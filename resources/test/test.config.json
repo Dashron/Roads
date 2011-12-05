@@ -1,0 +1,1 @@
+{"dependencies": ["test_dep"], "info": "banana", "db" : {"connection" : "mongodb://localhost/zaft"}}
