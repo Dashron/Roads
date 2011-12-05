@@ -1,0 +1,19 @@
+This framework has been designed to make the development of resource oriented web services easier.
+
+The general concept is to create a new folder in the resources directory, one for each conceptual chunk of content (a user resource, a blog post resource, a comment resource)
+Each resource contains a set of routes, a set of models, and a collection of views.
+
+You should then make one master resource, (I name it after the site I'm working on) which is configured to depend on all the other resources you need.
+Routing requests through the master resource will automatically check all child resources if the master fails.
+
+
+todo: 
+serious performance testing
+more use cases to determine what is needed in real world development
+access resources via routes
+caching strategy
+session strategy (should it be models?)
+single instance of resources, treat like a node module (if not already handled that way)
+smart way to fork based on accept headers, or some other field so that you can use one code base for api's and front ends.
+the ability to include in a template a routed request. fill a subview with a json decoded response of routing a fake request.
+have a web based platform that uses lots of the same code styles, so that the subviews could be in view or in browser
