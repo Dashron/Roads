@@ -6,6 +6,7 @@ Each resource contains a set of routes, a set of models, and a collection of vie
 You should then make one master resource, (I name it after the site I'm working on) which is configured to depend on all the other resources you need.
 Routing requests through the master resource will automatically check all child resources if the master fails.
 
+If you wish to use views, you need to create a node_modules folder and put the mu.js library within it.
 
 todo: 
 serious performance testing
