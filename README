@@ -17,3 +17,5 @@ single instance of resources, treat like a node module (if not already handled t
 smart way to fork based on accept headers, or some other field so that you can use one code base for api's and front ends.
 the ability to include in a template a routed request. fill a subview with a json decoded response of routing a fake request.
 have a web based platform that uses lots of the same code styles, so that the subviews could be in view or in browser
+clean up code after the major prototypical rewrite
+investigate testing alternatives, or just clean up own framework bit by bit.
