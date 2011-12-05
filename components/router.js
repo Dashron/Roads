@@ -12,22 +12,22 @@ var RegexRouter = exports.RegexRouter = function RegexRouter () {
 };
 
 /**
- * 
+ * @type {Array}
  */
 RegexRouter.prototype.routes = null;
 
 /**
- * 
+ * @type {Function}
  */
 RegexRouter.prototype.unmatched = null;
 
 /**
  * Add a route
  * 
- * @param regex
- * @param func
+ * @param {RegExp} regex
+ * @param {Function} func
  *            the function to execute when the route is matched
- * @param method
+ * @param {String} method
  *            optional, defaults to GET
  */
 RegexRouter.prototype.add = function (regex, func, method) {
@@ -50,7 +50,7 @@ RegexRouter.prototype.add = function (regex, func, method) {
 /**
  * Assign a route which will be executed if no other routes are matched
  * 
- * @param func
+ * @param {Function} func
  */
 RegexRouter.prototype.unmatched = function (func) {
 	var _self = this;
@@ -61,13 +61,13 @@ RegexRouter.prototype.unmatched = function (func) {
 /**
  * Route the provided request
  * 
- * @param request
- * @param response
- * @param extra
+ * @param {HttpRequest} request
+ * @param {HttpResponse} response
+ * @param {Object} extra
  *            any extra data you want provided to the route function
- * @param callback
+ * @param {Function} callback
  *            a function to execute once the data has been routed
- * @return boolean
+ * @return {Boolean}
  */
 RegexRouter.prototype.route = function (request, response, extra, callback) {
 	var _self = this;
