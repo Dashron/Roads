@@ -83,6 +83,7 @@ RegexRouter.prototype.route = function (request, response, extra, callback) {
 
 			if (result != null && result.length) {
 				match_found = true;
+				extra.matches = result;
 				routes[i].func(request, response, extra, callback);
 				break;
 			}
