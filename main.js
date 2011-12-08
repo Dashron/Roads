@@ -1,17 +1,14 @@
 "use strict";
 var http = require('http');
 var firenode_component = require('./components/firenode/firenode');
-//var resource_component = require('./components/resource');
+var resource_component = require('./components/resource');
 
-//resource_component.load(process.argv[2]);
+var resource_name = process.argv[2] || "example";
+var resource = resource_component.get(resource_name);
 
 //start the server
 var server = http.createServer(function (request, response) {
-	var Firebug = new (firenode_component.Firebug)(response);
-	Firebug.log("hello", "world");
-	Firebug.error(new Error('broken!'));
-	response.end("test");
-	//router.route(req, res, {});
+	resource.routeRequest(request, response);
 });
 
 //heroku or cloud foundry
