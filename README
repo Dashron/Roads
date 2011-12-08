@@ -9,6 +9,11 @@ Routing requests through the master resource will automatically check all child 
 If you wish to use views, you need to create a node_modules folder and put the mu.js library within it.
 
 todo: 
+wrap up client side code
+functional parity between client and server side.
+default route on all routes which load from the templates directory when /<resource_name>/templates/<template_name> is accessed
+fill the template if data is posted to it, otherwise return it empty
+
 serious performance testing
 more use cases to determine what is needed in real world development
 access resources via routes
@@ -16,7 +21,5 @@ caching strategy
 session strategy (should it be models?)
 single instance of resources, treat like a node module (if not already handled that way)
 smart way to fork based on accept headers, or some other field so that you can use one code base for api's and front ends.
-the ability to include in a template a routed request. fill a subview with a json decoded response of routing a fake request.
-have a web based platform that uses lots of the same code styles, so that the subviews could be in view or in browser
 clean up code after the major prototypical rewrite
 investigate testing alternatives, or just clean up own framework bit by bit.
