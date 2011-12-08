@@ -40,6 +40,7 @@ mu.templateRoot = '/';
  * 
  * @author Aaron Hedges <aaron@dashron.com>
  * @param {String} template
+ * @deprecated
  */
 var View = exports.View = function View(template) {
 	event.EventEmitter.call(this);
