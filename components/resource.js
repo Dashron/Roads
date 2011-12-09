@@ -211,7 +211,7 @@ Resource.prototype.template = function (name) {
 	if (typeof this.templates[name] === "undefined") {
 		return fs_module.createReadStream(_self.directory + '/templates/' + name);
 	} else {
-		
+		console.log(this.templates[name]);
 	}
 };
 
@@ -283,13 +283,25 @@ Resource.prototype.routeRequest = function (request, response, extra, callback) 
 Resource.prototype.addTemplateRoutes = function (router) {
 	var _self = this;
 
-	router.add(new RegExp('^template/' + _self.name + '/(\w+)$'), function (request, response, extra, callback) {
-		_self.getTemplate(request.url.path.replace('/template/', ''), function (contents) {
-			response.end(contents);
-		}, function (request, response, extra, callback) {
-			if (typeof _self.unmatched_route === "function") {
-				request.url = url_module.parse(request.url, true);
-				_self.unmatched_route(request, response, extra, callback);
+	router.add(new RegExp('^/' + _self.name + '/template/(.+)$'), function (request, response, extra, callback) {
+		
+		var stream = _self.template(extra.matches[1]);
+		
+		
+		stream.on('open', function () {
+			response.writeHead(200, {'Content-Type':'text/plain'});
+			stream.pipe(response);
+		});
+		
+		stream.on('error', function(err) {
+			if(err.code=='ENOENT') {
+				response.writeHead(404, {'Content-Type':'text/plain'});
+				response.end("File missing");
+			}
+			else {
+				console.log("err");
+				response.writeHead(404, {'Content-Type':'text/plain'});
+				response.end();
 			}
 		});
 	});
