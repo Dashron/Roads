@@ -1,3 +1,9 @@
+/*
+* gfw.js - config.js
+* Copyright(c) 2011 Aaron Hedges <aaron@dashron.com>
+* MIT Licensed
+*/
+
 "use strict";
 var _config_data = {};
 

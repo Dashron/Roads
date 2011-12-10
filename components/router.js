@@ -1,3 +1,9 @@
+/*
+* gfw.js - router.js
+* Copyright(c) 2011 Aaron Hedges <aaron@dashron.com>
+* MIT Licensed
+*/
+
 "use strict";
 var fs_module = require('fs');
 var url_module = require('url');
@@ -68,6 +74,9 @@ RegexRouter.prototype.unmatched = function (func) {
  * @param {Function} callback
  *            a function to execute once the data has been routed
  * @return {Boolean}
+ * 
+ * @todo return promise on success?
+ * @todo routes[i].func(resource, response, extra)
  */
 RegexRouter.prototype.route = function (request, response, extra, callback) {
 	var _self = this;
@@ -84,6 +93,8 @@ RegexRouter.prototype.route = function (request, response, extra, callback) {
 			if (result != null && result.length) {
 				match_found = true;
 				extra.matches = result;
+				//TODO:
+				//extra.request = request
 				routes[i].func(request, response, extra, callback);
 				break;
 			}

@@ -1,3 +1,9 @@
+/*
+* gfw.js - static.js
+* Copyright(c) 2011 Aaron Hedges <aaron@dashron.com>
+* MIT Licensed
+*/
+
 "use strict";
 var fs_module = require('fs');
 
