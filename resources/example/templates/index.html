@@ -1,12 +1,21 @@
 <html>
 <head>
 <script type="text/javascript" src="/gfw/core.js"></script>
+<script type="text/javascript" src="/gfw/sizzle.js"></script>
 </head>
 <script type="text/javascript">
-GFW.buildResource('example').template('test_client.html', function(template) {
-	document.write(template.html);
+GFW.getResource('example').template('test_client.html', function(template) {
+	var t = GFW.e('#template');
+	t.innerHTML += template.html;
+	
+	GFW.e('.changeme', t).forEach(function (element) {
+		element.innerHTML = 2;
+	})
+	
 });
 </script>
 <body>
+<div id="template">
+</div>
 </body>
 </html>

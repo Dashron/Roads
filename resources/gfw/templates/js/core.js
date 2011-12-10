@@ -4,6 +4,23 @@ var GFW = (function () {
 	};
 
 	/**
+	 * @param {String}
+	 *            selector
+	 * @param {Element}
+	 *            context
+	 * @return {Sizzle}
+	 */
+	Gfw.prototype.e = Gfw.prototype.element = function (selector, context) {
+		var selection = Sizzle(selector, context);
+		
+		if(selector.indexOf('#') === 0) {
+			return selection[0];
+		}
+		
+		return selection;
+	};
+
+	/**
 	 * Http
 	 * 
 	 * @return {Http}
@@ -26,17 +43,17 @@ var GFW = (function () {
 		},
 		request : function (method, url, params, success, error) {
 			var xmlhttp = new XMLHttpRequest();
-			
-			xmlhttp.onreadystatechange = function() {
-				if(xmlhttp.readyState == 4) {
-					if(xmlhttp.status == 200) {
+
+			xmlhttp.onreadystatechange = function () {
+				if (xmlhttp.readyState == 4) {
+					if (xmlhttp.status == 200) {
 						success(xmlhttp.responseText);
 					} else {
 						error(xmlhttp.responseText, xmlhttp.status);
 					}
 				}
 			};
-			
+
 			xmlhttp.open(method, url, true);
 			xmlhttp.send();
 		}
@@ -67,15 +84,15 @@ var GFW = (function () {
 				this.data[i] = data[i];
 			}
 		};
-		
+
 		/**
 		 * 
 		 * @param selector
 		 */
 		Template.prototype.replace = function (selector) {
-			//$(selector).replace(this.html);
+			// $(selector).replace(this.html);
 		};
-		
+
 		/**
 		 * 
 		 * @param key
@@ -129,7 +146,7 @@ var GFW = (function () {
 			script.src = '/' + this.name + '/' + js_file;
 			document.body.appendChild(script);
 		};
-		
+
 		/**
 		 * 
 		 * @param {String}
@@ -186,7 +203,7 @@ var GFW = (function () {
 	 * @param name
 	 * @return {Resource}
 	 */
-	Gfw.prototype.buildResource = function (name) {
+	Gfw.prototype.getResource = function (name) {
 		if (typeof this.resources[name] === "undefined") {
 			this.resources[name] = new this.Resource(name);
 		}
