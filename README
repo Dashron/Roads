@@ -1,5 +1,8 @@
 This framework has been designed to make the development of resource oriented web services easier.
 
+NOTE: THE EXAMPLE NOW EXPECTS THE SIZZLE LIBRARY TO BE LOCATED WITHIN resources/gfw/templates/js.
+You can locate it at sizzlejs.com
+
 The general concept is to create a new folder in the resources directory, one for each conceptual chunk of content (a user resource, a blog post resource, a comment resource)
 Each resource contains a set of routes, a set of models, and a collection of views.
 
