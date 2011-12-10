@@ -1,5 +1,6 @@
 "use strict";
-var RegexRouter = require('../../components/router.js').RegexRouter;
+var RegexRouter = require('../../components/router').RegexRouter;
+var static_file_module = require('../../components/static');
 var util_module = require('util');
 var fs_module = require('fs');
 
@@ -8,27 +9,26 @@ var Router = exports.Router = function TestRouter() {
 	RegexRouter.call(_self);
 	
 	_self.add(/^\/gfw(\/.+\.js)$/, function(request, response, extra, callback) {
-		// don't let people navigate through the folder structure
-		var stream = fs_module.createReadStream(extra.resource.directory + '/templates/js' + extra.matches[1].replace(/\.\./, ''));
+		var filename = extra.matches[1].replace(/\.\./, '');
 		
-		stream.on('open', function () {
+		static_file_module.loadFile(extra.resource.directory + '/templates/js' + filename, function (contents) {
+			//TODO: Fix here, what happens is when cached this is sent before any logging can be applied, so logging ends up happening after we have sent the headers
 			response.writeHead(200, {'Content-Type':'text/javascript'});
-			stream.pipe(response);
-		});
-		
-		stream.on('error', function(err) {
+			response.end(contents);
+			callback();
+			
+		}, function (error) {
 			if(err.code=='ENOENT') {
 				response.writeHead(404, {'Content-Type':'text/plain'});
 				response.end("File missing");
+				callback();
 			}
 			else {
-				console.log("err");
 				response.writeHead(404, {'Content-Type':'text/plain'});
 				response.end();
+				callback();
 			}
 		});
-		
-		callback();
 	});
 };
 
