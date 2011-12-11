@@ -1,8 +1,8 @@
 /*
-* gfw.js - resource.js
-* Copyright(c) 2011 Aaron Hedges <aaron@dashron.com>
-* MIT Licensed
-*/
+ * gfw.js - resource.js
+ * Copyright(c) 2011 Aaron Hedges <aaron@dashron.com>
+ * MIT Licensed
+ */
 
 "use strict";
 var fs_module = require('fs');
@@ -10,7 +10,7 @@ var url_module = require('url');
 var mongoose_module = require('mongoose');
 
 var View = require('./view').View;
-
+var static_component = require('./static');
 var Firebug = require('./firenode/firenode').Firebug;
 
 var _resources = {};
@@ -122,9 +122,10 @@ Resource.prototype.load = function (config) {
 	// If no configuration values are provided, try loading from the default
 	// directory
 	if (typeof config != "object") {
-		//config = require(_self.directory + "/" + _self.name + ".config.js").config;
+		// config = require(_self.directory + "/" + _self.name +
+		// ".config.js").config;
 		// TODO: fix
-		config = fs_module.readFileSync(_self.directory + "/" + _self.name + ".config.json", 'utf8'); 
+		config = fs_module.readFileSync(_self.directory + "/" + _self.name + ".config.json", 'utf8');
 		config = JSON.parse(config);
 	}
 
@@ -212,13 +213,9 @@ Resource.prototype.buildView = function (template) {
  *            fail
  * @returns {ReadableStream}
  */
-Resource.prototype.template = function (name) {
-	var _self = this;
-	if (typeof this.templates[name] === "undefined") {
-		return fs_module.createReadStream(_self.directory + '/templates/' + name);
-	} else {
-		console.log(this.templates[name]);
-	}
+Resource.prototype.template = function (name, complete, error) {
+	// convert to use static
+	return static_component.loadFile(this.directory + '/templates/' + name, complete, error);
 };
 
 /**
@@ -237,16 +234,16 @@ Resource.prototype.routeRequest = function (request, response, extra, callback) 
 	var _self = this;
 	var routed = false;
 
-	if(typeof extra != "object") {
+	if (typeof extra != "object") {
 		extra = {};
 	}
-	
-	if(typeof callback != "function") {
-		callback = function(){
-			console.log("request complete:" + request.url.pathname);
+
+	if (typeof callback != "function") {
+		callback = function () {
+			console.log("Request Complete:" + request.url.pathname);
 		};
 	}
-	
+
 	// The route needs access to the root resource
 	if (typeof extra.root_resource != "object") {
 		extra.root_resource = _self;
@@ -277,7 +274,7 @@ Resource.prototype.routeRequest = function (request, response, extra, callback) 
 		_self.unmatched_route(request, response, extra, callback);
 		routed = true;
 	}
-	
+
 	return routed;
 };
 
@@ -290,24 +287,23 @@ Resource.prototype.addTemplateRoutes = function (router) {
 	var _self = this;
 
 	router.add(new RegExp('^/' + _self.name + '/template/(.+)$'), function (request, response, extra, callback) {
-		
-		var stream = _self.template(extra.matches[1]);
-		
-		
-		stream.on('open', function () {
-			response.writeHead(200, {'Content-Type':'text/plain'});
-			stream.pipe(response);
-		});
-		
-		stream.on('error', function(err) {
-			if(err.code=='ENOENT') {
-				response.writeHead(404, {'Content-Type':'text/plain'});
+		_self.template(extra.matches[1], function (contents) {
+			response.writeHead(200, {
+				'Content-Type' : 'text/plain'
+			});
+			response.end(contents);
+		}, function (error) {
+			if (error.code == 'ENOENT') {
+				response.writeHead(404, {
+					'Content-Type' : 'text/plain'
+				});
 				response.end("File missing");
-			}
-			else {
+			} else {
 				console.log("err");
-				response.writeHead(404, {'Content-Type':'text/plain'});
-				response.end();
+				response.writeHead(500, {
+					'Content-Type' : 'text/plain'
+				});
+				response.end("An error has occured");
 			}
 		});
 	});
