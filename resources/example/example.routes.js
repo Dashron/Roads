@@ -8,12 +8,15 @@ var Router = exports.Router = function TestRouter() {
 	
 	_self.add(/^\/$/, function (request, response, extra, callback) {
 		// TODO cleanup
-		var stream = extra.resource.template('index.html');
-		stream.on('open', function () {
+		extra.resource.template('index.html', function (contents) {
 			response.writeHead(200, {'Content-Type':'text/html'});
-			stream.pipe(response);
+			response.end(contents);
+			callback();
+		}, function (error) {
+			response.writeHead(404, {'Content-Type':'text/plain'});
+			response.end("Not Found");
+			callback();
 		});
-		callback();
 	});
 	
 	/*_self.add(/\w+/, function(request, response, extra, callback) {
