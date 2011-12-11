@@ -11,7 +11,16 @@ var server = http.createServer(function (request, response) {
 	resource.routeRequest(request, response);
 });
 
-//heroku or cloud foundry
+// port for heroku or cloud foundry or 8125
 server.listen(process.env.PORT || process.env.VMC_APP_PORT || 8125, null, function() {
 	console.log('Server running');
 });
+
+// Enable a repl to mess with the server at run time
+var context = require('repl').start().context;
+// Expose the primary resource to the repl
+context.resource = resource;
+// Expose the server to the repl
+context.server = server;
+// Expose the resource component to the repl
+context.components = {"resource" : resource_component};
