@@ -8,6 +8,7 @@ var resource = resource_component.get(resource_name);
 
 //start the server
 var server = http.createServer(function (request, response) {
+	console.log("Request for :" + request.url);
 	resource.routeRequest(request, response);
 });
 
@@ -23,4 +24,4 @@ context.resource = resource;
 // Expose the server to the repl
 context.server = server;
 // Expose the resource component to the repl
-context.components = {"resource" : resource_component};
+context.components = {"resource" : resource_component, "static" :require('./components/static')};
