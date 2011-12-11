@@ -18,6 +18,7 @@ var file_cache = {};
 exports.loadFile = function (path, complete, error) {
 	if(typeof file_cache[path] === "string") {
 		complete(file_cache[path]);
+		return;
 	}
 	
 	(new FilePromise(path))
