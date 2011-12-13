@@ -208,9 +208,9 @@ Resource.prototype.buildView = function (template) {
  * @param {String}
  *            name
  * @param {Function}
- *            pass
+ *            complete
  * @param {Function}
- *            fail
+ *            error
  * @returns {ReadableStream}
  */
 Resource.prototype.template = function (name, complete, error) {
