@@ -10,25 +10,7 @@ var Router = exports.Router = function TestRouter() {
 	
 	_self.add(/^\/gfw(\/.+\.js)$/, function(request, response, extra, callback) {
 		var filename = extra.matches[1].replace(/\.\./, '');
-		
-		static_file_module.loadFile(extra.resource.directory + '/templates/js' + filename, function (contents) {
-			//TODO: Fix here, what happens is when cached this is sent before any logging can be applied, so logging ends up happening after we have sent the headers
-			response.writeHead(200, {'Content-Type':'text/javascript'});
-			response.end(contents);
-			callback();
-			
-		}, function (error) {
-			if(err.code=='ENOENT') {
-				response.writeHead(404, {'Content-Type':'text/plain'});
-				response.end("File missing");
-				callback();
-			}
-			else {
-				response.writeHead(404, {'Content-Type':'text/plain'});
-				response.end();
-				callback();
-			}
-		});
+		static_file_module.streamFile(extra.resource.directory + '/templates/js' + filename, response);
 	});
 };
 
