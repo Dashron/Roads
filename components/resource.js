@@ -12,6 +12,7 @@ var mongoose_module = require('mongoose');
 var View = require('./view').View;
 var static_component = require('./static');
 var Firebug = require('./firenode/firenode').Firebug;
+var static_file_module = require('./static');
 
 var _resources = {};
 
@@ -97,6 +98,11 @@ Resource.prototype.templates = null;
 
 /**
  * 
+ */
+Resource.prototype.templateDir = '';
+
+/**
+ * 
  * @param {Mongoose}
  *            connection
  */
@@ -118,6 +124,7 @@ Resource.prototype.load = function (config) {
 	}
 
 	_self.directory = __dirname.replace("components", "") + "resources/" + _self.name;
+	_self.templateDir = _self.directory + '/templates/';
 
 	// If no configuration values are provided, try loading from the default
 	// directory
@@ -199,7 +206,7 @@ Resource.prototype.buildView = function (template) {
 	var _self = this;
 
 	var view = new View(template);
-	view.setDir(_self.directory + '/templates');
+	view.setDir(_self.templateDir);
 	return view;
 };
 
@@ -215,7 +222,7 @@ Resource.prototype.buildView = function (template) {
  */
 Resource.prototype.template = function (name, complete, error) {
 	// convert to use static
-	return static_component.loadFile(this.directory + '/templates/' + name, complete, error);
+	return static_component.loadFile(this.templateDir + name, complete, error);
 };
 
 /**
@@ -287,25 +294,7 @@ Resource.prototype.addTemplateRoutes = function (router) {
 	var _self = this;
 
 	router.add(new RegExp('^/' + _self.name + '/template/(.+)$'), function (request, response, extra, callback) {
-		_self.template(extra.matches[1], function (contents) {
-			response.writeHead(200, {
-				'Content-Type' : 'text/plain'
-			});
-			response.end(contents);
-		}, function (error) {
-			if (error.code == 'ENOENT') {
-				response.writeHead(404, {
-					'Content-Type' : 'text/plain'
-				});
-				response.end("File missing");
-			} else {
-				console.log("err");
-				response.writeHead(500, {
-					'Content-Type' : 'text/plain'
-				});
-				response.end("An error has occured");
-			}
-		});
+		static_file_module.streamFile(_self.templateDir + extra.matches[1], response);
 	});
 
 	router.add(/template\/(\w+)/, function (request, response, extra, callback) {
