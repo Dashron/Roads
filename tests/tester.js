@@ -24,10 +24,9 @@ Tester.prototype.runAll = function tester_runAll(directory) {
 			throw new Error(err);
 		}
 
-		var assert = null;
 		//load each file, and assign the routes to this router
 		files.forEach(function(file) {
-			self.runOne(directory + file, assert);
+			self.runOne(directory + file);
 		});
 	});
 };
