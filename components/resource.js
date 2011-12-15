@@ -289,6 +289,7 @@ Resource.prototype.routeRequest = function (request, response, extra, callback) 
  * 
  * @param router
  * @returns
+ * @todo allow users to configure their resource to not take default template or js or css routes
  */
 Resource.prototype.addTemplateRoutes = function (router) {
 	var _self = this;
@@ -296,10 +297,20 @@ Resource.prototype.addTemplateRoutes = function (router) {
 	router.add(new RegExp('^/' + _self.name + '/template/(.+)$'), function (request, response, extra, callback) {
 		static_file_module.streamFile(_self.templateDir + extra.matches[1], response);
 	});
-
-	router.add(/template\/(\w+)/, function (request, response, extra, callback) {
+	
+	router.add(new RegExp('^/' + _self.name + '/template/(.+)$'), function (request, response, extra, callback) {
 		// TODO: fill the template client side and return it
 	}, "POST");
+	
+	router.add(new RegExp('^/' + _self.name + '(\/.+\.js)$'), function(request, response, extra, callback) {
+		var filename = extra.matches[1].replace(/\.\./, '');
+		static_file_module.streamFile(extra.resource.directory + '/templates/js' + filename, response);
+	});
+	
+	router.add(new RegExp('^/' + _self.name + '(\/.+\.css)$'), function(request, response, extra, callback) {
+		var filename = extra.matches[1].replace(/\.\./, '');
+		static_file_module.streamFile(extra.resource.directory + '/templates/css' + filename, response);
+	});
 };
 
 /**
