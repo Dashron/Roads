@@ -12,8 +12,9 @@ var mongoose_module = require('mongoose');
 var View = require('./view').View;
 var static_component = require('./static');
 var Firebug = require('./firenode/firenode').Firebug;
-var static_file_module = require('./static');
+var Cookie = require('./cookie').Cookie;
 
+var static_file_module = require('./static');
 var _resources = {};
 
 /**
@@ -254,6 +255,10 @@ Resource.prototype.routeRequest = function (request, response, extra, callback) 
 	// The route needs access to the root resource
 	if (typeof extra.root_resource != "object") {
 		extra.root_resource = _self;
+	}
+	
+	if (typeof extra.cookie != "object") {
+		extra.cookie = new Cookie(request, response);
 	}
 
 	// All routes need access to the containing resource
