@@ -43,7 +43,7 @@ exports.loadFile = function (path, complete, error) {
  */
 exports.streamFile = function (path, response) {
 	var content_type = exports.contentType(path);
-	
+
 	if (typeof file_cache[path] === "string") {
 		response.writeHead(200, {
 			'Content-Type' : content_type
@@ -57,12 +57,12 @@ exports.streamFile = function (path, response) {
 	stream.setEncoding('utf8');
 
 	stream.on('data', function streamFile_data (data) {
-		if(buffer.length === 0) {
+		if (buffer.length === 0) {
 			response.writeHead(200, {
 				'Content-Type' : content_type
 			});
 		}
-		
+
 		buffer += data;
 		response.write(data);
 	});
@@ -73,7 +73,7 @@ exports.streamFile = function (path, response) {
 	});
 
 	stream.on('error', function streamFile_error (error) {
-		if(error.code === 'ENOENT') {
+		if (error.code === 'ENOENT') {
 			response.writeHead(404, {
 				'Content-Type' : 'text/plain'
 			});
@@ -98,12 +98,16 @@ exports.streamFile = function (path, response) {
  * @return {String}
  */
 exports.contentType = function (path) {
-	if (path.indexOf('.js') >= 0) {
+	if (path.match(/\.js$/)) {
 		return 'text/javascript';
 	}
 
-	if (path.indexOf('.css') >= 0) {
+	if (path.match(/\.css$/)) {
 		return 'text/css';
+	}
+
+	if (path.match(/\.html$/)) {
+		return 'text/html';
 	}
 
 	return 'text/plain';
