@@ -7,6 +7,19 @@
 "use strict";
 var fs_module = require('fs');
 var url_module = require('url');
+var qs_module = require('querystring');
+
+/**
+ * @todo add json and other types
+ * @param body
+ * @param content_type
+ * @return {Object}
+ */
+exports.parsePostData = function (body, content_type) {
+	if(content_type === "application/x-www-form-urlencoded") {
+		return qs_module.parse(body); 
+	}
+};
 
 /**
  * A url based router, the first regex matched will point to the executing
@@ -93,9 +106,22 @@ RegexRouter.prototype.route = function (request, response, extra, callback) {
 			if (result != null && result.length) {
 				match_found = true;
 				extra.matches = result;
-				//TODO:
-				//extra.request = request
-				routes[i].func(request, response, extra, callback);
+				request.GET = request.url.query;
+				
+				if(request.method === "GET") {
+					routes[i].func(request, response, extra, callback);
+				} else if(request.method === "POST") {
+					var buffer = '';
+					request.on('data', function (data) {
+						buffer += data;
+					});
+					
+					request.on('end', function () {
+						request.POST = exports.parsePostData(buffer, request.headers['content-type']);
+						routes[i].func(request, response, extra, callback);
+					});
+				}
+				
 				break;
 			}
 		}
