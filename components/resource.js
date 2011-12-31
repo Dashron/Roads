@@ -14,7 +14,6 @@ var static_component = require('./static');
 var Firebug = require('./firenode/firenode').Firebug;
 var Cookie = require('./cookie').Cookie;
 
-var static_file_module = require('./static');
 var _resources = {};
 
 /**
@@ -300,7 +299,7 @@ Resource.prototype.addTemplateRoutes = function (router) {
 	var _self = this;
 
 	router.add(new RegExp('^/' + _self.name + '/template/(.+)$'), function (request, response, extra, callback) {
-		static_file_module.streamFile(_self.templateDir + extra.matches[1], response);
+		static_component.streamFile(_self.templateDir + extra.matches[1], response);
 	});
 	
 	router.add(new RegExp('^/' + _self.name + '/template/(.+)$'), function (request, response, extra, callback) {
@@ -309,12 +308,12 @@ Resource.prototype.addTemplateRoutes = function (router) {
 	
 	router.add(new RegExp('^/' + _self.name + '(\/.+\.js)$'), function(request, response, extra, callback) {
 		var filename = extra.matches[1].replace(/\.\./, '');
-		static_file_module.streamFile(extra.resource.directory + '/templates/js' + filename, response);
+		static_component.streamFile(extra.resource.directory + '/templates/js' + filename, response);
 	});
 	
 	router.add(new RegExp('^/' + _self.name + '(\/.+\.css)$'), function(request, response, extra, callback) {
 		var filename = extra.matches[1].replace(/\.\./, '');
-		static_file_module.streamFile(extra.resource.directory + '/templates/css' + filename, response);
+		static_component.streamFile(extra.resource.directory + '/templates/css' + filename, response);
 	});
 };
 
