@@ -8,9 +8,12 @@
 var fs_module = require('fs');
 var url_module = require('url');
 var mongoose_module = require('mongoose');
+//todo replace this with a chunked renderer like mu?
+var hogan_module = require('hogan.js');
 
-var View = require('./view').View;
 var static_component = require('./static');
+var http_wrapper_component = require('./http_wrapper');
+var View = require('./view').View;
 var Firebug = require('./firenode/firenode').Firebug;
 var Cookie = require('./cookie').Cookie;
 
@@ -231,62 +234,49 @@ Resource.prototype.template = function (name, complete, error) {
  *            request
  * @param {HttpResponse}
  *            response
- * @param {Object}
- *            extra
  * @param {Function}
  *            callback
  * @return {Boolean}
  */
-Resource.prototype.routeRequest = function (request, response, extra, callback) {
+Resource.prototype.routeRequest = function (request, response, callback) {
 	var _self = this;
-	var routed = false;
-
-	if (typeof extra != "object") {
-		extra = {};
+	
+	if (! (request instanceof http_wrapper_component.Request) && 
+		! (request instanceof http_wrapper_component.Response)) {
+		
+		var cookie = new Cookie(request, response);
+		
+		request = new http_wrapper_component.Request(request);
+		response = new http_wrapper_component.Response(response);
+		response.cookie(cookie);
+		
+		if (_self.config.debug === true) {
+			response.logger(new Firebug(response));
+			response.logger().log('init', true);
+		}
 	}
 
-	if (typeof callback != "function") {
-		callback = function () {
-			console.log("Request Complete:" + request.url.pathname);
-		};
-	}
-
-	// The route needs access to the root resource
-	if (typeof extra.root_resource != "object") {
-		extra.root_resource = _self;
+	if(typeof callback === "undefined") {
+		// empty function so we can just always call it without errors
+		callback = function(){};
 	}
 	
-	if (typeof extra.cookie != "object") {
-		extra.cookie = new Cookie(request, response);
-	}
-
-	// All routes need access to the containing resource
-	extra.resource = _self;
-
-	if (_self.config.debug === true && typeof extra.logger === "undefined") {
-		var logger = new Firebug(response);
-		extra.logger = logger;
-		extra.logger.log('init', true);
-	}
-
-	if (_self.router.route(request, response, extra, callback)) {
-		routed = true;
+	if (_self.router.route(request, response, callback)) {
+		return true;
 	} else {
 		for ( var i in _self.resources) {
-			if (_self.resources[i].routeRequest(request, response, extra, callback)) {
-				routed = true;
+			if (_self.resources[i].routeRequest(request, response, callback)) {
+				return true;
 			}
 		}
 	}
 
-	if (routed === false && typeof _self.unmatched_route === "function") {
-		request.url = url_module.parse(request.url, true);
-
-		_self.unmatched_route(request, response, extra, callback);
-		routed = true;
+	if (typeof _self.unmatched_route === "function") {
+		_self.unmatched_route(request, response, callback);
+		return true;
 	}
 
-	return routed;
+	return false;
 };
 
 /**
@@ -298,22 +288,33 @@ Resource.prototype.routeRequest = function (request, response, extra, callback) 
 Resource.prototype.addTemplateRoutes = function (router) {
 	var _self = this;
 
-	router.add(new RegExp('^/' + _self.name + '/template/(.+)$'), function (request, response, extra, callback) {
-		static_component.streamFile(_self.templateDir + extra.matches[1], response);
+	router.add(new RegExp('^/' + _self.name + '/template/(.+)$'), function (request, response, callback) {
+		static_component.streamFile(_self.templateDir + request.routeMatches()[1], response, callback);
 	});
 	
-	router.add(new RegExp('^/' + _self.name + '/template/(.+)$'), function (request, response, extra, callback) {
-		// TODO: fill the template client side and return it
+	router.add(new RegExp('^/' + _self.name + '/template/(.+)$'), function (request, response, callback) {
+		static_component.loadFile(_self.templateDir + request.routeMatches()[1], function (contents) {
+			//todo replace this with a chunked renderer like mu?
+			var template = hogan_module.compile(contents);
+			response.writeHead(200);
+			response.end(template.render(request.POST));
+			callback();
+			
+		}, function (error) {
+			response.writeHead(500);
+			response.end("not found");
+			callback();
+		});
 	}, "POST");
 	
-	router.add(new RegExp('^/' + _self.name + '(\/.+\.js)$'), function(request, response, extra, callback) {
-		var filename = extra.matches[1].replace(/\.\./, '');
-		static_component.streamFile(extra.resource.directory + '/templates/js' + filename, response);
+	router.add(new RegExp('^/' + _self.name + '(\/.+\.js)$'), function(request, response, callback) {
+		var filename = request.routeMatches()[1].replace(/\.\./, '');
+		static_component.streamFile(_self.directory + '/templates/js' + filename, response, callback);
 	});
 	
-	router.add(new RegExp('^/' + _self.name + '(\/.+\.css)$'), function(request, response, extra, callback) {
-		var filename = extra.matches[1].replace(/\.\./, '');
-		static_component.streamFile(extra.resource.directory + '/templates/css' + filename, response);
+	router.add(new RegExp('^/' + _self.name + '(\/.+\.css)$'), function(request, response, callback) {
+		var filename = request.routeMatches()[1].replace(/\.\./, '');
+		static_component.streamFile(_self.directory + '/templates/css' + filename, response, callback);
 	});
 };
 
