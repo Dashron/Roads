@@ -1,14 +1,15 @@
 "use strict";
-var RegexRouter = require('../../components/router.js').RegexRouter;
+var RegexRouter = require('../../components/router').RegexRouter;
 var util_module = require('util');
+var resource_component = require('../../components/resource');
 
 var Router = exports.Router = function TestRouter() {
 	var _self = this;
 	RegexRouter.call(_self);
 	
-	_self.add(/^\/$/, function (request, response, extra, callback) {
+	_self.add(/^\/$/, function (request, response, callback) {
 		// TODO cleanup
-		extra.resource.template('index.html', function (contents) {
+		resource_component.get('example').template('index.html', function (contents) {
 			response.writeHead(200, {'Content-Type':'text/html'});
 			response.end(contents);
 			callback();
@@ -25,7 +26,7 @@ var Router = exports.Router = function TestRouter() {
 	})*/;
 };
 
-exports.unmatched = function (request, response, extra, callback) {
+exports.unmatched = function (request, response, callback) {
 	console.log("not found");
 	console.log(request.url);
 	response.writeHead(404, {'Content-Type':'text/plain'});
