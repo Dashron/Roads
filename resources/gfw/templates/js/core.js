@@ -1,4 +1,17 @@
 var GFW = (function () {
+	if (typeof Element.prototype.on !== "function") {
+
+		if (typeof Element.prototype.addEventListener === "function") {
+			Element.prototype.on = function (event, listener) {
+				this.addEventListener.apply(this, [ event, listener ]);
+			};
+		} else {
+			Element.prototype.on = function (event, listener) {
+				this.attachEvent.apply(this, [ event, listener ]);
+			};
+		}
+
+	}
 	var Gfw = function Gfw () {
 		this.resources = {};
 	};
@@ -12,12 +25,26 @@ var GFW = (function () {
 	 */
 	Gfw.prototype.e = Gfw.prototype.element = function (selector, context) {
 		var selection = Sizzle(selector, context);
-		
-		if(selector.indexOf('#') === 0) {
+
+		if (selector.indexOf('#') === 0) {
 			return selection[0];
 		}
-		
+
 		return selection;
+	};
+
+	/**
+	 * 
+	 * @param {Object}
+	 *            object
+	 */
+	Gfw.prototype.serialize = function (object) {
+		var key = null;
+		var response = [];
+		for (key in object) {
+			response.push(key + '=' + object[key]);
+		}
+		return response.join('&');
 	};
 
 	/**
@@ -26,36 +53,46 @@ var GFW = (function () {
 	 * @return {Http}
 	 */
 	Gfw.prototype.Http = {
-		get : function (url, params, success, error) {
-			this.request("GET", url, params, success, error);
+		get : function (url, details) {
+			// response = GFW.serialize(params);
+			this.request("GET", url, details.params, details.success, details.error);
 		},
-		post : function (url, params, success, error) {
-			this.request("POST", url, params, success, error);
+		post : function (url, details) {
+			this.request("POST", url, details.params, details.success, details.error);
 		},
-		put : function (url, params, success, error) {
-			this.request("PUT", url, params, success, error);
+		put : function (url, details) {
+			this.request("PUT", url, details.params, details.success, details.error);
 		},
-		patch : function (url, params, success, error) {
-			this.request("PATCH", url, params, success, error);
+		patch : function (url, details) {
+			this.request("PATCH", url, details.params, details.success, details.error);
 		},
-		del : function (url, params, success, error) {
-			this.request("DELETE", url, params, success, error);
+		del : function (url, details) {
+			this.request("DELETE", url, details.params, details.success, details.error);
 		},
 		request : function (method, url, params, success, error) {
-			var xmlhttp = new XMLHttpRequest();
+			var http = new XMLHttpRequest();
+			var response = null;
 
-			xmlhttp.onreadystatechange = function () {
-				if (xmlhttp.readyState == 4) {
-					if (xmlhttp.status == 200) {
-						success(xmlhttp.responseText);
+			http.onreadystatechange = function () {
+				if (http.readyState == 4) {
+					if (http.status == 200) {
+						success(http.responseText);
 					} else {
-						error(xmlhttp.responseText, xmlhttp.status);
+						error(http.responseText, http.status);
 					}
 				}
 			};
 
-			xmlhttp.open(method, url, true);
-			xmlhttp.send();
+			http.open(method, url, true);
+
+			if (method === "POST") {
+				response = GFW.serialize(params);
+				http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+				http.setRequestHeader("Content-length", response.length);
+				http.setRequestHeader("Connection", "close");
+			}
+
+			http.send(response);
 		}
 	};
 
@@ -156,14 +193,17 @@ var GFW = (function () {
 		 * @param {Function}
 		 *            error error
 		 */
-		Resource.prototype.template = function (name, success, error) {
+		Resource.prototype.template = function (name, details) {
 			var _self = this;
 			if (typeof _self.templates[name] === "undefined") {
-				GFW.Http.get('/' + _self.name + '/template/' + name, {}, function (data) {
-					success(_self.templates[name] = new GFW.Template(data));
+				this.http('template/' + name).get({
+					success : function (data) {
+						details.success(_self.templates[name] = new GFW.Template(data));
+					},
+					error : details.error
 				});
 			} else {
-				success(_self.templates[name]);
+				details.success(_self.templates[name]);
 			}
 		};
 
@@ -173,22 +213,23 @@ var GFW = (function () {
 		 * @returns {Object}
 		 */
 		Resource.prototype.http = function (path) {
+			var _self = this;
 			return {
 				path : path,
-				get : function (params, success, error) {
-					return GFW.Http.get('/' + this.name + '/' + this.path, params, success, error);
+				get : function (details) {
+					return GFW.Http.get('/' + _self.name + '/' + this.path, details);
 				},
-				post : function (params, success, error) {
-					return GFW.Http.post('/' + this.name + '/' + this.path, params, success, error);
+				post : function (details) {
+					return GFW.Http.post('/' + _self.name + '/' + this.path, details);
 				},
-				put : function (params, success, error) {
-					return GFW.Http.put('/' + this.name + '/' + this.path, params, success, error);
+				put : function (details) {
+					return GFW.Http.put('/' + _self.name + '/' + this.path, details);
 				},
-				patch : function (params, success, error) {
-					return GFW.Http.patch('/' + this.name + '/' + this.path, params, success, error);
+				patch : function (details) {
+					return GFW.Http.patch('/' + _self.name + '/' + this.path, details);
 				},
-				del : function (params, success, error) {
-					return GFW.Http.del('/' + this.name + '/' + this.path, params, success, error);
+				del : function (details) {
+					return GFW.Http.del('/' + _self.name + '/' + this.path, details);
 				}
 			};
 		};
