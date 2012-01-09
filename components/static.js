@@ -41,7 +41,7 @@ exports.loadFile = function (path, complete, error) {
  * @param {HttpResponse}
  *            response
  */
-exports.streamFile = function (path, response) {
+exports.streamFile = function (path, response, callback) {
 	var content_type = exports.contentType(path);
 
 	if (typeof file_cache[path] === "string") {
@@ -70,6 +70,7 @@ exports.streamFile = function (path, response) {
 	stream.on('end', function streamFile_end () {
 		file_cache[path] = buffer;
 		response.end();
+		callback();
 	});
 
 	stream.on('error', function streamFile_error (error) {
@@ -84,10 +85,12 @@ exports.streamFile = function (path, response) {
 			});
 			console.log(error);
 		}
+		callback();
 	});
 
 	stream.on('close', function streamFile_close () {
 		response.end();
+		callback();
 	});
 };
 
