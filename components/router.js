@@ -10,18 +10,6 @@ var url_module = require('url');
 var qs_module = require('querystring');
 
 /**
- * @todo add json and other types
- * @param body
- * @param content_type
- * @return {Object}
- */
-exports.parsePostData = function (body, content_type) {
-	if(content_type === "application/x-www-form-urlencoded") {
-		return qs_module.parse(body); 
-	}
-};
-
-/**
  * A url based router, the first regex matched will point to the executing
  * function
  */
@@ -80,8 +68,8 @@ RegexRouter.prototype.unmatched = function (func) {
 /**
  * Route the provided request
  * 
- * @param {HttpRequest} request
- * @param {HttpResponse} response
+ * @param {Request} request
+ * @param {Response} response
  * @param {Object} extra
  *            any extra data you want provided to the route function
  * @param {Function} callback
@@ -91,47 +79,40 @@ RegexRouter.prototype.unmatched = function (func) {
  * @todo return promise on success?
  * @todo routes[i].func(resource, response, extra)
  */
-RegexRouter.prototype.route = function (request, response, extra, callback) {
+RegexRouter.prototype.route = function (request, response, callback) {
 	var _self = this;
-	var url = url_module.parse(request.url, true);
+	var url = url_module.parse(request.url(), true);
 	var match_found = false;
-	var routes = _self.routes[request.method];
-
-	request.url = url_module.parse(request.url, true);
+	var routes = _self.routes[request.method()];
 
 	if (Array.isArray(routes)) {
 		for ( var i = 0; i < routes.length; i++) {
-			var result = url.pathname.match(routes[i].regex);
+			var result = request.url('pathname').match(routes[i].regex);
 
 			if (result != null && result.length) {
 				match_found = true;
-				extra.matches = result;
-				request.GET = request.url.query;
+				request.routeMatches(result);
 				
-				if(request.method === "GET") {
-					routes[i].func(request, response, extra, callback);
-				} else if(request.method === "POST") {
-					var buffer = '';
-					request.on('data', function (data) {
-						buffer += data;
-					});
+				switch (request.method()) {
+					case "GET" :
+						routes[i].func(request, response, callback);
+						return true;
 					
-					request.on('end', function () {
-						request.POST = exports.parsePostData(buffer, request.headers['content-type']);
-						routes[i].func(request, response, extra, callback);
-					});
+					case "POST" :
+						request.on('end', function () {
+							routes[i].func(request, response, callback);
+						});
+						return true;
 				}
-				
-				break;
 			}
 		}
 	}
 
 	// If there was no match, run the unmatched func
 	if (!match_found && typeof _self.unmatched === "function") {
-		_self.unmatched(request, response, extra, callback);
-		match_found = true;
+		_self.unmatched(request, response, callback);
+		return true;
 	}
 
-	return match_found;
+	return false;
 };
