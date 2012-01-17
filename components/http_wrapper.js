@@ -143,9 +143,11 @@ Request.prototype.modifiedSince = function (file_date) {
 	var request_date = this.headers('if-modified-since');
 	if (typeof request_date === "undefined") {
 		return true;
+	} else {
+		request_date = new Date(request_date);
 	}
 
-	return (file_date > request_date);
+	return (file_date.getTime() > request_date.getTime());
 };
 
 /**
