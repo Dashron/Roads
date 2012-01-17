@@ -1,3 +1,4 @@
+"use strict";
 var util_module = require('util');
 var event_module = require('events');
 var qs_module = require('querystring');
@@ -5,21 +6,23 @@ var url_module = require('url');
 
 /**
  * 
- * @param {String} data
- * @param {String} contentType
+ * @param {String}
+ *            data
+ * @param {String}
+ *            contentType
  * @return {Boolean}
  */
 exports.parsePostData = function (body, content_type) {
 	content_type = content_type.split(';');
-	
+
 	switch (content_type[0].trim()) {
 		case "application/x-www-form-urlencoded":
 			return qs_module.parse(body);
 			break;
-		case "application/json" :
+		case "application/json":
 			return JSON.parse(boddy);
 			break;
-		default :
+		default:
 			console.log(body);
 			console.log(content_type);
 			throw new Error("content type not supported");
@@ -28,24 +31,25 @@ exports.parsePostData = function (body, content_type) {
 
 /**
  * 
- * @todo extend original? this is odd, I don't really like wrapping every function
+ * @todo extend original? this is odd, I don't really like wrapping every
+ *       function
  */
 var Request = exports.Request = function Request (original_request) {
 	var _self = this;
-	
+
 	_self.request(original_request);
 	var buffer = [];
 	_self.GET = _self.url('query');
-	
+
 	_self.request().on('data', function (data) {
 		buffer.push(data);
 	});
-	
+
 	_self.request().on('end', function () {
-		if(_self.method() === "POST") {
+		if (_self.method() === "POST") {
 			_self.POST = exports.parsePostData(buffer.join(), _self.contentType());
 		}
-		
+
 		_self.emit('end');
 	});
 };
@@ -54,14 +58,15 @@ util_module.inherits(Request, event_module.EventEmitter);
 
 /**
  * 
- * @param {Request} request
+ * @param {Request}
+ *            request
  * @return {Cookie}
  */
 Request.prototype.request = function (request) {
 	if (typeof request !== "undefined") {
 		this._request = request;
 	}
-	
+
 	return this._request;
 };
 
@@ -99,24 +104,25 @@ Request.prototype.url = function (key) {
 	if (typeof this._url === "undefined") {
 		this._url = url_module.parse(this.request().url, true);
 	}
-	
+
 	if (typeof key === "undefined") {
 		return this._url;
 	}
-	
+
 	return this._url[key];
 };
 
 /**
  * 
- * @param {Array} matches
+ * @param {Array}
+ *            matches
  * @return {Array}
  */
 Request.prototype.routeMatches = function (matches) {
 	if (typeof matches !== "undefined") {
 		this._matches = matches;
 	}
-	
+
 	return this._matches;
 };
 
