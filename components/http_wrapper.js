@@ -131,7 +131,7 @@ Request.prototype.routeMatches = function (matches) {
  * @returns
  */
 Request.prototype.etag = function () {
-	return this.headers('If-None-Match');
+	return this.headers('if-none-match');
 };
 
 /**
@@ -140,7 +140,11 @@ Request.prototype.etag = function () {
  * @returns
  */
 Request.prototype.modifiedSince = function (file_date) {
-	var request_date = this.headers('If-Modified-Since');
+	var request_date = this.headers('if-modified-since');
+	if (typeof request_date === "undefined") {
+		return true;
+	}
+
 	return (file_date > request_date);
 };
 
