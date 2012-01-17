@@ -240,7 +240,6 @@ Resource.prototype.template = function (name, complete, error) {
  */
 Resource.prototype.routeRequest = function (request, response, callback) {
 	var _self = this;
-	
 	if (! (request instanceof http_wrapper_component.Request) && 
 		! (request instanceof http_wrapper_component.Response)) {
 		
@@ -251,7 +250,7 @@ Resource.prototype.routeRequest = function (request, response, callback) {
 		response.cookie(cookie);
 		
 		if (_self.config.debug === true) {
-			response.logger(new Firebug(response));
+			response.logger(new Firebug(response.response()));
 			response.logger().log('init', true);
 		}
 	}
@@ -289,32 +288,30 @@ Resource.prototype.addTemplateRoutes = function (router) {
 	var _self = this;
 
 	router.add(new RegExp('^/' + _self.name + '/template/(.+)$'), function (request, response, callback) {
-		static_component.streamFile(_self.templateDir + request.routeMatches()[1], response, callback);
+		static_component.streamFile(_self.templateDir + request.routeMatches()[1], request, response, callback);
 	});
 	
 	router.add(new RegExp('^/' + _self.name + '/template/(.+)$'), function (request, response, callback) {
 		static_component.loadFile(_self.templateDir + request.routeMatches()[1], function (contents) {
 			//todo replace this with a chunked renderer like mu?
 			var template = hogan_module.compile(contents);
-			response.writeHead(200);
-			response.end(template.render(request.POST));
+			response.ok(template.render(request.POST));
 			callback();
 			
 		}, function (error) {
-			response.writeHead(500);
-			response.end("not found");
+			response.error(error);
 			callback();
 		});
 	}, "POST");
 	
 	router.add(new RegExp('^/' + _self.name + '(\/.+\.js)$'), function(request, response, callback) {
 		var filename = request.routeMatches()[1].replace(/\.\./, '');
-		static_component.streamFile(_self.directory + '/templates/js' + filename, response, callback);
+		static_component.streamFile(_self.directory + '/templates/js' + filename, request, response, callback);
 	});
 	
 	router.add(new RegExp('^/' + _self.name + '(\/.+\.css)$'), function(request, response, callback) {
 		var filename = request.routeMatches()[1].replace(/\.\./, '');
-		static_component.streamFile(_self.directory + '/templates/css' + filename, response, callback);
+		static_component.streamFile(_self.directory + '/templates/css' + filename, request, response, callback);
 	});
 };
 

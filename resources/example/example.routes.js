@@ -10,12 +10,11 @@ var Router = exports.Router = function TestRouter() {
 	_self.add(/^\/$/, function (request, response, callback) {
 		// TODO cleanup
 		resource_component.get('example').template('index.html', function (contents) {
-			response.writeHead(200, {'Content-Type':'text/html'});
-			response.end(contents);
+			response.contentType('text/html');
+			response.ok(contents);
 			callback();
 		}, function (error) {
-			response.writeHead(404, {'Content-Type':'text/plain'});
-			response.end("Not Found");
+			response.notFound();
 			callback();
 		});
 	});
@@ -27,10 +26,7 @@ var Router = exports.Router = function TestRouter() {
 };
 
 exports.unmatched = function (request, response, callback) {
-	console.log("not found");
-	console.log(request.url);
-	response.writeHead(404, {'Content-Type':'text/plain'});
-	response.end("Not Found");
+	response.notFound();
 	callback();
 };
 

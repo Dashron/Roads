@@ -38,59 +38,83 @@ exports.loadFile = function (path, complete, error) {
  * 
  * @param {String}
  *            path
- * @param {HttpResponse}
+ * @param {Response}
  *            response
+ * @todo add etag support
+ * @todo investigate speed benefits from allowing file read and stat to happen at the same time
  */
-exports.streamFile = function (path, response, callback) {
+exports.streamFile = function (path, request, response, callback) {
 	var content_type = exports.contentType(path);
 
 	if (typeof file_cache[path] === "string") {
-		response.writeHead(200, {
-			'Content-Type' : content_type
-		});
-		response.end(file_cache[path]);
-		return;
+		var cached = file_cache[path];
+
+		// respect the If-Modified-Since header
+		if(!request.modifiedSince(cached.lastModified)) {
+			response.notModified();
+			return;
+		} else {
+			response.contentType(content_type);
+			response.lastModified(cached.lastModified);
+			response.ok(cached.contents);
+			return;
+		}
 	}
 
 	var buffer = '';
-	var stream = fs_module.createReadStream(path);
-	stream.setEncoding('utf8');
-
-	stream.on('data', function streamFile_data (data) {
-		if (buffer.length === 0) {
-			response.writeHead(200, {
-				'Content-Type' : content_type
-			});
-		}
-
-		buffer += data;
-		response.write(data);
-	});
-
-	stream.on('end', function streamFile_end () {
-		file_cache[path] = buffer;
-		response.end();
-		callback();
-	});
-
-	stream.on('error', function streamFile_error (error) {
-		if (error.code === 'ENOENT') {
-			response.writeHead(404, {
-				'Content-Type' : 'text/plain'
-			});
-			response.end("File not found");
+	// Once we have the stat, we can operate as usual on the data being read in
+	fs_module.stat(path, function (err, stats) {
+		// respect the If-Modified-Since header
+		if (!request.modifiedSince(stats.mtime)) {
+			response.notModified();
+			return;
 		} else {
-			response.writeHead(500, {
-				'Content-Type' : 'text/plain'
-			});
-			console.log(error);
-		}
-		callback();
-	});
+			var stream = fs_module.createReadStream(path);
+			stream.setEncoding('utf8');
+			stream.on('data', function streamFile_data (data) {
+				// on our first write, we want to set status and headers
+				if (buffer.length === 0) {
+					response.contentType(content_type);
 
-	stream.on('close', function streamFile_close () {
-		response.end();
-		callback();
+					if (!err) {
+						// set the last modified header
+						response.lastModified(stats.mtime);
+					} else {
+						throw err;
+					}
+
+					response.ok();
+				}
+
+				buffer += data;
+				response.write(data);
+			});
+
+			stream.on('end', function streamFile_end () {
+				// cache the last modified header, and the file contents in local memory
+				file_cache[path] = {
+					lastModified : stats.mtime,
+					contents : buffer
+				};
+				
+				response.end();
+				callback();
+			});
+
+			stream.on('error', function streamFile_error (error) {
+				if (error.code === 'ENOENT') {
+					response.notFound();
+				} else {
+					response.error(error);
+				}
+				callback();
+			});
+
+			stream.on('close', function streamFile_close () {
+				response.end();
+				callback();
+			});
+		}
 	});
 };
 
