@@ -57,9 +57,15 @@ exports.streamFile = function (path, response, options) {
 			response.notModified();
 			return;
 		} else {
-			response.contentType(content_type);
-			response.lastModified(cached.lastModified);
-			response.ok(cached.contents);
+			// If the item is not cached, it is not performed immediately, so we mirror that behavior just in case
+			process.nextTick(function() {
+				response.contentType(content_type);
+				response.lastModified(cached.lastModified);
+				response.ok(cached.contents);
+				if (typeof callback === "function") {
+					callback();
+				}
+			});
 			return;
 		}
 	}
