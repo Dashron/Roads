@@ -8,7 +8,7 @@
 var fs_module = require('fs');
 var url_module = require('url');
 var mongoose_module = require('mongoose');
-//todo replace this with a chunked renderer like mu?
+// todo replace this with a chunked renderer like mu?
 var hogan_module = require('hogan.js');
 
 var static_component = require('./static');
@@ -240,26 +240,22 @@ Resource.prototype.template = function (name, complete, error) {
  */
 Resource.prototype.routeRequest = function (request, response, callback) {
 	var _self = this;
-	if (! (request instanceof http_wrapper_component.Request) && 
-		! (request instanceof http_wrapper_component.Response)) {
-		
-		var cookie = new Cookie(request, response);
-		
-		request = new http_wrapper_component.Request(request);
-		response = new http_wrapper_component.Response(response);
-		response.cookie(cookie);
-		
-		if (_self.config.debug === true) {
-			response.logger(new Firebug(response.response()));
-			response.logger().log('init', true);
-		}
+
+	if (!(request instanceof http_wrapper_component.Request) || !(response instanceof http_wrapper_component.Response)) {
+		throw new Error('You must wrap your httprequest and httpresponse BEFORE you route them');
 	}
 
-	if(typeof callback === "undefined") {
-		// empty function so we can just always call it without errors
-		callback = function(){};
+	if (_self.config.debug === true) {
+		response.logger(new Firebug(response.response()));
+		response.logger().log('init', true);
 	}
-	
+
+	// empty function so we can just always call it without errors
+	if (typeof callback === "undefined") {
+		callback = function () {
+		};
+	}
+
 	if (_self.router.route(request, response, callback)) {
 		return true;
 	} else {

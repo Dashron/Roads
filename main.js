@@ -2,20 +2,24 @@
 var http = require('http');
 var firenode_component = require('./components/firenode/firenode');
 var resource_component = require('./components/resource');
-
+var Server = require('./components/server').Server;
 var resource_name = process.argv[2] || "example";
 var resource = resource_component.get(resource_name);
 
-//start the server
-var server = http.createServer(function (request, response) {
-	console.log("Request for :" + request.url);
+/*process.on('uncaughtException', function (error) {
+	console.log(error);
+});*/
+
+var server = new Server(process.env.PORT || process.env.VMC_APP_PORT || 8125);
+
+server.onRequest(function (request, response) {
+	console.log("Request for :" + request.url());
 	resource.routeRequest(request, response);
 });
 
-// port for heroku or cloud foundry or 8125
-server.listen(process.env.PORT || process.env.VMC_APP_PORT || 8125, null, function() {
-	console.log('Server running');
-});
+server.start();
+
+//TODO: enable a "shutdown" function which will close the server and the repl, allowing the script to auto-terminate
 
 // Enable a repl to mess with the server at run time
 var context = require('repl').start().context;

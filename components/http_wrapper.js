@@ -33,6 +33,7 @@ exports.parsePostData = function (body, content_type) {
  * 
  * @todo extend original? this is odd, I don't really like wrapping every
  *       function
+ * @todo  rewrite entirely
  */
 var Request = exports.Request = function Request (original_request) {
 	var _self = this;
@@ -154,6 +155,7 @@ Request.prototype.modifiedSince = function (file_date) {
  * 
  * @todo extend original? this is odd, I don't really like wrapping every
  *       function
+ * @todo  rewrite entirely
  */
 var Response = exports.Response = function Response (original_response) {
 	this.response(original_response);
