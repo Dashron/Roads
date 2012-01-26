@@ -43,14 +43,17 @@ exports.loadFile = function (path, complete, error) {
  * @todo add etag support
  * @todo investigate speed benefits from allowing file read and stat to happen at the same time
  */
-exports.streamFile = function (path, request, response, callback) {
+exports.streamFile = function (path, response, options) {
+	var request = options.request;
+	var callback = options.callback;
+	
 	var content_type = exports.contentType(path);
 
 	if (typeof file_cache[path] === "string") {
 		var cached = file_cache[path];
 
 		// respect the If-Modified-Since header
-		if(!request.modifiedSince(cached.lastModified)) {
+		if(typeof request != "undefined" && !request.modifiedSince(cached.lastModified)) {
 			response.notModified();
 			return;
 		} else {
@@ -65,7 +68,7 @@ exports.streamFile = function (path, request, response, callback) {
 	// Once we have the stat, we can operate as usual on the data being read in
 	fs_module.stat(path, function (err, stats) {
 		// respect the If-Modified-Since header
-		if (!request.modifiedSince(stats.mtime)) {
+		if (typeof request != "undefined" &&  !request.modifiedSince(stats.mtime)) {
 			response.notModified();
 			return;
 		} else {
@@ -98,7 +101,9 @@ exports.streamFile = function (path, request, response, callback) {
 				};
 				
 				response.end();
-				callback();
+				if (typeof callback === "function") {
+					callback();
+				}
 			});
 
 			stream.on('error', function streamFile_error (error) {
@@ -107,12 +112,16 @@ exports.streamFile = function (path, request, response, callback) {
 				} else {
 					response.error(error);
 				}
-				callback();
+				if (typeof callback === "function") {
+					callback();
+				}
 			});
 
 			stream.on('close', function streamFile_close () {
 				response.end();
-				callback();
+				if (typeof callback === "function") {
+					callback();
+				}
 			});
 		}
 	});

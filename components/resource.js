@@ -278,36 +278,46 @@ Resource.prototype.routeRequest = function (request, response, callback) {
  * 
  * @param router
  * @returns
- * @todo allow users to configure their resource to not take default template or js or css routes
+ * @todo allow users to configure their resource to not take default template or
+ *       js or css routes
  */
 Resource.prototype.addTemplateRoutes = function (router) {
 	var _self = this;
 
 	router.add(new RegExp('^/' + _self.name + '/template/(.+)$'), function (request, response, callback) {
-		static_component.streamFile(_self.templateDir + request.routeMatches()[1], request, response, callback);
+		static_component.streamFile(_self.templateDir + request.routeMatches()[1], response, {
+			request : request,
+			callback : callback
+		});
 	});
-	
+
 	router.add(new RegExp('^/' + _self.name + '/template/(.+)$'), function (request, response, callback) {
 		static_component.loadFile(_self.templateDir + request.routeMatches()[1], function (contents) {
-			//todo replace this with a chunked renderer like mu?
+			// todo replace this with a chunked renderer like mu?
 			var template = hogan_module.compile(contents);
 			response.ok(template.render(request.POST));
 			callback();
-			
+
 		}, function (error) {
 			response.error(error);
 			callback();
 		});
 	}, "POST");
-	
-	router.add(new RegExp('^/' + _self.name + '(\/.+\.js)$'), function(request, response, callback) {
+
+	router.add(new RegExp('^/' + _self.name + '(\/.+\.js)$'), function (request, response, callback) {
 		var filename = request.routeMatches()[1].replace(/\.\./, '');
-		static_component.streamFile(_self.directory + '/templates/js' + filename, request, response, callback);
+		static_component.streamFile(_self.directory + '/templates/js' + filename, response, {
+			request : request,
+			callback : callback
+		});
 	});
-	
-	router.add(new RegExp('^/' + _self.name + '(\/.+\.css)$'), function(request, response, callback) {
+
+	router.add(new RegExp('^/' + _self.name + '(\/.+\.css)$'), function (request, response, callback) {
 		var filename = request.routeMatches()[1].replace(/\.\./, '');
-		static_component.streamFile(_self.directory + '/templates/css' + filename, request, response, callback);
+		static_component.streamFile(_self.directory + '/templates/css' + filename, response, {
+			request : request,
+			callback : callback
+		});
 	});
 };
 
