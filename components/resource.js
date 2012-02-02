@@ -12,7 +12,8 @@ var mongoose_module = require('mongoose');
 var hogan_module = require('hogan.js');
 
 var static_component = require('./static');
-var http_wrapper_component = require('./http_wrapper');
+var request_component = require('./request_wrapper');
+var response_component = require('./response_wrapper');
 var View = require('./view').View;
 var Firebug = require('./firenode/firenode').Firebug;
 var Cookie = require('./cookie').Cookie;
@@ -241,7 +242,7 @@ Resource.prototype.template = function (name, complete, error) {
 Resource.prototype.routeRequest = function (request, response, callback) {
 	var _self = this;
 
-	if (!(request instanceof http_wrapper_component.Request) || !(response instanceof http_wrapper_component.Response)) {
+	if (!(request instanceof request_component.Request) || !(response instanceof response_component.Response)) {
 		throw new Error('You must wrap your httprequest and httpresponse BEFORE you route them');
 	}
 

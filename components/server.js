@@ -1,7 +1,8 @@
 var http_module = require('http');
 var events_module = require('events');
 var util_module = require('util');
-var http_wrapper_component = require('./http_wrapper');
+var request_component = require('./request_wrapper');
+var response_component = require('./response_wrapper');
 var Cookie = require('./cookie').Cookie;
 
 /**
@@ -69,8 +70,8 @@ Server.prototype.requestHandler = function (fn) {
 	_self.server.on('request', function (request, response) {
 		var cookie = new Cookie(request, response);
 
-		var request = new http_wrapper_component.Request(request);
-		var response = new http_wrapper_component.Response(response);
+		var request = new request_component.Request(request);
+		var response = new response_component.Response(response);
 		response.cookie(cookie);
 
 		fn(request, response);
