@@ -78,6 +78,57 @@ RegexRouter.prototype.unmatched = function (func) {
 };
 
 /**
+ * [url_matches description]
+ * @param  {[type]} keys    [description]
+ * @param  {[type]} matches [description]
+ * @return {[type]}
+ */
+var url_matches = function (keys, matches) {
+	var GET = {};
+	var i = 0;
+	
+	for (i = 0; i < matches.length; i++) {
+		if (typeof keys[i] != "undefined") {
+			GET[keys[i]] = matches[i];
+		} else {
+			throw new Error('Route match found without an appropriate key');
+		}
+	}
+
+	return GET;
+};
+
+/**
+ * [perform_route description]
+ * @param  {[type]}   route    [description]
+ * @param  {[type]}   request  [description]
+ * @param  {[type]}   response [description]
+ * @param  {Function} callback [description]
+ * @return {[type]}
+ */
+var perform_route = function (route, request, response, callback) {
+	switch (request.method) {
+		case "GET" :
+			route.func(request, response, callback);
+			return true;
+		
+		case "POST" :
+		case "PUT" :
+		// Does delete go here? @todo read the spec
+		case "DELETE" :
+			request.on('end', function () {
+				route.func(request, response, callback);
+			});
+			return true;
+			
+		default :
+			console.log('unsupported method ' + request.method);
+			response.notFound();
+			return true;
+	}
+};
+
+/**
  * Route the provided request
  * 
  * @param {Request} request
@@ -97,40 +148,28 @@ RegexRouter.prototype.route = function (request, response, callback) {
 	var match_found = false;
 	var routes = _self.routes[request.method];
 	var i =0;
-	var j =0;
-	if (Array.isArray(routes)) {
-		for (i = 0; i < routes.length; i++) {
-			var result = request.url('pathname').match(routes[i].regex);
 
-			if (result != null && result.length) {
-				match_found = true;
-				result.shift();
-				for(j = 0; j < result.length; j++) {
-					if (typeof routes[i].keys[j] != "undefined") {
-						request.GET[routes[i].keys[j]] = result[j];
-					} else {
-						throw new Error('Route match found without an appropriate key');
-					}
-				}
+	if (Array.isArray(routes)) {
+		for (i = 0; i < routes.length; i ++) {
+			var route = routes[i];
+			var result = request.url('pathname').match(route.regex);
 				
-				switch (request.method) {
-					case "GET" :
-						routes[i].func(request, response, callback);
-						return true;
-					
-					case "POST" :
-						request.on('end', function () {
-							routes[i].func(request, response, callback);
-						});
-						return true;
-						
-					default :
-						console.log('unsupported method ' + request.method);
-						response.notFound();
-						return true;
-				}
+			if (result != null && result.length) {
+				var extra_get_vals = {};
+				
+				match_found = true;
+
+				// First element is always the whole item
+				result.shift();
+				extra_get_vals = url_matches(route.keys, result);
+				for(var key in extra_get_vals) {
+					request.GET[key] = extra_get_vals[key];
+				};
+				
+				perform_route(route, request, response, callback);
+				return true;
 			}
-		}
+		};
 	}
 
 	// If there was no match, run the unmatched func

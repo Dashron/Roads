@@ -30,7 +30,7 @@ exports.parsePostData = function (body, content_type) {
 /**
  * [Request description]
  * @param {Request} original_request [description]
- * @todo  rewrite
+ * @todo  replace end event with endHandler
  */
 var Request = exports.Request = function Request (original_request) {
 	var _self = this;
