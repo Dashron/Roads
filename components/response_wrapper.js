@@ -9,12 +9,6 @@ var Response = exports.Response = function Response (original_response) {
 };
 
 /**
- * [_fill_data description]
- * @type {[type]}
- */
-Response.prototype._fill_data = null;
-
-/**
  * [_default_template description]
  * @type {[type]}
  */
@@ -121,15 +115,6 @@ Response.prototype.lastModified = function (date) {
  */
 Response.prototype.append = function (data) {
 	this.response().write(data);
-};
-
-/**
- * [fill description]
- * @param  {[type]} data [description]
- * @return {[type]}
- */
-Response.prototype.fill = function (data) {
-	this.write(this._renderer(data));
 };
 
 /**
