@@ -37,21 +37,33 @@ RegexRouter.prototype.unmatched = null;
  * @param {String} method
  *            optional, defaults to GET
  */
-RegexRouter.prototype.add = function (regex, func, method) {
+RegexRouter.prototype.add = function (regex, func, options) {
 	var _self = this;
+	var method = "GET";
 
-	if (method === null || typeof method === "undefined") {
-		method = "GET";
+	var route_info = {
+		regex : regex,
+		func : func,
+		keys : []
+	};
+
+	if (typeof options === "undefined") {
+		options = {};
 	}
+
+	if (typeof options.method !== "undefined") {
+		method = options.method;
+	}
+
+	if (typeof options.keys != "undefined") {
+		route_info.keys = options.keys
+	};
 
 	if (typeof _self.routes[method] == "undefined" || typeof _self.routes[method] == null) {
 		_self.routes[method] = [];
 	}
 
-	_self.routes[method].push({
-		regex : regex,
-		func : func
-	});
+	_self.routes[method].push(route_info);
 };
 
 /**
@@ -83,17 +95,25 @@ RegexRouter.prototype.route = function (request, response, callback) {
 	var _self = this;
 	var url = url_module.parse(request.url(), true);
 	var match_found = false;
-	var routes = _self.routes[request.method()];
-
+	var routes = _self.routes[request.method];
+	var i =0;
+	var j =0;
 	if (Array.isArray(routes)) {
-		for ( var i = 0; i < routes.length; i++) {
+		for (i = 0; i < routes.length; i++) {
 			var result = request.url('pathname').match(routes[i].regex);
 
 			if (result != null && result.length) {
 				match_found = true;
-				request.routeMatches(result);
+				result.shift();
+				for(j = 0; j < result.length; j++) {
+					if (typeof routes[i].keys[j] != "undefined") {
+						request.GET[routes[i].keys[j]] = result[j];
+					} else {
+						throw new Error('Route match found without an appropriate key');
+					}
+				}
 				
-				switch (request.method()) {
+				switch (request.method) {
 					case "GET" :
 						routes[i].func(request, response, callback);
 						return true;
@@ -102,6 +122,11 @@ RegexRouter.prototype.route = function (request, response, callback) {
 						request.on('end', function () {
 							routes[i].func(request, response, callback);
 						});
+						return true;
+						
+					default :
+						console.log('unsupported method ' + request.method);
+						response.notFound();
 						return true;
 				}
 			}

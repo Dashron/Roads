@@ -286,14 +286,14 @@ Resource.prototype.addTemplateRoutes = function (router) {
 	var _self = this;
 
 	router.add(new RegExp('^/' + _self.name + '/template/(.+)$'), function (request, response, callback) {
-		static_component.streamFile(_self.templateDir + request.routeMatches()[1], response, {
+		static_component.streamFile(_self.templateDir + request.GET['template'], response, {
 			request : request,
 			callback : callback
 		});
-	});
+	}, {keys : ['template']});
 
 	router.add(new RegExp('^/' + _self.name + '/template/(.+)$'), function (request, response, callback) {
-		static_component.loadFile(_self.templateDir + request.routeMatches()[1], function (contents) {
+		static_component.loadFile(_self.templateDir + request.GET['template'], function (contents) {
 			// todo replace this with a chunked renderer like mu?
 			var template = hogan_module.compile(contents);
 			response.ok(template.render(request.POST));
@@ -303,23 +303,23 @@ Resource.prototype.addTemplateRoutes = function (router) {
 			response.error(error);
 			callback();
 		});
-	}, "POST");
+	}, {method : "POST", keys : ['template']});
 
 	router.add(new RegExp('^/' + _self.name + '(\/.+\.js)$'), function (request, response, callback) {
-		var filename = request.routeMatches()[1].replace(/\.\./, '');
+		var filename = request.GET['file'].replace(/\.\./, '');
 		static_component.streamFile(_self.directory + '/templates/js' + filename, response, {
 			request : request,
 			callback : callback
 		});
-	});
+	}, {keys : ['file']});
 
 	router.add(new RegExp('^/' + _self.name + '(\/.+\.css)$'), function (request, response, callback) {
-		var filename = request.routeMatches()[1].replace(/\.\./, '');
+		var filename = request.GET['file'].replace(/\.\./, '');
 		static_component.streamFile(_self.directory + '/templates/css' + filename, response, {
 			request : request,
 			callback : callback
 		});
-	});
+	}, {keys : ['file']});
 };
 
 /**
