@@ -12,7 +12,7 @@ var resource = resource_component.get(resource_name);
 
 var server = new Server(process.env.PORT || process.env.VMC_APP_PORT || 8125);
 
-server.onRequest(function (request, response) {
+server.requestHandler(function (request, response) {
 	console.log("Request for :" + request.url());
 	resource.routeRequest(request, response);
 });

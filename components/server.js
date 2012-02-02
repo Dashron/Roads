@@ -47,7 +47,7 @@ Server.prototype.hostname = null;
 Server.prototype.start = function () {
 	var _self = this;
 	_self.server.listen(_self.port, _self.hostname, function () {
-		console.log('Server running');
+		console.log('Server listening for ' + _self.hostname + " on port:" + _self.port);
 	});
 };
 
@@ -64,8 +64,9 @@ Server.prototype.stop = function () {
  * @param  {Function} fn [description]
  * @return {[type]}
  */
-Server.prototype.onRequest = function (fn) {
-	this.server.on('request', function (request, response) {
+Server.prototype.requestHandler = function (fn) {
+	var _self = this;
+	_self.server.on('request', function (request, response) {
 		var cookie = new Cookie(request, response);
 
 		var request = new http_wrapper_component.Request(request);
