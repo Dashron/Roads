@@ -57,19 +57,6 @@ Response.prototype.logger = function (logger) {
 };
 
 /**
- * [renderer description]
- * @param  {[type]} renderer [description]
- * @return {[type]}
- */
-Response.prototype.renderer = function (renderer) {
-	if (typeof renderer != "undefined") {
-		this._renderer = renderer;
-	}
-
-	return this._renderer;
-};
-
-/**
  * 
  * @param type
  */
