@@ -257,10 +257,14 @@ Resource.prototype.routeRequest = function (request, response, callback) {
 		};
 	}
 
-	if (_self.router.route(request, response, callback)) {
+	var route = _self.router.getRoute(request, function (route) {
+		route(request, response, callback);
+	});
+
+	if (route) {
 		return true;
 	} else {
-		for ( var i in _self.resources) {
+		for (var i in _self.resources) {
 			if (_self.resources[i].routeRequest(request, response, callback)) {
 				return true;
 			}
@@ -268,7 +272,10 @@ Resource.prototype.routeRequest = function (request, response, callback) {
 	}
 
 	if (typeof _self.unmatched_route === "function") {
-		_self.unmatched_route(request, response, callback);
+		// matching the successful routes async functionality
+		process.nextTick(function() {
+			_self.unmatched_route(request, response, callback);
+		});
 		return true;
 	}
 

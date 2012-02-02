@@ -99,36 +99,6 @@ var url_matches = function (keys, matches) {
 };
 
 /**
- * [perform_route description]
- * @param  {[type]}   route    [description]
- * @param  {[type]}   request  [description]
- * @param  {[type]}   response [description]
- * @param  {Function} callback [description]
- * @return {[type]}
- */
-var perform_route = function (route, request, response, callback) {
-	switch (request.method) {
-		case "GET" :
-			route.func(request, response, callback);
-			return true;
-		
-		case "POST" :
-		case "PUT" :
-		// Does delete go here? @todo read the spec
-		case "DELETE" :
-			request.on('end', function () {
-				route.func(request, response, callback);
-			});
-			return true;
-			
-		default :
-			console.log('unsupported method ' + request.method);
-			response.notFound();
-			return true;
-	}
-};
-
-/**
  * Route the provided request
  * 
  * @param {Request} request
@@ -144,38 +114,72 @@ var perform_route = function (route, request, response, callback) {
  */
 RegexRouter.prototype.route = function (request, response, callback) {
 	var _self = this;
-	var url = url_module.parse(request.url(), true);
-	var match_found = false;
+	return _self.getRoute(request, function (route) {
+		route.call(null, request, response, callback);
+	});
+};
+
+/**
+ * Retrieves a route function to be executed at a later time. 
+ * Only calls the callback, providing the route if the request is ready to be routed
+ * 
+ * @param  {[type]}   request  [description]
+ * @param  {Function} ready first parameter is provided the route function. not called until you can safely execute it.
+ * @return {[type]}
+ */
+RegexRouter.prototype.getRoute = function (request, ready) {
+	var _self = this;
 	var routes = _self.routes[request.method];
-	var i =0;
+	var matching_route = null;
+	var matches = null;
+	var i = 0;
 
 	if (Array.isArray(routes)) {
 		for (i = 0; i < routes.length; i ++) {
 			var route = routes[i];
-			var result = request.url('pathname').match(route.regex);
-				
-			if (result != null && result.length) {
-				var extra_get_vals = {};
-				
-				match_found = true;
+			var matches = request.url('pathname').match(route.regex);
 
-				// First element is always the whole item
-				result.shift();
-				extra_get_vals = url_matches(route.keys, result);
-				for(var key in extra_get_vals) {
-					request.GET[key] = extra_get_vals[key];
-				};
-				
-				perform_route(route, request, response, callback);
-				return true;
+			if (matches != null) {
+				// apply grouped matches as GET key value pairs
+				if (matches.length > 1) {
+					var extra_get_vals = {};
+
+					// First element is always the matched selection, and not a group
+					matches.shift();
+					
+					extra_get_vals = url_matches(route.keys, matches);
+					for(var key in extra_get_vals) {
+						request.GET[key] = extra_get_vals[key];
+					};
+				}
+
+				matching_route = route.func;
 			}
 		};
 	}
 
 	// If there was no match, run the unmatched func
-	if (!match_found && typeof _self.unmatched === "function") {
-		_self.unmatched(request, response, callback);
-		return true;
+	if (matching_route === null && typeof _self.unmatched === "function") {
+		matching_route = _self.unmatched;
+	}
+
+	if (matching_route !== null) {
+		switch (request.method) {
+			case "GET" :
+				process.nextTick(function () {
+					ready(matching_route);
+				})
+				return true;
+			
+			case "POST" :
+			case "PUT" :
+			// Does delete go here? @todo read the spec
+			case "DELETE" :
+				request.on('end', function () {
+					ready(matching_route);
+				});
+				return true;
+		}
 	}
 
 	return false;
