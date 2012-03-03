@@ -43,7 +43,7 @@ RegexRouter.prototype.add = function (regex, func, options) {
 
 	var route_info = {
 		regex : regex,
-		func : func,
+		fn : func,
 		keys : []
 	};
 
@@ -64,17 +64,6 @@ RegexRouter.prototype.add = function (regex, func, options) {
 	}
 
 	_self.routes[method].push(route_info);
-};
-
-/**
- * Assign a route which will be executed if no other routes are matched
- * 
- * @param {Function} func
- */
-RegexRouter.prototype.unmatched = function (func) {
-	var _self = this;
-
-	_self.unmatched = func;
 };
 
 /**
@@ -112,32 +101,34 @@ var url_matches = function (keys, matches) {
  * @todo return promise on success?
  * @todo routes[i].func(resource, response, extra)
  */
-RegexRouter.prototype.route = function (request, response, callback) {
+/*RegexRouter.prototype.route = function (request, response, callback) {
 	var _self = this;
 	return _self.getRoute(request, function (route) {
 		route.call(null, request, response, callback);
 	});
-};
+};*/
 
 /**
  * Retrieves a route function to be executed at a later time. 
  * Only calls the callback, providing the route if the request is ready to be routed
  * 
+ * @todo  why have a promise? if we are doing a uri bundle we don't have to wait for anything
  * @param  {[type]}   request  [description]
  * @param  {Function} ready first parameter is provided the route function. not called until you can safely execute it.
  * @return {[type]}
  */
-RegexRouter.prototype.getRoute = function (request, ready) {
+RegexRouter.prototype.getRoute = function (uri_bundle) {
 	var _self = this;
-	var routes = _self.routes[request.method];
+	var routes = _self.routes[uri_bundle.method];
 	var matching_route = null;
 	var matches = null;
 	var i = 0;
 
+	// Find a match and add any regex matches into the GET params
 	if (Array.isArray(routes)) {
 		for (i = 0; i < routes.length; i ++) {
 			var route = routes[i];
-			var matches = request.url('pathname').match(route.regex);
+			var matches = uri_bundle.uri.match(route.regex);
 
 			if (matches != null) {
 				// apply grouped matches as GET key value pairs
@@ -147,39 +138,22 @@ RegexRouter.prototype.getRoute = function (request, ready) {
 					// First element is always the matched selection, and not a group
 					matches.shift();
 					
-					extra_get_vals = url_matches(route.keys, matches);
+					extra_get_vals = url_matches(route.options.keys, matches);
+
 					for(var key in extra_get_vals) {
-						request.GET[key] = extra_get_vals[key];
+						uri_bundle.params[key] = extra_get_vals[key];
 					};
 				}
 
-				matching_route = route.func;
+				return route.fn;
 			}
 		};
 	}
 
 	// If there was no match, run the unmatched func
-	if (matching_route === null && typeof _self.unmatched === "function") {
-		matching_route = _self.unmatched;
-	}
-
-	if (matching_route !== null) {
-		switch (request.method) {
-			case "GET" :
-				process.nextTick(function () {
-					ready(matching_route);
-				})
-				return true;
-			
-			case "POST" :
-			case "PUT" :
-			// Does delete go here? @todo read the spec
-			case "DELETE" :
-				request.on('end', function () {
-					ready(matching_route);
-				});
-				return true;
-		}
+	if (typeof _self.unmatched === "function") {
+		console.log('unmatched route');
+		return _self.unmatched;
 	}
 
 	return false;
