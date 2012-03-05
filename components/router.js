@@ -133,12 +133,16 @@ RegexRouter.prototype.getRoute = function (uri_bundle) {
 			if (matches != null) {
 				// apply grouped matches as GET key value pairs
 				if (matches.length > 1) {
+					if (typeof uri_bundle.params != "object") {
+						uri_bundle.params = {};
+					}
+					
 					var extra_get_vals = {};
 
 					// First element is always the matched selection, and not a group
 					matches.shift();
-					
-					extra_get_vals = url_matches(route.options.keys, matches);
+
+					extra_get_vals = url_matches(route.keys, matches);
 
 					for(var key in extra_get_vals) {
 						uri_bundle.params[key] = extra_get_vals[key];

@@ -50,34 +50,35 @@ mu.templateRoot = '/';
  */
 var View = exports.View = function View(template) {
 	event.EventEmitter.call(this);
-	this.js = {};
-	this.css = {};
-	this.child_views = {};
+	this._js = {};
+	this._css = {};
+	this._template_engine = new MuRenderer(template);
+	this._child_views = {};
+
 	this.render_state = this.RENDER_NOT_CALLED;
 	this.parent = null;
-	this.template_engine = new MuRenderer(template);
 };
 
 util.inherits(View, event.EventEmitter);
 
-View.prototype.data = {};
-View.prototype.js = {};
-View.prototype.css = {};
-View.prototype.child_views = {};
+View.prototype._js = null;
+View.prototype._css = null;
+View.prototype._template_engine = null;
+View.prototype._child_views = null;
 View.prototype.render_state = 0;
+// TODO: Move these constants into the module? not the class?
 View.prototype.RENDER_NOT_CALLED = 0;
 View.prototype.RENDER_STARTED = 1;
 View.prototype.RENDER_COMPLETE = 2;
 View.prototype.RENDER_FAILED = 3;
 View.prototype.parent = null;
-View.prototype.template_engine = null;
 
 /**
  * Set the directory this view will be loaded from
  * @param {String} path
  */
 View.prototype.setDir = function view_setDir(path) {
-	this.template_engine.dir = path;
+	this._template_engine.dir = path;
 	return this;
 };
 
@@ -86,7 +87,7 @@ View.prototype.setDir = function view_setDir(path) {
  * @param {[type]} response [description]
  */
 View.prototype.setResponse = function view_setResponse(response) {
-	this.template_engine.response = response;
+	this._template_engine.response = response;
 	return this;
 }
 
@@ -104,7 +105,7 @@ View.prototype.isRendered = function view_isRendered() {
  * @param {Mixed} value
  */
 View.prototype.set = function view_set(key, value) {
-	this.template_engine.data[key] = value;
+	this._template_engine.data[key] = value;
 };
 
 /**
@@ -114,9 +115,9 @@ View.prototype.set = function view_set(key, value) {
  */
 View.prototype.get = function view_get(key) {
 	if(typeof key === "string") {
-		return this.template_engine.data[key];
+		return this._template_engine.data[key];
 	}
-	return this.template_engine.data;
+	return this._template_engine.data;
 };
 
 /**
@@ -129,7 +130,7 @@ View.prototype.fill = function view_fill(func) {
 	var new_data = func();
 	var i = null;
 	for(i in new_data) {
-		this.data[i] = new_data[i];
+		this._template_engine.data[i] = new_data[i];
 	}
 };
 
@@ -139,46 +140,24 @@ View.prototype.fill = function view_fill(func) {
  */
 View.prototype.canRender = function view_canRender() {
 	var key = null;
-	for(key in this.child_views) { 
-		if(!this.child_views[key].isRendered()) {
+	for(key in this._child_views) { 
+		if(!this._child_views[key].isRendered()) {
 			return false;
 		}
 	}
 	return true;
 };
 
-var render_child = function (view) {
-	process.nextTick(function() {
-		view.render();
-	});
-};
-
 /**
  * Renders the current view, writing the the response, if and only if all child views have been completed
  * @todo: Handle the case where a child element never finishes
  */
-View.prototype.render = function view_render() {
-	var _self = this;
-	//in case render is called multiple times (should we allow this?), we always want it to be false at the start
-	_self.rendered = false;
-	
-	//count the amount of child templates still rendering.
-	//if there are some we have to wait for the view to finish
-	if(_self.canRender()) {
-		process.nextTick(function () {
-			_self.template_engine.render();
-		});
+View.prototype.render = function view_render(template) {
+	if (typeof template === "string") {
+		this._template_engine.template = template;
 	}
-	//if there are not any, we can render the data right now
-	else if (_self.render_state === _self.RENDER_NOT_CALLED) {
-		var key = null;
-		// render all child templates
-		for(key in _self.child_views) {
-			render_child(_self.child_views[key]);
-		}
-	} else {
-		throw new Error('You can not re-call render if the view is rendering, or if the render failed');
-	}
+	this.render_state = this.RENDER_STARTED;
+	this._template_engine.render();
 };
 
 
@@ -189,31 +168,33 @@ View.prototype.render = function view_render() {
  * @returns {View}
  */
 View.prototype.child = function view_child(key, template) {
+	var _self = this;
+
 	var new_view = new View(template);
 	new_view.parent = this;
-	new_view.setDir(this.template_engine.getDir());
+	new_view.setDir(this._template_engine.dir);
 
 	// Makes a fake response that writes to the parent instead of to an actual response object
-	new_view.template_engine.response = {
+	new_view._template_engine.response = {
 		buffer: '',
 		write: function(chunk) {
 			this.buffer += chunk; 
 		},
 		end: function() { 
-			_self.rendered = true;
+			// flag the child view as rendered
+			new_view.render_state = new_view.RENDER_COMPLETE;
 
-			//_self.emit('end', this.buffer);
-			_self.parent.set(key, this.buffer); 
-			if(_self.parent.canRender()) {
-				_self.parent.render();
+			// set the child data into the parent view, and then render the parent if possible
+			_self.set(key, this.buffer); 
+			if(_self.canRender()) {
+				_self.render();
 			}
 		}
 	 };
 
+	this._child_views[key] = new_view;
 
-	this.child_views[key] = new_view;
-
-	return this.child_views[key];
+	return this._child_views[key];
 };
 
 
@@ -227,7 +208,7 @@ View.prototype.addJs = function view_addJs(file) {
 		this.parent.addJs(file);
 	}
 	else {
-		this.js.push({'src': file});
+		this._js.push({'src': file});
 	}
 };
 
@@ -241,7 +222,7 @@ View.prototype.addCss = function view_addCss(file) {
 		this.parent.addCss(file);
 	}
 	else {
-		this.css.push({'src': file});
+		this._css.push({'src': file});
 	}
 };
 
@@ -252,6 +233,7 @@ View.prototype.addCss = function view_addCss(file) {
 var MuRenderer = function(template) {
 	this.dir = '';
 	this.response = {};
+	this.data = {};
 	this.template = template;
 };
 
@@ -289,6 +271,7 @@ MuRenderer.prototype.render = function() {
 
 	mu.render(_self.dir + _self.template, _self.data, {}, function(err, output) {
 		if(err) {
+			// todo: this is really just debug info. we need a different error here (500 probably)
 			_self.response.end(JSON.stringify(err));
 			_self.error(err);
 			return;

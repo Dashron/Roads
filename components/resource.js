@@ -5,16 +5,16 @@
  */
 
 "use strict";
-var fs_module = require('fs');
+//var fs_module = require('fs');
 var url_module = require('url');
 var mongoose_module = require('mongoose');
 var http_module = require('http');
 // todo replace this with a chunked renderer like mu?
-var hogan_module = require('hogan.js');
+//var hogan_module = require('hogan.js');
 
-var static_component = require('./static');
-var request_component = require('./request_wrapper');
-var response_component = require('./response_wrapper');
+//var static_component = require('./static');
+//var request_component = require('./request_wrapper');
+//var response_component = require('./response_wrapper');
 var View = require('./view').View;
 var Firebug = require('./firenode/firenode').Firebug;
 var Cookie = require('./cookie').Cookie;
@@ -100,7 +100,7 @@ var build = exports.build = function (name, description) {
 };
 
 /**
- * [populate_child_connections description]
+ * Iterates through all dependent resources and applies a datbase connection if not pre-configured for one
  * @param  {[type]} children   [description]
  * @param  {[type]} connection [description]
  * @return {[type]}
@@ -129,20 +129,18 @@ var Resource = exports.Resource = function Resource (name) {
 	this.resources = {};
 	this.db = null;
 	this.unmatched_route = null;
-	this.templates = {};
 };
 
 Resource.prototype.name = '';
 Resource.prototype.uri = '';
-Resource.prototype.directory = '';
 Resource.prototype.config = null;
-Resource.prototype.router = null;
-Resource.prototype.models = {};
-Resource.prototype.resources = null;
-Resource.prototype.db = null;
-Resource.prototype.templates = null;
+Resource.prototype.directory = '';
 Resource.prototype.template_dir = '';
 Resource.prototype.default_template = null;
+Resource.prototype.router = null;
+Resource.prototype.resources = null;
+Resource.prototype.models = {};
+Resource.prototype.db = null;
 
 /**
  * [addRoute description]
@@ -177,8 +175,21 @@ Resource.prototype.addModel = function (key, model) {
  * @return {[type]}
  */
 Resource.prototype.request = function (uri_bundle, view) {
+	// Allow direct urls for shorthand. Assume a GET request in this case
+	if (typeof uri_bundle === "string") {
+		uri_bundle = {
+			uri : uri_bundle,
+			method : 'GET'
+		}
+	}
+
 	var route = this.getRoute(uri_bundle);
 	
+	if (!route) {
+		// todo: 404
+		throw new Error('route not found');
+	}
+
 	if (view instanceof http_module.ServerResponse) {
 		view = (new View(this.default_template)).setResponse(view);
 	}
@@ -219,69 +230,13 @@ Resource.prototype.getRoute = function (uri_bundle) {
 };
 
 /**
- * Retrieve the proper route for the provided request.
- * This function also binds the resource as the "this" value for each route
- * 
- * @param  {[type]} request [description]
- * @param  {[type]} ready   [description]
- * @return {[type]}
- */
-/*Resource.prototype.getRoute = function (request, ready) {
-	var _self = this;
-	var modified_ready = function (route) {
-		route.bind(_self);
-		ready(route);
-	};
-
-	if (_self.router.getRoute(request, modified_ready)
-		return true;
-	} else {
-		for (var i in _self.resources) {
-			if(_self.resources[i].getRoute(request, ready)) {
-				return true;
-			}
-		}
-	}
-
-	if (typeof _self.unmatched_route === "function") {
-		// router routes are always on next tick, so we need to match that functionality
-		process.nextTick(function () {
-			_self.unmatched_route.bind(_self);
-			ready(_self.unmatched_route);
-		})
-		return true;
-	}
-
-	return false;
-};*/
-
-/**
- * [buildView description]
- * @param  {Function} callback [description]
- * @return {[type]}
- */
-/*Resource.prototype.buildView = function (name, success, error) {
-	if (typeof name != "string") {
-		// return new View(_self.defaultTemplate);
-		name = _self.defaultTemplate;
-	} else {
-		// return _self.buildView().child(name);
-	}
-
-	static_component.loadFile(_self.template_dir + name, function (contents) {
-		// use old mu system, so that render() triggers up a chain.
-		success(hogan_module.compile(contents));
-	}, error);
-};*/
-
-/**
  * 
  * @param router
  * @returns
  * @todo allow users to configure their resource to not take default template or
  *       js or css routes
  */
-var applyTemplateRoutes = function (router, resource) {
+/*var applyTemplateRoutes = function (router, resource) {
 	router.add(new RegExp('^/' + resource.name + '/template/(.+)$'), function (request, response, callback) {
 		static_component.streamFile(resource.template_dir + request.GET['template'], response, {
 			request : request,
@@ -335,4 +290,4 @@ var applyResourceRoutes = function (router, resource) {
 	router.add(new RegExp('^/' + resource.name + '/(\d+)$'), function (request, response, callback) {
 		resource.models[resource.name].delete({id : request.GET['id']});
 	}, {method : "DELETE", keys : ['id']});
-};
+};*/
