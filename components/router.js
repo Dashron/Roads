@@ -9,6 +9,7 @@ var fs_module = require('fs');
 var url_module = require('url');
 var qs_module = require('querystring');
 
+var HTTP_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH"];
 /**
  * A url based router, the first regex matched will point to the executing
  * function
@@ -29,6 +30,25 @@ RegexRouter.prototype.routes = null;
 RegexRouter.prototype.unmatched = null;
 
 /**
+ * [addRoutes description]
+ * @param {[type]} regex   [description]
+ * @param {Object} routes  Mapping of Method => Route Function
+ * @param {[type]} options [description]
+ */
+RegexRouter.prototype.addRoutes = function (regex, routes, options) {
+	var i = 0;
+	var method = null;
+
+	for (i = 0; i < HTTP_METHODS.length; i++) {
+		method = HTTP_METHODS[i];
+		if (typeof routes[method] === "function") {
+			this.add(regex, routes[method], method, options);
+		}
+	}
+};
+
+
+/**
  * Add a route
  * 
  * @param {RegExp} regex
@@ -37,9 +57,12 @@ RegexRouter.prototype.unmatched = null;
  * @param {String} method
  *            optional, defaults to GET
  */
-RegexRouter.prototype.add = function (regex, func, options) {
+RegexRouter.prototype.add = function (regex, func, method, options) {
 	var _self = this;
-	var method = "GET";
+
+	if (typeof method != "string") {
+		method = "GET";
+	}
 
 	var route_info = {
 		regex : regex,
@@ -49,10 +72,6 @@ RegexRouter.prototype.add = function (regex, func, options) {
 
 	if (typeof options === "undefined") {
 		options = {};
-	}
-
-	if (typeof options.method !== "undefined") {
-		method = options.method;
 	}
 
 	if (typeof options.keys != "undefined") {

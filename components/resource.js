@@ -64,7 +64,7 @@ var clear = exports.clear = function () {
  * @return {[type]}
  */
 var build = exports.build = function (name, description) {
-	var i = 0;
+	var i = 0, j = 0;
 	var key = null;
 	var route = null;
 	var resource = new Resource(name);
@@ -79,7 +79,7 @@ var build = exports.build = function (name, description) {
 
 	for (i = 0; i < description.routes.length; i++) {
 		route = description.routes[i];
-		resource.addRoute(route.match, route.fn, route.options);
+		resource.addRoutes(route.match, route, route.options);
 	}
 
 	for (i = 0; i < description.dependencies.length; i++) {
@@ -143,12 +143,13 @@ Resource.prototype.models = {};
 Resource.prototype.db = null;
 
 /**
- * [addRoute description]
- * @param {[type]}   match [description]
- * @param {Function} fn    [description]
+ * [addRoutes description]
+ * @param {[type]} match   [description]
+ * @param {Object} routes  Mapping of Method => Function
+ * @param {[type]} options [description]
  */
-Resource.prototype.addRoute = function (match, fn, options) {
-	this.router.add(match, fn, options);
+Resource.prototype.addRoutes = function (match, routes, options) {
+	this.router.addRoutes(match, routes, options);
 };
 
 /**

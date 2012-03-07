@@ -4,7 +4,7 @@ module.exports = {
 	default_template : 'index.html',
 	routes : [{ 
 		match : /^\/$/,
-		fn : function (uri_bundle, view) {
+		GET : function (uri_bundle, view) {
 			console.log(uri_bundle);
 			this.request('/user/1', view.child('user'));
 			view.render();
@@ -13,7 +13,7 @@ module.exports = {
 		}
 	}, {
 		match : /^\/user\/(\d+)$/,
-		fn : function (uri_bundle, view) {
+		GET : function (uri_bundle, view) {
 			console.log(uri_bundle);
 			view.render('user.html');
 		},
