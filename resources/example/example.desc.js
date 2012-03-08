@@ -5,17 +5,24 @@ module.exports = {
 	routes : [{ 
 		match : /^\/$/,
 		GET : function (uri_bundle, view) {
+			var resource = this;
 			console.log(uri_bundle);
-			this.request('/user/1', view.child('user'));
-			view.render();
+			resource.request('/user/1', view.child('user'));
+			process.nextTick(function () {
+				resource.request('/user/5', view.child('user_two'));
+				view.render();
+			});
+			
 		},
 		options : {
 		}
 	}, {
 		match : /^\/user\/(\d+)$/,
 		GET : function (uri_bundle, view) {
-			console.log(uri_bundle);
-			view.render('user.html');
+			process.nextTick(function () {
+				view.set('id', uri_bundle.params.id);
+				view.render('user.html');
+			});
 		},
 		options : {
 			keys : ['id']

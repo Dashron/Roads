@@ -68,9 +68,10 @@ View.prototype._child_views = null;
 View.prototype.render_state = 0;
 // TODO: Move these constants into the module? not the class?
 View.prototype.RENDER_NOT_CALLED = 0;
-View.prototype.RENDER_STARTED = 1;
-View.prototype.RENDER_COMPLETE = 2;
-View.prototype.RENDER_FAILED = 3;
+View.prototype.RENDER_REQUESTED = 1;
+View.prototype.RENDER_STARTED = 2;
+View.prototype.RENDER_COMPLETE = 3;
+View.prototype.RENDER_FAILED = 4;
 View.prototype.parent = null;
 
 /**
@@ -96,7 +97,7 @@ View.prototype.setResponse = function view_setResponse(response) {
  * @returns {Boolean}
  */
 View.prototype.isRendered = function view_isRendered() {
-	return this.render_state = this.RENDER_COMPLETE;
+	return this.render_state == this.RENDER_COMPLETE;
 };
 
 /**
@@ -140,6 +141,25 @@ View.prototype.fill = function view_fill(func) {
  */
 View.prototype.canRender = function view_canRender() {
 	var key = null;
+
+	/**
+	 * This protects from items rendering in random async order
+	 * example 1:
+	 * parent creates child, loads data from database, then renders.
+	 * child immediately renders
+	 * - in this example, the child is complete first, and checks if the parent can render.
+	 *    Render has not been requested, so it fails. Once the parent calls render everything works fine
+	 * 
+	 * example 2:
+	 * Parent creates child, then immediately renders
+	 * child loads data from database then renders.
+	 * - in this example, the parent is complete first, so it marks render as requested but notices child views exist
+	 *    Because of this, it waits. Once the child view renders it notices that the parent is ready and immediately calls parent.render
+	 */  
+	if (this.render_state != this.RENDER_REQUESTED) {
+		return false;
+	}
+
 	for(key in this._child_views) { 
 		if(!this._child_views[key].isRendered()) {
 			return false;
@@ -156,8 +176,12 @@ View.prototype.render = function view_render(template) {
 	if (typeof template === "string") {
 		this._template_engine.template = template;
 	}
-	this.render_state = this.RENDER_STARTED;
-	this._template_engine.render();
+	this.render_state = this.RENDER_REQUESTED;
+
+	if (this.canRender()) {
+		this.render_state = this.RENDER_STARTED;
+		this._template_engine.render();
+	}
 };
 
 
@@ -168,8 +192,6 @@ View.prototype.render = function view_render(template) {
  * @returns {View}
  */
 View.prototype.child = function view_child(key, template) {
-	var _self = this;
-
 	var new_view = new View(template);
 	new_view.parent = this;
 	new_view.setDir(this._template_engine.dir);
@@ -185,9 +207,10 @@ View.prototype.child = function view_child(key, template) {
 			new_view.render_state = new_view.RENDER_COMPLETE;
 
 			// set the child data into the parent view, and then render the parent if possible
-			_self.set(key, this.buffer); 
-			if(_self.canRender()) {
-				_self.render();
+			new_view.parent.set(key, this.buffer); 
+
+			if(new_view.parent.canRender()) {
+				new_view.parent.render();
 			}
 		}
 	 };
