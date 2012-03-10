@@ -16,7 +16,7 @@ var HTTP_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH"];
  */
 var RegexRouter = exports.RegexRouter = function RegexRouter () {
 	this.routes = {};
-	this.unmatched = null;
+	this.unmatched_route = null;
 };
 
 /**
@@ -27,7 +27,7 @@ RegexRouter.prototype.routes = null;
 /**
  * @type {Function}
  */
-RegexRouter.prototype.unmatched = null;
+RegexRouter.prototype.unmatched_route = null;
 
 /**
  * [addRoutes description]
@@ -174,9 +174,9 @@ RegexRouter.prototype.getRoute = function (uri_bundle) {
 	}
 
 	// If there was no match, run the unmatched func
-	if (typeof _self.unmatched === "function") {
+	if (typeof _self.unmatched_route === "function") {
 		console.log('unmatched route');
-		return _self.unmatched;
+		return _self.unmatched_route;
 	}
 
 	return false;
