@@ -5,8 +5,9 @@
 */
 "use strict";
 var mu = require('mu');
-var event = require('events');
-var util = require('util');
+var EventEmitter = require('events').EventEmitter;
+var util_module = require('util');
+var http_module = require('http');
 
 mu.templateRoot = '/';
 
@@ -49,7 +50,7 @@ mu.templateRoot = '/';
  * @deprecated
  */
 var View = exports.View = function View(template) {
-	event.EventEmitter.call(this);
+EventEmitter.call(this);
 	this._js = {};
 	this._css = {};
 	this._template_engine = new MuRenderer(template);
@@ -59,7 +60,7 @@ var View = exports.View = function View(template) {
 	this.parent = null;
 };
 
-util.inherits(View, event.EventEmitter);
+util_module.inherits(View, EventEmitter);
 
 View.prototype._js = null;
 View.prototype._css = null;
@@ -89,6 +90,12 @@ View.prototype.setDir = function view_setDir(path) {
  */
 View.prototype.setResponse = function view_setResponse(response) {
 	this._template_engine.response = response;
+	
+	if (response instanceof http_module.ServerResponse) {
+		this._template_engine.response.setHeader('Content-Type', 'text/plain');
+		this._template_engine.response.status_code = 200;
+	}
+
 	return this;
 }
 
@@ -220,6 +227,13 @@ View.prototype.child = function view_child(key, template) {
 	return this._child_views[key];
 };
 
+var apply_to_root = function (view, fn) {
+	if (view.parent) {
+		apply_to_root(view.parent, fn);
+	} else {
+		fn(view);
+	}
+};
 
 /**
  * Adds a javascript file, and pushes it all the way up the chain to the core template
@@ -227,12 +241,9 @@ View.prototype.child = function view_child(key, template) {
  * @param {String} file 
  */
 View.prototype.addJs = function view_addJs(file) {
-	if(this.parent) {
-		this.parent.addJs(file);
-	}
-	else {
-		this._js.push({'src': file});
-	}
+	apply_to_root(this, function (view) {
+		view._js.push({'src' : file});
+	});
 };
 
 /**
@@ -241,14 +252,89 @@ View.prototype.addJs = function view_addJs(file) {
  * @param {String} file
  */
 View.prototype.addCss = function view_addCss(file) {
-	if(this.parent) {
-		this.parent.addCss(file);
-	}
-	else {
-		this._css.push({'src': file});
-	}
+	apply_to_root(this, function (view) {
+		view._css.push({'src' : file})
+	});
 };
 
+/**
+ * Set the response status code in the response tied to the parent most view
+ * @param {[type]} code [description]
+ */
+View.prototype.setStatusCode = function view_setStatusCode(code) {
+	apply_to_root(this, function (view) {
+		view._template_engine.response.statusCode = code;
+	});
+};
+
+/**
+ * Set a collection of headers in the response tied to the parent most view
+ * @param {[type]} headers [description]
+ */
+View.prototype.setHeader = function view_setHeaders(headers) {
+	var key = null;
+	apply_to_root(this, function (view) {
+		for(key in headers) {
+			view._template_engine.response.setHeader(key, headers[key]);
+		}
+	});
+};
+
+/**
+ * Return a 404: Not found code, and overwrite the existing template with the one provided
+ * @param  {[type]} template [description]
+ * @return {[type]}
+ */
+View.prototype.notFound = function view_notFound(template) {
+	apply_to_root(this, function (view) {
+		view._template_engine.response.statusCode = 404;
+		view._template_engine.template =  template;
+		view._template_engine.render();
+	});
+};
+
+/**
+ * Return a 500: Error code, and overwrite the existing tempalte with the one provided
+ * @param  {[type]} template [description]
+ * @return {[type]}
+ */
+View.prototype.error = function view_error(template) {
+	apply_to_root(this, function (view) {
+		view._template_engine.response.statusCode = 500;
+		view._template_engine.template = template;
+		view._template_engine.render();
+	});
+};
+
+/**
+ * Return a 201: Created code, and redirect the user to the provided url
+ * 
+ * @todo describe how this would be properly used
+ * @param  {[type]} redirect_url [description]
+ * @return {[type]}
+ */
+View.prototype.created = function view_created(redirect_url) {
+	apply_to_root(this, function (view) {
+		view._template_engine.response.statusCode = 201;
+		view._template_engine.response.setHeader('Location', redirect_url);
+		view._template_engine.render();
+	});
+};
+
+/**
+ * Return a 302: Found code, 
+ * @todo  add support for other 300's
+ * @todo describe how this would be properly used
+ * @param  {[type]} redirect_url [description]
+ * @return {[type]}
+ */
+View.prototype.redirect = function view_redirect(redirect_url) {
+	apply_to_root(this, function (view) {
+		view._template_engine.response.statusCode = 302;
+		view._template_engine.response.setHeader('Location', redirect_url);
+		view._template_engine.render();
+	});
+};
 
 /**
  * 

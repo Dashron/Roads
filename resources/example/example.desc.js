@@ -31,7 +31,7 @@ module.exports = {
 	unmatched_route : function (uri_bundle, view) {
 		console.log('unmatched route');
 		console.log(uri_bundle);
-		view.render();
+		view.notFound('404.html');
 	},
 	dependencies : [
 	],
