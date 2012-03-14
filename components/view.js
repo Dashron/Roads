@@ -49,11 +49,26 @@ mu.templateRoot = '/';
  * @param {String} template
  * @deprecated
  */
-var View = exports.View = function View(template) {
-EventEmitter.call(this);
+var View = exports.View = function View(template, render_type) {
+	EventEmitter.call(this);
 	this._js = {};
 	this._css = {};
-	this._template_engine = new MuRenderer(template);
+
+	switch (render_type) {
+		case 'html' :
+			console.log('html');
+			this._template_engine = new HtmlRenderer(template);
+			break;
+		case 'json' :
+			console.log('json');
+			this._template_engine = new JsonRenderer();
+			break;
+		case 'text' :
+			console.log('text');
+			this._template_engine = new MuRenderer(template);
+			break;
+	}
+	this._render_type = render_type;
 	this._child_views = {};
 
 	this.render_state = this.RENDER_NOT_CALLED;
@@ -66,6 +81,7 @@ View.prototype._js = null;
 View.prototype._css = null;
 View.prototype._template_engine = null;
 View.prototype._child_views = null;
+View.prototype._render_type = null;
 View.prototype.render_state = 0;
 // TODO: Move these constants into the module? not the class?
 View.prototype.RENDER_NOT_CALLED = 0;
@@ -199,7 +215,7 @@ View.prototype.render = function view_render(template) {
  * @returns {View}
  */
 View.prototype.child = function view_child(key, template) {
-	var new_view = new View(template);
+	var new_view = new View(template, this._render_type);
 	new_view.parent = this;
 	new_view.setDir(this._template_engine.dir);
 
@@ -336,22 +352,24 @@ View.prototype.redirect = function view_redirect(redirect_url) {
 	});
 };
 
+
 /**
- * 
+ * [Renderer description]
  */
-var MuRenderer = function(template) {
-	this.dir = '';
+var Renderer = function() {
 	this.response = {};
 	this.data = {};
-	this.template = template;
 };
 
-MuRenderer.prototype.response = null;
-MuRenderer.prototype.template = null;
-MuRenderer.prototype.data = null;
-MuRenderer.prototype.dir = '';
+Renderer.prototype.response = null;
+Renderer.prototype.data = null;
 
-MuRenderer.prototype.error = function (err) {
+/**
+ * [error description]
+ * @param  {[type]} err [description]
+ * @return {[type]}
+ */
+Renderer.prototype.error = function (err) {
 	// In case the error is called before the error handler is applied, we mess with the function so we still get output
 	this.errorHandler = function (fn) {
 		fn(err);
@@ -363,22 +381,21 @@ MuRenderer.prototype.error = function (err) {
  * @param  {Function} fn [description]
  * @return {[type]}
  */
-MuRenderer.prototype.errorHandler = function (fn) {
+Renderer.prototype.errorHandler = function (fn) {
 	this.error = fn;
 };
 
 /**
- * Use mu to render the view and write it to the provided writable and endable response
- * @param {String} template
- * @param {Object} data
- * @param {HttpResponse} response a writable, and endable response
- * @return {HttpResponse}
- * @todo use pipe
+ * [muRender description]
+ * @todo  move this somewhere better
+ * @param  {[type]} template [description]
+ * @return {[type]}
  */
-MuRenderer.prototype.render = function() {
+var muRender = function(template) {
 	var _self = this;
-
-	mu.render(_self.dir + _self.template, _self.data, {}, function(err, output) {
+	// _self.template should be the user set value, wheras render(template) is the default if nothing is set.
+	template = _self.template || template;
+	mu.render(_self.dir + template, _self.data, {}, function(err, output) {
 		if(err) {
 			// todo: this is really just debug info. we need a different error here (500 probably)
 			_self.response.end(JSON.stringify(err));
@@ -396,4 +413,54 @@ MuRenderer.prototype.render = function() {
 			_self.response.end();
 		});
 	});
+};
+
+/**
+ * [HtmlRenderer description]
+ * @param {[type]} template [description]
+ */
+var HtmlRenderer = function(template) {
+	Renderer.call(this);
+	this.template = template;
+	this.dir = '';
+};
+util_module.inherits(HtmlRenderer, Renderer);
+
+HtmlRenderer.prototype.dir = '';
+HtmlRenderer.prototype.template = '';
+
+/**
+ * [render description]
+ * @param  {[type]} template [description]
+ * @return {[type]}
+ */
+HtmlRenderer.prototype.render = function (template) {
+	if (this.response instanceof http_module.ServerResponse) {
+		this.response.setHeader('Content-Type', 'text/html');
+		this.response.status_code = 200;
+	}
+	muRender.call(this, template);
+};
+
+/**
+ * [JsonRenderer description]
+ */
+var JsonRenderer = function() {
+	Renderer.call(this);
+};
+
+util_module.inherits(JsonRenderer, Renderer);
+
+/**
+ * [render description]
+ * @return {[type]}
+ */
+JsonRenderer.prototype.render = function() {
+	if (this.response instanceof http_module.ServerResponse) {
+		this.response.setHeader('Content-Type', 'application/json');
+		this.response.status_code = 200;
+	}
+
+	this.response.write(JSON.stringify(this.data));
+	this.response.end();
 };

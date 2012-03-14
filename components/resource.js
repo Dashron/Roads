@@ -192,7 +192,7 @@ Resource.prototype.request = function (uri_bundle, view) {
 	}
 
 	if (view instanceof http_module.ServerResponse) {
-		view = (new View(this.default_template)).setResponse(view);
+		view = (new View(this.default_template, 'html')).setResponse(view);
 	}
 
 	// assume that we want to load templates directly from this route, no matter the data provided
