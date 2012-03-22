@@ -1,3 +1,9 @@
+/*
+* gfw.js - config.js
+* Copyright(c) 2011 Aaron Hedges <aaron@dashron.com>
+* MIT Licensed
+*/
+
 "use strict";
 var util_module = require('util');
 var event_module = require('events');
@@ -31,6 +37,7 @@ exports.parsePostData = function (body, content_type) {
  * [Request description]
  * @param {Request} original_request [description]
  * @todo  replace end event with endHandler
+ * @deprecated  we now use the standard http_request and give abstractions where necessary
  */
 var Request = exports.Request = function Request (original_request) {
 	var _self = this;

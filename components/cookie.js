@@ -1,4 +1,10 @@
 /*
+* gfw.js - config.js
+* Copyright(c) 2011 Aaron Hedges <aaron@dashron.com>
+* MIT Licensed
+*/
+
+/*
  * How to:
  * Create a cookie with the http request and response.
  * To retrieve a cookie, use cookie.get(key);
@@ -14,7 +20,6 @@
  * 
  * @todo: better expires date checking
  */
-
 var Cookie = exports.Cookie = function (request, response) {
 	this.response = response;
 	this.cookie_data = {};

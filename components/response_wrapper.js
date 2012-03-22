@@ -1,8 +1,15 @@
+/*
+* gfw.js - config.js
+* Copyright(c) 2011 Aaron Hedges <aaron@dashron.com>
+* MIT Licensed
+*/
+
 /**
  * 
  * @todo extend original? this is odd, I don't really like wrapping every
  *       function
  * @todo  rewrite entirely
+ * @deprecated  we now use the standard request and response, and include abstractions only where necessary
  */
 var Response = exports.Response = function Response (original_response) {
 	this.response(original_response);
