@@ -3,6 +3,7 @@
 * Copyright(c) 2011 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
 */
+
 "use strict";
 var mu = require('mu');
 var EventEmitter = require('events').EventEmitter;
@@ -49,26 +50,26 @@ mu.templateRoot = '/';
  * @param {String} template
  * @deprecated
  */
-var View = exports.View = function View(template, render_type) {
+var View = exports.View = function View(template, render_mode) {
 	EventEmitter.call(this);
 	this._js = {};
 	this._css = {};
 
-	switch (render_type) {
-		case 'html' :
-			console.log('html');
+	switch (render_mode) {
+		case 'text/html' :
 			this._template_engine = new HtmlRenderer(template);
 			break;
-		case 'json' :
-			console.log('json');
+		case 'application/json' :
 			this._template_engine = new JsonRenderer();
 			break;
-		case 'text' :
-			console.log('text');
+		case 'text/plain' :
 			this._template_engine = new MuRenderer(template);
 			break;
+		default:
+			throw new Error('Invalid render_mode :' + render_mode);
+			break;
 	}
-	this._render_type = render_type;
+	this._render_mode = render_mode;
 	this._child_views = {};
 
 	this.render_state = this.RENDER_NOT_CALLED;
@@ -81,7 +82,7 @@ View.prototype._js = null;
 View.prototype._css = null;
 View.prototype._template_engine = null;
 View.prototype._child_views = null;
-View.prototype._render_type = null;
+View.prototype._render_mode = null;
 View.prototype.render_state = 0;
 // TODO: Move these constants into the module? not the class?
 View.prototype.RENDER_NOT_CALLED = 0;
@@ -215,7 +216,7 @@ View.prototype.render = function view_render(template) {
  * @returns {View}
  */
 View.prototype.child = function view_child(key, template) {
-	var new_view = new View(template, this._render_type);
+	var new_view = new View(template, this._render_mode);
 	new_view.parent = this;
 	new_view.setDir(this._template_engine.dir);
 

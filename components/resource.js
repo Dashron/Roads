@@ -192,7 +192,11 @@ Resource.prototype.request = function (uri_bundle, view) {
 	}
 
 	if (view instanceof http_module.ServerResponse) {
-		view = (new View(this.default_template, 'html')).setResponse(view);
+		if (!uri_bundle.mode) {
+			uri_bundle.mode = 'text/html';
+		}
+		// todo: validate mode
+		view = (new View(this.default_template, uri_bundle.mode)).setResponse(view);
 	}
 
 	// assume that we want to load templates directly from this route, no matter the data provided

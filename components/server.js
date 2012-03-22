@@ -1,3 +1,9 @@
+/*
+* gfw.js - config.js
+* Copyright(c) 2011 Aaron Hedges <aaron@dashron.com>
+* MIT Licensed
+*/
+
 var http_module = require('http');
 var url_module = require('url');
 var events_module = require('events');
@@ -65,7 +71,7 @@ var Server = exports.Server = function Server (port, hostname) {
 
 util_module.inherits(Server, events_module.EventEmitter);
 
-// todo finish
+// todo finish and fix to use standard http_request
 var parseAcceptHeader = function (request) {
 	/*var accept = request.header('Accept').split(",");
 	var parse_regex = /(\w+\/\w+)(; q=(\d\.\d))*//*;
