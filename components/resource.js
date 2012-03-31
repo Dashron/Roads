@@ -15,7 +15,9 @@ var http_module = require('http');
 //var static_component = require('./static');
 //var request_component = require('./request_wrapper');
 //var response_component = require('./response_wrapper');
-var View = require('./view').View;
+var accept_header_component = require('./accept_header');
+var view_component = require('./view');
+var View = view_component.View;
 var Firebug = require('./firenode/firenode').Firebug;
 var Cookie = require('./cookie').Cookie;
 var Router = require('./router').RegexRouter;
@@ -79,7 +81,10 @@ var build = exports.build = function (name, description) {
 
 	for (i = 0; i < description.routes.length; i++) {
 		route = description.routes[i];
-		resource.addRoutes(route.match, route, route.options);
+		if (typeof route.options != "object") {
+			route.options = {};
+		}
+		resource.addRoute(route.match, route, route.options.keys);
 	}
 
 	for (i = 0; i < description.dependencies.length; i++) {
@@ -148,8 +153,8 @@ Resource.prototype.db = null;
  * @param {Object} routes  Mapping of Method => Function
  * @param {[type]} options [description]
  */
-Resource.prototype.addRoutes = function (match, routes, options) {
-	this.router.addRoutes(match, routes, options);
+Resource.prototype.addRoute = function (match, route, keys) {
+	this.router.addRoute(match, route, keys);
 };
 
 /**
@@ -185,25 +190,33 @@ Resource.prototype.request = function (uri_bundle, view) {
 	}
 
 	var route = this.getRoute(uri_bundle);
-	
+
 	if (!route) {
 		// todo: 404
 		throw new Error('route not found');
 	}
 
 	if (view instanceof http_module.ServerResponse) {
-		if (!uri_bundle.mode) {
-			uri_bundle.mode = 'text/html';
-		}
-		// todo: validate mode
-		view = (new View(this.default_template, uri_bundle.mode)).setResponse(view);
+		var response = view;
+
+		view = new View();
+		view.setRenderMode(accept_header_component.getRenderMode(uri_bundle.accept, route.modes));
+		view.setTemplate(this.default_template);
+		view.setResponse(response);
 	}
 
 	// assume that we want to load templates directly from this route, no matter the data provided
 	view.setDir(this.template_dir);
 
 	// route, allowing this to point to the original resource, and provide some helper utils
-	route.call(this, uri_bundle, view);
+	if (typeof route[uri_bundle.method] == "function") {
+		route[uri_bundle.method].call(this, uri_bundle, view);
+	} else if (typeof route['default'] === "function") {
+		route.default.call(this, uri_bundle, view);
+	} else {
+		//todo :implement
+		//view.unsupportedMethod();
+	}
 };
 
 /**

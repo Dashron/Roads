@@ -3,6 +3,7 @@
 * Copyright(c) 2011 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
 */
+"use strict";
 
 var http_module = require('http');
 var url_module = require('url');
@@ -49,7 +50,7 @@ var Server = exports.Server = function Server (port, hostname) {
 					uri : url.pathname,
 					params : url.query,
 					cookie : cookie,
-					mode : parseAcceptHeader(request),
+					accept : request.headers.accept
 				}, response);
 			});
 		} else {
@@ -58,7 +59,7 @@ var Server = exports.Server = function Server (port, hostname) {
 				uri : url.pathname,
 				params : url.query,
 				cookie : cookie,
-				mode : parseAcceptHeader(request),
+				accept : request.headers.accept
 			}, response);
 		}
 
@@ -70,23 +71,6 @@ var Server = exports.Server = function Server (port, hostname) {
 };
 
 util_module.inherits(Server, events_module.EventEmitter);
-
-// todo finish and fix to use standard http_request
-var parseAcceptHeader = function (request) {
-	/*var accept = request.header('Accept').split(",");
-	var parse_regex = /(\w+\/\w+)(; q=(\d\.\d))*//*;
-	var i = 0;
-	var result = null;
-	var media_range = null;
-	var quality = 0;
-	for (i = 0; i < accept.length; i++) {
-		result = accept[i].match(parse_regex);
-		media_rage = result[0]
-		quality = result[2];
-	}*/
-
-	return 'text/html';
-};
 
 Server.prototype.server = null;
 Server.prototype.port = null;

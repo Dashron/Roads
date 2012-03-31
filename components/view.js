@@ -3,8 +3,8 @@
 * Copyright(c) 2011 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
 */
-
 "use strict";
+
 var mu = require('mu');
 var EventEmitter = require('events').EventEmitter;
 var util_module = require('util');
@@ -47,29 +47,12 @@ mu.templateRoot = '/';
  * //If you want to use the js or css functions, you need to 
  * 
  * @author Aaron Hedges <aaron@dashron.com>
- * @param {String} template
- * @deprecated
  */
-var View = exports.View = function View(template, render_mode) {
+var View = exports.View = function View() {
 	EventEmitter.call(this);
 	this._js = {};
 	this._css = {};
 
-	switch (render_mode) {
-		case 'text/html' :
-			this._template_engine = new HtmlRenderer(template);
-			break;
-		case 'application/json' :
-			this._template_engine = new JsonRenderer();
-			break;
-		case 'text/plain' :
-			this._template_engine = new MuRenderer(template);
-			break;
-		default:
-			throw new Error('Invalid render_mode :' + render_mode);
-			break;
-	}
-	this._render_mode = render_mode;
 	this._child_views = {};
 
 	this.render_state = this.RENDER_NOT_CALLED;
@@ -115,6 +98,36 @@ View.prototype.setResponse = function view_setResponse(response) {
 
 	return this;
 }
+
+/**
+ * [setRenderMode description]
+ * @param {[type]} mode [description]
+ */
+View.prototype.setRenderMode = function view_setRenderMode(mode) {
+	this._render_mode = mode;
+	switch (mode) {
+		case 'text/html' :
+			this._template_engine = new HtmlRenderer();
+			break;
+		case 'application/json' :
+			this._template_engine = new JsonRenderer();
+			break;
+		case 'text/plain' :
+			this._template_engine = new MuRenderer();
+			break;
+		default:
+			throw new Error('Invalid render_mode :' + mode);
+			break;
+	}
+}
+
+/**
+ * [setTemplate description]
+ * @type {[type]}
+ */
+View.prototype.setTemplate = function view_setTemplate(template) {
+	this._template_engine.template = template;
+};
 
 /**
  * returns whether the view has finished rendering or not
@@ -216,7 +229,9 @@ View.prototype.render = function view_render(template) {
  * @returns {View}
  */
 View.prototype.child = function view_child(key, template) {
-	var new_view = new View(template, this._render_mode);
+	var new_view = new View();
+	new_view.setRenderMode(this._render_mode);
+	new_view.setTemplate(template);
 	new_view.parent = this;
 	new_view.setDir(this._template_engine.dir);
 

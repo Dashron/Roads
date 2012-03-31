@@ -9,13 +9,12 @@ var fs_module = require('fs');
 var url_module = require('url');
 var qs_module = require('querystring');
 
-var HTTP_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH"];
 /**
  * A url based router, the first regex matched will point to the executing
  * function
  */
 var RegexRouter = exports.RegexRouter = function RegexRouter () {
-	this.routes = {};
+	this.routes = [];
 	this.unmatched_route = null;
 };
 
@@ -35,54 +34,8 @@ RegexRouter.prototype.unmatched_route = null;
  * @param {Object} routes  Mapping of Method => Route Function
  * @param {[type]} options [description]
  */
-RegexRouter.prototype.addRoutes = function (regex, routes, options) {
-	var i = 0;
-	var method = null;
-
-	for (i = 0; i < HTTP_METHODS.length; i++) {
-		method = HTTP_METHODS[i];
-		if (typeof routes[method] === "function") {
-			this.add(regex, routes[method], method, options);
-		}
-	}
-};
-
-
-/**
- * Add a route
- * 
- * @param {RegExp} regex
- * @param {Function} func
- *            the function to execute when the route is matched
- * @param {String} method
- *            optional, defaults to GET
- */
-RegexRouter.prototype.add = function (regex, func, method, options) {
-	var _self = this;
-
-	if (typeof method != "string") {
-		method = "GET";
-	}
-
-	var route_info = {
-		regex : regex,
-		fn : func,
-		keys : []
-	};
-
-	if (typeof options === "undefined") {
-		options = {};
-	}
-
-	if (typeof options.keys != "undefined") {
-		route_info.keys = options.keys
-	};
-
-	if (typeof _self.routes[method] == "undefined" || typeof _self.routes[method] == null) {
-		_self.routes[method] = [];
-	}
-
-	_self.routes[method].push(route_info);
+RegexRouter.prototype.addRoute = function (match, route, keys) {
+	this.routes.push({match: match, route: route, keys: keys});
 };
 
 /**
@@ -94,12 +47,13 @@ RegexRouter.prototype.add = function (regex, func, method, options) {
 var url_matches = function (keys, matches) {
 	var GET = {};
 	var i = 0;
-	
-	for (i = 0; i < matches.length; i++) {
-		if (typeof keys[i] != "undefined") {
-			GET[keys[i]] = matches[i];
-		} else {
-			throw new Error('Route match found without an appropriate key');
+	if (Array.isArray(keys)) {
+		for (i = 0; i < matches.length; i++) {
+			if (typeof keys[i] != "undefined") {
+				GET[keys[i]] = matches[i];
+			} else {
+				throw new Error('Route match found without an appropriate key');
+			}
 		}
 	}
 
@@ -138,7 +92,7 @@ var url_matches = function (keys, matches) {
  */
 RegexRouter.prototype.getRoute = function (uri_bundle) {
 	var _self = this;
-	var routes = _self.routes[uri_bundle.method];
+	var routes = _self.routes;
 	var matching_route = null;
 	var matches = null;
 	var i = 0;
@@ -146,9 +100,10 @@ RegexRouter.prototype.getRoute = function (uri_bundle) {
 	// Find a match and add any regex matches into the GET params
 	if (Array.isArray(routes)) {
 		for (i = 0; i < routes.length; i ++) {
-			var route = routes[i];
-			var matches = uri_bundle.uri.match(route.regex);
+			var route = routes[i].route;
+			var matches = uri_bundle.uri.match(routes[i].match);
 
+			// Ensure a regex match has been made, and there is support for the requested method
 			if (matches != null) {
 				// apply grouped matches as GET key value pairs
 				if (matches.length > 1) {
@@ -161,14 +116,14 @@ RegexRouter.prototype.getRoute = function (uri_bundle) {
 					// First element is always the matched selection, and not a group
 					matches.shift();
 
-					extra_get_vals = url_matches(route.keys, matches);
+					extra_get_vals = url_matches(routes[i].keys, matches);
 
 					for(var key in extra_get_vals) {
 						uri_bundle.params[key] = extra_get_vals[key];
 					};
 				}
 
-				return route.fn;
+				return route;
 			}
 		};
 	}
