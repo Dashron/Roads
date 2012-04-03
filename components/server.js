@@ -95,3 +95,26 @@ Server.prototype.start = function () {
 Server.prototype.stop = function () {
 	this.server.close();
 };
+
+/**
+ * [parsePostData description]
+ * @param  {String} body         [description]
+ * @param  {String} content_type [description]
+ * @return {Object}
+ */
+exports.parsePostData = function (body, content_type) {
+	content_type = content_type.split(';');
+
+	switch (content_type[0].trim()) {
+		case "application/x-www-form-urlencoded":
+			return qs_module.parse(body);
+			break;
+		case "application/json":
+			return JSON.parse(boddy);
+			break;
+		default:
+			console.log(body);
+			console.log(content_type);
+			throw new Error("content type not supported");
+	}
+};
