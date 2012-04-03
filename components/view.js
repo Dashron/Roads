@@ -5,12 +5,12 @@
 */
 "use strict";
 
-var mu = require('mu');
+var mu = require('mu2');
+mu.root = '/';
+
 var EventEmitter = require('events').EventEmitter;
 var util_module = require('util');
 var http_module = require('http');
-
-mu.templateRoot = '/';
 
 /**
  * Renders templates asynchronously, supporing an unlimited amount of child views.
@@ -113,7 +113,7 @@ View.prototype.setRenderMode = function view_setRenderMode(mode) {
 			this._template_engine = new JsonRenderer();
 			break;
 		case 'text/plain' :
-			this._template_engine = new MuRenderer();
+			//this._template_engine = new MuRenderer();
 			break;
 		default:
 			throw new Error('Invalid render_mode :' + mode);
@@ -402,36 +402,6 @@ Renderer.prototype.errorHandler = function (fn) {
 };
 
 /**
- * [muRender description]
- * @todo  move this somewhere better
- * @param  {[type]} template [description]
- * @return {[type]}
- */
-var muRender = function(template) {
-	var _self = this;
-	// _self.template should be the user set value, wheras render(template) is the default if nothing is set.
-	template = _self.template || template;
-	mu.render(_self.dir + template, _self.data, {}, function(err, output) {
-		if(err) {
-			// todo: this is really just debug info. we need a different error here (500 probably)
-			_self.response.end(JSON.stringify(err));
-			_self.error(err);
-			return;
-		}
-		
-		//write chunk
-		output.addListener('data', function(c) {
-			_self.response.write(c);
-		});
-		
-		//wrap up
-		output.addListener('end', function(c) {
-			_self.response.end();
-		});
-	});
-};
-
-/**
  * [HtmlRenderer description]
  * @param {[type]} template [description]
  */
@@ -451,11 +421,24 @@ HtmlRenderer.prototype.template = '';
  * @return {[type]}
  */
 HtmlRenderer.prototype.render = function (template) {
+	var _self = this;
+
 	if (this.response instanceof http_module.ServerResponse) {
 		this.response.setHeader('Content-Type', 'text/html');
 		this.response.status_code = 200;
 	}
-	muRender.call(this, template);
+	
+	// _self.template should be the user set value, wheras render(template) is the default if nothing is set.
+	template = this.template || template;
+
+	var stream = mu.compileAndRender(this.dir + template, this.data);
+	stream.on('data', function (data) {
+		_self.response.write(data);
+	});
+
+	stream.on('end', function () {
+		_self.response.end();
+	});
 };
 
 /**
