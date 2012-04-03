@@ -9,8 +9,6 @@ var http_module = require('http');
 var url_module = require('url');
 var events_module = require('events');
 var util_module = require('util');
-var request_component = require('./request_wrapper');
-var response_component = require('./response_wrapper');
 var Cookie = require('./cookie').Cookie;
 
 /**
