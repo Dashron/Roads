@@ -1,20 +1,17 @@
 module.exports = {
-	name : 'example',
-	uri : '/',
-	default_template : 'index.html',
-	routes : [{ 
-		match : /^$/,
-		modes : ['text/html'],
+	name : 'user',
+	uri : 'user/',
+	default_template : 'user.html',
+	routes : [{
+		match : /^(\d+)$/,
 		GET : function (uri_bundle, view) {
-			var resource = this;
-			resource.request('/user/1', view.child('user'));
 			process.nextTick(function () {
-				resource.request('/user/5', view.child('user_two'));
-				view.render('index.html');
+				view.set('id', uri_bundle.params.id);
+				view.render('user.html');
 			});
-			
 		},
 		options : {
+			keys : ['id']
 		}
 	}],
 	unmatched_route : {
@@ -25,7 +22,6 @@ module.exports = {
 		},
 	},
 	dependencies : [
-		'user'
 	],
 	models : [
 	],

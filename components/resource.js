@@ -148,6 +148,15 @@ Resource.prototype.models = {};
 Resource.prototype.db = null;
 
 /**
+ * [getResource description]
+ * @param  {[type]} name [description]
+ * @return {[type]}      [description]
+ */
+Resource.prototype.getResource = function (name) {
+	return get_resource(name);
+};
+
+/**
  * [addRoutes description]
  * @param {[type]} match   [description]
  * @param {Object} routes  Mapping of Method => Function
@@ -181,6 +190,9 @@ Resource.prototype.addModel = function (key, model) {
  * @return {[type]}
  */
 Resource.prototype.request = function (uri_bundle, view) {
+	var key = null;
+	var template_dir = this.template_dir;
+
 	// Allow direct urls for shorthand. Assume a GET request in this case
 	if (typeof uri_bundle === "string") {
 		uri_bundle = {
@@ -192,8 +204,20 @@ Resource.prototype.request = function (uri_bundle, view) {
 	var route = this.getRoute(uri_bundle);
 
 	if (!route) {
-		// todo: 404
-		throw new Error('route not found');
+		// attempt each child, see if you can find a proper route
+		for (key in this.resources) {
+			route = this.resources[key].getRoute(uri_bundle);
+			if (route) {
+				// ensure that the proper template directory is used within the view
+				template_dir = this.resources[key].template_dir;
+				break;
+			}
+		}
+
+		if (!route) {
+			// todo: 404
+			throw new Error('route not found');
+		}
 	}
 
 	if (view instanceof http_module.ServerResponse) {
@@ -201,12 +225,13 @@ Resource.prototype.request = function (uri_bundle, view) {
 
 		view = new View();
 		view.setRenderMode(accept_header_component.getRenderMode(uri_bundle.accept, route.modes));
-		view.setTemplate(this.default_template);
+		// todo: not sure this will actually be desired due to view template precedence.
+		//view.setTemplate(this.default_template);
 		view.setResponse(response);
 	}
 
 	// assume that we want to load templates directly from this route, no matter the data provided
-	view.setDir(this.template_dir);
+	view.setDir(template_dir);
 
 	// route, allowing this to point to the original resource, and provide some helper utils
 	if (typeof route[uri_bundle.method] == "function") {
@@ -225,24 +250,21 @@ Resource.prototype.request = function (uri_bundle, view) {
  * @return {[type]}
  */
 Resource.prototype.getRoute = function (uri_bundle) {
-	// what to do here? how do I route down into the children?
-	// We don't have to pass the view, we can assume it's correct.
-	// we just need to make sure that the promise returned is bound to the right resource
-	var route = this.router.getRoute(uri_bundle);
 
-	if (route) {
-		return route;
-	} else {
-		// attempt each child, see if you can find a proper route
-		for (key in this.resources) {
-			route = this.resources[key].getRoute(uri_bundle);
+	if (uri_bundle.uri.indexOf(this.uri) === 0) {
+		// strip the resource uri out of the request uri
+		uri_bundle.uri = uri_bundle.uri.substring(this.uri.length);
 
-			if (route) {
-				return route;
-			}
+		// what to do here? how do I route down into the children?
+		// We don't have to pass the view, we can assume it's correct.
+		// we just need to make sure that the promise returned is bound to the right resource
+		var route = this.router.getRoute(uri_bundle);
+
+		if (route) {
+			return route;
 		}
 	}
-
+	
 	// No route was found
 	return false;
 };
