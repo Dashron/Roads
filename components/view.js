@@ -12,6 +12,29 @@ var EventEmitter = require('events').EventEmitter;
 var util_module = require('util');
 var http_module = require('http');
 
+var _renderers = {};
+
+/**
+ * [addRenderer description]
+ * @param {[type]} content_type [description]
+ * @param {[type]} renderer     [description]
+ */
+exports.addRenderer = function (content_type, renderer) {
+	_renderers[content_type] = renderer;
+};
+
+/**
+ * [getRenderer description]
+ * @param  {[type]} content_type [description]
+ * @return {[type]}              [description]
+ */
+exports.getRenderer = function (content_type) {
+	if (_renderers[content_type]) {
+		return _renderers[content_type];
+	} else {
+		throw new Error('Unsupported content type :' + content_type);
+	}
+}
 /**
  * Renders templates asynchronously, supporing an unlimited amount of child views.
  * 
@@ -105,20 +128,7 @@ View.prototype.setResponse = function view_setResponse(response) {
  */
 View.prototype.setRenderMode = function view_setRenderMode(mode) {
 	this._render_mode = mode;
-	switch (mode) {
-		case 'text/html' :
-			this._template_engine = new HtmlRenderer();
-			break;
-		case 'application/json' :
-			this._template_engine = new JsonRenderer();
-			break;
-		case 'text/plain' :
-			//this._template_engine = new MuRenderer();
-			break;
-		default:
-			throw new Error('Invalid render_mode :' + mode);
-			break;
-	}
+	this._template_engine = new (exports.getRenderer(mode))();
 }
 
 /**
@@ -372,7 +382,7 @@ View.prototype.redirect = function view_redirect(redirect_url) {
 /**
  * [Renderer description]
  */
-var Renderer = function() {
+var Renderer = exports.Renderer = function() {
 	this.response = {};
 	this.data = {};
 };
@@ -440,6 +450,7 @@ HtmlRenderer.prototype.render = function (template) {
 		_self.response.end();
 	});
 };
+exports.addRenderer('text/html', HtmlRenderer);
 
 /**
  * [JsonRenderer description]
@@ -463,3 +474,4 @@ JsonRenderer.prototype.render = function() {
 	this.response.write(JSON.stringify(this.data));
 	this.response.end();
 };
+exports.addRenderer('application/json', JsonRenderer);
