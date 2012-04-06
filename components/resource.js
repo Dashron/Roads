@@ -74,7 +74,7 @@ var build = exports.build = function (name, description) {
 	resource.uri = description.uri;
 	resource.directory = __dirname.replace("components", '') + 'resources/' + name;
 	resource.template_dir = resource.directory + '/templates/';
-	resource.default_template = description.default_template;
+	resource.template = description.template;
 
 	resource.router.unmatched_route = description.unmatched_route;
 	resource.config = description.config;
@@ -141,7 +141,7 @@ Resource.prototype.uri = '';
 Resource.prototype.config = null;
 Resource.prototype.directory = '';
 Resource.prototype.template_dir = '';
-Resource.prototype.default_template = null;
+Resource.prototype.template = null;
 Resource.prototype.router = null;
 Resource.prototype.resources = null;
 Resource.prototype.models = {};
@@ -216,10 +216,11 @@ Resource.prototype.request = function (uri_bundle, view) {
 
 		if (!route) {
 			// todo: 404
-			throw new Error('route not found');
+			throw new Error('route not found :' + uri_bundle.uri + ' [' + this.name + ']');
 		}
 	}
 
+	// If the template provided is actually a server response, we need to build the very first view
 	if (view instanceof http_module.ServerResponse) {
 		var response = view;
 
@@ -228,6 +229,15 @@ Resource.prototype.request = function (uri_bundle, view) {
 		// todo: not sure this will actually be desired due to view template precedence.
 		//view.setTemplate(this.default_template);
 		view.setResponse(response);
+	}
+
+	// If a template is set in the config, apply it to the current view and then provide a child view to the route
+	if (typeof this.template === "function") {
+		// We don't want to set the route resources directory, we will always create the template from the resource upon which request is called
+		view.setDir(this.template_dir);
+		var child = view.child('content');
+		this.template(view);
+		view = child;
 	}
 
 	// assume that we want to load templates directly from this route, no matter the data provided

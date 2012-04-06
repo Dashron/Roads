@@ -157,6 +157,16 @@ View.prototype.set = function view_set(key, value) {
 };
 
 /**
+ * Sets data to be rendered by the root template (eg page title)
+ * @param {[type]} title [description]
+ */
+View.prototype.setToRoot = function view_setToRoot(key, value) {
+	apply_to_root(this, function (view) {
+		view.set(key, value);
+	});
+};
+
+/**
  * Retrieves all of the data so that it can be rendered by a parent
  * @param {String} key
  * @return {Mixed|Object}

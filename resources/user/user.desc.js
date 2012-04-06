@@ -1,7 +1,6 @@
 module.exports = {
 	name : 'user',
-	uri : 'user/',
-	default_template : 'user.html',
+	uri : '/users/',
 	routes : [{
 		match : /^(\d+)$/,
 		GET : function (uri_bundle, view) {
