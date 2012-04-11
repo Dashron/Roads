@@ -80,6 +80,10 @@ var View = exports.View = function View() {
 
 	this.render_state = this.RENDER_NOT_CALLED;
 	this.parent = null;
+	// Default error handler 500's
+	this._error_handler = function (error) {
+		this.error(error);
+	}
 };
 
 util_module.inherits(View, EventEmitter);
@@ -89,6 +93,7 @@ View.prototype._css = null;
 View.prototype._template_engine = null;
 View.prototype._child_views = null;
 View.prototype._render_mode = null;
+View.prototype._error_handler = null;
 View.prototype.render_state = 0;
 // TODO: Move these constants into the module? not the class?
 View.prototype.RENDER_NOT_CALLED = 0;
@@ -127,8 +132,12 @@ View.prototype.setResponse = function view_setResponse(response) {
  * @param {[type]} mode [description]
  */
 View.prototype.setRenderMode = function view_setRenderMode(mode) {
-	this._render_mode = mode;
-	this._template_engine = new (exports.getRenderer(mode))();
+	var _self = this;
+	_self._render_mode = mode;
+	_self._template_engine = new (exports.getRenderer(mode))();
+	_self._template_engine.errorHandler(function(error) {
+		_self._error_handler(error);
+	});
 }
 
 /**
@@ -227,19 +236,39 @@ View.prototype.canRender = function view_canRender() {
 
 /**
  * Renders the current view, writing the the response, if and only if all child views have been completed
- * @todo: Handle the case where a child element never finishes
+ * @todo: handle the case where a child element never finishes
+ * @param  {String|Boolean} template Renders the provided template unless one was set previously. If false is passed, no data will be written
+ * @return {[type]}          [description]
  */
 View.prototype.render = function view_render(template) {
-	if (typeof template === "string") {
-		this._template_engine.template = template;
-	}
-	this.render_state = this.RENDER_REQUESTED;
+	if (template) {
+		this.render_state = this.RENDER_REQUESTED;
 
-	if (this.canRender()) {
-		this.render_state = this.RENDER_STARTED;
-		this._template_engine.render();
+		if (this.canRender()) {
+			this.render_state = this.RENDER_STARTED;
+			this._template_engine.render(template);
+		} else {
+			// If a template has not yet been assigned to this view, and we can not immediately render it
+			// we need to set the provided template, so it is rendered in the future
+			if (!this._template_engine.template) {
+				this.setTemplate(template);
+			}
+		}
+	} else {
+		//console.log('denied');
+		//console.log(template);
+		this._template_engine.response.end();
 	}
 };
+
+/**
+ * [errorHandler description]
+ * @param  {Function} fn [description]
+ * @return {[type]}      [description]
+ */
+View.prototype.setErrorHandler = function view_setErrorHandler(fn) {
+	this._error_handler = fn;
+}
 
 
 /**
@@ -341,7 +370,7 @@ View.prototype.notFound = function view_notFound(template) {
 	apply_to_root(this, function (view) {
 		view._template_engine.response.statusCode = 404;
 		view._template_engine.template =  template;
-		view._template_engine.render();
+		view.render();
 	});
 };
 
@@ -354,7 +383,7 @@ View.prototype.error = function view_error(template) {
 	apply_to_root(this, function (view) {
 		view._template_engine.response.statusCode = 500;
 		view._template_engine.template = template;
-		view._template_engine.render();
+		view.render(false);
 	});
 };
 
@@ -369,7 +398,7 @@ View.prototype.created = function view_created(redirect_url) {
 	apply_to_root(this, function (view) {
 		view._template_engine.response.statusCode = 201;
 		view._template_engine.response.setHeader('Location', redirect_url);
-		view._template_engine.render();
+		view.render(false);
 	});
 };
 
@@ -384,10 +413,24 @@ View.prototype.redirect = function view_redirect(redirect_url) {
 	apply_to_root(this, function (view) {
 		view._template_engine.response.statusCode = 302;
 		view._template_engine.response.setHeader('Location', redirect_url);
-		view._template_engine.render();
+		view.render(false);
 	});
 };
 
+/**
+ * [notModified description]
+ * @return {[type]} [description]
+ */
+View.prototype.notModified = function view_notModified() {
+	apply_to_root(this, function (view) {
+		view._template_engine.response.statusCode = 304;
+		// date
+		// etag
+		// expires
+		// cache  control
+		view.render(false);
+	});
+};
 
 /**
  * [Renderer description]
@@ -454,6 +497,10 @@ HtmlRenderer.prototype.render = function (template) {
 	var stream = mu.compileAndRender(this.dir + template, this.data);
 	stream.on('data', function (data) {
 		_self.response.write(data);
+	});
+
+	stream.on('error', function (err) {
+		_self.error(err);
 	});
 
 	stream.on('end', function () {
