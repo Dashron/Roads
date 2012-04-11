@@ -48,7 +48,7 @@ var Server = exports.Server = function Server (port, hostname) {
 					uri : url.pathname,
 					params : url.query,
 					cookie : cookie,
-					accept : request.headers.accept
+					headers : request.headers
 				}, response);
 			});
 		} else {
@@ -57,7 +57,7 @@ var Server = exports.Server = function Server (port, hostname) {
 				uri : url.pathname,
 				params : url.query,
 				cookie : cookie,
-				accept : request.headers.accept
+				headers : request.headers
 			}, response);
 		}
 

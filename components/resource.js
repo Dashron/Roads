@@ -225,7 +225,7 @@ Resource.prototype.request = function (uri_bundle, view) {
 		var response = view;
 
 		view = new View();
-		view.setRenderMode(accept_header_component.getRenderMode(uri_bundle.accept, route.modes));
+		view.setRenderMode(accept_header_component.getRenderMode(uri_bundle.headers.accept, route.modes));
 		// todo: not sure this will actually be desired due to view template precedence.
 		//view.setTemplate(this.default_template);
 		view.setResponse(response);
