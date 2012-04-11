@@ -18,17 +18,21 @@ exports.getRenderMode = function (accept, available_modes) {
 	var highest_quality = -1;
 	var mode_index = -1;
 	
-	for (i = 0; i < available_modes.length; i++) {
-		if (mime_types.preferred[available_modes[i]] === true) {
-			return available_modes[i];
+	if (mime_types.preferred.length > 0) {
+		for (i = 0; i < available_modes.length; i++) {
+			if (mime_types.preferred[available_modes[i]] === true) {
+				return available_modes[i];
+			}
 		}
 	}
 
-	for (i = 0; i < available_modes.length; i++) {
-		if (mime_types.secondary[j].media_range === available_modes[i]) {
-			if (highest_quality < mime_types.secondary[j].quality) {
-				highest_quality = mime_types.secondary[j].quality;
-				mode_index = i;
+	if (mime_types.secondary.length > 0) {
+		for (i = 0; i < available_modes.length; i++) {
+			if (mime_types.secondary[j].media_range === available_modes[i]) {
+				if (highest_quality < mime_types.secondary[j].quality) {
+					highest_quality = mime_types.secondary[j].quality;
+					mode_index = i;
+				}
 			}
 		}
 	}
