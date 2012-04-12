@@ -11,13 +11,14 @@ mu.root = '/';
 var EventEmitter = require('events').EventEmitter;
 var util_module = require('util');
 var http_module = require('http');
+var fs_module = require('fs');
 
 var _renderers = {};
 
 /**
  * [addRenderer description]
  * @param {[type]} content_type [description]
- * @param {[type]} renderer     [description]
+ * @param {[type]} renderer     [description] 
  */
 exports.addRenderer = function (content_type, renderer) {
 	_renderers[content_type] = renderer;
@@ -241,7 +242,7 @@ View.prototype.canRender = function view_canRender() {
  * @return {[type]}          [description]
  */
 View.prototype.render = function view_render(template) {
-	if (template) {
+	if (template !== false) {
 		this.render_state = this.RENDER_REQUESTED;
 
 		if (this.canRender()) {
@@ -255,8 +256,6 @@ View.prototype.render = function view_render(template) {
 			}
 		}
 	} else {
-		//console.log('denied');
-		//console.log(template);
 		this._template_engine.response.end();
 	}
 };
@@ -280,7 +279,6 @@ View.prototype.setErrorHandler = function view_setErrorHandler(fn) {
 View.prototype.child = function view_child(key, template) {
 	var new_view = new View();
 	new_view.setRenderMode(this._render_mode);
-	new_view.setTemplate(template);
 	new_view.parent = this;
 	new_view.setDir(this._template_engine.dir);
 
@@ -298,7 +296,7 @@ View.prototype.child = function view_child(key, template) {
 			new_view.parent.set(key, this.buffer); 
 
 			if(new_view.parent.canRender()) {
-				new_view.parent.render();
+				new_view.parent.render(template);
 			}
 		}
 	 };
@@ -365,12 +363,12 @@ View.prototype.setHeader = function view_setHeaders(headers) {
  * Return a 404: Not found code, and overwrite the existing template with the one provided
  * @param  {[type]} template [description]
  * @return {[type]}
+ * @todo  fix
  */
 View.prototype.notFound = function view_notFound(template) {
 	apply_to_root(this, function (view) {
 		view._template_engine.response.statusCode = 404;
-		view._template_engine.template =  template;
-		view.render();
+		view._template_engine.render(template);
 	});
 };
 
@@ -379,10 +377,9 @@ View.prototype.notFound = function view_notFound(template) {
  * @param  {[type]} template [description]
  * @return {[type]}
  */
-View.prototype.error = function view_error(template) {
+View.prototype.error = function view_error(error) {
 	apply_to_root(this, function (view) {
 		view._template_engine.response.statusCode = 500;
-		view._template_engine.template = template;
 		view.render(false);
 	});
 };
@@ -522,7 +519,7 @@ util_module.inherits(JsonRenderer, Renderer);
  * [render description]
  * @return {[type]}
  */
-JsonRenderer.prototype.render = function() {
+JsonRenderer.prototype.render = function () {
 	if (this.response instanceof http_module.ServerResponse) {
 		this.response.setHeader('Content-Type', 'application/json');
 		this.response.status_code = 200;
@@ -532,3 +529,41 @@ JsonRenderer.prototype.render = function() {
 	this.response.end();
 };
 exports.addRenderer('application/json', JsonRenderer);
+
+
+var buildFileRenderer = function (content_type) {
+	var FileRenderer = function() {
+		Renderer.call(this);
+		this.dir = '';
+	}
+
+	FileRenderer.prototype.dir = '';
+	util_module.inherits(FileRenderer, Renderer);
+
+	FileRenderer.prototype.render = function (template) {
+		var _self = this;
+
+		if (this.response instanceof http_module.ServerResponse) {
+			this.response.setHeader('Content-Type', content_type)
+			this.response.status_code = 200;
+		}
+
+		var stream = fs_module.createReadStream(this.dir + template);
+		stream.on('data', function (data) {
+			_self.response.write(data);
+		});
+
+		stream.on('error', function (err) {
+			_self.error(err);
+		});
+
+		stream.on('end', function () {
+			_self.response.end();
+		});
+	}
+
+	return FileRenderer;
+}
+
+exports.addRenderer('text/css', buildFileRenderer('text/css'));
+exports.addRenderer('text/javascript', buildFileRenderer('text/javascript'));
