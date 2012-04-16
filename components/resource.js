@@ -215,6 +215,10 @@ Resource.prototype.request = function (uri_bundle, view) {
 		}
 
 		if (!route) {
+			route = this.unmatched_route;
+		}
+
+		if (!route) {
 			// todo: 404
 			throw new Error('route not found :' + uri_bundle.uri + ' [' + this.name + ']');
 		}
