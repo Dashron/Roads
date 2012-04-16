@@ -134,11 +134,18 @@ View.prototype.setResponse = function view_setResponse(response) {
  */
 View.prototype.setRenderMode = function view_setRenderMode(mode) {
 	var _self = this;
+	var old_engine = _self._template_engine;
+
 	_self._render_mode = mode;
+
 	_self._template_engine = new (exports.getRenderer(mode))();
-	_self._template_engine.errorHandler(function(error) {
-		_self._error_handler(error);
-	});
+	
+	if (old_engine != null) {
+		_self._template_engine.dir = old_engine.dir;
+		_self._template_engine.response = old_engine.response;
+	}
+
+	_self._template_engine.errorHandler(_self._error_handler);
 }
 
 /**
