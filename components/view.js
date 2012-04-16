@@ -81,6 +81,7 @@ var View = exports.View = function View() {
 
 	this.render_state = this.RENDER_NOT_CALLED;
 	this.parent = null;
+	this.root = this;
 	// Default error handler 500's
 	this._error_handler = function (error) {
 		this.error(error);
@@ -91,6 +92,10 @@ util_module.inherits(View, EventEmitter);
 
 View.prototype._js = null;
 View.prototype._css = null;
+View.prototype._dir = null;
+View.prototype._template = null;
+View.prototype._response = null;
+View.prototype._data = {};
 View.prototype._template_engine = null;
 View.prototype._child_views = null;
 View.prototype._render_mode = null;
@@ -103,13 +108,14 @@ View.prototype.RENDER_STARTED = 2;
 View.prototype.RENDER_COMPLETE = 3;
 View.prototype.RENDER_FAILED = 4;
 View.prototype.parent = null;
+View.prototype.root = null;
 
 /**
  * Set the directory this view will be loaded from
  * @param {String} path
  */
 View.prototype.setDir = function view_setDir(path) {
-	this._template_engine.dir = path;
+	this._dir = path;
 	return this;
 };
 
@@ -118,12 +124,12 @@ View.prototype.setDir = function view_setDir(path) {
  * @param {[type]} response [description]
  */
 View.prototype.setResponse = function view_setResponse(response) {
-	this._template_engine.response = response;
-	
 	if (response instanceof http_module.ServerResponse) {
-		this._template_engine.response.setHeader('Content-Type', 'text/plain');
-		this._template_engine.response.status_code = 200;
+		response.setHeader('Content-Type', 'text/plain');
+		response.status_code = 200;
 	}
+
+	this._response = response;
 
 	return this;
 }
@@ -133,19 +139,7 @@ View.prototype.setResponse = function view_setResponse(response) {
  * @param {[type]} mode [description]
  */
 View.prototype.setRenderMode = function view_setRenderMode(mode) {
-	var _self = this;
-	var old_engine = _self._template_engine;
-
-	_self._render_mode = mode;
-
-	_self._template_engine = new (exports.getRenderer(mode))();
-	
-	if (old_engine != null) {
-		_self._template_engine.dir = old_engine.dir;
-		_self._template_engine.response = old_engine.response;
-	}
-
-	_self._template_engine.errorHandler(_self._error_handler);
+	this._render_mode = mode;
 }
 
 /**
@@ -153,7 +147,7 @@ View.prototype.setRenderMode = function view_setRenderMode(mode) {
  * @type {[type]}
  */
 View.prototype.setTemplate = function view_setTemplate(template) {
-	this._template_engine.template = template;
+	this._template = template;
 };
 
 /**
@@ -170,7 +164,7 @@ View.prototype.isRendered = function view_isRendered() {
  * @param {Mixed} value
  */
 View.prototype.set = function view_set(key, value) {
-	this._template_engine.data[key] = value;
+	this._data[key] = value;
 };
 
 /**
@@ -178,9 +172,7 @@ View.prototype.set = function view_set(key, value) {
  * @param {[type]} title [description]
  */
 View.prototype.setToRoot = function view_setToRoot(key, value) {
-	apply_to_root(this, function (view) {
-		view.set(key, value);
-	});
+	this.root.set(key, value);
 };
 
 /**
@@ -190,9 +182,9 @@ View.prototype.setToRoot = function view_setToRoot(key, value) {
  */
 View.prototype.get = function view_get(key) {
 	if(typeof key === "string") {
-		return this._template_engine.data[key];
+		return this._data[key];
 	}
-	return this._template_engine.data;
+	return this._data;
 };
 
 /**
@@ -205,7 +197,7 @@ View.prototype.fill = function view_fill(func) {
 	var new_data = func();
 	var i = null;
 	for(i in new_data) {
-		this._template_engine.data[i] = new_data[i];
+		this._data[i] = new_data[i];
 	}
 };
 
@@ -254,18 +246,34 @@ View.prototype.render = function view_render(template) {
 
 		if (this.canRender()) {
 			this.render_state = this.RENDER_STARTED;
-			this._template_engine.render(template);
+			this.buildTemplateEngine().render(template);
 		} else {
 			// If a template has not yet been assigned to this view, and we can not immediately render it
 			// we need to set the provided template, so it is rendered in the future
-			if (!this._template_engine.template) {
+			if (!this._template) {
 				this.setTemplate(template);
 			}
 		}
 	} else {
-		this._template_engine.response.end();
+		this.response.end();
 	}
 };
+
+/**
+ * [buildTemplateEngine description]
+ * @return {[type]} [description]
+ */
+View.prototype.buildTemplateEngine = function view_buildTemplateEngine() {
+	//console.log(this);
+	var template_engine = new (exports.getRenderer(this._render_mode))();
+	template_engine.dir = this._dir;
+	template_engine.data = this._data;
+	template_engine.template = this._template;
+	template_engine.response = this._response;
+	template_engine.errorHandler(this._error_handler);
+	return template_engine;
+};
+
 
 /**
  * [errorHandler description]
@@ -287,10 +295,11 @@ View.prototype.child = function view_child(key, template) {
 	var new_view = new View();
 	new_view.setRenderMode(this._render_mode);
 	new_view.parent = this;
-	new_view.setDir(this._template_engine.dir);
+	new_view.root = this.root;
+	new_view.setDir(this._dir);
 
 	// Makes a fake response that writes to the parent instead of to an actual response object
-	new_view._template_engine.response = {
+	new_view._response = {
 		buffer: '',
 		write: function(chunk) {
 			this.buffer += chunk; 
@@ -313,23 +322,13 @@ View.prototype.child = function view_child(key, template) {
 	return this._child_views[key];
 };
 
-var apply_to_root = function (view, fn) {
-	if (view.parent) {
-		apply_to_root(view.parent, fn);
-	} else {
-		fn(view);
-	}
-};
-
 /**
  * Adds a javascript file, and pushes it all the way up the chain to the core template
  * TODO: add a flag so it is not pushed to the top? is that useful?
  * @param {String} file 
  */
 View.prototype.addJs = function view_addJs(file) {
-	apply_to_root(this, function (view) {
-		view._js.push({'src' : file});
-	});
+	this.root._js.push({'src' : file});
 };
 
 /**
@@ -338,9 +337,7 @@ View.prototype.addJs = function view_addJs(file) {
  * @param {String} file
  */
 View.prototype.addCss = function view_addCss(file) {
-	apply_to_root(this, function (view) {
-		view._css.push({'src' : file})
-	});
+	this.root._css.push({'src' : file})
 };
 
 /**
@@ -348,9 +345,7 @@ View.prototype.addCss = function view_addCss(file) {
  * @param {[type]} code [description]
  */
 View.prototype.setStatusCode = function view_setStatusCode(code) {
-	apply_to_root(this, function (view) {
-		view._template_engine.response.statusCode = code;
-	});
+	this.root._response.statusCode = code;
 };
 
 /**
@@ -358,12 +353,9 @@ View.prototype.setStatusCode = function view_setStatusCode(code) {
  * @param {[type]} headers [description]
  */
 View.prototype.setHeader = function view_setHeaders(headers) {
-	var key = null;
-	apply_to_root(this, function (view) {
-		for(key in headers) {
-			view._template_engine.response.setHeader(key, headers[key]);
-		}
-	});
+	for(key in headers) {
+		this.root._response.setHeader(key, headers[key]);
+	}
 };
 
 /**
@@ -373,10 +365,8 @@ View.prototype.setHeader = function view_setHeaders(headers) {
  * @todo  fix
  */
 View.prototype.notFound = function view_notFound(template) {
-	apply_to_root(this, function (view) {
-		view._template_engine.response.statusCode = 404;
-		view._template_engine.render(template);
-	});
+	this.root._response.statusCode = 404;
+	this.root._render(template);
 };
 
 /**
@@ -385,10 +375,8 @@ View.prototype.notFound = function view_notFound(template) {
  * @return {[type]}
  */
 View.prototype.error = function view_error(error) {
-	apply_to_root(this, function (view) {
-		view._template_engine.response.statusCode = 500;
-		view.render(false);
-	});
+	this.root._response.statusCode = 500;
+	this.root.render(false);
 };
 
 /**
@@ -399,11 +387,9 @@ View.prototype.error = function view_error(error) {
  * @return {[type]}
  */
 View.prototype.created = function view_created(redirect_url) {
-	apply_to_root(this, function (view) {
-		view._template_engine.response.statusCode = 201;
-		view._template_engine.response.setHeader('Location', redirect_url);
-		view.render(false);
-	});
+	this.root._response.statusCode = 201;
+	this.root._response.setHeader('Location', redirect_url);
+	this.root.render(false);
 };
 
 /**
@@ -414,11 +400,9 @@ View.prototype.created = function view_created(redirect_url) {
  * @return {[type]}
  */
 View.prototype.redirect = function view_redirect(redirect_url) {
-	apply_to_root(this, function (view) {
-		view._template_engine.response.statusCode = 302;
-		view._template_engine.response.setHeader('Location', redirect_url);
-		view.render(false);
-	});
+	this.root._response.statusCode = 302;
+	this.root._response.setHeader('Location', redirect_url);
+	this.root.render(false);
 };
 
 /**
@@ -426,14 +410,12 @@ View.prototype.redirect = function view_redirect(redirect_url) {
  * @return {[type]} [description]
  */
 View.prototype.notModified = function view_notModified() {
-	apply_to_root(this, function (view) {
-		view._template_engine.response.statusCode = 304;
-		// date
-		// etag
-		// expires
-		// cache  control
-		view.render(false);
-	});
+	this.root._response.statusCode = 304;
+	// date
+	// etag
+	// expires
+	// cache  control
+	this.root.render(false);
 };
 
 /**
