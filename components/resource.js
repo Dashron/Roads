@@ -249,12 +249,21 @@ Resource.prototype.request = function (uri_bundle, view) {
 
 	// route, allowing this to point to the original resource, and provide some helper utils
 	if (typeof route[uri_bundle.method] == "function") {
-		route[uri_bundle.method].call(this, uri_bundle, view);
+		process.nextTick(function() {
+			route[uri_bundle.method].call(this, uri_bundle, view);
+		});
 	} else if (typeof route['default'] === "function") {
-		route.default.call(this, uri_bundle, view);
+		process.nextTick(function() {
+			route.default.call(this, uri_bundle, view);
+		});
 	} else {
-		//todo :implement
-		//view.unsupportedMethod();
+		var keys = [];
+		['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'].forEach(function (option) {
+			if (typeof route[option] === "function") {
+				keys.push(option)
+			}
+		});
+		view.unsupportedMethod(keys);
 	}
 };
 
