@@ -84,6 +84,7 @@ var View = exports.View = function View() {
 	this.root = this;
 	// Default error handler 500's
 	this._error_handler = function (error) {
+		console.log(error);
 		this.error(error);
 	}
 };
@@ -249,7 +250,7 @@ View.prototype.render = function view_render(template) {
 			if (this._template) {
 				template = this._template;
 			}
-			this.buildTemplateEngine().render(template);
+			this.buildTemplateEngine().render(this._dir + template);
 		} else {
 			// If a template has not yet been assigned to this view, and we can not immediately render it
 			// we need to set the provided template, so it is rendered in the future
@@ -267,9 +268,7 @@ View.prototype.render = function view_render(template) {
  * @return {[type]} [description]
  */
 View.prototype.buildTemplateEngine = function view_buildTemplateEngine() {
-	//console.log(this);
 	var template_engine = new (exports.getRenderer(this._render_mode))();
-	template_engine.dir = this._dir;
 	template_engine.data = this._data;
 	template_engine.response = this._response;
 	template_engine.errorHandler(this._error_handler);
@@ -314,7 +313,9 @@ View.prototype.child = function view_child(key, template) {
 			new_view.parent.set(key, this.buffer); 
 
 			if(new_view.parent.canRender()) {
-				new_view.parent.render(template);
+				process.nextTick(function() {
+					new_view.parent.render(template);
+				});
 			}
 		}
 	 };
@@ -420,6 +421,12 @@ View.prototype.notModified = function view_notModified() {
 	this.root.render(false);
 };
 
+View.prototype.unsupportedMethod = function view_unsupportedMethod(supported_methods) {
+	this.root._response.statusCode = 405
+	this.root._response.setHeader('Allow', supported_methods.join(','));
+	this.root._response.end();
+};
+
 /**
  * [Renderer description]
  */
@@ -456,15 +463,10 @@ Renderer.prototype.errorHandler = function (fn) {
  * [HtmlRenderer description]
  * @param {[type]} template [description]
  */
-var HtmlRenderer = function(template) {
+var HtmlRenderer = function() {
 	Renderer.call(this);
-	this.template = template;
-	this.dir = '';
 };
 util_module.inherits(HtmlRenderer, Renderer);
-
-HtmlRenderer.prototype.dir = '';
-HtmlRenderer.prototype.template = '';
 
 /**
  * [render description]
@@ -478,11 +480,8 @@ HtmlRenderer.prototype.render = function (template) {
 		this.response.setHeader('Content-Type', 'text/html');
 		this.response.status_code = 200;
 	}
-	
-	// _self.template should be the user set value, wheras render(template) is the default if nothing is set.
-	template = this.template || template;
 
-	var stream = mu.compileAndRender(this.dir + template, this.data);
+	var stream = mu.compileAndRender(template, this.data);
 	stream.on('data', function (data) {
 		_self.response.write(data);
 	});
@@ -525,10 +524,8 @@ exports.addRenderer('application/json', JsonRenderer);
 var buildFileRenderer = function (content_type) {
 	var FileRenderer = function() {
 		Renderer.call(this);
-		this.dir = '';
 	}
 
-	FileRenderer.prototype.dir = '';
 	util_module.inherits(FileRenderer, Renderer);
 
 	FileRenderer.prototype.render = function (template) {
@@ -539,7 +536,7 @@ var buildFileRenderer = function (content_type) {
 			this.response.status_code = 200;
 		}
 
-		var stream = fs_module.createReadStream(this.dir + template);
+		var stream = fs_module.createReadStream(template);
 		stream.on('data', function (data) {
 			_self.response.write(data);
 		});
