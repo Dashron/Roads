@@ -78,6 +78,7 @@ var View = exports.View = function View() {
 	this._css = {};
 
 	this._child_views = {};
+	this._data = {};
 
 	this.render_state = this.RENDER_NOT_CALLED;
 	this.parent = null;
@@ -96,7 +97,7 @@ View.prototype._css = null;
 View.prototype._dir = null;
 View.prototype._template = null;
 View.prototype._response = null;
-View.prototype._data = {};
+View.prototype._data = null;
 View.prototype._child_views = null;
 View.prototype._render_mode = null;
 View.prototype._error_handler = null;
