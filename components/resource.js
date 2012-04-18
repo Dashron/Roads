@@ -192,6 +192,7 @@ Resource.prototype.addModel = function (key, model) {
 Resource.prototype.request = function (uri_bundle, view) {
 	var key = null;
 	var template_dir = this.template_dir;
+	var _self = this;
 
 	// Allow direct urls for shorthand. Assume a GET request in this case
 	if (typeof uri_bundle === "string") {
@@ -250,11 +251,11 @@ Resource.prototype.request = function (uri_bundle, view) {
 	// route, allowing this to point to the original resource, and provide some helper utils
 	if (typeof route[uri_bundle.method] == "function") {
 		process.nextTick(function() {
-			route[uri_bundle.method].call(this, uri_bundle, view);
+			route[uri_bundle.method].call(_self, uri_bundle, view);
 		});
 	} else if (typeof route['default'] === "function") {
 		process.nextTick(function() {
-			route.default.call(this, uri_bundle, view);
+			route.default.call(_self, uri_bundle, view);
 		});
 	} else {
 		var keys = [];
