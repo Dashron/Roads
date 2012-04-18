@@ -4,11 +4,31 @@ module.exports = {
 	name : 'static',
 	uri : '/static/',
 	routes : [{ 
-		match : /^([\w.\/]+)$/,
-		modes : ['text/html'],
+		match : /^(([\w.\/]+)\.(js|css|txt|html))$/,
+		modes : ['text/javascript', 'text/css', 'text/plain'],
 		GET : function (uri_bundle, view) {
+			// We want to change the root view, and not some child view along the way
+			var child = view;
+			//view = view.root;
+
 			var request_date = uri_bundle.headers['if-modified-since'];
 			var path = this.template_dir + uri_bundle.params.file;
+// For some reason, this view does not take the new render mode content-type
+			switch (uri_bundle.params.ext) {
+				case 'js':
+					view.setRenderMode('text/javascript');
+					break;
+
+				case 'css':
+					view.setRenderMode('text/css');
+					break;
+
+				case 'txt':
+				case 'html':
+				default:
+					view.setRenderMode('text/plain');
+					break;
+			}
 
 			// can we improve this further? it would be nice to not need to stat a file each request
 			if (typeof request_date === "string") {
@@ -26,13 +46,16 @@ module.exports = {
 				});
 			} else {
 				view.setErrorHandler(function (error) {
+					console.log(error);
 					view.notFound('404.html');
 				});
-				view.render(uri_bundle.params.file);
+				view.setTemplate(uri_bundle.params.file);
+				view.render();
 			}
 		},
 		options : {
-			keys : ['file']
+			keys : ['file', 'name', 'ext'],
+			override_template : true
 		}
 	}],
 	unmatched_route : {
