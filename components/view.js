@@ -96,7 +96,6 @@ View.prototype._dir = null;
 View.prototype._template = null;
 View.prototype._response = null;
 View.prototype._data = {};
-View.prototype._template_engine = null;
 View.prototype._child_views = null;
 View.prototype._render_mode = null;
 View.prototype._error_handler = null;
@@ -246,6 +245,10 @@ View.prototype.render = function view_render(template) {
 
 		if (this.canRender()) {
 			this.render_state = this.RENDER_STARTED;
+			// We want to prefer the pre-set template over the render(template)
+			if (this._template) {
+				template = this._template;
+			}
 			this.buildTemplateEngine().render(template);
 		} else {
 			// If a template has not yet been assigned to this view, and we can not immediately render it
@@ -268,7 +271,6 @@ View.prototype.buildTemplateEngine = function view_buildTemplateEngine() {
 	var template_engine = new (exports.getRenderer(this._render_mode))();
 	template_engine.dir = this._dir;
 	template_engine.data = this._data;
-	template_engine.template = this._template;
 	template_engine.response = this._response;
 	template_engine.errorHandler(this._error_handler);
 	return template_engine;
