@@ -1,6 +1,5 @@
 "use strict";
 var http = require('http');
-var firenode_component = require('./components/firenode/firenode');
 var resource_component = require('./components/resource');
 var Server = require('./components/server').Server;
 
