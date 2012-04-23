@@ -23,6 +23,19 @@ var Cookie = require('./cookie').Cookie;
 var Router = require('./router').RegexRouter;
 
 var _resources = {};
+var _resource_dir = __dirname.replace('components', 'resources/');
+
+/**
+ * Set the default directory  to load resources from
+ * @param {String} directory 
+ */
+var set_resource_dir = exports.setDir = function (directory) {
+	if (directory.charAt(directory.length) != '/') {
+		directory = directory + '/';
+	}
+	
+	_resource_dir = directory;
+};
 
 /**
  * Build a single resource by name, and cache it
@@ -36,8 +49,7 @@ var _resources = {};
 var get_resource = exports.get = function (name, config) {
 	if (typeof _resources[name] == "undefined" || _resources[name] == null) {
 		console.log("Loading Resource:" + name);
-		_resources[name] = build(name, require(__dirname.replace('components', 'resources/') 
-			+ name + '/' + name + '.desc.js'));
+		_resources[name] = build(name, require(_resource_dir + name + '/' + name + '.desc.js'));
 	}
 
 	return _resources[name];
