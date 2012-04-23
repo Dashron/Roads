@@ -84,10 +84,11 @@ var View = exports.View = function View() {
 	this.parent = null;
 	this.root = this;
 	// Default error handler 500's
-	this._error_handler = function (error) {
+	// This is problematic. If response.end() errors, it ends up in a crazy ass loop.
+	/*this._error_handler = function (error) {
 		console.log(error);
 		this.error(error);
-	}
+	}*/
 };
 
 util_module.inherits(View, EventEmitter);
@@ -269,10 +270,18 @@ View.prototype.render = function view_render(template) {
  * @return {[type]} [description]
  */
 View.prototype.buildTemplateEngine = function view_buildTemplateEngine() {
+	var _self = this;
+
 	var template_engine = new (exports.getRenderer(this._render_mode))();
 	template_engine.data = this._data;
 	template_engine.response = this._response;
-	template_engine.errorHandler(this._error_handler);
+	template_engine.errorHandler(function (error) {
+		_self.render_state = this.RENDER_FAILED;
+		_self._error_handler(error);
+	});
+	template_engine.endHandler(function() {
+		_self.render_state = _self.RENDER_COMPLETE;
+	});
 	return template_engine;
 };
 
@@ -301,7 +310,7 @@ View.prototype.child = function view_child(key, template) {
 	new_view.setDir(this._dir);
 
 	// Makes a fake response that writes to the parent instead of to an actual response object
-	new_view._response = {
+	new_view.setResponse({
 		buffer: '',
 		write: function(chunk) {
 			this.buffer += chunk; 
@@ -319,7 +328,7 @@ View.prototype.child = function view_child(key, template) {
 				});
 			}
 		}
-	 };
+	 });
 
 	this._child_views[key] = new_view;
 
@@ -451,6 +460,12 @@ Renderer.prototype.error = function (err) {
 	};
 };
 
+Renderer.prototype.end = function () {
+	this.endHandler = function (fn) {
+		fn();
+	};
+};
+
 /**
  * [errorHandler description]
  * @param  {Function} fn [description]
@@ -458,6 +473,14 @@ Renderer.prototype.error = function (err) {
  */
 Renderer.prototype.errorHandler = function (fn) {
 	this.error = fn;
+};
+
+/**
+ * [endHandler description]
+ * @return {[type]} [description]
+ */
+Renderer.prototype.endHandler = function (fn) {
+	this.end = fn;
 };
 
 /**
@@ -492,6 +515,7 @@ HtmlRenderer.prototype.render = function (template) {
 	});
 
 	stream.on('end', function () {
+		_self.end();
 		_self.response.end();
 	});
 };
