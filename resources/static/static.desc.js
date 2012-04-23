@@ -7,10 +7,6 @@ module.exports = {
 		match : /^(([\w.\/]+)\.(js|css|txt|html))$/,
 		modes : ['text/javascript', 'text/css', 'text/plain'],
 		GET : function (uri_bundle, view) {
-			// We want to change the root view, and not some child view along the way
-			var child = view;
-			//view = view.root;
-
 			var request_date = uri_bundle.headers['if-modified-since'];
 			var path = this.template_dir + uri_bundle.params.file;
 // For some reason, this view does not take the new render mode content-type
