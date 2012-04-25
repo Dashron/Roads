@@ -8,7 +8,7 @@ module.exports = {
 		modes : ['text/javascript', 'text/css', 'text/plain'],
 		GET : function (uri_bundle, view) {
 			var request_date = uri_bundle.headers['if-modified-since'];
-			var path = this.template_dir + uri_bundle.params.file;
+			var path = view.getDir() + uri_bundle.params.file;
 // For some reason, this view does not take the new render mode content-type
 			switch (uri_bundle.params.ext) {
 				case 'js':
@@ -27,31 +27,36 @@ module.exports = {
 			}
 
 			// can we improve this further? it would be nice to not need to stat a file each request
-			if (typeof request_date === "string") {
-				request_date = new Date(request_date);
-				fs_module.stat(path, function (err, stats) {
-					if (err) {
-						view.error(err);
-					} else {
-						if (stats.mtime.getTime() > request_date.getTime()) {
-							view.notModified();
-						} else {
-							view.render(uri_bundle.params.file);
+			fs_module.stat(path, function (err, stats) {				
+				if (err) {
+					console.log(err);
+					view.error(err);
+				} else {
+					view.setErrorHandler(function (error) {
+						console.log(error);
+						view.notFound('404.html');
+					});
+
+					view.setHeader({
+						'Last-Modified' : stats.mtime.toUTCString()
+					});
+
+					if (typeof request_date === "string") {
+						request_date = new Date(request_date);
+
+						if (stats.mtime.getTime() <= request_date.getTime()) {
+							return view.notModified();
 						}
 					}
-				});
-			} else {
-				view.setErrorHandler(function (error) {
-					console.log(error);
-					view.notFound('404.html');
-				});
-				view.setTemplate(uri_bundle.params.file);
-				view.render();
-			}
+
+					view.setTemplate(uri_bundle.params.file);
+					view.render();
+				}
+			});
 		},
 		options : {
 			keys : ['file', 'name', 'ext'],
-			override_template : true
+			ignore_template : true
 		}
 	}],
 	unmatched_route : {

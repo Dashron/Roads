@@ -122,6 +122,14 @@ View.prototype.setDir = function view_setDir(path) {
 };
 
 /**
+ * [getDir description]
+ * @return {[type]} [description]
+ */
+View.prototype.getDir = function view_getDir() {
+	return this._dir;
+};
+
+/**
  * [setResponse description]
  * @param {[type]} response [description]
  */
@@ -261,7 +269,7 @@ View.prototype.render = function view_render(template) {
 			}
 		}
 	} else {
-		this.response.end();
+		this._response.end();
 	}
 };
 
@@ -366,6 +374,7 @@ View.prototype.setStatusCode = function view_setStatusCode(code) {
  * @param {[type]} headers [description]
  */
 View.prototype.setHeader = function view_setHeaders(headers) {
+	var key = null;
 	for(key in headers) {
 		this.root._response.setHeader(key, headers[key]);
 	}

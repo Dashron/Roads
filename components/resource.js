@@ -249,7 +249,7 @@ Resource.prototype.request = function (uri_bundle, view) {
 	}
 
 	// If a template is set in the config, apply it to the current view and then provide a child view to the route
-	if (!route.options.override_template && typeof this.template === "function") {
+	if (!route.options.ignore_template && typeof this.template === "function") {
 		// We don't want to set the route resources directory, we will always create the template from the resource upon which request is called
 		view.setDir(this.template_dir);
 		var child = view.child('content');
