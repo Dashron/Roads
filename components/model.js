@@ -5,22 +5,28 @@
 */
 "use strict";
 
+var database_module = require('./database');
+
 /**
  * How to use:
- * Create the model constructors from a reference object using buildModel.
- * Use those constructors to create new models, with the loaded data provided as a parameter.
- * eg.
- * var User = model_module.buildModelConstructor({
- * 	id : 'integer',
- * 	name : 'string'
- * });
- * var aaron = new User({id : 5, name : 'Aaron'});
- * 
- * You should not build a module more than once (althoguh it will work, it's just unnecessary)
- * 
- * This model will stay very lean.
- * Other objects should interact on the models, models should not have their own database references or validation scripts
- * 
+ *  var user_module = new model_module.ModelModule();
+ *  user_module.connection = 'default';
+ *  user_module.setModel({
+ *  	table : '',
+ *  	fields : {
+ *  		name : {
+ *  			type : '',
+ *  			set : function (){},
+ *  			get : function (){}
+ *  		}
+ *  	},
+ *  	methods : {
+ *  		name : function (){}
+ *  	}
+ *  });
+ *
+ * user_module.do_stuff();
+ *  
  */
 var Model = module.exports.Model = function Model(data) {
 	for (var i in data) {
@@ -33,21 +39,49 @@ var Model = module.exports.Model = function Model(data) {
 Model.prototype.definition = null;
 Model.prototype.changed = false;
 
-module.exports.buildModelConstructor = function buildModel (definition) {
+/**
+ * [ModelModule description]
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+var ModelModule = module.exports.ModelModule = function ModelModule () {
+};
+
+ModelModule.prototype.connection = null;
+
+ModelModule.prototype.getConnection = function () {
+	return database_module.getConnection(this.connection);
+};
+
+ModelModule.prototype.setModel = function (definition) {
+	this.definition = definition;
+	
 	var new_model = function(data) {
 		Model.call(this, data);
 	};
 
 	new_model.prototype.definition = definition;
+	applyModelMethods(new_model, definition);
+	applyModelFields(new_model, definition);
+	this.Model = new_model;
+};
 
+function applyModelMethods (model, definition) {
 	for (var i in definition.methods) {
 		if (i === 'definition') {
 			throw new Error('Invalid model definition provided. "definition" is a reserved word');
 		}
 
-		new_model.prototype[i] = definition.methods[i];
+		model.prototype[i] = definition.methods[i];
 	}
-
+}
+	
+function applyModelFields (model, definition) {
 	for (var i in definition.fields) {
 		if (i === 'definition') {
 			throw new Error('Invalid model definition provided. "definition" is a reserved word');
@@ -75,9 +109,64 @@ module.exports.buildModelConstructor = function buildModel (definition) {
 				}
 			}			
 
-			Object.defineProperty(new_model.prototype, key, property);
+			Object.defineProperty(model.prototype, key, property);
 		}(i, definition.fields[i]));
 	}
+}
 
-	return new_model;
+ModelModule.prototype.query = function () {
+	return this.getConnection().query();
 };
+
+ModelModule.prototype.load = function (value, field) {
+	var promise = new ModelPromise();
+
+	if (typeof field != "string") {
+		field = "id";
+	}
+
+	this.query().select('*')
+		.from(this.definition.table)
+		.where(this.getConnection().name(field) + ' = ?', [value])
+		.limit(1)
+		.execute(function (err, rows, columns) {
+			if (err) {
+				console.log(err);
+				promise._error(err);
+			}
+
+			promise._ready(new exports.Model(rows[0]));
+		});
+
+	return promise;
+};
+
+/**
+ * [ModelPromise description]
+ *
+ *
+ *
+ * 
+ */
+var ModelPromise = exports.ModelPromise = function () {
+};
+
+ModelPromise.prototype._error = function (err) {
+	this.error = function (fn) {
+		fn(err);
+	}
+};
+
+ModelPromise.prototype.error = function (fn) {
+	this._error = fn;
+}
+
+ModelPromise.prototype._ready = function (data) {
+	this.empty = function (fn) {
+		fn(data);
+	}
+};
+
+ModelPromise.prototype.ready = function (fn) {
+	this._ready = fn;
+}

@@ -3,6 +3,7 @@ var assert = require('assert');
 
 
 var model_module = require('../../components/model');
+var database_module = require('../../components/database');
 
 vows.describe('Model Component').addBatch({
     'An empty model': {
@@ -15,7 +16,8 @@ vows.describe('Model Component').addBatch({
     },
     'A model with fields' : {
         topic: function () {
-        	var User = model_module.buildModelConstructor({
+                var UserModule = new model_module.ModelModule();
+                UserModule.setModel({
                         table : 'user',
                         fields : {
                                 id : {
@@ -33,7 +35,7 @@ vows.describe('Model Component').addBatch({
                         }
                 });
 
-                return new User({
+                return new UserModule.Model({
                         id : 999,
                         email : 'fake@dashron.com',
                         password : '555',
@@ -81,7 +83,8 @@ vows.describe('Model Component').addBatch({
     },
     'A model with getters and setters' : {
         topic: function () {
-                var User = model_module.buildModelConstructor({
+                var UserModule = new model_module.ModelModule();
+                UserModule.setModel({
                         table : 'user',
                         fields : {
                                 id : {
@@ -118,7 +121,7 @@ vows.describe('Model Component').addBatch({
                         }
                 });
 
-                return new User();
+                return new UserModule.Model();
         },
         'can use setters' : function (user) {
                 user.password = '1234';
@@ -133,7 +136,8 @@ vows.describe('Model Component').addBatch({
     },
     'A model with methods' : {
         topic: function () {
-        	var User = model_module.buildModelConstructor({
+                var UserModule = new model_module.ModelModule();
+                UserModule.setModel({
                         table : 'user',
                         fields : {
                                 password : {
@@ -150,11 +154,66 @@ vows.describe('Model Component').addBatch({
                         }
                 });
 
-                return new User();
+                return new UserModule.Model();
         },
         'can call function' : function (user) {
                 user.password = '1234';
         	assert.isTrue(user.checkPassword('1234'));
+        }
+    },
+    'A model module' : {
+        topic: function () {
+                var _self = this;
+                var UserModule = new model_module.ModelModule();
+                UserModule.connection = 'default';
+                UserModule.setModel({
+                        table : 'user',
+                        fields : {
+                                id : {
+                                        type : 'id',
+                                },
+                                email : {
+                                        type : 'email'
+                                },
+                                password : {
+                                        type : 'password',
+                                        set : function (password) {
+                                                this.password = crypto_module.createHash('sha256').update(password).digest('hex');
+                                        }
+                                },
+                                last_ip : {
+                                        type : 'ip',
+                                }
+                        },
+                        methods : {
+                                checkPassword : function checkPassword(password) {
+                                        var sha256 = crypto_module.createHash('sha256').update(password);
+                                        return sha256.digest('hex') === this.password;
+                                }
+                        }
+                });
+
+                database_module.loadConnection('default', {
+                        hostname: 'localhost',
+                        user : 'gfw',
+                        database: 'gfw'
+                });
+
+                database_module.ready(function () {
+                        _self.callback(null, UserModule);
+                });
+                
+        },
+        'can use load' : function (user_module) {
+                var promise = user_module.load(1);
+                
+                promise.error(function (err) {
+                        throw err;
+                });
+
+                promise.ready(function (model) {
+                        assert.equal(model.id, 1);
+                });
         }
     }
 }).export(module); // Export the Suite
