@@ -47,7 +47,7 @@ vows.describe('Model Component').addBatch({
                 assert.equal(user.email, 'fake@dashron.com');
                 assert.equal(user.password, '555');
                 assert.equal(user.last_ip, 555);
-                assert.equal(user.changed, false);
+                assert.equal(Object.keys(user.updated_fields).length, 0);
         },
         'can access the definition' : function (user) {
                 assert.deepEqual(user.definition, {
@@ -78,7 +78,7 @@ vows.describe('Model Component').addBatch({
                 assert.equal(user.email, 'aaron@dashron.com');
                 assert.equal(user.password, '12345');
                 assert.equal(user.last_ip, '127.0.0.1');
-                assert.equal(user.changed, true);
+                assert.equal(Object.keys(user.updated_fields).length, 4);
         }
     },
     'A model with getters and setters' : {
@@ -177,8 +177,8 @@ vows.describe('Model Component').addBatch({
                                 },
                                 password : {
                                         type : 'password',
-                                        set : function (password) {
-                                                this.password = crypto_module.createHash('sha256').update(password).digest('hex');
+                                        set : function (value) {
+                                                this._password = 'worst_salt_' + value;
                                         }
                                 },
                                 last_ip : {
@@ -187,20 +187,19 @@ vows.describe('Model Component').addBatch({
                         },
                         methods : {
                                 checkPassword : function checkPassword(password) {
-                                        var sha256 = crypto_module.createHash('sha256').update(password);
-                                        return sha256.digest('hex') === this.password;
+                                        return 'worst_salt_' + password === this._password;
                                 }
                         }
+                });
+
+                database_module.ready(function () {
+                        _self.callback(null, UserModule);
                 });
 
                 database_module.loadConnection('default', {
                         hostname: 'localhost',
                         user : 'gfw',
                         database: 'gfw'
-                });
-
-                database_module.ready(function () {
-                        _self.callback(null, UserModule);
                 });
                 
         },
@@ -213,6 +212,59 @@ vows.describe('Model Component').addBatch({
 
                 promise.ready(function (model) {
                         assert.equal(model.id, 1);
+                });
+        },
+        'can save' : function (user_module) {
+                var user = new user_module.Model();
+                user.email = 'aaron@dashron.com';
+                user.password = '12345';
+                user.last_ip = '127.0.0.1';
+                var promise = user.save();
+
+                promise.ready(function (result) {
+                        assert.equal(promise.result.affected, 1);
+                        assert.ok(!isNaN(result.id));
+                });
+
+                promise.error(function (error) {
+                        throw error;
+                });
+        },
+        'can update' : function (user_module) {
+                var user = new user_module.Model();
+                user.email = 'aaron@dashron.com';
+                user.password = '12345';
+                user.last_ip = '127.0.0.1';
+                var insert_promise = user.save();
+
+                insert_promise.ready(function (insert_user) {
+                        assert.equal(this.result.affected, 1);
+                        assert.ok(!isNaN(insert_user.id));
+                        
+                        var load_promise = user_module.load(insert_user.id);
+
+                        load_promise.ready(function (load_user) {
+                                load_user.email = 'fake@dashron.com';
+                                var update_promise = load_user.save();
+
+                                update_promise.ready(function (update_user) {
+                                        assert.equal(update_promise.result.affected, 1);
+                                        assert.equal(update_user.email, 'fake@dashron.com');
+                                });
+
+                                update_promise.error(function (error) {
+                                        throw error;
+                                });
+                        });
+
+                        load_promise.error(function (error) {
+                               throw error;
+                        });
+                });
+
+                insert_promise.error(function (error) {
+                        console.log(error);
+                        throw error;
                 });
         }
     }
