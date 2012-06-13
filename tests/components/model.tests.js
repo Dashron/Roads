@@ -191,17 +191,13 @@ vows.describe('Model Component').addBatch({
                                 }
                         }
                 });
-
-                database_module.ready(function () {
-                        _self.callback(null, UserModule);
-                });
-
                 database_module.loadConnection('default', {
                         hostname: 'localhost',
                         user : 'gfw',
                         database: 'gfw'
                 });
-                
+
+                return UserModule;
         },
         'can use load' : function (user_module) {
                 var promise = user_module.load(1);
@@ -222,7 +218,7 @@ vows.describe('Model Component').addBatch({
                 var promise = user.save();
 
                 promise.ready(function (result) {
-                        assert.equal(promise.result.affected, 1);
+                        assert.equal(promise.result.affectedRows, 1);
                         assert.ok(!isNaN(result.id));
                 });
 
@@ -238,7 +234,7 @@ vows.describe('Model Component').addBatch({
                 var insert_promise = user.save();
 
                 insert_promise.ready(function (insert_user) {
-                        assert.equal(this.result.affected, 1);
+                        assert.equal(this.result.affectedRows, 1);
                         assert.ok(!isNaN(insert_user.id));
                         
                         var load_promise = user_module.load(insert_user.id);
@@ -248,11 +244,57 @@ vows.describe('Model Component').addBatch({
                                 var update_promise = load_user.save();
 
                                 update_promise.ready(function (update_user) {
-                                        assert.equal(update_promise.result.affected, 1);
+                                        assert.equal(update_promise.result.affectedRows, 1);
                                         assert.equal(update_user.email, 'fake@dashron.com');
                                 });
 
                                 update_promise.error(function (error) {
+                                        throw error;
+                                });
+                        });
+
+                        load_promise.error(function (error) {
+                               throw error;
+                        });
+                });
+
+                insert_promise.error(function (error) {
+                        console.log(error);
+                        throw error;
+                });
+        },
+        'can delete' : function (user_module) {
+                var user = new user_module.Model();
+                user.email = 'aaron@dashron.com';
+                user.password = '12345';
+                user.last_ip = '127.0.0.1';
+                var insert_promise = user.save();
+
+                insert_promise.ready(function (insert_user) {
+                        assert.equal(this.result.affectedRows, 1);
+                        assert.ok(!isNaN(insert_user.id));
+                        
+                        var load_promise = user_module.load(insert_user.id);
+
+                        load_promise.ready(function (load_user) {
+                                var delete_promise = load_user.delete();
+
+                                delete_promise.ready(function (delete_user) {
+                                        assert.equal(delete_promise.result.affectedRows, 1);
+                                        assert.equal(delete_user, null);
+
+                                        var load2_promise = user_module.load(insert_user.id);
+
+                                        load2_promise.ready(function (load2_user) {
+                                                assert.equal(load2_user, null);
+                                        });
+
+                                        load2_promise.error(function (error) {
+                                                throw error;
+                                        });
+                                });
+
+                                delete_promise.error(function (error) {
                                         throw error;
                                 });
                         });

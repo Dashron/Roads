@@ -50,9 +50,9 @@ ModelModule.prototype.setModel = function (definition) {
 	NewModel.prototype.definition = definition;
 	applyModelMethods(NewModel, definition);
 	applyModelFields(NewModel, definition);
-	
-	NewModel.prototype.query = function () {
-		return model_module.getConnection().query();
+
+	NewModel.prototype.getConnection = function () {
+		return model_module.getConnection();
 	}
 
 	this.Model = NewModel;
@@ -101,10 +101,6 @@ function applyModelFields (model, definition) {
 	}
 }
 
-ModelModule.prototype.query = function () {
-	return this.getConnection().query();
-};
-
 ModelModule.prototype.load = function (value, field) {
 	var _self = this;
 	var promise = new ModelPromise();
@@ -113,17 +109,23 @@ ModelModule.prototype.load = function (value, field) {
 		field = "id";
 	}
 
-	this.query().select('*')
-		.from(this.definition.table)
-		.where(this.getConnection().name(field) + ' = ?', [value])
-		.limit(1)
-		.execute(function (err, rows, columns) {
-			if (err) {
-				promise._error(err);
-			}
+	this.getConnection()
+		.query('select * from `' + this.definition.table + '`' 
+				+ ' where `' + field + '` = ? limit 1', 
+				[value], 
+				function (err, rows, columns) {
+					if (err) {
+						promise._error(err);
+					}
 
-			promise._ready(new _self.Model(rows[0]));
-		});
+					if (rows.length === 0) {
+						// todo: should I use ready, error and empty? or just pass null to ready?
+						promise._ready(null);
+						return;
+					}
+
+					promise._ready(new _self.Model(rows[0]));
+				});
 
 	return promise;
 };
@@ -149,47 +151,58 @@ Model.prototype.save = function () {
 	var promise = new ModelPromise();
 	var keys = Object.keys(this.updated_fields);
 
+	//todo don't allow save to be called on a deleted object
 	if (keys.length > 0) {
 		if (typeof this.id === "undefined" || this.id === null) {
+			var values = [];
+			var placeholders = [];
+
+			for (var i = 0; i < keys.length; i++) {
+				values.push(this['_' + keys[i]]);
+				placeholders.push('?');
+			}
+
+			this.getConnection()
+				.query('insert into `' + this.definition.table + '`'
+						+ '(`' + keys.join('`, `') + '`)'
+						+ ' VALUES (' + placeholders.join(', ') + ')', 
+						values,
+						function(error, result) {
+							promise.result = result;
+
+							if (error) {
+								promise._error(error);
+								return;
+							}
+
+							_self.id = result.insertId;
+							_self.updated_fields = [];
+							promise._ready(_self);
+						});
+		} else {
 			var values = [];
 
 			for (var i = 0; i < keys.length; i++) {
 				values.push(this['_' + keys[i]]);
 			}
+			
+			values.push(this.id);
 
-			this.query().insert(this.definition.table, keys, values)
-				.execute(function(error, result) {
-					promise.result = result;
+			this.getConnection()
+				.query('update `' + this.definition.table + '`'
+						+ ' set `' + keys.join('` = ?, `') + '` = ? '
+						+ ' where `id` = ?', 
+						values, 
+						function (error, result) {
 
-					if (error) {
-						promise._error(error);
-						return;
-					}
-
-					_self.id = result.id;
-					_self.updated_fields = [];
-					promise._ready(_self);
-				});
-		} else {
-			var set = {};
-
-			for (var i = 0; i < keys.length; i++) {
-				set[keys[i]] = this['_' + keys[i]];
-			}
-
-			this.query().update(this.definition.table)
-				.set(set)
-				.where('id = ?', [this.id])
-				.execute(function (error, result) {
-
-					promise.result = result;
-					if (error) {
-						promise._error(error);
-						return;
-					}
-					_self.updated_fields = [];
-					promise._ready(_self);
-				});
+							promise.result = result;
+							if (error) {
+								promise._error(error);
+								return;
+							}
+							_self.updated_fields = [];
+							promise._ready(_self);
+						});
 		}
 	} else {
 		process.nextTick(function () {
@@ -200,6 +213,27 @@ Model.prototype.save = function () {
 	return promise;
 }
 
+Model.prototype.delete = function () {
+	var promise = new ModelPromise();
+
+	this.getConnection()
+		.query('delete from `' + this.definition.table + '`'
+			+ ' where `id` = ?', 
+			[this.id], 
+			function (error, result) {
+				promise.result = result;
+
+				if (error) {
+					promise._error(error);
+					return;
+				}
+
+				// todo: mark the model as deleted, so it does not accidentally get used in other locations
+				promise._ready(null);
+			});
+
+	return promise;
+};
 
 /**
  * [ModelPromise description]

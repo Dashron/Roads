@@ -1,32 +1,19 @@
 /*
-* gfw.js - model.js
+* gfw.js - database.js
 * Copyright(c) 2011 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
 */
 "use strict";
-var mysql_module = require('db-mysql');
+var mysql_module = require('mysql');
 var connections = {};
+var configs = {};
 
 module.exports.loadConnection = function (label, config) {
 	connections[label] = null;
+	configs[label] = config;
 
-	new mysql_module.Database(config).connect(function(error) {
-		if (error) {
-			// We don't allow startup if we can not connect to all of the databases
-			throw error;
-		}
-
-		connections[label] = this;
-
-		for(var i in connections) {
-			if (connections[i] === null) {
-				return;
-			}
-		}
-
-		// call ready if we have a connection loaded for each label requested
-		module.exports._ready();
-	});
+	connections[label] = mysql_module.createConnection(configs[label]);
+	connections[label].connect();
 };
 
 module.exports._ready = function () {
