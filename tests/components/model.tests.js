@@ -210,7 +210,7 @@ vows.describe('Model Component').addBatch({
                         assert.equal(model.id, 1);
                 });
         },
-        'can save' : function (user_module) {
+        'can insert' : function (user_module) {
                 var user = new user_module.Model();
                 user.email = 'aaron@dashron.com';
                 user.password = '12345';
@@ -280,7 +280,7 @@ vows.describe('Model Component').addBatch({
                                 var delete_promise = load_user.delete();
 
                                 delete_promise.ready(function (delete_user) {
-                                        assert.equal(delete_promise.result.affectedRows, 1);
+                                        assert.equal(this.result.affectedRows, 1);
                                         assert.equal(delete_user, null);
 
                                         var load2_promise = user_module.load(insert_user.id);
