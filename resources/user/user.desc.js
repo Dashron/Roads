@@ -22,8 +22,9 @@ module.exports = {
 	},
 	dependencies : [
 	],
-	models : [
-	],
+	models : {
+		'user' : require('./models/user.model')
+	},
 	config : {
 	}
 };

@@ -35,5 +35,12 @@ module.exports = {
 	models : [
 	],
 	config : {
+		dbs : {
+			"default" : {
+				hostname: 'localhost',
+				user : 'gfw',
+				database: 'gfw'
+			}
+		}
 	}
 };

@@ -16,17 +16,12 @@ module.exports.loadConnection = function (label, config) {
 	connections[label].connect();
 };
 
-module.exports._ready = function () {
-	module.exports.ready = function (fn) {
-		fn();
-	}
-}
-
-
-module.exports.ready = function (fn) {
-	module.exports._ready = fn;
-};
-
+/**
+ * 
+ * @todo  connection pooling
+ * @param  {[type]} label [description]
+ * @return {[type]}       [description]
+ */
 module.exports.getConnection = function (label) {
 	if (typeof connections[label] == "object") {
 		return connections[label];
