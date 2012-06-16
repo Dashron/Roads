@@ -5,16 +5,10 @@
  */
 
 "use strict";
-//var fs_module = require('fs');
-var url_module = require('url');
-var mongoose_module = require('mongoose');
-var http_module = require('http');
-// todo replace this with a chunked renderer like mu?
-//var hogan_module = require('hogan.js');
 
-//var static_component = require('./static');
-//var request_component = require('./request_wrapper');
-//var response_component = require('./response_wrapper');
+var url_module = require('url');
+var http_module = require('http');
+
 var accept_header_component = require('./accept_header');
 var view_component = require('./view');
 var View = view_component.View;
@@ -103,13 +97,8 @@ var build = exports.build = function (name, description) {
 		resource.addChild(get_resource(description.dependencies[i]));
 	}
 
-
-	if (typeof resource.config.db === "object" && typeof resource.config.db.connection === "string") {
-		resource.db = mongoose_module.createConnection(resource.config.db.connection);
-		populate_child_connections(resource.children, resource.db);
-	}
-
 	for (key in description.models) {
+		console.log(key);
 		resource.addModel(key, description.models[key]);
 	}
 
@@ -192,6 +181,7 @@ Resource.prototype.addChild = function (resource) {
  * @param {[type]} model [description]
  */
 Resource.prototype.addModel = function (key, model) {
+	console.log('adding model');
 	this.models[key] = model;
 }
 
