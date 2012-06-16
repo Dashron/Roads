@@ -1,8 +1,13 @@
+THIS FRAMEWORK IS NOT YET READY FOR PRODUCTION USE
+
+A model system was recently added. It has some minor issues that I am working out, primarily if you attempt to load from within a view, I am hitting an infinite loop. I expect it to be resolved by 6-18-12
+
 Routing/resources was recently reworked. 
 
 This readme, some resources and some components are now out of date. Look at /resources/example/example.desc.js for a basic idea on how resources work (you can now call resource functions within a route via 'this')
 
 
+-----------------
 
 This framework has been designed to make the development of resource oriented web services easier.
 
@@ -15,14 +20,12 @@ Routing requests through the master resource will automatically check all child 
 If you wish to use views, you need to create a node_modules folder and put the mu.js library within it.
 
 todo: 
+remove the weird url changing heirarchy of resources. Use uri as an optimization and nothing else
 wrap up client side code
 functional parity between client and server side.
-fill the template if data is posted to it, otherwise return it empty
-smart way to fork based on accept headers, or some other field so that you can use one code base for api's and front ends.
-model strategy
 caching strategy
 session strategy (should it be models?)
 
 serious performance testing
 more use cases to determine what is needed in real world development
-investigate testing alternatives, or just clean up own framework bit by bit.
+add more vows coverage
