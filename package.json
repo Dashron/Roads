@@ -2,7 +2,7 @@
 	"name": "roads",
 	"version": "0.6.1",
 	"engines": {
-		"node": ">=0.6.0"
+		"node": ">=0.6.1"
 	},
 	"author": {
 		"name": "Aaron Hedges",
