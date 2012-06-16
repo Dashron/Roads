@@ -12,7 +12,6 @@ var http_module = require('http');
 var accept_header_component = require('./accept_header');
 var view_component = require('./view');
 var View = view_component.View;
-var Firebug = require('./firenode/firenode').Firebug;
 var Cookie = require('./cookie').Cookie;
 var Router = require('./router').RegexRouter;
 
