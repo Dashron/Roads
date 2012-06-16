@@ -192,7 +192,7 @@ vows.describe('Model Component').addBatch({
                         }
                 });
                 database_module.loadConnection('default', {
-                        hostname: 'localhost',
+                        host: 'localhost',
                         user : 'gfw',
                         database: 'gfw'
                 });
