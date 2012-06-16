@@ -11,11 +11,8 @@ module.exports = {
 		GET : function (uri_bundle, view) {
 			var resource = this.getResource('user');
 			resource.request('/users/1', view.child('user'));
-			process.nextTick(function () {
-				resource.request('/users/5', view.child('user_two'));
-				view.render('index.html');
-			});
-			
+			resource.request('/users/5', view.child('user_two'));
+			view.render('index.html');
 		},
 		options : {
 		}
