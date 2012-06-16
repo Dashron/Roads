@@ -1,8 +1,8 @@
 {
 	"name": "roads",
-	"version": "0.6.1",
+	"version": "0.6.2",
 	"engines": {
-		"node": ">=0.6.1"
+		"node": ">=0.6.0"
 	},
 	"author": {
 		"name": "Aaron Hedges",
