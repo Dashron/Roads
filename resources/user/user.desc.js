@@ -1,10 +1,10 @@
 
 
 module.exports = {
-	name : 'user',
-	uri : '/users/',
+	name : 'users',
+	route_catch_all : /^\/users/,
 	routes : [{
-		match : /^(\d+)$/,
+		match : /^\/users\/(\d+)$/,
 		GET : function (uri_bundle, view) {
 			var user_promise = this.models['user'].load(uri_bundle.params.id);
 			user_promise.ready(function (user) {

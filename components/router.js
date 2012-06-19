@@ -13,9 +13,10 @@ var qs_module = require('querystring');
  * A url based router, the first regex matched will point to the executing
  * function
  */
-var RegexRouter = exports.RegexRouter = function RegexRouter () {
+var RegexRouter = exports.RegexRouter = function RegexRouter (catch_all) {
 	this.routes = [];
 	this.unmatched_route = null;
+	this.catch_all = catch_all
 };
 
 /**
@@ -27,6 +28,12 @@ RegexRouter.prototype.routes = null;
  * @type {Function}
  */
 RegexRouter.prototype.unmatched_route = null;
+
+/**
+ * This regex should match any route contained within this object.
+ * @type {RegExp}
+ */
+RegexRouter.prototype.catch_all = null;
 
 /**
  * [addRoutes description]
@@ -96,6 +103,12 @@ RegexRouter.prototype.getRoute = function (uri_bundle) {
 	var matching_route = null;
 	var matches = null;
 	var i = 0;
+
+	if (this.catch_all) {
+		if (!uri_bundle.uri.match(this.catch_all)) {
+			return false;
+		}
+	}
 
 	// Find a match and add any regex matches into the GET params
 	if (Array.isArray(routes)) {

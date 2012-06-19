@@ -1,6 +1,5 @@
 module.exports = {
 	name : 'example',
-	uri : '',
 	template : function (view) {
 		view.set('title', 'hello world');
 		view.render('template.html');

@@ -76,11 +76,11 @@ var build = exports.build = function (name, description) {
 	var route = null;
 	var resource = new Resource(name);
 
-	resource.uri = description.uri;
 	resource.directory = __dirname.replace("components", '') + 'resources/' + name;
 	resource.template_dir = resource.directory + '/templates/';
 	resource.template = description.template;
 
+	resource.router = new Router(description.route_catch_all);
 	resource.router.unmatched_route = description.unmatched_route;
 	resource.config = description.config;
 
@@ -129,7 +129,7 @@ var populate_child_connections = function (children, connection) {
 var Resource = exports.Resource = function Resource (name) {
 	this.name = name;
 	this.config = {};
-	this.router = new Router();
+	this.router = null;
 	this.models = {};
 	this.resources = {};
 	this.db = null;
@@ -137,7 +137,6 @@ var Resource = exports.Resource = function Resource (name) {
 };
 
 Resource.prototype.name = '';
-Resource.prototype.uri = '';
 Resource.prototype.config = null;
 Resource.prototype.directory = '';
 Resource.prototype.template_dir = '';
@@ -193,6 +192,7 @@ Resource.prototype.addModel = function (key, model) {
 Resource.prototype.request = function (uri_bundle, view) {
 	var key = null;
 	var template_dir = this.template_dir;
+	var route_resource = this;
 	var _self = this;
 
 	// Allow direct urls for shorthand. Assume a GET request in this case
@@ -203,156 +203,85 @@ Resource.prototype.request = function (uri_bundle, view) {
 		}
 	}
 
-	var route = this.getRoute(uri_bundle);
+	// clean up the success path, and have processRoute return a promise
+	this.processRoute(uri_bundle, function (route, route_resource) {
+		// If the template provided is actually a server response, we need to build the very first view
+		if (view instanceof http_module.ServerResponse) {
+			var response = view;
 
-	if (!route) {
-		// attempt each child, see if you can find a proper route
-		for (key in this.resources) {
-			route = this.resources[key].getRoute(uri_bundle);
-			if (route) {
-				// ensure that the proper template directory is used within the view
-				template_dir = this.resources[key].template_dir;
-				break;
-			}
+			view = new View();
+			view.setRenderMode(accept_header_component.getRenderMode(uri_bundle.headers.accept, route.modes));
+			// todo: not sure this will actually be desired due to view template precedence.
+			//view.setTemplate(this.default_template);
+			view.setResponse(response);
 		}
 
-		if (!route) {
-			route = this.unmatched_route;
+		// If a template is set in the config, apply it to the current view and then provide a child view to the route
+		if (!route.options.ignore_template && typeof _self.template === "function") {
+			// We don't want to set the route resources directory, we will always create the template from the resource upon which request is called
+			view.setDir(_self.template_dir);
+			var child = view.child('content');
+			_self.template(view);
+			view = child;
 		}
 
-		if (!route) {
-			// todo: 404
-			throw new Error('route not found :' + uri_bundle.uri + ' [' + this.name + ']');
+		// assume that we want to load templates directly from this route, no matter the data provided
+		view.setDir(route_resource.template_dir);
+
+		// route, allowing this to point to the original resource, and provide some helper utils
+		if (typeof route[uri_bundle.method] == "function") {
+			// Route to the proper method
+			process.nextTick(function() {
+				route[uri_bundle.method].call(route_resource, uri_bundle, view);
+			});
+		} else if (typeof route['default'] === "function") {
+			// Allow default routes in case the method is not explicitly stated
+			process.nextTick(function() {
+				route.default.call(route_resource, uri_bundle, view);
+			});
+		} else {
+			// Handle the unsupportedMethod http response, and provide the allowed methods
+			var keys = [];
+			['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'].forEach(function (option) {
+				if (typeof route[option] === "function") {
+					keys.push(option)
+				}
+			});
+			view.unsupportedMethod(keys);
 		}
-	}
-
-	// If the template provided is actually a server response, we need to build the very first view
-	if (view instanceof http_module.ServerResponse) {
-		var response = view;
-
-		view = new View();
-		view.setRenderMode(accept_header_component.getRenderMode(uri_bundle.headers.accept, route.modes));
-		// todo: not sure this will actually be desired due to view template precedence.
-		//view.setTemplate(this.default_template);
-		view.setResponse(response);
-	}
-
-	// If a template is set in the config, apply it to the current view and then provide a child view to the route
-	if (!route.options.ignore_template && typeof this.template === "function") {
-		// We don't want to set the route resources directory, we will always create the template from the resource upon which request is called
-		view.setDir(this.template_dir);
-		var child = view.child('content');
-		this.template(view);
-		view = child;
-	}
-
-	// assume that we want to load templates directly from this route, no matter the data provided
-	view.setDir(template_dir);
-
-	// route, allowing this to point to the original resource, and provide some helper utils
-	if (typeof route[uri_bundle.method] == "function") {
-		process.nextTick(function() {
-			route[uri_bundle.method].call(_self, uri_bundle, view);
-		});
-	} else if (typeof route['default'] === "function") {
-		process.nextTick(function() {
-			route.default.call(_self, uri_bundle, view);
-		});
-	} else {
-		var keys = [];
-		['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'].forEach(function (option) {
-			if (typeof route[option] === "function") {
-				keys.push(option)
-			}
-		});
-		view.unsupportedMethod(keys);
-	}
+	}, function () {
+		throw new Error('route not found :' + uri_bundle.uri + ' [' + _self.name + ']');
+	});
 };
 
 /**
  * [getRoute description]
+ * @todo  return a promise
  * @param  {[type]} uri_bundle [description]
  * @return {[type]}
  */
-Resource.prototype.getRoute = function (uri_bundle) {
+Resource.prototype.processRoute = function (uri_bundle, success, failure) {
+	var route = this.router.getRoute(uri_bundle);
+	var key = null;
 
-	if (uri_bundle.uri.indexOf(this.uri) === 0) {
-		// strip the resource uri out of the request uri
-		uri_bundle.uri = uri_bundle.uri.substring(this.uri.length);
-
-		// what to do here? how do I route down into the children?
-		// We don't have to pass the view, we can assume it's correct.
-		// we just need to make sure that the promise returned is bound to the right resource
-		var route = this.router.getRoute(uri_bundle);
-
-		if (route) {
-			return route;
+	if (!route) {
+		// attempt each child, see if you can find a proper route
+		for (key in this.resources) {
+			if (this.resources[key].processRoute(uri_bundle, success, failure)) {
+				return true;
+			}
 		}
 	}
-	
-	// No route was found
+
+	if (this.unmatched_route) {
+		route = this.unmatched_route;
+	}
+
+	if (route) {
+		success(route, this);
+		return true;
+	}
+
+	failure();
 	return false;
 };
-
-/**
- * 
- * @param router
- * @returns
- * @todo allow users to configure their resource to not take default template or
- *       js or css routes
- */
-/*var applyTemplateRoutes = function (router, resource) {
-	router.add(new RegExp('^/' + resource.name + '/template/(.+)$'), function (request, response, callback) {
-		static_component.streamFile(resource.template_dir + request.GET['template'], response, {
-			request : request,
-			callback : callback
-		});
-	}, {keys : ['template']});
-
-	router.add(new RegExp('^/' + resource.name + '/template/(.+)$'), function (request, response, callback) {
-		static_component.loadFile(resource.template_dir + request.GET['template'], function (contents) {
-			// todo replace this with a chunked renderer like mu?
-			var template = hogan_module.compile(contents);
-			response.ok(template.render(request.POST));
-			callback();
-
-		}, function (error) {
-			response.error(error);
-			callback();
-		});
-	}, {method : "POST", keys : ['template']});
-
-	router.add(new RegExp('^/' + resource.name + '(\/.+\.js)$'), function (request, response, callback) {
-		var filename = request.GET['file'].replace(/\.\./, '');
-		static_component.streamFile(resource.directory + '/templates/js' + filename, response, {
-			request : request,
-			callback : callback
-		});
-	}, {keys : ['file']});
-
-	router.add(new RegExp('^/' + resource.name + '(\/.+\.css)$'), function (request, response, callback) {
-		var filename = request.GET['file'].replace(/\.\./, '');
-		static_component.streamFile(resource.directory + '/templates/css' + filename, response, {
-			request : request,
-			callback : callback
-		});
-	}, {keys : ['file']});
-};
-
-var applyResourceRoutes = function (router, resource) {
-	router.add(new RegExp('^/' + resource.name + '/(\d+)$'), function (request, response, callback) {
-		resource.models[resource.name].get({id : request.GET['id']});
-	}, {method : "GET", keys : ['id']});
-
-	router.add(new RegExp('^/' + resource.name + '/$'), function (request, response, callback) {
-		resource.models[resource.name].get({id : request.GET['id']});
-	}, {method : "POST", keys : ['id']});
-
-	router.add(new RegExp('^/' + resource.name + '/(\d+)$'), function (request, response, callback) {
-		resource.models[resource.name].save({id : request.GET['id']});
-	}, {method : "PUT", keys : ['id']});
-
-	router.add(new RegExp('^/' + resource.name + '/(\d+)$'), function (request, response, callback) {
-		resource.models[resource.name].delete({id : request.GET['id']});
-	}, {method : "DELETE", keys : ['id']});
-};*/
