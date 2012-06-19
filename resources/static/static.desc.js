@@ -2,9 +2,9 @@ var fs_module = require('fs');
 
 module.exports = {
 	name : 'static',
-	uri : '/static/',
+	router_catch_all : /^\/static/,
 	routes : [{ 
-		match : /^(([\w.\/]+)\.(js|css|txt|html))$/,
+		match : /^\/static\/(([\w.\/]+)\.(js|css|txt|html))$/,
 		modes : ['text/javascript', 'text/css', 'text/plain'],
 		GET : function (uri_bundle, view) {
 			var request_date = uri_bundle.headers['if-modified-since'];

@@ -267,7 +267,8 @@ Resource.prototype.processRoute = function (uri_bundle, success, failure) {
 	if (!route) {
 		// attempt each child, see if you can find a proper route
 		for (key in this.resources) {
-			if (this.resources[key].processRoute(uri_bundle, success, failure)) {
+			// we don't want to fail immediately, so we ignore the fail scenario here. fail should only be called on teh top most resource
+			if (this.resources[key].processRoute(uri_bundle, success)) {
 				return true;
 			}
 		}
@@ -282,6 +283,9 @@ Resource.prototype.processRoute = function (uri_bundle, success, failure) {
 		return true;
 	}
 
-	failure();
+	if (failure) {
+		failure();
+	}
+	
 	return false;
 };
