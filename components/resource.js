@@ -210,7 +210,7 @@ Resource.prototype.request = function (uri_bundle, view) {
 			var response = view;
 
 			view = new View();
-			view.setRenderMode(accept_header_component.getRenderMode(uri_bundle.headers.accept, route.modes));
+			view.setContentType(accept_header_component.getContentType(uri_bundle.headers.accept, route.modes));
 			// todo: not sure this will actually be desired due to view template precedence.
 			//view.setTemplate(this.default_template);
 			view.setResponse(response);
@@ -219,14 +219,14 @@ Resource.prototype.request = function (uri_bundle, view) {
 		// If a template is set in the config, apply it to the current view and then provide a child view to the route
 		if (!route.options.ignore_template && typeof _self.template === "function") {
 			// We don't want to set the route resources directory, we will always create the template from the resource upon which request is called
-			view.setDir(_self.template_dir);
+			view.dir = _self.template_dir;
 			var child = view.child('content');
 			_self.template(view);
 			view = child;
 		}
 
 		// assume that we want to load templates directly from this route, no matter the data provided
-		view.setDir(route_resource.template_dir);
+		view.dir = route_resource.template_dir;
 
 		// route, allowing this to point to the original resource, and provide some helper utils
 		if (typeof route[uri_bundle.method] == "function") {
@@ -247,7 +247,7 @@ Resource.prototype.request = function (uri_bundle, view) {
 					keys.push(option)
 				}
 			});
-			view.unsupportedMethod(keys);
+			view.statusUnsupportedMethod(keys);
 		}
 	}, function () {
 		throw new Error('route not found :' + uri_bundle.uri + ' [' + _self.name + ']');

@@ -20,7 +20,7 @@ module.exports = {
 		GET : function (uri_bundle, view) {
 			console.log('unmatched route');
 			console.log(uri_bundle);
-			view.notFound('404.html');
+			view.statusNotFound('404.html');
 		},
 	},
 	dependencies : [

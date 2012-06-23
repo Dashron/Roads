@@ -16,18 +16,19 @@ var fs_module = require('fs');
 var _renderers = {};
 
 /**
- * [addRenderer description]
- * @param {[type]} content_type [description]
- * @param {[type]} renderer     [description] 
+ * Registers a render function to a content type
+ * @param {string} content_type The content type (or mime type) of the request
+ * @param {Renderer} renderer     The renderer object that will handle view data
  */
 exports.addRenderer = function (content_type, renderer) {
 	_renderers[content_type] = renderer;
 };
 
 /**
- * [getRenderer description]
- * @param  {[type]} content_type [description]
- * @return {[type]}              [description]
+ * Returns a renderer for a content type
+ * @param  {string} content_type The content type (or mime type) of the request
+ * @return {Renderer}              The renderer associated with the content type
+ * @throws {Error} If a renderer has not been added to the content_type
  */
 exports.getRenderer = function (content_type) {
 	if (_renderers[content_type]) {
@@ -36,8 +37,17 @@ exports.getRenderer = function (content_type) {
 		throw new Error('Unsupported content type :' + content_type);
 	}
 }
+
+var render_states = exports.RENDER_STATES = {
+	RENDER_NOT_CALLED : 0,
+	RENDER_REQUESTED : 1,
+	RENDER_STARTED : 2,
+	RENDER_COMPLETE : 3,
+	RENDER_FAILED : 4,
+};
+
 /**
- * Renders templates asynchronously, supporing an unlimited amount of child views.
+ * Renders templates with many output options, and unlimited asynchronous sub views
  * 
  * USAGE:
  * //Templates:
@@ -71,6 +81,7 @@ exports.getRenderer = function (content_type) {
  * //If you want to use the js or css functions, you need to 
  * 
  * @author Aaron Hedges <aaron@dashron.com>
+ * @todo unify js, css and dir into a metadata field
  */
 var View = exports.View = function View() {
 	EventEmitter.call(this);
@@ -80,58 +91,33 @@ var View = exports.View = function View() {
 	this._child_views = {};
 	this._data = {};
 
-	this.render_state = this.RENDER_NOT_CALLED;
+	this.render_state = render_states.RENDER_NOT_CALLED;
 	this.parent = null;
 	this.root = this;
-	// Default error handler 500's
-	// This is problematic. If response.end() errors, it ends up in a crazy ass loop.
-	/*this._error_handler = function (error) {
-		console.log(error);
-		this.error(error);
-	}*/
 };
 
 util_module.inherits(View, EventEmitter);
 
 View.prototype._js = null;
 View.prototype._css = null;
-View.prototype._dir = null;
 View.prototype._template = null;
 View.prototype._response = null;
 View.prototype._data = null;
 View.prototype._child_views = null;
-View.prototype._render_mode = null;
-View.prototype._error_handler = null;
-View.prototype.render_state = 0;
-// TODO: Move these constants into the module? not the class?
-View.prototype.RENDER_NOT_CALLED = 0;
-View.prototype.RENDER_REQUESTED = 1;
-View.prototype.RENDER_STARTED = 2;
-View.prototype.RENDER_COMPLETE = 3;
-View.prototype.RENDER_FAILED = 4;
+View.prototype._content_type = null;
+View.prototype._error = null;
+View.prototype.dir = null;
 View.prototype.parent = null;
 View.prototype.root = null;
 
 /**
- * Set the directory this view will be loaded from
- * @param {String} path
- */
-View.prototype.setDir = function view_setDir(path) {
-	this._dir = path;
-	return this;
-};
-
-/**
- * [getDir description]
- * @return {[type]} [description]
- */
-View.prototype.getDir = function view_getDir() {
-	return this._dir;
-};
-
-/**
- * [setResponse description]
- * @param {[type]} response [description]
+ * Assign the response object that will be written to with the final output
+ * 
+ * If a ServerResponse is provided, a default content type of text/plain will be set, along with 
+ * a status code of 200.
+ * 
+ * @param {ServerResponse|Object} response
+ * @return {View} this, used for chaining
  */
 View.prototype.setResponse = function view_setResponse(response) {
 	if (response instanceof http_module.ServerResponse) {
@@ -145,19 +131,26 @@ View.prototype.setResponse = function view_setResponse(response) {
 }
 
 /**
- * [setRenderMode description]
- * @param {[type]} mode [description]
+ * Sets the content type of the output.
+ * This is used in choosing a Renderer
+ * 
+ * @param {string} content_type
+ * @return {View} this, used for chaining
  */
-View.prototype.setRenderMode = function view_setRenderMode(mode) {
-	this._render_mode = mode;
+View.prototype.setContentType = function view_setContentType(content_type) {
+	this._content_type = content_type;
+	return this;
 }
 
 /**
- * [setTemplate description]
- * @type {[type]}
+ * Tells the view which template to look for when rendering the final output
+ * 
+ * @type {string} template
+ * @return {View} this, used for chaining
  */
 View.prototype.setTemplate = function view_setTemplate(template) {
 	this._template = template;
+	return this;
 };
 
 /**
@@ -165,24 +158,29 @@ View.prototype.setTemplate = function view_setTemplate(template) {
  * @returns {Boolean}
  */
 View.prototype.isRendered = function view_isRendered() {
-	return this.render_state == this.RENDER_COMPLETE;
+	return this.render_state == render_states.RENDER_COMPLETE;
 };
 
 /**
  * Sets data to be rendered to the view
  * @param {String} key
- * @param {Mixed} value
+ * @param {mixed} value
+ * @return {View} this, used for chaining
  */
 View.prototype.set = function view_set(key, value) {
 	this._data[key] = value;
+	return this;
 };
 
 /**
  * Sets data to be rendered by the root template (eg page title)
- * @param {[type]} title [description]
+ * @param {string} key 
+ * @param {mixed} value
+ * @return {View} this, used for chaining
  */
 View.prototype.setToRoot = function view_setToRoot(key, value) {
 	this.root.set(key, value);
+	return this;
 };
 
 /**
@@ -200,8 +198,10 @@ View.prototype.get = function view_get(key) {
 /**
  * Executes the provided function, and adds all the keys in the returned object
  * to the data which will be rendered in this view
- * @TODO: Only call func when render is executed
+ * 
+ * @TODO: This function should be saved, and only executed when render is called.
  * @param {Function} func
+ * @return {View} this, used for chaining
  */
 View.prototype.fill = function view_fill(func) {
 	var new_data = func();
@@ -209,6 +209,7 @@ View.prototype.fill = function view_fill(func) {
 	for(i in new_data) {
 		this._data[i] = new_data[i];
 	}
+	return this;
 };
 
 /**
@@ -224,15 +225,15 @@ View.prototype.canRender = function view_canRender() {
 	 * parent creates child, loads data from database, then renders.
 	 * child immediately renders
 	 * - in this example, the child is complete first, and checks if the parent can render.
-	 *    Render has not been requested, so it fails. Once the parent calls render everything works fine
+	 *    Render has not been requested, so it fails. Once the parent calls render() everything works fine
 	 * 
 	 * example 2:
 	 * Parent creates child, then immediately renders
 	 * child loads data from database then renders.
 	 * - in this example, the parent is complete first, so it marks render as requested but notices child views exist
-	 *    Because of this, it waits. Once the child view renders it notices that the parent is ready and immediately calls parent.render
+	 *    Because of this, it waits. Once the child view renders it notices that the parent is ready and immediately calls parent.render()
 	 */  
-	if (this.render_state != this.RENDER_REQUESTED) {
+	if (this.render_state != render_states.RENDER_REQUESTED) {
 		return false;
 	}
 
@@ -248,19 +249,18 @@ View.prototype.canRender = function view_canRender() {
  * Renders the current view, writing the the response, if and only if all child views have been completed
  * @todo: handle the case where a child element never finishes
  * @param  {String|Boolean} template Renders the provided template unless one was set previously. If false is passed, no data will be written
- * @return {[type]}          [description]
  */
 View.prototype.render = function view_render(template) {
 	if (template !== false) {
-		this.render_state = this.RENDER_REQUESTED;
+		this.render_state = render_states.RENDER_REQUESTED;
 
 		if (this.canRender()) {
-			this.render_state = this.RENDER_STARTED;
+			this.render_state = render_states.RENDER_STARTED;
 			// We want to prefer the pre-set template over the render(template)
 			if (this._template) {
 				template = this._template;
 			}
-			this.buildTemplateEngine().render(this._dir + template);
+			this.buildRenderer().render(this.dir + template);
 		} else {
 			// If a template has not yet been assigned to this view, and we can not immediately render it
 			// we need to set the provided template, so it is rendered in the future
@@ -274,48 +274,51 @@ View.prototype.render = function view_render(template) {
 };
 
 /**
- * [buildTemplateEngine description]
- * @return {[type]} [description]
+ * Builds a Renderer with all necessary data pulled from the view
+ * @return {Renderer}
  */
-View.prototype.buildTemplateEngine = function view_buildTemplateEngine() {
+View.prototype.buildRenderer = function view_buildRenderer() {
 	var _self = this;
 
-	var template_engine = new (exports.getRenderer(this._render_mode))();
-	template_engine.data = this._data;
-	template_engine.response = this._response;
-	template_engine.errorHandler(function (error) {
-		_self.render_state = this.RENDER_FAILED;
-		_self._error_handler(error);
+	var renderer = new (exports.getRenderer(this._content_type))();
+	renderer.data = this._data;
+	renderer.response = this._response;
+	renderer.error(function (error) {
+		_self.render_state = render_states.RENDER_FAILED;
+		_self._error(error);
 	});
-	template_engine.endHandler(function() {
-		_self.render_state = _self.RENDER_COMPLETE;
+	renderer.end(function() {
+		_self.render_state = render_states.RENDER_COMPLETE;
 	});
-	return template_engine;
+	return renderer;
 };
 
 
 /**
- * [errorHandler description]
- * @param  {Function} fn [description]
- * @return {[type]}      [description]
+ * Sets an error handler which will be called any time an error occurs in this view
+ * 
+ * @param  {Function} fn takes a single parameter, the error
+ * @return {View} this, used for chaining
  */
-View.prototype.setErrorHandler = function view_setErrorHandler(fn) {
-	this._error_handler = fn;
+View.prototype.error = function view_error(fn) {
+	this._error = fn;
+	return this;
 }
 
 
 /**
- * Create a child view
+ * Create a child view relative to this view
+ * 
  * @param {String} key required, the key the parent will render the data in
  * @param {String} template required, the template file to be rendered
  * @returns {View}
  */
 View.prototype.child = function view_child(key, template) {
 	var new_view = new View();
-	new_view.setRenderMode(this._render_mode);
+	new_view.setContentType(this._content_type);
 	new_view.parent = this;
 	new_view.root = this.root;
-	new_view.setDir(this._dir);
+	new_view.dir = this.dir;
 
 	// Makes a fake response that writes to the parent instead of to an actual response object
 	new_view.setResponse({
@@ -325,7 +328,7 @@ View.prototype.child = function view_child(key, template) {
 		},
 		end: function() { 
 			// flag the child view as rendered
-			new_view.render_state = new_view.RENDER_COMPLETE;
+			new_view.render_state = render_states.RENDER_COMPLETE;
 
 			// set the child data into the parent view, and then render the parent if possible
 			new_view.parent.set(key, this.buffer); 
@@ -347,56 +350,65 @@ View.prototype.child = function view_child(key, template) {
  * Adds a javascript file, and pushes it all the way up the chain to the core template
  * TODO: add a flag so it is not pushed to the top? is that useful?
  * @param {String} file 
+ * @return {View} this, used for chaining
  */
 View.prototype.addJs = function view_addJs(file) {
 	this.root._js.push({'src' : file});
+	return this;
 };
 
 /**
  * Adds a css file, and pushes it all the way up the chain to the core template
  * TODO: add a flag so it is not pushed to the top? is that useful?
  * @param {String} file
+ * @return {View} this, used for chaining
  */
 View.prototype.addCss = function view_addCss(file) {
-	this.root._css.push({'src' : file})
+	this.root._css.push({'src' : file});
+	return this;
 };
 
 /**
  * Set the response status code in the response tied to the parent most view
- * @param {[type]} code [description]
+ * 
+ * @param {int} code
+ * @return {View} this, used for chaining
  */
 View.prototype.setStatusCode = function view_setStatusCode(code) {
 	this.root._response.statusCode = code;
+	return this;
 };
 
 /**
  * Set a collection of headers in the response tied to the parent most view
- * @param {[type]} headers [description]
+ * 
+ * @param {Object} headers 
+ * @return {View} this, used for chaining
  */
 View.prototype.setHeader = function view_setHeaders(headers) {
 	var key = null;
 	for(key in headers) {
 		this.root._response.setHeader(key, headers[key]);
 	}
+	return this;
 };
 
 /**
  * Return a 404: Not found code, and overwrite the existing template with the one provided
- * @param  {[type]} template [description]
- * @return {[type]}
- * @todo  fix
+ * 
+ * @param  {string} template information passed to the root rendererer to be immediately rendered
  */
-View.prototype.notFound = function view_notFound(template) {
+View.prototype.statusNotFound = function view_notFound(template) {
 	this.root._response.statusCode = 404;
 	this.root._render(template);
 };
 
 /**
- * Return a 500: Error code, and overwrite the existing tempalte with the one provided
- * @param  {[type]} template [description]
- * @return {[type]}
+ * Return a 500: Error code, and overwrite the existing template with the one provided
+ * 
+ * @param  {[type]} template information passed to the root renderer to be immediately rendered
  */
-View.prototype.error = function view_error(error) {
+View.prototype.statusError = function view_error(error) {
 	this.root._response.statusCode = 500;
 	this.root.render(false);
 };
@@ -404,11 +416,19 @@ View.prototype.error = function view_error(error) {
 /**
  * Return a 201: Created code, and redirect the user to the provided url
  * 
- * @todo describe how this would be properly used
- * @param  {[type]} redirect_url [description]
- * @return {[type]}
+ * This should be used any time you create a resource per request of a user.
+ * 
+ * for example, if I call
+ * 
+ * PUT /users
+ * name=aaron&email=aaron@dashron.com
+ * 
+ * which successfully creates user 1, aaron
+ * the view at /users should end as view.created('/users/1');
+ * 
+ * @param  {string} redirect_url
  */
-View.prototype.created = function view_created(redirect_url) {
+View.prototype.statusCreated = function view_created(redirect_url) {
 	this.root._response.statusCode = 201;
 	this.root._response.setHeader('Location', redirect_url);
 	this.root.render(false);
@@ -416,22 +436,24 @@ View.prototype.created = function view_created(redirect_url) {
 
 /**
  * Return a 302: Found code, 
- * @todo  add support for other 300's
+ * 
+ * @todo  add support for other 300's within this function
  * @todo describe how this would be properly used
- * @param  {[type]} redirect_url [description]
- * @return {[type]}
+ * @param  {string} redirect_url
  */
-View.prototype.redirect = function view_redirect(redirect_url) {
+View.prototype.statusRedirect = function view_redirect(redirect_url) {
 	this.root._response.statusCode = 302;
 	this.root._response.setHeader('Location', redirect_url);
 	this.root.render(false);
 };
 
 /**
- * [notModified description]
- * @return {[type]} [description]
+ * Returns a 304: Not found code,
+ * 
+ * This tells the browser to use a previously cached version of this page.
+ * @todo : as a parameter take some headers to control this? date, etag, expires, cache control
  */
-View.prototype.notModified = function view_notModified() {
+View.prototype.statusNotModified = function view_notModified() {
 	this.root._response.statusCode = 304;
 	// date
 	// etag
@@ -440,14 +462,22 @@ View.prototype.notModified = function view_notModified() {
 	this.root.render(false);
 };
 
-View.prototype.unsupportedMethod = function view_unsupportedMethod(supported_methods) {
+/**
+ * Returns a 405: Unsupported Method code,
+ * 
+ * This is used to state that the method (GET, POST, PUT, PATCH, DELETE, HEAD) is not supported for the
+ * requested uri. You must provide a list of acceptable methods
+ * 
+ * @param  {Array} supported_methods 
+ */
+View.prototype.statusUnsupportedMethod = function view_unsupportedMethod(supported_methods) {
 	this.root._response.statusCode = 405
 	this.root._response.setHeader('Allow', supported_methods.join(','));
 	this.root._response.end();
 };
 
 /**
- * [Renderer description]
+ * Base object to handle rendering view data
  */
 var Renderer = exports.Renderer = function() {
 	this.response = {};
@@ -456,45 +486,41 @@ var Renderer = exports.Renderer = function() {
 
 Renderer.prototype.response = null;
 Renderer.prototype.data = null;
-
-/**
- * [error description]
- * @param  {[type]} err [description]
- * @return {[type]}
- */
-Renderer.prototype.error = function (err) {
+Renderer.prototype._error = function (err) {
 	// In case the error is called before the error handler is applied, we mess with the function so we still get output
-	this.errorHandler = function (fn) {
+	this.error = function (fn) {
 		fn(err);
 	};
 };
-
-Renderer.prototype.end = function () {
-	this.endHandler = function (fn) {
+Renderer.prototype._end = function () {
+	this.end = function (fn) {
 		fn();
 	};
 };
 
 /**
- * [errorHandler description]
- * @param  {Function} fn [description]
- * @return {[type]}
+ * Assigns a function to be called any time an error occurs in the renderer
+ * 
+ * @param  {Function} fn takes a single parameter, the error
+ * @return {Renderer} this, used for chaining
  */
-Renderer.prototype.errorHandler = function (fn) {
-	this.error = fn;
+Renderer.prototype.error = function (fn) {
+	this._error = fn;
+	return this;
 };
 
 /**
- * [endHandler description]
- * @return {[type]} [description]
+ * Assigns a function to be called when the rendering ends
+ * 
+ * @return {Renderer} this, used for chaining
  */
-Renderer.prototype.endHandler = function (fn) {
-	this.end = fn;
+Renderer.prototype.end = function (fn) {
+	this._end = fn;
+	return this;
 };
 
 /**
- * [HtmlRenderer description]
- * @param {[type]} template [description]
+ * Renders a view as html via the Mu2 module
  */
 var HtmlRenderer = function() {
 	Renderer.call(this);
@@ -502,9 +528,9 @@ var HtmlRenderer = function() {
 util_module.inherits(HtmlRenderer, Renderer);
 
 /**
- * [render description]
- * @param  {[type]} template [description]
- * @return {[type]}
+ * Requests the provided template to be rendered
+ * 
+ * @param  {string} template
  */
 HtmlRenderer.prototype.render = function (template) {
 	var _self = this;
@@ -520,28 +546,26 @@ HtmlRenderer.prototype.render = function (template) {
 	});
 
 	stream.on('error', function (err) {
-		_self.error(err);
+		_self._error(err);
 	});
 
 	stream.on('end', function () {
-		_self.end();
+		_self._end();
 		_self.response.end();
 	});
 };
 exports.addRenderer('text/html', HtmlRenderer);
 
 /**
- * [JsonRenderer description]
+ * Renders the view output as json
  */
 var JsonRenderer = function() {
 	Renderer.call(this);
 };
-
 util_module.inherits(JsonRenderer, Renderer);
 
 /**
- * [render description]
- * @return {[type]}
+ * Requests the data to be rendered
  */
 JsonRenderer.prototype.render = function () {
 	if (this.response instanceof http_module.ServerResponse) {
@@ -555,6 +579,13 @@ JsonRenderer.prototype.render = function () {
 exports.addRenderer('application/json', JsonRenderer);
 
 
+/**
+ * This function allows you to build a renderer that responds to a certain content type
+ * It is not really intended to be called outside of this module, it is currently used 
+ * 	because js and css are identical except for the content type
+ * @param  {string} content_type
+ * @return {Renderer} 
+ */
 var buildFileRenderer = function (content_type) {
 	var FileRenderer = function() {
 		Renderer.call(this);
@@ -576,7 +607,7 @@ var buildFileRenderer = function (content_type) {
 		});
 
 		stream.on('error', function (err) {
-			_self.error(err);
+			_self._error(err);
 		});
 
 		stream.on('end', function () {

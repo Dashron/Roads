@@ -8,21 +8,21 @@ module.exports = {
 		modes : ['text/javascript', 'text/css', 'text/plain'],
 		GET : function (uri_bundle, view) {
 			var request_date = uri_bundle.headers['if-modified-since'];
-			var path = view.getDir() + uri_bundle.params.file;
+			var path = view.dir + uri_bundle.params.file;
 // For some reason, this view does not take the new render mode content-type
 			switch (uri_bundle.params.ext) {
 				case 'js':
-					view.setRenderMode('text/javascript');
+					view.setContentType('text/javascript');
 					break;
 
 				case 'css':
-					view.setRenderMode('text/css');
+					view.setContentType('text/css');
 					break;
 
 				case 'txt':
 				case 'html':
 				default:
-					view.setRenderMode('text/plain');
+					view.setContentType('text/plain');
 					break;
 			}
 
@@ -32,9 +32,9 @@ module.exports = {
 					console.log(err);
 					view.error(err);
 				} else {
-					view.setErrorHandler(function (error) {
+					view.error(function (error) {
 						console.log(error);
-						view.notFound('404.html');
+						view.statusNotFound('404.html');
 					});
 
 					view.setHeader({
@@ -45,7 +45,7 @@ module.exports = {
 						request_date = new Date(request_date);
 
 						if (stats.mtime.getTime() <= request_date.getTime()) {
-							return view.notModified();
+							return view.statusNotModified();
 						}
 					}
 
@@ -63,7 +63,7 @@ module.exports = {
 		GET : function (uri_bundle, view) {
 			console.log('unmatched route');
 			console.log(uri_bundle);
-			view.notFound('404.html');
+			view.statusNotFound('404.html');
 		},
 	},
 	dependencies : [

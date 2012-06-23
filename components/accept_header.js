@@ -6,39 +6,39 @@
 "use strict";
 
 /**
- * [getRenderMode description]
- * @param  {[type]} request         [description]
- * @param  {[type]} available_modes [description]
- * @return {[type]}                 [description]
+ * Returns the ideal content type from the accept string, which is also in your list of valid types
+ * @param  {string} accept          the accept header from the http request
+ * @param  {Array} valid_types  an array of content types that you are willing to respond with
+ * @return {string}                 a single content type
  */
-exports.getRenderMode = function (accept, available_modes) {
+exports.getContentType = function (accept, valid_types) {
 	var mime_types = parseAcceptHeader(accept);
 	var i = 0;
 	var j = 0;
 	var highest_quality = -1;
-	var mode_index = -1;
+	var type_index = -1;
 	
 	if (mime_types.preferred.length > 0) {
-		for (i = 0; i < available_modes.length; i++) {
-			if (mime_types.preferred[available_modes[i]] === true) {
-				return available_modes[i];
+		for (i = 0; i < valid_types.length; i++) {
+			if (mime_types.preferred[valid_types[i]] === true) {
+				return valid_types[i];
 			}
 		}
 	}
 
 	if (mime_types.secondary.length > 0) {
-		for (i = 0; i < available_modes.length; i++) {
-			if (mime_types.secondary[j].media_range === available_modes[i]) {
+		for (i = 0; i < valid_types.length; i++) {
+			if (mime_types.secondary[j].media_range === valid_types[i]) {
 				if (highest_quality < mime_types.secondary[j].quality) {
 					highest_quality = mime_types.secondary[j].quality;
-					mode_index = i;
+					type_index = i;
 				}
 			}
 		}
 	}
 
-	if (typeof available_modes[mode_index] != "undefined" && available_modes[mode_index] != null) {
-		return available_modes[mode_index];
+	if (typeof valid_types[type_index] != "undefined" && valid_types[type_index] != null) {
+		return valid_types[type_index];
 	}
 
 	//todo: replace with configurable default
