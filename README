@@ -1,9 +1,3 @@
-THIS FRAMEWORK IS NOT YET READY FOR PRODUCTION USE
-
-A model system was recently added. It has some minor issues that I am working out, primarily if you attempt to load from within a view, I am hitting an infinite loop. I expect it to be resolved by 6-18-12
-
-Routing/resources was recently reworked. 
-
 This readme, some resources and some components are now out of date. Look at /resources/example/example.desc.js for a basic idea on how resources work (you can now call resource functions within a route via 'this')
 
 
@@ -12,20 +6,11 @@ This readme, some resources and some components are now out of date. Look at /re
 This framework has been designed to make the development of resource oriented web services easier.
 
 The general concept is to create a new folder in the resources directory, one for each conceptual chunk of content (a user resource, a blog post resource, a comment resource)
-Each resource contains a set of routes, a set of models, and a collection of views.
+Each resource contains a set of routes and a set of models.
 
 You should then make one master resource, (I name it after the site I'm working on) which is configured to depend on all the other resources you need.
 Routing requests through the master resource will automatically check all child resources if the master fails.
-
-If you wish to use views, you need to create a node_modules folder and put the mu.js library within it.
+router_catch_all is an optimization that is checked before any routes are attempted. If router_catch_all does not match, no routes within that resource will be checked.
 
 todo: 
-remove the weird url changing heirarchy of resources. Use uri as an optimization and nothing else
-wrap up client side code
-functional parity between client and server side.
-caching strategy
-session strategy (should it be models?)
-
-serious performance testing
-more use cases to determine what is needed in real world development
-add more vows coverage
+see issues
