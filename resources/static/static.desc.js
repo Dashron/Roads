@@ -2,14 +2,18 @@ var fs_module = require('fs');
 
 module.exports = {
 	name : 'static',
-	router_catch_all : /^\/static/,
+	router_catch_all : /\.(js|css|txt|html)$/,
 	routes : [{ 
-		match : /^\/static\/(([\w.\/]+)\.(js|css|txt|html))$/,
+		match : /^\/(([\w.\/]+)\.(js|css|txt|html))$/,
+		options : {
+			keys : ['file', 'name', 'ext'],
+			ignore_template : true
+		},
 		modes : ['text/javascript', 'text/css', 'text/plain'],
 		GET : function (uri_bundle, view) {
 			var request_date = uri_bundle.headers['if-modified-since'];
 			var path = view.dir + uri_bundle.params.file;
-// For some reason, this view does not take the new render mode content-type
+
 			switch (uri_bundle.params.ext) {
 				case 'js':
 					view.setContentType('text/javascript');
@@ -53,10 +57,6 @@ module.exports = {
 					view.render();
 				}
 			});
-		},
-		options : {
-			keys : ['file', 'name', 'ext'],
-			ignore_template : true
 		}
 	}],
 	unmatched_route : {
