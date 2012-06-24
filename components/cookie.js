@@ -69,8 +69,7 @@ Cookie.prototype.set_data = null;
 
 /**
  * 
- * @param {String}
- *            key
+ * @param {String} key
  * @return {Mixed}
  */
 Cookie.prototype.get = function (key) {
@@ -124,23 +123,14 @@ Cookie.prototype.apply_expires = function (parts, expires) {
 
 /**
  * 
- * @param {String}
- *            key
- * @param {Object}
- *            options
- * @param {String}
- *            options.value the cookie's value
- * @param {String}
- *            options.domain the domain that can access the cookie
- * @param {String}
- *            options.path the path within the domain that can access the cookie
- * @param {Date|String}
- *            options.expires the date that the cookie expires, provide
- *            "session" for it to expire when the browser closes
- * @param {Boolean}
- *            options.secure https only
- * @param {Boolean}
- *            options.HttpOnly server only, no javascript access
+ * @param {String} key
+ * @param {Object} options
+ * @param {String} options.value the cookie's value
+ * @param {String} options.domain the domain that can access the cookie
+ * @param {String} options.path the path within the domain that can access the cookie
+ * @param {Date|String} options.expires the date that the cookie expires, provide "session" for it to expire when the browser closes
+ * @param {Boolean} options.secure https only
+ * @param {Boolean} options.HttpOnly server only, no javascript access
  * @return void
  */
 Cookie.prototype.set = function (key, options) {
