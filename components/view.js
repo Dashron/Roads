@@ -320,6 +320,10 @@ View.prototype.child = function view_child(key, template) {
 	new_view.root = this.root;
 	new_view.dir = this.dir;
 
+	if (template) {
+		new_view.setTemplate(template);
+	}
+
 	// Makes a fake response that writes to the parent instead of to an actual response object
 	new_view.setResponse({
 		buffer: '',
@@ -335,7 +339,7 @@ View.prototype.child = function view_child(key, template) {
 
 			if(new_view.parent.canRender()) {
 				process.nextTick(function() {
-					new_view.parent.render(template);
+					new_view.parent.render();
 				});
 			}
 		}
@@ -408,9 +412,15 @@ View.prototype.statusNotFound = function view_notFound(template) {
  * 
  * @param  {[type]} template information passed to the root renderer to be immediately rendered
  */
-View.prototype.statusError = function view_error(error) {
+View.prototype.statusError = function view_error(error, template) {
+	this.root.set('error', error);
 	this.root._response.statusCode = 500;
-	this.root.render(false);
+	
+	if (typeof template != "string") {
+		template = false;
+	}
+
+	this.root.render(template);
 };
 
 /**
