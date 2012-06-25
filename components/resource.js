@@ -12,7 +12,6 @@ var http_module = require('http');
 var accept_header_component = require('./accept_header');
 var view_component = require('./view');
 var View = view_component.View;
-var Cookie = require('./cookie').Cookie;
 var Router = require('./router').RegexRouter;
 
 var _resources = {};
@@ -20,6 +19,7 @@ var _resource_dir = __dirname.replace('components', 'resources/');
 
 /**
  * Set the default directory  to load resources from
+ * 
  * @param {String} directory 
  */
 var set_resource_dir = exports.setDir = function (directory) {
@@ -33,10 +33,8 @@ var set_resource_dir = exports.setDir = function (directory) {
 /**
  * Build a single resource by name, and cache it
  * 
- * @param {String}
- *            name
- * @param {Object}
- *            config
+ * @param {String} name
+ * @param {Object} config
  * @return {Resource}
  */
 var get_resource = exports.get = function (name, config) {
@@ -66,9 +64,23 @@ var clear = exports.clear = function () {
 };
 
 /**
- * [build description]
- * @param  {[type]} description [description]
- * @return {[type]}
+ * Builds a resource with the provided resource description.
+ * 
+ * The description contains.....
+ * 
+ * directory : 
+ * template_dir : 
+ * template : 
+ * route_catch_all : 
+ * unmatched_route : 
+ * routes : 
+ * config : 
+ * dependencies : 
+ * models : 
+ * 
+ * @param {string} name
+ * @param  {Object} description
+ * @return {Resource}
  */
 var build = exports.build = function (name, description) {
 	var i = 0, j = 0;
@@ -106,9 +118,9 @@ var build = exports.build = function (name, description) {
 
 /**
  * Iterates through all dependent resources and applies a datbase connection if not pre-configured for one
- * @param  {[type]} children   [description]
+ * 
+ * @param  {Array} children   [description]
  * @param  {[type]} connection [description]
- * @return {[type]}
  */
 var populate_child_connections = function (children, connection) {
 	var key = null;
@@ -123,8 +135,9 @@ var populate_child_connections = function (children, connection) {
 };
 
 /**
- * [Resource description]
- * @param {[type]} name [description]
+ * Constructs a resource
+ * 
+ * @param {string} name
  */
 var Resource = exports.Resource = function Resource (name) {
 	this.name = name;
