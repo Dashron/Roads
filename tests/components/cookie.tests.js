@@ -49,9 +49,10 @@ vows.describe('Model Component').addBatch({
 		},
 		'has set values properly' : function (response) {
 			var headers = response.getHeader('Set-Cookie');
-			
+
 			assert.equal(headers[0], 'a=b; Path=/');
 			assert.equal(headers[1], 'c=d; Path=/');
+			// todo: test expires, domain, path, secure, httponly
 		}
 	}
 }).export(module); // Export the Suite
