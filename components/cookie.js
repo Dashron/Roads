@@ -1,5 +1,5 @@
 /*
-* gfw.js - config.js
+* gfw.js - cookie.js
 * Copyright(c) 2011 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
 */
@@ -18,12 +18,14 @@
  * secure : if true, the cookie is only provided when using https
  * HttpOnly : if true, javascript will not be able to access the cookie
  * 
+ * http://tools.ietf.org/html/rfc6265
+ * 
  * @todo: better expires date checking
  */
 var Cookie = exports.Cookie = function (request, response) {
-	this.response = response;
-	this.cookie_data = {};
-	this.set_data = {};
+	this._response = response;
+	this._cookie_data = {};
+	this._header_data = {};
 	
 	if (typeof request.headers.cookie === "string") {
 		var cookies = request.headers.cookie.split(';');
@@ -31,94 +33,34 @@ var Cookie = exports.Cookie = function (request, response) {
 		var i = 0;
 
 		for (i = 0; i < cookies.length; i++) {
-			cookie = cookies[i].split('=');
+			cookie = cookies[i].trim().split('=');
 
-			this.cookie_data[cookie[0]] = cookie[1];
+			this._cookie_data[cookie[0]] = cookie[1];
 		}
 	}
 };
 
+Cookie.prototype._domain = null;
+Cookie.prototype._response = null;
+Cookie.prototype._cookie_data = null;
+Cookie.prototype._header_data = null;
+
 /**
  * 
- * @param domain
+ * @param {string} domain
  */
 Cookie.prototype.setDomain = function (domain) {
-	this.domain = domain;
+	this._domain = domain;
 };
 
 /**
- * @type {String}
- */
-Cookie.prototype.domain = null;
-
-/**
- * @type {HttpResponse}
- */
-Cookie.prototype.response = null;
-
-/**
+ * Retrieves the value of a cookie for the provided key
  * 
- * @type {Object}
- */
-Cookie.prototype.cookie_data = null;
-
-/**
- * 
- */
-Cookie.prototype.set_data = null;
-
-/**
- * 
- * @param {String} key
- * @return {Mixed}
+ * @param {string} key
+ * @return {mixed} the cookie value
  */
 Cookie.prototype.get = function (key) {
-	return this.cookie_data[key];
-};
-
-/**
- * 
- * @param parts
- * @param domain
- */
-Cookie.prototype.apply_domain = function (parts, domain) {
-	if (typeof domain === "string") {
-		parts.push('Domain=' + domain);
-	} else {
-		parts.push('Domain=' + this.domain);
-	}
-};
-
-/**
- * 
- * @param parts
- * @param path
- */
-Cookie.prototype.apply_path = function (parts, path) {
-	if (typeof path === "string") {
-		parts.push('Path=' + path);
-	} else {
-		parts.push('Path=/');
-	}
-};
-
-/**
- * 
- * @param parts
- * @param expires
- */
-Cookie.prototype.apply_expires = function (parts, expires) {
-	if (typeof expires === "string") {
-		// Session should not include expires
-		if (expires.toLowerCase() !== "session") {
-			// TODO: date checking
-			parts.push('Expires=' + expires);
-		}
-	} else if (typeof expires !== "undefined") {
-		// If a date is provided convert it
-		// TODO: better date type checking
-		parts.push('Expires=' + expires.toString());
-	}
+	return this._cookie_data[key];
 };
 
 /**
@@ -134,32 +76,42 @@ Cookie.prototype.apply_expires = function (parts, expires) {
  * @return void
  */
 Cookie.prototype.set = function (key, options) {
-	this.set_data[key] = options;
+	this._header_data[key] = options;
+	this._cookie_data[key] = options.value;
 	var i = 0;
 	var cookie_header = [];
 
 	// set all of the header data when you call set.
 	// we don't want to make the users re-call stuff, and I don't want to mess with the response prototype when it's this easy.
-	for (i in this.set_data) {
-		cookie_header.push(this.buildCookie(i, this.set_data[i]));
+	for (i in this._header_data) {
+		cookie_header.push(this._buildCookie(i, this._header_data[i]));
 	}
 	
-	this.response.setHeader('Set-Cookie', cookie_header);
+	this._response.setHeader('Set-Cookie', cookie_header);
 };
 
 /**
  * 
  * @param {String} key
  * @param {Object} options
+ * @param {String} options.value the cookie's value
+ * @param {String} options.domain the domain that can access the cookie
+ * @param {String} options.path the path within the domain that can access the cookie
+ * @param {Date|String} options.expires the date that the cookie expires, provide "session" for it to expire when the browser closes
+ * @param {Boolean} options.secure https only
+ * @param {Boolean} options.HttpOnly server only, no javascript access
  * @return {String}
  */
-Cookie.prototype.buildCookie = function (key, options) {
+Cookie.prototype._buildCookie = function (key, options) {
 	var parts = [];
 	
-	parts.push(key + '=' + options.value);
-	this.apply_domain(parts, options.domain);
-	this.apply_path(parts, options.path);
-	this.apply_expires(parts, options.expires);
+	apply_part(parts, key, options.value, 1);
+	apply_part(parts, 'Domain', options.domain, this._domain);
+	apply_part(parts, 'Path', options.path, '/');
+	
+	if (options.expires !== "session") {
+		apply_part(parts, 'Expires', options.expires);	
+	}
 
 	if (options.secure) {
 		parts.push('Secure');
@@ -170,4 +122,20 @@ Cookie.prototype.buildCookie = function (key, options) {
 	}
 
 	return parts.join('; ');
+};
+
+/** 
+ *
+ *
+ */
+var apply_part = function (parts, key, value, default_value) {
+	if (typeof value === "undefined" || value === null) {
+		value = default_value;
+		if (typeof value === "undefined" || value === null) {
+			return false;
+		}
+	}
+
+	parts.push(key + '=' + value);
+	return true;
 };
