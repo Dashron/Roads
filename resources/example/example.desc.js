@@ -15,8 +15,14 @@ module.exports = {
 			view.set('cookie_old_value', uri_bundle.cookie.get('date'));
 			var date = new Date().toString();
 			
+			if (uri_bundle.cookie.get('second_date')) {
+				uri_bundle.cookie.delete('second_date');
+			} else {
+				uri_bundle.cookie.set('second_date', { value : date, domain : '127.0.0.1' });
+			}
+
 			uri_bundle.cookie.set('date', { value : date , domain : '127.0.0.1' });
-			uri_bundle.cookie.set('second_date', { value : date, domain : '127.0.0.1' });
+			
 
 			view.set('cookie_new_value', date);
 

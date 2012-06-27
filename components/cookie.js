@@ -91,6 +91,17 @@ Cookie.prototype.set = function (key, options) {
 };
 
 /**
+ * Removes a cookie
+ * 
+ * @param  {String} key
+ */
+Cookie.prototype.delete = function (key) {
+	this.set(key, {
+		expires : new Date(0)
+	});
+};
+
+/**
  * 
  * @param {String} key
  * @param {Object} options

@@ -45,6 +45,9 @@ vows.describe('Model Component').addBatch({
 			cookies.set('c', {
 				value : 'd'
 			});
+
+			cookies.delete('e');
+
 			return response;
 		},
 		'has set values properly' : function (response) {
@@ -53,6 +56,10 @@ vows.describe('Model Component').addBatch({
 			assert.equal(headers[0], 'a=b; Path=/');
 			assert.equal(headers[1], 'c=d; Path=/');
 			// todo: test expires, domain, path, secure, httponly
+		},
+		'has deleted values properly' : function (response) {
+			var headers = response.getHeader('Set-Cookie');
+			assert.equal(headers[2], 'e=1; Path=/; Expires=' + (new Date(0)).toString());
 		}
 	}
 }).export(module); // Export the Suite
