@@ -1,5 +1,5 @@
 /*
-* gfw.js - config.js
+* gfw.js - server.js
 * Copyright(c) 2011 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
 */
