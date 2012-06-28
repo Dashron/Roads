@@ -1,6 +1,6 @@
 {
 	"name": "roads",
-	"version": "0.6.2",
+	"version": "0.6.4",
 	"engines": {
 		"node": ">=0.6.0"
 	},
