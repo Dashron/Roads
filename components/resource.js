@@ -22,7 +22,7 @@ var _resource_dir = __dirname.replace('components', 'resources/');
  * 
  * @param {String} directory 
  */
-var set_resource_dir = exports.setDir = function (directory) {
+var set_resource_dir = exports.setResourceDir = function (directory) {
 	if (directory.charAt(directory.length) != '/') {
 		directory = directory + '/';
 	}
@@ -40,20 +40,10 @@ var set_resource_dir = exports.setDir = function (directory) {
 var get_resource = exports.get = function (name, config) {
 	if (typeof _resources[name] == "undefined" || _resources[name] == null) {
 		console.log("Loading Resource:" + name);
-		_resources[name] = build(name, require(_resource_dir + name + '/' + name + '.desc.js'));
+		_resources[name] = new Resource(require(_resource_dir + name + '/' + name + '.desc.js'));
 	}
 
 	return _resources[name];
-};
-
-/**
- * Removes a single resource from the cache list
- * 
- * @param  {[type]} name [description]
- * @return {[type]}
- */
-var remove_resource = exports.remove = function (name) {
-	_resources[name] = null;
 };
 
 /**
@@ -64,93 +54,54 @@ var clear = exports.clear = function () {
 };
 
 /**
- * Builds a resource with the provided resource description.
+ * Constructs a resource
  * 
- * The description contains.....
- * 
- * directory : 
- * template_dir : 
- * template : 
- * route_catch_all : 
- * unmatched_route : 
- * routes : 
- * config : 
- * dependencies : 
- * models : 
- * 
- * @param {string} name
- * @param  {Object} description
- * @return {Resource}
+ * @todo : document all the description properties
+ * @param {Object} description
  */
-var build = exports.build = function (name, description) {
+var Resource = exports.Resource = function Resource (description) {
+	this.name = description.name;
+	this.router = new Router(description.route_catch_all);
+	this.directory = __dirname.replace("components", '') + 'resources/' + this.name;
+	this.template_dir = this.directory + '/templates/';
+	this.config = description.config;
+	this.template = description.template;
+	this.resources = {};
+	this.db = null;
+
 	var i = 0, j = 0;
 	var key = null;
 	var route = null;
-	var resource = new Resource(name);
-
-	resource.directory = __dirname.replace("components", '') + 'resources/' + name;
-	resource.template_dir = resource.directory + '/templates/';
-	resource.template = description.template;
-
-	resource.router = new Router(description.route_catch_all);
-	resource.router.unmatched_route = description.unmatched_route;
-	resource.config = description.config;
 
 	for (i = 0; i < description.routes.length; i++) {
 		route = description.routes[i];
 		if (typeof route.options != "object") {
 			route.options = {};
 		}
-		resource.addRoute(route.match, route, route.options.keys);
+		if (typeof route.modes === "undefined") {
+			route.modes = ['text/html'];
+		}
+		this.router.addRoute(route.match, route, route.options.keys);
+	}
+
+	if (typeof description.unmatched_route === "object") {
+		this.unmatched_route = description.unmatched_route;
 	}
 
 	for (i = 0; i < description.dependencies.length; i++) {
-		resource.addChild(get_resource(description.dependencies[i]));
+		this.resources[this.name] = get_resource(description.dependencies[i]);
 	}
 
+	this.models = {};
 	for (key in description.models) {
 		console.log('adding model: ' + key);
-		resource.addModel(key, description.models[key]);
+		this.models[key] = description.models[key];
 	}
 
 	for (key in description.view_renderers) {
+		console.log('adding renderer: ' + key);
 		view_component.addRenderer(key, description.view_renderers[key]);
 	}
-
-	return resource;
-};
-
-/**
- * Iterates through all dependent resources and applies a datbase connection if not pre-configured for one
- * 
- * @param  {Array} children   [description]
- * @param  {[type]} connection [description]
- */
-var populate_child_connections = function (children, connection) {
-	var key = null;
-	for (key in children) {
-		if (typeof children[key].db === "undefined" || children[key].db === null) {
-			children[key].db = connection;
-			// we want to fill all empty children with the provided default connection
-			// this might not  be the right path
-			populate_child_connections(children[key].children, connection);
-		}
-	}
-};
-
-/**
- * Constructs a resource
- * 
- * @param {string} name
- */
-var Resource = exports.Resource = function Resource (name) {
-	this.name = name;
-	this.config = {};
-	this.router = null;
-	this.models = {};
-	this.resources = {};
-	this.db = null;
-	this.unmatched_route = null;
 };
 
 Resource.prototype.name = '';
@@ -164,47 +115,23 @@ Resource.prototype.models = {};
 Resource.prototype.db = null;
 
 /**
- * [getResource description]
- * @param  {[type]} name [description]
- * @return {[type]}      [description]
+ * Retrieves a resource by.
+ * This is not just child resources, this is any resource you have a description for
+ * 
+ * @param  {String} name
+ * @return {Resource}
  */
 Resource.prototype.getResource = function (name) {
 	return get_resource(name);
 };
 
 /**
- * [addRoutes description]
- * @param {[type]} match   [description]
- * @param {Object} routes  Mapping of Method => Function
- * @param {[type]} options [description]
- */
-Resource.prototype.addRoute = function (match, route, keys) {
-	this.router.addRoute(match, route, keys);
-};
 
 /**
- * [addChild description]
- * @param {[type]} resource [description]
- */
-Resource.prototype.addChild = function (resource) {
-	this.resources[resource.name] = resource;
-}
-
-/**
- * [addModel description]
- * @param {[type]} key   [description]
- * @param {[type]} model [description]
- */
-Resource.prototype.addModel = function (key, model) {
-	console.log('adding model');
-	this.models[key] = model;
-}
-
-/**
- * [route description]
- * @param  {[type]} uri_bundle [description]
- * @param  {[type]} view       [description]
- * @return {[type]}
+ * Locates the code best associated with the provided uri_bundle, and writes any necessary data to the view
+ * 
+ * @param  {Object} uri_bundle
+ * @param  {View} view
  */
 Resource.prototype.request = function (uri_bundle, view) {
 	var key = null;
@@ -228,8 +155,6 @@ Resource.prototype.request = function (uri_bundle, view) {
 
 			view = new View();
 			view.setContentType(accept_header_component.getContentType(uri_bundle.headers.accept, route.modes));
-			// todo: not sure this will actually be desired due to view template precedence.
-			//view.setTemplate(this.default_template);
 			view.setResponse(response);
 		}
 
@@ -267,15 +192,21 @@ Resource.prototype.request = function (uri_bundle, view) {
 			view.statusUnsupportedMethod(keys);
 		}
 	}, function () {
+		// Yes, dying horribly is intended here. This bit of code should never be executed
+		// The ideal technique would be for your root resource to have an unmatched_route property
+		// that handles all 404's
 		throw new Error('route not found :' + uri_bundle.uri + ' [' + _self.name + ']');
 	});
 };
 
 /**
- * [getRoute description]
- * @todo  return a promise
- * @param  {[type]} uri_bundle [description]
- * @return {[type]}
+ * Locates the appropriate route for the provided uri_bundle, and provides it to the sucess callback.
+ * If not found, the failure callback is called with no parameters
+ * 
+ * @param  {Object} uri_bundle 
+ * @param {Function} success takes two parameters, the route, and the resource associated with the route
+ * @param {Function} failure
+ * @return {Objectt}
  */
 Resource.prototype.processRoute = function (uri_bundle, success, failure) {
 	var route = this.router.getRoute(uri_bundle);
@@ -291,10 +222,12 @@ Resource.prototype.processRoute = function (uri_bundle, success, failure) {
 		}
 	}
 
-	if (this.unmatched_route) {
+	// If no route has been found, try the default "unmatched_route"
+	if (!route && this.unmatched_route) {
 		route = this.unmatched_route;
 	}
 
+	// todo: should these be called on next tick?
 	if (route) {
 		success(route, this);
 		return true;
@@ -305,4 +238,23 @@ Resource.prototype.processRoute = function (uri_bundle, success, failure) {
 	}
 	
 	return false;
+};
+
+
+/**
+ * Iterates through all dependent resources and applies a datbase connection if not pre-configured for one
+ * 
+ * @param  {Array} children   [description]
+ * @param  {[type]} connection [description]
+ */
+var populate_child_connections = function (children, connection) {
+	var key = null;
+	for (key in children) {
+		if (typeof children[key].db === "undefined" || children[key].db === null) {
+			children[key].db = connection;
+			// we want to fill all empty children with the provided default connection
+			// this might not  be the right path
+			populate_child_connections(children[key].children, connection);
+		}
+	}
 };

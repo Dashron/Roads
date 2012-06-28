@@ -1,7 +1,5 @@
-
-
 module.exports = {
-	name : 'users',
+	name : 'user',
 	route_catch_all : /^\/users/,
 	routes : [{
 		match : /^\/users\/(\d+)$/,

@@ -62,6 +62,10 @@ HandlebarsRenderer.prototype.render = function (template) {
 			compiled_views[template] = handlebars.compile(buffer);
 			_self.executeTemplate(template);
 		});
+
+		stream.on('error', function (err) {
+			_self._error(err);
+		});
 	} else {
 		this.executeTemplate(template);
 	}

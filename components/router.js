@@ -42,7 +42,11 @@ RegexRouter.prototype.catch_all = null;
  * @param {[type]} options [description]
  */
 RegexRouter.prototype.addRoute = function (match, route, keys) {
-	this.routes.push({match: match, route: route, keys: keys});
+	this.routes.push({
+		match: match, 
+		route: route, 
+		keys: keys
+	});
 };
 
 /**
