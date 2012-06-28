@@ -30,7 +30,7 @@
 		 "url" : "git://github.com/Dashron/roads.git"
 	},
 	"dependencies": {
-		"mu2": "~0.5.13",
+		"handlebars": "~1.0.5beta",
 		"mysql": "~2.0.0-alpha2"
 	}
 }
