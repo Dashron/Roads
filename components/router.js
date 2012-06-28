@@ -19,27 +19,16 @@ var RegexRouter = exports.RegexRouter = function RegexRouter (catch_all) {
 	this.catch_all = catch_all
 };
 
-/**
- * @type {Array}
- */
 RegexRouter.prototype.routes = null;
-
-/**
- * @type {Function}
- */
 RegexRouter.prototype.unmatched_route = null;
-
-/**
- * This regex should match any route contained within this object.
- * @type {RegExp}
- */
 RegexRouter.prototype.catch_all = null;
 
 /**
- * [addRoutes description]
- * @param {[type]} regex   [description]
- * @param {Object} routes  Mapping of Method => Route Function
- * @param {[type]} options [description]
+ * Add a single route to the router
+ * 
+ * @param {RegExp} regex regex that is associated with the provided route.
+ * @param {Object} route an object containing all route details. We never touch the route here, so it can  be anything
+ * @param {Objet} keys a mapping of Number=>String so that regex grouping can be put assigned as a querystring parameter
  */
 RegexRouter.prototype.addRoute = function (match, route, keys) {
 	this.routes.push({
@@ -50,10 +39,11 @@ RegexRouter.prototype.addRoute = function (match, route, keys) {
 };
 
 /**
- * [url_matches description]
- * @param  {[type]} keys    [description]
- * @param  {[type]} matches [description]
- * @return {[type]}
+ * Find all the grouping matches within the provided url, and connect them with the appropriate querystring names
+ * 
+ * @param  {Object} keys a mapping of Number=>String
+ * @param  {Array} matches response of string.match(regex)
+ * @return {Object} Everything that should be added to the GET parameters
  */
 var url_matches = function (keys, matches) {
 	var GET = {};
@@ -72,34 +62,17 @@ var url_matches = function (keys, matches) {
 };
 
 /**
- * Route the provided request
+ * Retrieve the route best associated with the provided uri_bundle.
  * 
- * @param {Request} request
- * @param {Response} response
- * @param {Object} extra
- *            any extra data you want provided to the route function
- * @param {Function} callback
- *            a function to execute once the data has been routed
- * @return {Boolean}
+ * It first checks to make sure that uri_bundle.uri matches this routers catch_all function (if one is provided)
+ * If not, we assume there are no routes here for this bundle.
  * 
- * @todo return promise on success?
- * @todo routes[i].func(resource, response, extra)
- */
-/*RegexRouter.prototype.route = function (request, response, callback) {
-	var _self = this;
-	return _self.getRoute(request, function (route) {
-		route.call(null, request, response, callback);
-	});
-};*/
-
-/**
- * Retrieves a route function to be executed at a later time. 
- * Only calls the callback, providing the route if the request is ready to be routed
+ * It then loops through all of the regexes trying to find the proper route.
+ * If one is found, we might have grouping matches from the regex.
+ * We associate those with the keys object provided in addRoute, and inject them back into the uri_bundle as GET parameters
  * 
- * @todo  why have a promise? if we are doing a uri bundle we don't have to wait for anything
- * @param  {[type]}   request  [description]
- * @param  {Function} ready first parameter is provided the route function. not called until you can safely execute it.
- * @return {[type]}
+ * @param {Object} uri_bundle
+ * @return {Object}
  */
 RegexRouter.prototype.getRoute = function (uri_bundle) {
 	var _self = this;
@@ -108,21 +81,21 @@ RegexRouter.prototype.getRoute = function (uri_bundle) {
 	var matches = null;
 	var i = 0;
 
+	// Provide a catch_all regex for optimization, so you can split up all your routes easily
 	if (this.catch_all) {
 		if (!uri_bundle.uri.match(this.catch_all)) {
 			return false;
 		}
 	}
 
-	// Find a match and add any regex matches into the GET params
 	if (Array.isArray(routes)) {
 		for (i = 0; i < routes.length; i ++) {
 			var route = routes[i].route;
 			var matches = uri_bundle.uri.match(routes[i].match);
 
-			// Ensure a regex match has been made, and there is support for the requested method
+			// Ensure a regex match has been made
 			if (matches != null) {
-				// apply grouped matches as GET key value pairs
+				// if the regex had groups, apply the grouped matches as GET parameters
 				if (matches.length > 1) {
 					if (typeof uri_bundle.params != "object") {
 						uri_bundle.params = {};
