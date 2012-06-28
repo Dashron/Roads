@@ -72,5 +72,6 @@ module.exports = {
 	models : [
 	],
 	config : {
-	}
+	},
+	view_renderers : require('./static.renderers')
 };

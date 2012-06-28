@@ -53,5 +53,6 @@ module.exports = {
 				database: 'gfw'
 			}
 		}
-	}
+	},
+	view_renderers : require('./example.renderers')
 };

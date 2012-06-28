@@ -109,8 +109,12 @@ var build = exports.build = function (name, description) {
 	}
 
 	for (key in description.models) {
-		console.log(key);
+		console.log('adding model: ' + key);
 		resource.addModel(key, description.models[key]);
+	}
+
+	for (key in description.view_renderers) {
+		view_component.addRenderer(key, description.view_renderers[key]);
 	}
 
 	return resource;
