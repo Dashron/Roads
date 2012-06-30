@@ -154,6 +154,11 @@ Resource.prototype.request = function (uri_bundle, view) {
 			var response = view;
 
 			view = new View();
+			
+			if (typeof route.modes === "undefined" || route.modes === null) {
+				throw new Error('no route modes found for ' + uri_bundle.uri);
+			}
+
 			view.setContentType(accept_header_component.getContentType(uri_bundle.headers.accept, route.modes));
 			view.setResponse(response);
 		}
