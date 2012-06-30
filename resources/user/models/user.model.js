@@ -31,3 +31,7 @@ UserModule.setModel({
 			}
         }
 });
+
+UserModule.getAll = function () {
+	return this.collection('select * from user');
+};

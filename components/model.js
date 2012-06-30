@@ -116,6 +116,7 @@ ModelModule.prototype.load = function (value, field) {
 				function (err, rows, columns) {
 					if (err) {
 						promise._error(err);
+						return;
 					}
 
 					if (rows.length === 0) {
@@ -129,6 +130,39 @@ ModelModule.prototype.load = function (value, field) {
 
 	return promise;
 };
+
+/**
+ * Returns an array of all the models found by the provided sql
+ * @param  {String} sql   
+ * @param  {Object} params key value map
+ * @return {Array}        Array of models
+ */
+ModelModule.prototype.collection = function (sql, params) {
+	var promise = new ModelPromise();
+	var _self = this;
+	this.getConnection().query(sql, params, function (err, rows, columns) {
+		if (err) {
+			promise._error(err);
+			return;
+		}
+
+		if (rows.length === 0) {
+			promise._ready([]);
+			return;
+		}
+
+		var models = [];
+
+		for (var i = 0; i < rows.length; i++) {
+			models.push(new _self.Model(rows[i]));
+		}
+
+		promise._ready(models);
+	});
+
+	return promise;
+};
+
 
 var Model = module.exports.Model = function Model (data) {
 	// todo: maybe don't double initalize?
