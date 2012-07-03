@@ -155,11 +155,11 @@ Resource.prototype.request = function (uri_bundle, view) {
 
 			view = new View();
 			
-			if (typeof route.modes === "undefined" || route.modes === null) {
+			if (typeof route.options.modes === "undefined" || route.options.modes === null) {
 				throw new Error('no route modes found for ' + uri_bundle.uri);
 			}
 
-			view.setContentType(accept_header_component.getContentType(uri_bundle.headers.accept, route.modes));
+			view.setContentType(accept_header_component.getContentType(uri_bundle.headers.accept, route.options.modes));
 			view.setResponse(response);
 		}
 

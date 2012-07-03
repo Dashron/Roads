@@ -3,7 +3,6 @@ module.exports = {
 	route_catch_all : /^\/users/,
 	routes : [{
 		match : /^\/users$/,
-		modes : ['text/html'],
 		GET : function (uri_bundle, view) {
 			var users_promise = this.models['user'].getAll();
 			users_promise.ready(function (users) {
@@ -12,11 +11,10 @@ module.exports = {
 			})
 		},
 		options : {
-
+			modes : ['text/html']
 		}
 	},{
 		match : /^\/users\/(\d+)$/,
-		modes : ['text/html'],
 		GET : function (uri_bundle, view) {
 			var user_promise = this.models['user'].load(uri_bundle.params.id);
 			user_promise.ready(function (user) {
@@ -30,15 +28,17 @@ module.exports = {
 			});
 		},
 		options : {
-			keys : ['id']
+			keys : ['id'],
+			modes : ['text/html']
 		}
 	}],
 	unmatched_route : {
 		GET : function (uri_bundle, view) {
-			console.log('unmatched route');
-			console.log(uri_bundle);
 			view.statusNotFound('404.html');
 		},
+		options : {
+			modes : ['text/html']
+		}
 	},
 	dependencies : [
 	],

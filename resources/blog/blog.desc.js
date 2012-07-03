@@ -2,7 +2,6 @@ module.exports = {
 	name : 'blog',
 	routes : [{ 
 		match : /^\/posts$/,
-		modes : ['text/html'],
 		GET : function (uri_bundle, view) {
 			
 			
@@ -18,11 +17,11 @@ module.exports = {
 
 		},
 		options : {
+			modes : ['text/html'],
 			keys : ['id']
 		}
 	}, {
 		match : /^\/posts\/(\d+)$/,
-		modes : ['text/html'],
 		GET : function (uri_bundle, view) {
 			
 			
@@ -42,6 +41,7 @@ module.exports = {
 			view.redirect('/posts/' + post.id);
 		},
 		options : {
+			modes : ['text/html'],
 			keys : ['id']
 		}
 	}],
