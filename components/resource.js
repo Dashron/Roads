@@ -85,7 +85,7 @@ var Resource = exports.Resource = function Resource (description) {
 	}
 
 	if (typeof description.unmatched_route === "object") {
-		this.unmatched_route = description.unmatched_route;
+		this.router.unmatched_route = description.unmatched_route;
 	}
 
 	for (i = 0; i < description.dependencies.length; i++) {
@@ -227,9 +227,8 @@ Resource.prototype.processRoute = function (uri_bundle, success, failure) {
 		}
 	}
 
-	// If no route has been found, try the default "unmatched_route"
-	if (!route && this.unmatched_route) {
-		route = this.unmatched_route;
+	if (!route) {
+		route = this.router.getUnmatchedRoute(uri_bundle);
 	}
 
 	// todo: should these be called on next tick?

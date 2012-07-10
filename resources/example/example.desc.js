@@ -37,6 +37,9 @@ module.exports = {
 			console.log(uri_bundle);
 			view.statusNotFound('404.html');
 		},
+		options : {
+			modes : ['text/html']
+		}
 	},
 	dependencies : [
 		'user',

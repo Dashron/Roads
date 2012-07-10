@@ -32,14 +32,6 @@ module.exports = {
 			modes : ['text/html']
 		}
 	}],
-	unmatched_route : {
-		GET : function (uri_bundle, view) {
-			view.statusNotFound('404.html');
-		},
-		options : {
-			modes : ['text/html']
-		}
-	},
 	dependencies : [
 	],
 	models : {

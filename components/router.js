@@ -118,11 +118,24 @@ RegexRouter.prototype.getRoute = function (uri_bundle) {
 		};
 	}
 
+	return false;
+};
+
+RegexRouter.prototype.getUnmatchedRoute = function (uri_bundle) {
+	console.log(this.catch_all);
+	// Provide a catch_all regex for optimization, so you can split up all your routes easily
+	if (!this.catch_all) {
+		return this.unmatched_route;
+	}
+
+	if (!uri_bundle.uri.match(this.catch_all)) {
+		return false;
+	}
+
 	// If there was no match, run the unmatched func
-	if (typeof _self.unmatched_route === "function") {
-		console.log('unmatched route');
-		return _self.unmatched_route;
+	if (typeof this.unmatched_route != "undefined" && _self.unmatched_route != null) {
+		return this.unmatched_route;
 	}
 
 	return false;
-};
+}

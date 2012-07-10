@@ -2,7 +2,7 @@ var fs_module = require('fs');
 
 module.exports = {
 	name : 'static',
-	router_catch_all : /\.(js|css|txt|html|ico)$/,
+	route_catch_all : /\.(js|css|txt|html|ico)$/,
 	routes : [{ 
 		match : /^\/(([\w.\/]+)\.(js|css|txt|html|ico))$/,
 		options : {
@@ -34,7 +34,7 @@ module.exports = {
 			fs_module.stat(path, function (err, stats) {				
 				if (err) {
 					console.log(err);
-					view.error(err);
+					view.statusNotFound('404.html');
 				} else {
 					view.error(function (error) {
 						console.log(error);
@@ -61,10 +61,11 @@ module.exports = {
 	}],
 	unmatched_route : {
 		GET : function (uri_bundle, view) {
-			console.log('unmatched route');
-			console.log(uri_bundle);
 			view.statusNotFound('404.html');
 		},
+		options : {
+			modes : ['text/html']
+		}
 	},
 	dependencies : [
 		'user'
