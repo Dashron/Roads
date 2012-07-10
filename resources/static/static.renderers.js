@@ -1,6 +1,7 @@
 var fs_module = require('fs');
 var Renderer = require('../../components/view').Renderer;
 var util_module = require('util');
+var http_module = require('http');
 
 /**
  * This function allows you to build a renderer that responds to a certain content type
