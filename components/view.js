@@ -103,7 +103,12 @@ View.prototype._response = null;
 View.prototype._data = null;
 View.prototype._child_views = null;
 View.prototype._content_type = null;
-View.prototype._error = null;
+
+View.prototype._error = function (error) {
+	console.log(error);
+	throw new Error('No error handler has been assigned to this view. Are one of your status calls erroring (404, 500, etc?). Maybe you have not set an error handler for your root template');
+};
+
 View.prototype.dir = null;
 View.prototype.parent = null;
 View.prototype.root = null;
