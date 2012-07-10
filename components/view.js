@@ -79,6 +79,7 @@ var render_states = exports.RENDER_STATES = {
  * 
  * @author Aaron Hedges <aaron@dashron.com>
  * @todo unify js, css and dir into a metadata field
+ * @todo add timeouts
  */
 var View = exports.View = function View() {
 	EventEmitter.call(this);
@@ -244,11 +245,11 @@ View.prototype.canRender = function view_canRender() {
 
 /**
  * Renders the current view, writing the the response, if and only if all child views have been completed
- * @todo: handle the case where a child element never finishes
- * @param  {String|Boolean} template Renders the provided template unless one was set previously. If false is passed, no data will be written
+ * @param {String} template Renders the provided template unless one was set previously.
+ * @param {Boolean} force Kills all child elements and forces the template to be rendered immediately. default: false
  */
-View.prototype.render = function view_render(template) {
-	if (template !== false) {
+View.prototype.render = function view_render(template, force) {
+	if (!force) {
 		this.render_state = render_states.RENDER_REQUESTED;
 
 		if (this.canRender()) {
@@ -266,7 +267,8 @@ View.prototype.render = function view_render(template) {
 			}
 		}
 	} else {
-		this._response.end();
+		this.root._child_views = {};
+		this.render(template, false);
 	}
 };
 
@@ -402,8 +404,7 @@ View.prototype.setHeader = function view_setHeaders(headers) {
 View.prototype.statusNotFound = function view_notFound(template) {
 	this.root._response.statusCode = 404;
 	// kill all child views so that the route renders immediately
-	this.root._child_views = {};
-	this.root.render(template);
+	this.root.render(template, true);
 };
 
 /**
@@ -440,7 +441,7 @@ View.prototype.statusError = function view_error(error, template) {
 View.prototype.statusCreated = function view_created(redirect_url) {
 	this.root._response.statusCode = 201;
 	this.root._response.setHeader('Location', redirect_url);
-	this.root.render(false);
+	this.root.render(null, true);
 };
 
 /**
@@ -453,7 +454,7 @@ View.prototype.statusCreated = function view_created(redirect_url) {
 View.prototype.statusRedirect = function view_redirect(redirect_url) {
 	this.root._response.statusCode = 302;
 	this.root._response.setHeader('Location', redirect_url);
-	this.root.render(false);
+	this.root.render(null, true);
 };
 
 /**
@@ -468,7 +469,7 @@ View.prototype.statusNotModified = function view_notModified() {
 	// etag
 	// expires
 	// cache  control
-	this.root.render(false);
+	this.root.render(null, true);
 };
 
 /**
