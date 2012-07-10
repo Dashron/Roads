@@ -103,7 +103,7 @@ function applyModelFields (model, definition) {
 
 ModelModule.prototype.load = function (value, field) {
 	var _self = this;
-	var promise = new ModelPromise();
+	var request = new ModelRequest();
 
 	if (typeof field != "string") {
 		field = "id";
@@ -115,20 +115,20 @@ ModelModule.prototype.load = function (value, field) {
 				[value], 
 				function (err, rows, columns) {
 					if (err) {
-						promise._error(err);
+						request._error(err);
 						return;
 					}
 
 					if (rows.length === 0) {
 						// todo: should I use ready, error and empty? or just pass null to ready?
-						promise._ready(null);
+						request._ready(null);
 						return;
 					}
 
-					promise._ready(new _self.Model(rows[0]));
+					request._ready(new _self.Model(rows[0]));
 				});
 
-	return promise;
+	return request;
 };
 
 /**
@@ -138,16 +138,16 @@ ModelModule.prototype.load = function (value, field) {
  * @return {Array}        Array of models
  */
 ModelModule.prototype.collection = function (sql, params) {
-	var promise = new ModelPromise();
+	var request = new ModelRequest();
 	var _self = this;
 	this.getConnection().query(sql, params, function (err, rows, columns) {
 		if (err) {
-			promise._error(err);
+			request._error(err);
 			return;
 		}
 
 		if (rows.length === 0) {
-			promise._ready([]);
+			request._ready([]);
 			return;
 		}
 
@@ -157,10 +157,10 @@ ModelModule.prototype.collection = function (sql, params) {
 			models.push(new _self.Model(rows[i]));
 		}
 
-		promise._ready(models);
+		request._ready(models);
 	});
 
-	return promise;
+	return request;
 };
 
 
@@ -182,7 +182,7 @@ Model.prototype.updated_fields = null;
 
 Model.prototype.save = function () {
 	var _self = this;
-	var promise = new ModelPromise();
+	var request = new ModelRequest();
 	var keys = Object.keys(this.updated_fields);
 
 	//todo don't allow save to be called on a deleted object
@@ -202,16 +202,16 @@ Model.prototype.save = function () {
 						+ ' VALUES (' + placeholders.join(', ') + ')', 
 						values,
 						function(error, result) {
-							promise.result = result;
+							request.result = result;
 
 							if (error) {
-								promise._error(error);
+								request._error(error);
 								return;
 							}
 
 							_self.id = result.insertId;
 							_self.updated_fields = [];
-							promise._ready(_self);
+							request._ready(_self);
 						});
 		} else {
 			var values = [];
@@ -229,74 +229,74 @@ Model.prototype.save = function () {
 						values, 
 						function (error, result) {
 
-							promise.result = result;
+							request.result = result;
 							if (error) {
-								promise._error(error);
+								request._error(error);
 								return;
 							}
 							_self.updated_fields = [];
-							promise._ready(_self);
+							request._ready(_self);
 						});
 		}
 	} else {
 		process.nextTick(function () {
-			promise._ready(_self);
+			request._ready(_self);
 		})
 	}
 
-	return promise;
+	return request;
 }
 
 Model.prototype.delete = function () {
-	var promise = new ModelPromise();
+	var request = new ModelRequest();
 
 	this.getConnection()
 		.query('delete from `' + this.definition.table + '`'
 			+ ' where `id` = ?', 
 			[this.id], 
 			function (error, result) {
-				promise.result = result;
+				request.result = result;
 
 				if (error) {
-					promise._error(error);
+					request._error(error);
 					return;
 				}
 
 				// todo: mark the model as deleted, so it does not accidentally get used in other locations
-				promise._ready(null);
+				request._ready(null);
 			});
 
-	return promise;
+	return request;
 };
 
 /**
- * [ModelPromise description]
+ * [ModelRequest description]
  *
  *
  *
  * 
  */
-var ModelPromise = exports.ModelPromise = function () {
+var ModelRequest = exports.ModelRequest = function () {
 };
 
-ModelPromise.prototype.result = null;
+ModelRequest.prototype.result = null;
 
-ModelPromise.prototype._error = function (err) {
+ModelRequest.prototype._error = function (err) {
 	this.error = function (fn) {
 		fn(err);
 	}
 };
 
-ModelPromise.prototype.error = function (fn) {
+ModelRequest.prototype.error = function (fn) {
 	this._error = fn;
 }
 
-ModelPromise.prototype._ready = function (data) {
+ModelRequest.prototype._ready = function (data) {
 	this.empty = function (fn) {
 		fn(data);
 	}
 };
 
-ModelPromise.prototype.ready = function (fn) {
+ModelRequest.prototype.ready = function (fn) {
 	this._ready = fn;
 }
