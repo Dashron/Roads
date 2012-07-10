@@ -7,9 +7,9 @@ module.exports = {
 		match : /^\/(([\w.\/]+)\.(js|css|txt|html|ico))$/,
 		options : {
 			keys : ['file', 'name', 'ext'],
-			ignore_template : true
+			ignore_template : true,
+			modes : ['text/javascript', 'text/css', 'text/plain'],
 		},
-		modes : ['text/javascript', 'text/css', 'text/plain'],
 		GET : function (uri_bundle, view) {
 			var request_date = uri_bundle.headers['if-modified-since'];
 			var path = view.dir + uri_bundle.params.file;
