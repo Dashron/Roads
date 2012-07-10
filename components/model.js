@@ -146,15 +146,10 @@ ModelModule.prototype.collection = function (sql, params) {
 			return;
 		}
 
-		if (rows.length === 0) {
-			request._ready([]);
-			return;
-		}
-
-		var models = [];
+		var models = new Array(rows.length);
 
 		for (var i = 0; i < rows.length; i++) {
-			models.push(new _self.Model(rows[i]));
+			models[i] = new _self.Model(rows[i]);
 		}
 
 		request._ready(models);
