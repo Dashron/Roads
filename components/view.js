@@ -5,9 +5,6 @@
 */
 "use strict";
 
-var mu = require('mu2');
-mu.root = '/';
-
 var EventEmitter = require('events').EventEmitter;
 var util_module = require('util');
 var http_module = require('http');
