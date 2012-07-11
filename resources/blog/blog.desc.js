@@ -1,5 +1,4 @@
 module.exports = {
-	name : 'blog',
 	routes : [{ 
 		match : /^\/posts$/,
 		GET : function (uri_bundle, view) {

@@ -1,5 +1,4 @@
 module.exports = {
-	name : 'user',
 	route_catch_all : /^\/users/,
 	routes : [{
 		match : /^\/users$/,
@@ -32,11 +31,7 @@ module.exports = {
 			modes : ['text/html']
 		}
 	}],
-	dependencies : [
-	],
 	models : {
 		'user' : require('./models/user.model')
-	},
-	config : {
 	}
 };

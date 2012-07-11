@@ -1,7 +1,6 @@
 var fs_module = require('fs');
 
 module.exports = {
-	name : 'static',
 	route_catch_all : /\.(js|css|txt|html|ico)$/,
 	routes : [{ 
 		match : /^\/(([\w.\/]+)\.(js|css|txt|html|ico))$/,

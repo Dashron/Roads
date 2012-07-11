@@ -40,7 +40,7 @@ var set_resource_dir = exports.setResourceDir = function (directory) {
 var get_resource = exports.get = function (name, config) {
 	if (typeof _resources[name] == "undefined" || _resources[name] == null) {
 		console.log("Loading Resource:" + name);
-		_resources[name] = new Resource(require(_resource_dir + name + '/' + name + '.desc.js'));
+		_resources[name] = new Resource(name, require(_resource_dir + name + '/' + name + '.desc.js'));
 	}
 
 	return _resources[name];
@@ -59,8 +59,8 @@ var clear = exports.clear = function () {
  * @todo : document all the description properties
  * @param {Object} description
  */
-var Resource = exports.Resource = function Resource (description) {
-	this.name = description.name;
+var Resource = exports.Resource = function Resource (name, description) {
+	this.name = name;
 	this.router = new Router(description.route_catch_all);
 	this.directory = __dirname.replace("components", '') + 'resources/' + this.name;
 	this.template_dir = this.directory + '/templates/';
@@ -88,8 +88,10 @@ var Resource = exports.Resource = function Resource (description) {
 		this.router.unmatched_route = description.unmatched_route;
 	}
 
-	for (i = 0; i < description.dependencies.length; i++) {
-		this.resources[this.name] = get_resource(description.dependencies[i]);
+	if (Array.isArray(description.dependencies)) {
+		for (i = 0; i < description.dependencies.length; i++) {
+			this.resources[this.name] = get_resource(description.dependencies[i]);
+		}
 	}
 
 	this.models = {};
