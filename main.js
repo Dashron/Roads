@@ -16,7 +16,7 @@ server.resource = resource;
 for (var label in resource.config.dbs) {
 	console.log('Connecting to database:');
 	console.log(resource.config.dbs[label]);
-	database_module.loadConnection(label, resource.config.dbs[label]);
+	database_module.connection(label, resource.config.dbs[label]);
 }
 
 server.start();

@@ -6,24 +6,19 @@
 "use strict";
 var mysql_module = require('mysql');
 var connections = {};
-var configs = {};
-
-module.exports.loadConnection = function (label, config) {
-	connections[label] = null;
-	configs[label] = config;
-
-	connections[label] = mysql_module.createConnection(configs[label]);
-	connections[label].connect();
-};
 
 /**
+ * Returns the connection for the provided label.
+ * If no connection has been created, this attempts to create the connection using the provided config.
  * 
- * @todo  connection pooling
- * @param  {[type]} label [description]
- * @return {[type]}       [description]
+ * @param  {String} label
+ * @param  {Object} config
+ * @return {Connection}
  */
-module.exports.getConnection = function (label) {
-	if (typeof connections[label] == "object") {
-		return connections[label];
+module.exports.connection = function (label, config) {
+	if (typeof connections[label] === "undefined" || connections[label] === null) {
+		connections[label] = mysql_module.createConnection(config);
+		connections[label].connect();
 	}
+	return connections[label];
 };

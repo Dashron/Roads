@@ -35,7 +35,7 @@ var ModelModule = module.exports.ModelModule = function ModelModule () {
 ModelModule.prototype.connection = null;
 
 ModelModule.prototype.getConnection = function () {
-	return database_module.getConnection(this.connection);
+	return database_module.connection(this.connection);
 };
 
 ModelModule.prototype.setModel = function (definition) {
