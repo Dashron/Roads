@@ -69,9 +69,5 @@ module.exports = {
 	dependencies : [
 		'user'
 	],
-	models : [
-	],
-	config : {
-	},
 	view_renderers : require('./static.renderers')
 };

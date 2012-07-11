@@ -56,7 +56,5 @@ module.exports = {
 	],
 	models : {
 		'post' : require('./models/post.model')
-	},
-	config : {
 	}
 };

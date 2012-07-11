@@ -19,8 +19,6 @@ module.exports = {
 		'blog',
 		'static'
 	],
-	models : [
-	],
 	config : {
 		dbs : {
 			"default" : {
