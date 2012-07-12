@@ -17,8 +17,11 @@ var Cookie = require('./cookie').Cookie;
  * @param {string} hostname [description]
  * @todo  emit log info?
  */
-var Server = exports.Server = function Server (port, hostname) {
+var Server = exports.Server = function Server (description) {
 	var _self = this;
+	this.resource = description.resource;
+	this.port = description.port || 8125;
+	this.hostname = description.hostname || null;
 
 	events_module.EventEmitter.call(_self);
 
@@ -63,9 +66,6 @@ var Server = exports.Server = function Server (port, hostname) {
 
 		_self.emit('request', request, response);
 	});
-
-	this.port = port || 8125;
-	this.hostname = hostname || null;
 };
 
 util_module.inherits(Server, events_module.EventEmitter);

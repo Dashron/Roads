@@ -2,22 +2,25 @@
 var http = require('http');
 var resource_component = require('./components/resource');
 var Server = require('./components/server').Server;
-var database_module = require('./components/database');
+var Database = require('./components/database').Database;
 
 /*process.on('uncaughtException', function (error) {
 	console.log(error);
 });*/
 
-var resource = resource_component.get(process.argv[2] || "example");
-var server = new Server(process.env.PORT || process.env.VMC_APP_PORT || 8125);
-server.resource = resource;
+new Database("default", {
+	hostname: 'localhost',
+	user : 'gfw',
+	database: 'gfw'
+});
 
-// todo: load all resources connections
-for (var label in resource.config.dbs) {
-	console.log('Connecting to database:');
-	console.log(resource.config.dbs[label]);
-	database_module.connection(label, resource.config.dbs[label]);
-}
+
+var resource_name = process.argv[2] || "example";
+var resource = require('./resources/' + resource_name + '/' + resource_name + '.resource');
+var server = new Server({
+	port : process.env.PORT || process.env.VMC_APP_PORT || 8125,
+	resource : resource
+});
 
 server.start();
 

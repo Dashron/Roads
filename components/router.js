@@ -12,31 +12,31 @@ var qs_module = require('querystring');
 /**
  * A url based router, the first regex matched will point to the executing
  * function
+ * 
+ * @param {Object} description default_route[object], catch_all[regexp], routes[array of objects]
  */
-var RegexRouter = exports.RegexRouter = function RegexRouter (catch_all) {
-	this.routes = [];
-	this.unmatched_route = null;
-	this.catch_all = catch_all
+var RegexRouter = exports.RegexRouter = function RegexRouter (description) {
+	this.default_route = description.default_route;
+	this.catch_all = description.catch_all;
+
+	if (Array.isArray(description.routes)) {
+		var i = 0, route = null;
+		this.routes = new Array(description.routes.length);
+
+		for (i = 0; i < description.routes.length; i ++) {
+			route = description.routes[i];
+			this.routes[i] = {
+				match: route.match, 
+				route: route, 
+				keys: route.keys
+			}
+		}
+	}
 };
 
 RegexRouter.prototype.routes = null;
-RegexRouter.prototype.unmatched_route = null;
+RegexRouter.prototype.default_route = null;
 RegexRouter.prototype.catch_all = null;
-
-/**
- * Add a single route to the router
- * 
- * @param {RegExp} regex regex that is associated with the provided route.
- * @param {Object} route an object containing all route details. We never touch the route here, so it can  be anything
- * @param {Objet} keys a mapping of Number=>String so that regex grouping can be put assigned as a querystring parameter
- */
-RegexRouter.prototype.addRoute = function (match, route, keys) {
-	this.routes.push({
-		match: match, 
-		route: route, 
-		keys: keys
-	});
-};
 
 /**
  * Find all the grouping matches within the provided url, and connect them with the appropriate querystring names
@@ -121,11 +121,16 @@ RegexRouter.prototype.getRoute = function (uri_bundle) {
 	return false;
 };
 
-RegexRouter.prototype.getUnmatchedRoute = function (uri_bundle) {
-	console.log(this.catch_all);
+/**
+ * If the uri bundle is acceptable for this router, the routers default route is returned
+ * 
+ * @param  {[type]} uri_bundle [description]
+ * @return {[type]}            [description]
+ */
+RegexRouter.prototype.getDefaultRoute = function (uri_bundle) {
 	// Provide a catch_all regex for optimization, so you can split up all your routes easily
 	if (!this.catch_all) {
-		return this.unmatched_route;
+		return this.default_route;
 	}
 
 	if (!uri_bundle.uri.match(this.catch_all)) {
@@ -133,8 +138,8 @@ RegexRouter.prototype.getUnmatchedRoute = function (uri_bundle) {
 	}
 
 	// If there was no match, run the unmatched func
-	if (typeof this.unmatched_route != "undefined" && _self.unmatched_route != null) {
-		return this.unmatched_route;
+	if (typeof this.default_route != "undefined" && _self.default_route != null) {
+		return this.default_route;
 	}
 
 	return false;

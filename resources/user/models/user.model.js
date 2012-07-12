@@ -1,10 +1,10 @@
 var model_module = require(__dirname.replace('/resources/user/models', '/components/model'));
-
 var crypto_module = require('crypto');
 
+var Database = require('../../../components/database').Database;
 
 var UserModule = module.exports = new model_module.ModelModule();
-UserModule.connection = 'default';
+UserModule.connection = new Database('default');
 UserModule.setModel({
         table : 'user',
         fields : {

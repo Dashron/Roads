@@ -8,6 +8,7 @@
 
 var url_module = require('url');
 var http_module = require('http');
+var path_module = require('path');
 
 var accept_header_component = require('./accept_header');
 var view_component = require('./view');
@@ -15,35 +16,15 @@ var View = view_component.View;
 var Router = require('./router').RegexRouter;
 
 var _resources = {};
-var _resource_dir = __dirname.replace('components', 'resources/');
+var _resource_dir = path_module.normalize(__dirname + '/../resources');
 
 /**
  * Set the default directory  to load resources from
  * 
  * @param {String} directory 
  */
-var set_resource_dir = exports.setResourceDir = function (directory) {
-	if (directory.charAt(directory.length) != '/') {
-		directory = directory + '/';
-	}
-	
-	_resource_dir = directory;
-};
-
-/**
- * Build a single resource by name, and cache it
- * 
- * @param {String} name
- * @param {Object} config
- * @return {Resource}
- */
-var get_resource = exports.get = function (name, config) {
-	if (typeof _resources[name] == "undefined" || _resources[name] == null) {
-		console.log("Loading Resource:" + name);
-		_resources[name] = new Resource(name, require(_resource_dir + name + '/' + name + '.desc.js'));
-	}
-
-	return _resources[name];
+var set_resource_dir = exports.directory = function (directory) {
+	_resource_dir = path_module.normalize(directory);
 };
 
 /**
@@ -54,80 +35,49 @@ var clear = exports.clear = function () {
 };
 
 /**
- * Constructs a resource
+ * Constructs a resource.
+ * The name provided is how the resource finds it's definition.
+ * If the resource has already been constructed, it will return that one.
  * 
  * @todo : document all the description properties
  * @param {Object} description
  */
 var Resource = exports.Resource = function Resource (name, description) {
-	this.name = name;
-	this.router = new Router(description.route_catch_all);
-	this.directory = __dirname.replace("components", '') + 'resources/' + this.name;
-	this.template_dir = this.directory + '/templates/';
-	this.config = description.config;
-	this.template = description.template;
-	this.resources = {};
-	this.db = null;
-
-	var i = 0, j = 0;
-	var key = null;
-	var route = null;
-
-	for (i = 0; i < description.routes.length; i++) {
-		route = description.routes[i];
-		if (typeof route.options != "object") {
-			route.options = {};
-		}
-		if (typeof route.modes === "undefined") {
-			route.modes = ['text/html'];
-		}
-		this.router.addRoute(route.match, route, route.options.keys);
+	if (typeof _resources[name] === "object") {
+		return _resources[name];
 	}
 
-	if (typeof description.unmatched_route === "object") {
-		this.router.unmatched_route = description.unmatched_route;
+	var key = null;
+
+	this.name = name;
+	this.directory = path_module.normalize(__dirname + '/../resources/' + this.name);
+	this.template_dir = this.directory + '/templates/';
+	this.config = description.config;
+	this.router = description.router;
+	this.resources = {};
+
+	for (key in description.properties) {
+		this[key] = description.properties[key];
 	}
 
 	if (Array.isArray(description.dependencies)) {
-		for (i = 0; i < description.dependencies.length; i++) {
-			this.resources[this.name] = get_resource(description.dependencies[i]);
+		for (key in description.dependencies) {
+			this.resources[key] = description.dependencies[key];
 		}
 	}
-
-	this.models = {};
-	for (key in description.models) {
-		console.log('adding model: ' + key);
-		this.models[key] = description.models[key];
+	
+	if (typeof description.construct === "function") {
+		description.construct.call(this);
 	}
 
-	for (key in description.view_renderers) {
-		console.log('adding renderer: ' + key);
-		view_component.addRenderer(key, description.view_renderers[key]);
-	}
+	_resources[name] = this;
 };
 
 Resource.prototype.name = '';
 Resource.prototype.config = null;
 Resource.prototype.directory = '';
 Resource.prototype.template_dir = '';
-Resource.prototype.template = null;
-Resource.prototype.router = null;
-Resource.prototype.resources = null;
-Resource.prototype.models = {};
-Resource.prototype.db = null;
 
-/**
- * Retrieves a resource by.
- * This is not just child resources, this is any resource you have a description for
- * 
- * @param  {String} name
- * @return {Resource}
- */
-Resource.prototype.getResource = function (name) {
-	return get_resource(name);
-};
-
-/**
 
 /**
  * Locates the code best associated with the provided uri_bundle, and writes any necessary data to the view
@@ -157,8 +107,9 @@ Resource.prototype.request = function (uri_bundle, view) {
 
 			view = new View();
 			
+			// The default content type will be text/html
 			if (typeof route.options.modes === "undefined" || route.options.modes === null) {
-				throw new Error('no route modes found for ' + uri_bundle.uri);
+				route.options.modes = ["text/html"];
 			}
 
 			view.setContentType(accept_header_component.getContentType(uri_bundle.headers.accept, route.options.modes));
@@ -166,13 +117,13 @@ Resource.prototype.request = function (uri_bundle, view) {
 		}
 
 		// If a template is set in the config, apply it to the current view and then provide a child view to the route
-		if (!route.options.ignore_template && typeof _self.template === "function") {
+		/*if (!route.options.ignore_template && typeof _self.template === "function") {
 			// We don't want to set the route resources directory, we will always create the template from the resource upon which request is called
 			view.dir = _self.template_dir;
 			var child = view.child('content');
 			_self.template(view);
 			view = child;
-		}
+		}*/
 
 		// assume that we want to load templates directly from this route, no matter the data provided
 		view.dir = route_resource.template_dir;
@@ -230,7 +181,7 @@ Resource.prototype.processRoute = function (uri_bundle, success, failure) {
 	}
 
 	if (!route) {
-		route = this.router.getUnmatchedRoute(uri_bundle);
+		route = this.router.getDefaultRoute(uri_bundle);
 	}
 
 	// todo: should these be called on next tick?
@@ -244,23 +195,4 @@ Resource.prototype.processRoute = function (uri_bundle, success, failure) {
 	}
 	
 	return false;
-};
-
-
-/**
- * Iterates through all dependent resources and applies a datbase connection if not pre-configured for one
- * 
- * @param  {Array} children   [description]
- * @param  {[type]} connection [description]
- */
-var populate_child_connections = function (children, connection) {
-	var key = null;
-	for (key in children) {
-		if (typeof children[key].db === "undefined" || children[key].db === null) {
-			children[key].db = connection;
-			// we want to fill all empty children with the provided default connection
-			// this might not  be the right path
-			populate_child_connections(children[key].children, connection);
-		}
-	}
 };

@@ -1,5 +1,7 @@
-module.exports = {
-	route_catch_all : /^\/users/,
+var Router = require('../../components/router').RegexRouter;
+
+module.exports = new Router({
+	catch_all : /^\/users/,
 	routes : [{
 		match : /^\/users$/,
 		GET : function (uri_bundle, view) {
@@ -17,6 +19,7 @@ module.exports = {
 		GET : function (uri_bundle, view) {
 			var user_promise = this.models['user'].load(uri_bundle.params.id);
 			user_promise.ready(function (user) {
+				console.log(user);
 				view.set('user', user);	
 				view.render('one.html');
 			});
@@ -27,11 +30,8 @@ module.exports = {
 			});
 		},
 		options : {
-			keys : ['id'],
 			modes : ['text/html']
-		}
+		},
+		keys : ['id']
 	}],
-	models : {
-		'user' : require('./models/user.model')
-	}
-};
+});

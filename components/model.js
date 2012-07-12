@@ -11,7 +11,7 @@ var util_module = require('util');
 /**
  * How to use:
  *  var user_module = new model_module.ModelModule();
- *  user_module.connection = 'default';
+ *  user_module.connection = new Database('default');
  *  user_module.setModel({
  *  	table : '',
  *  	fields : {
@@ -34,10 +34,6 @@ var ModelModule = module.exports.ModelModule = function ModelModule () {
 
 ModelModule.prototype.connection = null;
 
-ModelModule.prototype.getConnection = function () {
-	return database_module.connection(this.connection);
-};
-
 ModelModule.prototype.setModel = function (definition) {
 	var model_module = this;
 	this.definition = definition;
@@ -51,9 +47,7 @@ ModelModule.prototype.setModel = function (definition) {
 	applyModelMethods(NewModel, definition);
 	applyModelFields(NewModel, definition);
 
-	NewModel.prototype.getConnection = function () {
-		return model_module.getConnection();
-	}
+	NewModel.prototype.connection = model_module.connection;
 
 	this.Model = NewModel;
 };
@@ -109,7 +103,7 @@ ModelModule.prototype.load = function (value, field) {
 		field = "id";
 	}
 
-	this.getConnection()
+	this.connection
 		.query('select * from `' + this.definition.table + '`' 
 				+ ' where `' + field + '` = ? limit 1', 
 				[value], 
@@ -140,7 +134,7 @@ ModelModule.prototype.load = function (value, field) {
 ModelModule.prototype.collection = function (sql, params) {
 	var request = new ModelRequest();
 	var _self = this;
-	this.getConnection().query(sql, params, function (err, rows, columns) {
+	this.connection.query(sql, params, function (err, rows, columns) {
 		if (err) {
 			request._error(err);
 			return;
@@ -191,7 +185,7 @@ Model.prototype.save = function () {
 				placeholders.push('?');
 			}
 
-			this.getConnection()
+			this.connection
 				.query('insert into `' + this.definition.table + '`'
 						+ '(`' + keys.join('`, `') + '`)'
 						+ ' VALUES (' + placeholders.join(', ') + ')', 
@@ -217,7 +211,7 @@ Model.prototype.save = function () {
 			
 			values.push(this.id);
 
-			this.getConnection()
+			this.connection
 				.query('update `' + this.definition.table + '`'
 						+ ' set `' + keys.join('` = ?, `') + '` = ? '
 						+ ' where `id` = ?', 
@@ -245,7 +239,7 @@ Model.prototype.save = function () {
 Model.prototype.delete = function () {
 	var request = new ModelRequest();
 
-	this.getConnection()
+	this.connection
 		.query('delete from `' + this.definition.table + '`'
 			+ ' where `id` = ?', 
 			[this.id], 
