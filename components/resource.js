@@ -60,10 +60,8 @@ var Resource = exports.Resource = function Resource (name, description) {
 		this[key] = description.properties[key];
 	}
 
-	if (Array.isArray(description.dependencies)) {
-		for (key in description.dependencies) {
-			this.resources[key] = description.dependencies[key];
-		}
+	for (key in description.dependencies) {
+		this.resources[key] = description.dependencies[key];
 	}
 	
 	if (typeof description.construct === "function") {

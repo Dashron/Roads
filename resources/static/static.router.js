@@ -1,12 +1,12 @@
 var fs_module = require('fs');
+var Router = require('../../components/router').RegexRouter;
 
-module.exports = {
-	route_catch_all : /\.(js|css|txt|html|ico)$/,
+module.exports = new Router({
+	catch_all : /\.(js|css|txt|html|ico)$/,
 	routes : [{ 
 		match : /^\/(([\w.\/]+)\.(js|css|txt|html|ico))$/,
+		keys : ['file', 'name', 'ext'],
 		options : {
-			keys : ['file', 'name', 'ext'],
-			ignore_template : true,
 			modes : ['text/javascript', 'text/css', 'text/plain'],
 		},
 		GET : function (uri_bundle, view) {
@@ -57,17 +57,5 @@ module.exports = {
 				}
 			});
 		}
-	}],
-	unmatched_route : {
-		GET : function (uri_bundle, view) {
-			view.statusNotFound('404.html');
-		},
-		options : {
-			modes : ['text/html']
-		}
-	},
-	dependencies : [
-		'user'
-	],
-	view_renderers : require('./static.renderers')
-};
+	}]
+});

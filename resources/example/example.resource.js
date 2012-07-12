@@ -22,6 +22,6 @@ module.exports = new Resource('example', {
 	dependencies : {
 		"user" : require('../user/user.resource'),
 		//"blog" : require('../blog/blog.resource'),
-		//"static" : require('../static/static.resource'),
+		"static" : require('../static/static.resource')
 	}
 });
