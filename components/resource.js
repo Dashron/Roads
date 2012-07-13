@@ -165,7 +165,7 @@ Resource.prototype.request = function (uri_bundle, view) {
  * @return {Objectt}
  */
 Resource.prototype.processRoute = function (uri_bundle, success, failure) {
-	var route = this.router.getRoute(uri_bundle);
+	var route = this.router.getRoute(uri_bundle, (typeof failure === "function"));
 	var key = null;
 
 	if (!route) {

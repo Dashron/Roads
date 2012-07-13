@@ -9,6 +9,29 @@ var fs_module = require('fs');
 var url_module = require('url');
 var qs_module = require('querystring');
 
+
+/**
+ * Turns a route description into an array of routes
+ * @param  {Array} routes
+ * @return {Array}
+ */
+var add_routes = function (router_routes, description_routes) {
+	var i = 0, route = null;
+
+	if (Array.isArray(description_routes)) {
+		for (i = 0; i < description_routes.length; i++) {
+			route = description_routes[i];
+			router_routes.push({
+				match: route.match,
+				route: route,
+				keys: route.keys
+			});
+		}
+	}
+
+	return router_routes;
+}
+
 /**
  * A url based router, the first regex matched will point to the executing
  * function
@@ -19,22 +42,14 @@ var RegexRouter = exports.RegexRouter = function RegexRouter (description) {
 	this.default_route = description.default_route;
 	this.catch_all = description.catch_all;
 
-	if (Array.isArray(description.routes)) {
-		var i = 0, route = null;
-		this.routes = new Array(description.routes.length);
+	var routes = null;
 
-		for (i = 0; i < description.routes.length; i ++) {
-			route = description.routes[i];
-			this.routes[i] = {
-				match: route.match, 
-				route: route, 
-				keys: route.keys
-			}
-		}
-	}
+	this.public_routes = add_routes([], description.routes.public);
+	this.all_routes = add_routes(add_routes([], description.routes.public), description.routes.private);
 };
 
-RegexRouter.prototype.routes = null;
+RegexRouter.prototype.public_routes = null;
+RegexRouter.prototype.all_routes = null;
 RegexRouter.prototype.default_route = null;
 RegexRouter.prototype.catch_all = null;
 
@@ -72,14 +87,20 @@ var url_matches = function (keys, matches) {
  * We associate those with the keys object provided in addRoute, and inject them back into the uri_bundle as GET parameters
  * 
  * @param {Object} uri_bundle
+ * @param {bool} allow_private if true, the router will also look at private routes
  * @return {Object}
  */
-RegexRouter.prototype.getRoute = function (uri_bundle) {
+RegexRouter.prototype.getRoute = function (uri_bundle, allow_private) {
 	var _self = this;
-	var routes = _self.routes;
 	var matching_route = null;
 	var matches = null;
 	var i = 0;
+
+	if (allow_private) {
+		var routes = _self.all_routes;
+	} else {
+		var routes = _self.public_routes;
+	}
 
 	// Provide a catch_all regex for optimization, so you can split up all your routes easily
 	if (this.catch_all) {
