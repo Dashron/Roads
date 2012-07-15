@@ -41,6 +41,7 @@ var render_states = exports.RENDER_STATES = {
 	RENDER_STARTED : 2,
 	RENDER_COMPLETE : 3,
 	RENDER_FAILED : 4,
+	RENDER_CANCELLED : 5
 };
 
 /**
@@ -255,6 +256,11 @@ View.prototype.canRender = function view_canRender() {
  */
 View.prototype.render = function view_render(template, force) {
 	if (!force) {
+		// If rendering has been cancelled before we try to render, do nothing
+		if (this.render_state === render_states.RENDER_CANCELLED) {
+			return;
+		}
+
 		this.render_state = render_states.RENDER_REQUESTED;
 
 		if (this.canRender()) {
@@ -272,9 +278,24 @@ View.prototype.render = function view_render(template, force) {
 			}
 		}
 	} else {
-		this.root._child_views = {};
+		this.cancelRender();
+		this.render_state = render_states.RENDER_REQUESTED;
+		this.setTemplate(template);
 		this.render(template, false);
 	}
+};
+
+/**
+ * Stops a render from occuring, and attempts to stop all child elements too.
+ */
+View.prototype.cancelRender = function () {
+	var key = null;
+	this.render_state = render_states.RENDER_CANCELLED;
+
+	for (key in this._child_views) {
+		this._child_views[key].cancelRender();
+	}
+	this._child_views = {};
 };
 
 /**

@@ -20,9 +20,12 @@ module.exports = new Router({
 			GET : function (uri_bundle, view) {
 				var user_promise = this.models['user'].load(uri_bundle.params.id);
 				user_promise.ready(function (user) {
-					console.log(user);
-					view.set('user', user);	
-					view.render('one.html');
+					//if (user === null) {
+						//view.statusNotFound('404.html');
+					//} else {
+						view.set('user', user);	
+						view.render('one.html');
+					//}
 				});
 
 				user_promise.error(function (error) {
