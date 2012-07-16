@@ -12,12 +12,12 @@ module.exports = new Resource('example', {
 			view_component.addRenderer(key, renderers[key]);
 		}
 	},
-	/*onRequest : function (uri_bundle, view) {
+	onRequest : function (uri_bundle, view, route, route_resource) {
 		var child = view.child('content');
 		view.set('title', 'hello world');
 		view.render('template.html');
-		return child;
-	},*/
+		route.call(route_resource, uri_bundle, child);
+	},
 	router : require('./example.router'),
 	dependencies : {
 		"user" : require('../user/user.resource'),

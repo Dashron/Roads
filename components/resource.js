@@ -55,6 +55,7 @@ var Resource = exports.Resource = function Resource (name, description) {
 	this.config = description.config;
 	this.router = description.router;
 	this.resources = {};
+	this.onRequest = description.onRequest;
 
 	for (key in description.properties) {
 		this[key] = description.properties[key];
@@ -130,12 +131,24 @@ Resource.prototype.request = function (uri_bundle, view) {
 		if (typeof route[uri_bundle.method] == "function") {
 			// Route to the proper method
 			process.nextTick(function() {
-				route[uri_bundle.method].call(route_resource, uri_bundle, view);
+				if (typeof route_resource.onRequest === "function") { 
+					route_resource.onRequest(uri_bundle, view, route[uri_bundle.method], route_resource);
+				} else if (typeof this.onRequest === "function") {
+					this.onRequest(uri_bundle, view, route[uri_bundle.method], route_resource);
+				} else {
+					route[uri_bundle.method].call(route_resource, uri_bundle, view);
+				}
 			});
 		} else if (typeof route['default'] === "function") {
 			// Allow default routes in case the method is not explicitly stated
 			process.nextTick(function() {
-				route.default.call(route_resource, uri_bundle, view);
+				if (typeof route_resource.onRequest === "function") { 
+					route_resource.onRequest(uri_bundle, view, route.default, route_resource);
+				} else if (typeof this.onRequest === "function") {
+					this.onRequest(uri_bundle, view, route.default, route_resource);
+				} else {
+					route.default.call(route_resource, uri_bundle, view);
+				}
 			});
 		} else {
 			// Handle the unsupportedMethod http response, and provide the allowed methods
