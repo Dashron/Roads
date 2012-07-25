@@ -76,6 +76,8 @@ assigned directly to the resource as resource.config.
 
 ### keys
 
+# Basic Structure
+
 The general concept is to create a new folder in the resources directory, one for each conceptual chunk of content (a user resource, a blog post resource, a comment resource)
 Each resource contains a set of routes and a set of models.
 
