@@ -12,46 +12,46 @@ The example uses mysql as a db backend, and I have provided a model system for i
 ## Definition
 
 ### construct
-	Function, no parameters.
+Function, no parameters.
 
-	Called after all of the standard initalization code is run, allows for startup operations.
-	This is the best place to add additional view renderers, or perform resource specific startup steps.
+Called after all of the standard initalization code is run, allows for startup operations.
+This is the best place to add additional view renderers, or perform resource specific startup steps.
 
 ### onRequest
-	Function, passed four parameters. uri_bundle, view, route, route_resource.
+Function, passed four parameters. uri_bundle, view, route, route_resource.
 	
-	This will be called in place of any route function. Here you can create standard templates, or alter how routes are handled. 
+This will be called in place of any route function. Here you can create standard templates, or alter how routes are handled. 
 
-	If the route's resource has an onRequest function it will run that.
-	If the route's resource does not have an onRequest function, and the root resource has an onRequest function, that will be run.
-	If no onRequest function was located earlier, the route will be called directly.
+If the route's resource has an onRequest function it will run that.
+If the route's resource does not have an onRequest function, and the root resource has an onRequest function, that will be run.
+If no onRequest function was located earlier, the route will be called directly.
 
-	A route is normally handled as route.call(route_resource, uri_bundle, view);
-	The route is not called for you if onRequest is provided, you must call it on your own.
+A route is normally handled as route.call(route_resource, uri_bundle, view);
+The route is not called for you if onRequest is provided, you must call it on your own.
 
 ### router
-	Object, a router
+Object, a router
 	
-	Used to handle any resource.request() calls. See the router definition for more info.
+Used to handle any resource.request() calls. See the router definition for more info.
 	
-	Resource expects the router to have two functions, getRoute(uri_bundle) and getDefaultRoute(uri_bundle). If uri_bundle.public = false, the request was internal and not from the server. The current router looks at a wider pool of routes if the request was internal.
+Resource expects the router to have two functions, getRoute(uri_bundle) and getDefaultRoute(uri_bundle). If uri_bundle.public = false, the request was internal and not from the server. The current router looks at a wider pool of routes if the request was internal.
 
 ### dependencies
-	Array of resources
+Array of resources
 	
-	Directly added to the resource in the "resources" property.
-	Any routes which are not found in the root resource will be attempted within these resources too.
+Directly added to the resource in the "resources" property.
+Any routes which are not found in the root resource will be attempted within these resources too.
 
 ### properties
-	Object name:value pairing.
+Object name:value pairing.
 
-	Becomes directly assigned to the resource. 
+Becomes directly assigned to the resource. 
 	
 	properties : models {
 		'user' : new UserModule()
 	}
 
-	becomes
+becomes
 
 	resource.models = {
 		'user' : new UserModule()
@@ -59,9 +59,9 @@ The example uses mysql as a db backend, and I have provided a model system for i
 
 
 ### config
-	Object
+Object
 
-	assigned directly to the resource as resource.config.
+assigned directly to the resource as resource.config.
 
 
 # Route
