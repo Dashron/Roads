@@ -90,16 +90,16 @@ var url_matches = function (keys, matches) {
  * @param {bool} allow_private if true, the router will also look at private routes
  * @return {Object}
  */
-RegexRouter.prototype.getRoute = function (uri_bundle, allow_private) {
+RegexRouter.prototype.getRoute = function (uri_bundle) {
 	var _self = this;
 	var matching_route = null;
 	var matches = null;
 	var i = 0;
 
-	if (allow_private) {
-		var routes = _self.all_routes;
-	} else {
+	if (uri_bundle.public) {
 		var routes = _self.public_routes;
+	} else {
+		var routes = _self.all_routes;
 	}
 
 	// Provide a catch_all regex for optimization, so you can split up all your routes easily

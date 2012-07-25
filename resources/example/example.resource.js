@@ -1,6 +1,5 @@
 var view_component = require('../../components/view');
 var Resource = require('../../components/resource').Resource;
-var Database = require('../../components/database').Database;
 
 module.exports = new Resource('example', {
 	construct : function () {
@@ -13,15 +12,19 @@ module.exports = new Resource('example', {
 		}
 	},
 	onRequest : function (uri_bundle, view, route, route_resource) {
-		var child = view.child('content');
-		view.set('title', 'hello world');
-		view.render('template.html');
-		route.call(route_resource, uri_bundle, child);
+		if (uri_bundle.public) {
+			var child = view.child('content');
+			view.set('title', 'hello world');
+			view.render('template.html');
+			route.call(route_resource, uri_bundle, child);
+		} else {
+			route.call(route_resource, uri_bundle, view);
+		}
 	},
 	router : require('./example.router'),
 	dependencies : {
 		"user" : require('../user/user.resource'),
-		//"blog" : require('../blog/blog.resource'),
+		"blog" : require('../blog/blog.resource'),
 		"static" : require('../static/static.resource')
 	}
 });

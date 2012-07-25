@@ -95,7 +95,7 @@ Resource.prototype.request = function (uri_bundle, view) {
 		uri_bundle = {
 			uri : uri_bundle,
 			method : 'GET'
-		}
+		};
 	}
 
 	// clean up the success path, and have processRoute return a promise
@@ -106,23 +106,17 @@ Resource.prototype.request = function (uri_bundle, view) {
 
 			view = new View();
 			
+			if (typeof route.options != "object") {
+				route.options = {};
+			}
 			// The default content type will be text/html
-			if (typeof route.options.modes === "undefined" || route.options.modes === null) {
+			if (!Array.isArray(route.options.modes)) {
 				route.options.modes = ["text/html"];
 			}
 
 			view.setContentType(accept_header_component.getContentType(uri_bundle.headers.accept, route.options.modes));
 			view.setResponse(response);
 		}
-
-		// If a template is set in the config, apply it to the current view and then provide a child view to the route
-		/*if (!route.options.ignore_template && typeof _self.template === "function") {
-			// We don't want to set the route resources directory, we will always create the template from the resource upon which request is called
-			view.dir = _self.template_dir;
-			var child = view.child('content');
-			_self.template(view);
-			view = child;
-		}*/
 
 		// assume that we want to load templates directly from this route, no matter the data provided
 		view.dir = route_resource.template_dir;
@@ -155,7 +149,7 @@ Resource.prototype.request = function (uri_bundle, view) {
 			var keys = [];
 			['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'].forEach(function (option) {
 				if (typeof route[option] === "function") {
-					keys.push(option)
+					keys.push(option);
 				}
 			});
 			view.statusUnsupportedMethod(keys);
@@ -178,7 +172,7 @@ Resource.prototype.request = function (uri_bundle, view) {
  * @return {Objectt}
  */
 Resource.prototype.processRoute = function (uri_bundle, success, failure) {
-	var route = this.router.getRoute(uri_bundle, (typeof failure === "function"));
+	var route = this.router.getRoute(uri_bundle);
 	var key = null;
 
 	if (!route) {

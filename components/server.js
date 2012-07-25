@@ -7,6 +7,8 @@
 
 var http_module = require('http');
 var url_module = require('url');
+var qs_module = require('querystring');
+
 var events_module = require('events');
 var util_module = require('util');
 var Cookie = require('./cookie').Cookie;
@@ -51,7 +53,8 @@ var Server = exports.Server = function Server (description) {
 					uri : url.pathname,
 					params : url.query,
 					cookie : cookie,
-					headers : request.headers
+					headers : request.headers,
+					public : true
 				}, response);
 			});
 		} else {
@@ -60,7 +63,8 @@ var Server = exports.Server = function Server (description) {
 				uri : url.pathname,
 				params : url.query,
 				cookie : cookie,
-				headers : request.headers
+				headers : request.headers,
+				public : true
 			}, response);
 		}
 
@@ -108,7 +112,7 @@ exports.parsePostData = function (body, content_type) {
 			return qs_module.parse(body);
 			break;
 		case "application/json":
-			return JSON.parse(boddy);
+			return JSON.parse(body);
 			break;
 		default:
 			console.log(body);

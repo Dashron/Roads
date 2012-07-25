@@ -6,10 +6,11 @@ module.exports = new Router({
 		public : [{ 
 			match : /^\/$/,
 			GET : function (uri_bundle, view) {
-				var resource = new Resource('user');
+				var resource = this.resources.user;
 				resource.request('/users/1', view.child('user'));
 				resource.request('/users/5', view.child('user_two'));
-				
+				this.request('/private', view.child('private'));
+
 				view.set('cookie_old_value', uri_bundle.cookie.get('date'));
 				var date = new Date().toString();
 				
@@ -25,6 +26,12 @@ module.exports = new Router({
 			},
 			options : {
 				modes : ['text/html']
+			}
+		}],
+		private : [{
+			match : /^\/private$/,
+			GET : function (uri_bundle, view) {
+				view.render('private.html');
 			}
 		}]
 	},
