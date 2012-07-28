@@ -5,7 +5,9 @@ module.exports = new Resource('blog', {
 	dependencies : {
 		user : require('../user/user.resource')
 	},
-	models : {
-		post : require('./models/post.model')
+	properties : {
+		models : {
+			post : require('./models/post.model')
+		}
 	}
 });

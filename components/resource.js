@@ -43,8 +43,8 @@ var clear = exports.clear = function () {
  * @param {Object} description
  */
 var Resource = exports.Resource = function Resource (name, description) {
-	if (typeof _resources[name] === "object") {
-		return _resources[name];
+	if (typeof _resources[name.toLowerCase()] === "object") {
+		return _resources[name.toLowerCase()];
 	}
 
 	var key = null;
