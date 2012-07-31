@@ -43,5 +43,6 @@ var buildFileRenderer = function (content_type) {
 
 module.exports = {
 	'text/css' : buildFileRenderer('text/css'),
-	'text/javascript' : buildFileRenderer('text/javascript')
+	'text/javascript' : buildFileRenderer('text/javascript'),
+	'text/plain' : buildFileRenderer('text/plain')
 };

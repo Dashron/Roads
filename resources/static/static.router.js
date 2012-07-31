@@ -1,5 +1,6 @@
 var fs_module = require('fs');
 var Router = require('../../components/router').RegexRouter;
+var Resource = require('../../components/resource').Resource;
 
 module.exports = new Router({
 	catch_all : /\.(js|css|txt|html|ico)$/,
@@ -34,10 +35,12 @@ module.exports = new Router({
 				fs_module.stat(path, function (err, stats) {				
 					if (err) {
 						console.log(err);
+						view.dir = new Resource('example').template_dir;
 						view.statusNotFound('404.html');
 					} else {
 						view.error(function (error) {
 							console.log(error);
+							view.dir = new Resource('example').template_dir;
 							view.statusNotFound('404.html');
 						});
 
