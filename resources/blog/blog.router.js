@@ -10,14 +10,11 @@ module.exports = new Router({
 				var post_promise = null;
 				if (uri_bundle.params.user_id) {
 					post_promise = this.models.post.getForUser(uri_bundle.params.user_id);
-					post_promise.preload((new Resource('User')).models.user);
 				} else {
 					post_promise = this.models.post.getAll();
-					post_promise.preload('user_id', (new Resource('User')).models.user);
 				}
 
-				// this actually has to be assigned before the preload to work.
-				// fix that
+				post_promise.preload('user_id', (new Resource('User')).models.user);
 				post_promise.ready(function (posts) {
 					view.set('posts', posts);
 					view.render('many.html');
