@@ -85,8 +85,22 @@ You should then make one master resource, (I name it after the site I'm working 
 Routing requests through the master resource will automatically check all child resources if the master fails.
 Private routes are only checked when a request is made internally. 
 
-todo: 
-Documentation
-Website
-Front End Framework
-See Issues for more
+# Roadmap
+## 0.8.0 will contain...
+a technique for handling sessions.
+a full working blog example, and any features missing to accomidate this.
+
+## 0.9.0 will contain...
+a caching system (memcache)
+
+## 1.0.0 will contain...
+full unit test coverage
+
+## 1.1.0 will contain...
+a websocket component
+
+# Todo: 
+More documentation
+Thorough website
+Front end framework
+See issues for more
