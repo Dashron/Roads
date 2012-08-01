@@ -17,7 +17,7 @@ var connections = {};
  */
 module.exports.Database = function (label, config) {
 	if (typeof connections[label] === "undefined" || connections[label] === null) {
-		if (typeof config != "object") {
+		if (typeof config !== "object") {
 			throw new Error('You must provide a connection config the first time you create a database');
 		}
 
