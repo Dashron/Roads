@@ -1,9 +1,11 @@
 var vows = require('vows');
 var assert = require('assert');
 var path_module = require('path');
+var util_module = require('util');
 
 var view_component = require('../../components/view');
 var View = view_component.View;
+var Renderer = view_component.Renderer;
 
 vows.describe('View Component').addBatch({
     'An html view': {
@@ -28,10 +30,9 @@ vows.describe('View Component').addBatch({
         	view.render('view_example.html');
         },
         'renders correctly': function (view) {
-		assert.equal(view.buffer, "this is a  test");
+			assert.equal(view.buffer, "view_example.html {}");
         },
         'is complete' : function (view) {
-        	console.log(view);
         	assert.equal(view.view.render_state, view_component.RENDER_STATES.RENDER_COMPLETE);
         },
     },
@@ -58,7 +59,7 @@ vows.describe('View Component').addBatch({
         	view.render('view_example.html');
         },
         'renders correctly' : function (view) {
-			assert.equal(view.buffer, "this is a single view test");
+			assert.equal(view.buffer, "view_example.html {single view,}");
         },
         'is complete' : function (view) {
         	assert.equal(view.view.render_state, view_component.RENDER_STATES.RENDER_COMPLETE);
@@ -89,7 +90,7 @@ vows.describe('View Component').addBatch({
         	view.render('view_example.html');
         },
         'renders correctly' : function (view) {
-        	assert.equal(view.buffer, "this is a this is a child test test");
+        	assert.equal(view.buffer, "view_example.html {view_example.html {child,},}");
         },
         'is complete' : function (view) {
         	assert.equal(view.view.render_state, view_component.RENDER_STATES.RENDER_COMPLETE);
@@ -122,10 +123,37 @@ vows.describe('View Component').addBatch({
         	child.render('view_example.html');
         },
         'renders correctly' : function (view) {
-        	assert.equal(view.buffer, "this is a this is a child test test");
+        	assert.equal(view.buffer, "view_example.html {view_example.html {child,},}");
         },
         'is complete' : function (view) {
         	assert.equal(view.view.render_state, view_component.RENDER_STATES.RENDER_COMPLETE);
         },
     }
 }).export(module); // Export the Suite
+
+
+var TestRenderer = function() {
+	Renderer.call(this);
+};
+util_module.inherits(TestRenderer, Renderer);
+
+/**
+ * Requests the provided template to be rendered
+ * 
+ * @param  {string} template
+ */
+TestRenderer.prototype.render = function (template) {
+	var _self = this;
+	var data = '';
+
+	Object.keys(this.data).forEach(function (value) {
+		data = data + _self.data[value] + ',';
+	});
+	template = template.split('/');
+	template = template[template.length - 1];
+	this.response.write(template + ' {' + data + '}');
+	this._end();
+	this.response.end();
+};
+
+view_component.addRenderer('text/html', TestRenderer);
