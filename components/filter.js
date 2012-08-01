@@ -13,9 +13,10 @@
  * @return {InputWrapper}
  */
 exports.input = function filter_input(data, values) {
-	if(values != null && typeof values != "undefined") {
+	if(values !== null && typeof values !== "undefined") {
 		data = values[data];
 	}
+
 	return new InputWrapper(data);
 };
 
@@ -45,8 +46,8 @@ InputWrapper.prototype.length = function wrapper_length(max_len) {
  * @return {Mixed}
  */
 InputWrapper.prototype.val = function wrapper_value(default_value) {
-	if (this.data == null || typeof this.data == "undefined") {
-		if(typeof default_value != "undefined") {
+	if (this.data === null || typeof this.data === "undefined") {
+		if(typeof default_value !== "undefined") {
 			return default_value;
 		}
 		
@@ -87,7 +88,6 @@ InputWrapper.prototype.type = function wrapper_type(type) {
 				return new InputWrapper(null);
 			}
 			return new InputWrapper(this.data);
-			break;
 		
 		case "date":
 			var date_obj = this.data;
@@ -103,7 +103,6 @@ InputWrapper.prototype.type = function wrapper_type(type) {
 			}
 			
 			return new InputWrapper(date_obj);
-			break;
 			
 		case "array":
 			if(Array.isArray(this.data)) {
@@ -112,11 +111,9 @@ InputWrapper.prototype.type = function wrapper_type(type) {
 			
 			return new InputWrapper(null);
 			
-			break;
-			
 		case "object":
 			// @todo allow the type sring to be split and have the second type be the actual object, then incorporate that into the check type[1];
-			if(typeof this.data == "object") {
+			if(typeof this.data === "object") {
 				return new InputWrapper(this.data);
 			} else {
 				return new InputWrapper(null);
@@ -132,7 +129,7 @@ InputWrapper.prototype.type = function wrapper_type(type) {
  * @returns {OutputWrapper}
  */
 exports.output = function filter_output(data, values) {
-	if(values != null && typeof values != "undefined") {
+	if(values !== null && typeof values !== "undefined") {
 		data = values[data];
 	}
 	
@@ -174,8 +171,8 @@ OutputWrapper.prototype.html_entities = function wrapper_html_entities() {
 	var new_data = this.data;
 	
 	_html_keys.forEach(function(key) {
-		entity = _html_entities[i];
-		new_data.replace(entity['regex'], entity['replace']);
+		entity = _html_entities[key];
+		new_data.replace(entity.regex, entity.replace);
 	});
 	
 	return new OutputWrapper(new_data);
