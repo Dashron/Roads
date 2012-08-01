@@ -33,7 +33,7 @@ exports.getRenderer = function (content_type) {
 	} else {
 		throw new Error('Unsupported content type :' + content_type);
 	}
-}
+};
 
 var render_states = exports.RENDER_STATES = {
 	RENDER_NOT_CALLED : 0,
@@ -132,7 +132,7 @@ View.prototype.setResponse = function view_setResponse(response) {
 	this._response = response;
 
 	return this;
-}
+};
 
 /**
  * Sets the content type of the output.
@@ -144,7 +144,7 @@ View.prototype.setResponse = function view_setResponse(response) {
 View.prototype.setContentType = function view_setContentType(content_type) {
 	this._content_type = content_type;
 	return this;
-}
+};
 
 /**
  * Tells the view which template to look for when rendering the final output
@@ -162,7 +162,7 @@ View.prototype.setTemplate = function view_setTemplate(template) {
  * @returns {Boolean}
  */
 View.prototype.isRendered = function view_isRendered() {
-	return this.render_state == render_states.RENDER_COMPLETE;
+	return this.render_state === render_states.RENDER_COMPLETE;
 };
 
 /**
@@ -237,7 +237,7 @@ View.prototype.canRender = function view_canRender() {
 	 * - in this example, the parent is complete first, so it marks render as requested but notices child views exist
 	 *    Because of this, it waits. Once the child view renders it notices that the parent is ready and immediately calls parent.render()
 	 */  
-	if (this.render_state != render_states.RENDER_REQUESTED) {
+	if (this.render_state !== render_states.RENDER_REQUESTED) {
 		return false;
 	}
 
@@ -328,7 +328,7 @@ View.prototype.buildRenderer = function view_buildRenderer() {
 View.prototype.error = function view_error(fn) {
 	this._error = fn;
 	return this;
-}
+};
 
 
 /**
@@ -442,7 +442,7 @@ View.prototype.statusError = function view_error(error, template) {
 	this.root.set('error', error);
 	this.root._response.statusCode = 500;
 	
-	if (typeof template != "string") {
+	if (typeof template !== "string") {
 		template = false;
 	}
 
@@ -507,7 +507,7 @@ View.prototype.statusNotModified = function view_notModified() {
  * @param  {Array} supported_methods 
  */
 View.prototype.statusUnsupportedMethod = function view_unsupportedMethod(supported_methods) {
-	this.root._response.statusCode = 405
+	this.root._response.statusCode = 405;
 	this.root._response.setHeader('Allow', supported_methods.join(','));
 	this.root._response.end();
 };
