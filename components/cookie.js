@@ -3,6 +3,7 @@
 * Copyright(c) 2011 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
 */
+"use strict";
 
 /*
  * How to:
@@ -102,6 +103,27 @@ Cookie.prototype.delete = function (key) {
 };
 
 /**
+ * Helper function to push cookie data on to an array of cookie data.
+ * 
+ * @param  {Array} parts
+ * @param  {String|Number} key           [description]
+ * @param  {Mixed} value         [description]
+ * @param  {Mixed} default_value
+ * @return {Array}
+ */
+var apply_part = function (parts, key, value, default_value) {
+	if (typeof value === "undefined" || value === null) {
+		value = default_value;
+		if (typeof value === "undefined" || value === null) {
+			return false;
+		}
+	}
+
+	parts.push(key + '=' + value);
+	return true;
+};
+
+/**
  * 
  * @param {String} key
  * @param {Object} options
@@ -133,20 +155,4 @@ Cookie.prototype._buildCookie = function (key, options) {
 	}
 
 	return parts.join('; ');
-};
-
-/** 
- *
- *
- */
-var apply_part = function (parts, key, value, default_value) {
-	if (typeof value === "undefined" || value === null) {
-		value = default_value;
-		if (typeof value === "undefined" || value === null) {
-			return false;
-		}
-	}
-
-	parts.push(key + '=' + value);
-	return true;
 };
