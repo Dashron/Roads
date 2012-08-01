@@ -103,4 +103,6 @@ a websocket component
 More documentation
 Thorough website
 Front end framework
+Domains on each request
+Database connection pool
 See issues for more
