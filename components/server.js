@@ -35,7 +35,6 @@ var Server = exports.Server = function Server (description) {
 		if (request.method === "POST") {
 			var buffer = [];
 			var post_data = null;
-			var key = null;
 
 			request.on('data', function (data) {
 				buffer.push(data);
@@ -43,7 +42,7 @@ var Server = exports.Server = function Server (description) {
 
 			request.on('end', function () {
 				var post_data = exports.parsePostData(buffer.join(), _self.contentType());
-				
+				var key = null;
 				for (key in post_data) {
 					url.query[key] = post_data[key];
 				}
@@ -110,10 +109,8 @@ exports.parsePostData = function (body, content_type) {
 	switch (content_type[0].trim()) {
 		case "application/x-www-form-urlencoded":
 			return qs_module.parse(body);
-			break;
 		case "application/json":
 			return JSON.parse(body);
-			break;
 		default:
 			console.log(body);
 			console.log(content_type);
