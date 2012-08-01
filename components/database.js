@@ -22,7 +22,6 @@ module.exports.Database = function (label, config) {
 		}
 
 		connections[label] = mysql_module.createConnection(config);
-		connections[label].connect();
 	}
 
 	return connections[label];

@@ -12,7 +12,7 @@ new Database("default", {
 	hostname: 'localhost',
 	user : 'gfw',
 	database: 'gfw'
-});
+}).connect();
 
 
 var resource_name = process.argv[2] || "example";
