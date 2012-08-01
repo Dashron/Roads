@@ -7,20 +7,6 @@
 "use strict";
 
 /**
- * 
- * @param {Mixed} data if alone, the data to parse. if not, the key of the value in the second parameters array to parse
- * @param {Array} [values] of values to choose from
- * @return {InputWrapper}
- */
-exports.input = function filter_input(data, values) {
-	if(values !== null && typeof values !== "undefined") {
-		data = values[data];
-	}
-
-	return new InputWrapper(data);
-};
-
-/**
  * @param {Mixed} data
  */
 var InputWrapper = function InputWrapper(data) {
@@ -122,20 +108,6 @@ InputWrapper.prototype.type = function wrapper_type(type) {
 	}
 };
 
-/**
- * 
- * @param {Mixed} data
- * @param {Array} values
- * @returns {OutputWrapper}
- */
-exports.output = function filter_output(data, values) {
-	if(values !== null && typeof values !== "undefined") {
-		data = values[data];
-	}
-	
-	return new OutputWrapper(data);
-};
-
 
 /*
 https://www.owasp.org/index.php/XSS_%28Cross_Site_Scripting%29_Prevention_Cheat_Sheet
@@ -176,4 +148,32 @@ OutputWrapper.prototype.html_entities = function wrapper_html_entities() {
 	});
 	
 	return new OutputWrapper(new_data);
+};
+
+/**
+ * 
+ * @param {Mixed} data if alone, the data to parse. if not, the key of the value in the second parameters array to parse
+ * @param {Array} [values] of values to choose from
+ * @return {InputWrapper}
+ */
+exports.input = function filter_input(data, values) {
+	if(values !== null && typeof values !== "undefined") {
+		data = values[data];
+	}
+
+	return new InputWrapper(data);
+};
+
+/**
+ * 
+ * @param {Mixed} data
+ * @param {Array} values
+ * @returns {OutputWrapper}
+ */
+exports.output = function filter_output(data, values) {
+	if(values !== null && typeof values !== "undefined") {
+		data = values[data];
+	}
+	
+	return new OutputWrapper(data);
 };
