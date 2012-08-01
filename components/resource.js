@@ -106,7 +106,7 @@ Resource.prototype.request = function (uri_bundle, view) {
 
 			view = new View();
 			
-			if (typeof route.options != "object") {
+			if (typeof route.options !== "object") {
 				route.options = {};
 			}
 			// The default content type will be text/html
@@ -122,7 +122,7 @@ Resource.prototype.request = function (uri_bundle, view) {
 		view.dir = route_resource.template_dir;
 
 		// route, allowing this to point to the original resource, and provide some helper utils
-		if (typeof route[uri_bundle.method] == "function") {
+		if (typeof route[uri_bundle.method] === "function") {
 			// Route to the proper method
 			process.nextTick(function() {
 				if (typeof route_resource.onRequest === "function") { 
