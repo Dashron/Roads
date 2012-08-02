@@ -17,7 +17,7 @@
  * path : the path within the domain that can access the cookie
  * expires : the date that the cookie expires, provide "session" for it to expire when the browser closes
  * secure : if true, the cookie is only provided when using https
- * HttpOnly : if true, javascript will not be able to access the cookie
+ * http_only : if true, javascript will not be able to access the cookie
  * 
  * http://tools.ietf.org/html/rfc6265
  * 
@@ -132,7 +132,7 @@ var apply_part = function (parts, key, value, default_value) {
  * @param {String} options.path the path within the domain that can access the cookie
  * @param {Date|String} options.expires the date that the cookie expires, provide "session" for it to expire when the browser closes
  * @param {Boolean} options.secure https only
- * @param {Boolean} options.HttpOnly server only, no javascript access
+ * @param {Boolean} options.http_only server only, no javascript access
  * @return {String}
  */
 Cookie.prototype._buildCookie = function (key, options) {
