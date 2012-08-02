@@ -87,24 +87,24 @@ Private routes are only checked when a request is made internally.
 
 # Roadmap
 ## 0.8.0 will contain...
-a technique for handling sessions.
-model field validation
-a full working blog example, and any features missing to accomidate this.
+*a technique for handling sessions.
+*model field validation
+*a full working blog example, and any features missing to accomidate this.
 
 ## 0.9.0 will contain...
-form helpers + csrf protection
-a caching system (memcache)
+*form helpers + csrf protection
+*a caching system (memcache)
 
 ## 1.0.0 will contain...
-full unit test coverage
+*full unit test coverage
 
 ## 1.1.0 will contain...
-a websocket component
+*a websocket component
 
 # Todo: 
-More documentation
-Thorough website
-Front end framework
-Domains on each request
-Database connection pool
-See issues for more
+*More documentation
+*Thorough website
+*Front end framework
+*Domains on each request
+*Database connection pool
+*See issues for more
