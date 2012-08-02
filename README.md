@@ -88,9 +88,11 @@ Private routes are only checked when a request is made internally.
 # Roadmap
 ## 0.8.0 will contain...
 a technique for handling sessions.
+model field validation
 a full working blog example, and any features missing to accomidate this.
 
 ## 0.9.0 will contain...
+form helpers + csrf protection
 a caching system (memcache)
 
 ## 1.0.0 will contain...
