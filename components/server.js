@@ -41,7 +41,7 @@ var Server = exports.Server = function Server (description) {
 			});
 
 			request.on('end', function () {
-				var post_data = exports.parsePostData(buffer.join(), _self.contentType());
+				var post_data = exports.parsePostData(buffer.join(), request.headers['content-type']);
 				var key = null;
 				for (key in post_data) {
 					url.query[key] = post_data[key];
