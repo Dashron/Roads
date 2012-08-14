@@ -25,6 +25,7 @@
  */
 var Cookie = exports.Cookie = function (request, response) {
 	this._response = response;
+	this._request = request;
 	this._cookie_data = {};
 	this._header_data = {};
 	
@@ -43,6 +44,7 @@ var Cookie = exports.Cookie = function (request, response) {
 
 Cookie.prototype._domain = null;
 Cookie.prototype._response = null;
+Cookie.prototype._request = null;
 Cookie.prototype._cookie_data = null;
 Cookie.prototype._header_data = null;
 
@@ -61,7 +63,7 @@ Cookie.prototype.setDomain = function (domain) {
  * @return {mixed} the cookie value
  */
 Cookie.prototype.get = function (key) {
-	return this._cookie_data[key];
+	return decodeURIComponent(this._cookie_data[key]);
 };
 
 /**
@@ -138,7 +140,7 @@ var apply_part = function (parts, key, value, default_value) {
 Cookie.prototype._buildCookie = function (key, options) {
 	var parts = [];
 	
-	apply_part(parts, key, options.value, 1);
+	apply_part(parts, key, encodeURIComponent(options.value), 1);
 	apply_part(parts, 'Domain', options.domain, this._domain);
 	apply_part(parts, 'Path', options.path, '/');
 	
@@ -147,6 +149,9 @@ Cookie.prototype._buildCookie = function (key, options) {
 	}
 
 	if (options.secure) {
+		if (!this._request.connection.encrypted) {
+			throw new Error('You can not assign a secured cookie to a non-secure connection');
+		}
 		parts.push('Secure');
 	}
 
