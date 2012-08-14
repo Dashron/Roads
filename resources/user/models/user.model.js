@@ -19,15 +19,11 @@ UserModule.setModel({
 			set : function (password) {
 				this._password = crypto_module.createHash('sha256').update(password).digest('hex');
 			}
-		},
-		last_ip : {
-			type : 'ip',
 		}
 	},
 	methods : {
 		checkPassword : function checkPassword(password) {
-			var sha256 = crypto_module.createHash('sha256').update(password);
-			return sha256.digest('hex') === this._password;
+			return this._password === crypto_module.createHash('sha256').update(password).digest('hex');
 		}
 	}
 });
