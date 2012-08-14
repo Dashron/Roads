@@ -36,10 +36,15 @@ ModelRequest.prototype.error = function (fn) {
 };
 
 ModelRequest.prototype._ready = function (data) {
+	var _self = this;
 	if (this._modifiers.length) {
-		this._modifiers.shift()(data);
+		process.nextTick(function () {
+			_self._modifiers.shift().call(_self, data);
+		});
 	} else {
-		this._final_ready(data);
+		process.nextTick(function () {
+			_self._final_ready(data);
+		});
 	}
 };
 
@@ -136,8 +141,8 @@ var Model = module.exports.Model = function Model (data) {
 	// we have to set this here because the prototype has to be null otherwise all objects share the field list
 	this.updated_fields = {};
 
-	for (var i in data) {
-		this[i] = data[i];
+	for (var key in data) {
+		this['_' + key] = data[key];
 	}
 
 	// we have to set this a second time to wipe out any updated field markers from setting the initial data
