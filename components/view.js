@@ -84,8 +84,6 @@ var render_states = exports.RENDER_STATES = {
  */
 var View = exports.View = function View() {
 	EventEmitter.call(this);
-	this._js = {};
-	this._css = {};
 
 	this._child_views = {};
 	this._data = {};
@@ -97,8 +95,6 @@ var View = exports.View = function View() {
 
 util_module.inherits(View, EventEmitter);
 
-View.prototype._js = null;
-View.prototype._css = null;
 View.prototype._template = null;
 View.prototype._response = null;
 View.prototype._data = null;
@@ -376,28 +372,6 @@ View.prototype.child = function view_child(key, template) {
 };
 
 /**
- * Adds a javascript file, and pushes it all the way up the chain to the core template
- * TODO: add a flag so it is not pushed to the top? is that useful?
- * @param {String} file 
- * @return {View} this, used for chaining
- */
-View.prototype.addJs = function view_addJs(file) {
-	this.root._js.push({'src' : file});
-	return this;
-};
-
-/**
- * Adds a css file, and pushes it all the way up the chain to the core template
- * TODO: add a flag so it is not pushed to the top? is that useful?
- * @param {String} file
- * @return {View} this, used for chaining
- */
-View.prototype.addCss = function view_addCss(file) {
-	this.root._css.push({'src' : file});
-	return this;
-};
-
-/**
  * Set the response status code in the response tied to the parent most view
  * 
  * @param {int} code
@@ -428,9 +402,9 @@ View.prototype.setHeader = function view_setHeaders(headers) {
  * @param  {string} template information passed to the root rendererer to be immediately rendered
  */
 View.prototype.statusNotFound = function view_notFound(template) {
+	this.root.cancelRender();
 	this.root._response.statusCode = 404;
-	// kill all child views so that the route renders immediately
-	this.root.render(template, true);
+	this.root._response.end();
 };
 
 /**
@@ -441,12 +415,14 @@ View.prototype.statusNotFound = function view_notFound(template) {
 View.prototype.statusError = function view_error(error, template) {
 	this.root.set('error', error);
 	this.root._response.statusCode = 500;
-	
-	if (typeof template !== "string") {
-		template = false;
-	}
+	var force = false;
 
-	this.root.render(template);
+	if (typeof template !== "string") {
+		this.root.cancelRender();
+		this.root._response.end();
+	} else {
+		this.root.render(template, true);
+	}
 };
 
 /**
@@ -465,9 +441,10 @@ View.prototype.statusError = function view_error(error, template) {
  * @param  {string} redirect_url
  */
 View.prototype.statusCreated = function view_created(redirect_url) {
+	this.root.cancelRender();
 	this.root._response.statusCode = 201;
 	this.root._response.setHeader('Location', redirect_url);
-	this.root.render(null, true);
+	this.root._response.end();
 };
 
 /**
@@ -478,9 +455,10 @@ View.prototype.statusCreated = function view_created(redirect_url) {
  * @param  {string} redirect_url
  */
 View.prototype.statusRedirect = function view_redirect(redirect_url) {
+	this.root.cancelRender();
 	this.root._response.statusCode = 302;
 	this.root._response.setHeader('Location', redirect_url);
-	this.root.render(null, true);
+	this.root._response.end();
 };
 
 /**
@@ -490,6 +468,7 @@ View.prototype.statusRedirect = function view_redirect(redirect_url) {
  * @todo : as a parameter take some headers to control this? date, etag, expires, cache control
  */
 View.prototype.statusNotModified = function view_notModified() {
+	this.root.cancelRender();
 	this.root._response.statusCode = 304;
 	// date
 	// etag
@@ -507,6 +486,7 @@ View.prototype.statusNotModified = function view_notModified() {
  * @param  {Array} supported_methods 
  */
 View.prototype.statusUnsupportedMethod = function view_unsupportedMethod(supported_methods) {
+	this.root.cancelRender();
 	this.root._response.statusCode = 405;
 	this.root._response.setHeader('Allow', supported_methods.join(','));
 	this.root._response.end();
