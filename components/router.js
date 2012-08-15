@@ -96,7 +96,7 @@ RegexRouter.prototype.getRoute = function (uri_bundle) {
 	var matches = null;
 	var i = 0;
 
-	if (uri_bundle.public) {
+	if (uri_bundle.source === "server") {
 		var routes = _self.public_routes;
 	} else {
 		var routes = _self.all_routes;

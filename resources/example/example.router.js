@@ -12,6 +12,7 @@ module.exports = new Router({
 					headers: uri_bundle.headers
 				}, view.child('login', 'current_user_widget.html'));
 
+				this.resources.user.request('/users/1', view.child('blog_user', 'byline.html'));
 				view.render('index.html');
 			}
 		}]

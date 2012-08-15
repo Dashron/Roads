@@ -93,13 +93,16 @@ Resource.prototype.request = function (uri_bundle, view) {
 	// Allow direct urls for shorthand. Assume a GET request in this case
 	if (typeof uri_bundle === "string") {
 		uri_bundle = {
-			uri : uri_bundle,
-			method : 'GET'
+			uri : uri_bundle
 		};
 	}
 
 	if (typeof uri_bundle.method != "string") {
 		uri_bundle.method = "GET";
+	}
+
+	if (typeof uri_bundle.source != "string") {
+		uri_bundle.source = "resource";
 	}
 
 	// clean up the success path, and have processRoute return a promise

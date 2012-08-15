@@ -44,27 +44,27 @@ module.exports = new Router({
 			GET : function (uri_bundle, view) {
 				var users_promise = this.models.user.getAll();
 
-				users_promise.ready(function (users) {
+				users_request.ready(function (users) {
 					view.set('users', users);
 					view.render('many.html');
 				});
 
-				users_promise.error(view.statusError.bind(view));
+				users_request.error(view.statusError.bind(view));
 			}
 		},{
 			match : /^\/users\/(\d+)$/,
 			GET : function (uri_bundle, view) {
-				var user_promise = this.models.user.load(uri_bundle.params.id);
-				user_promise.ready(function (user) {
-					//if (user === null) {
-						//view.statusNotFound('404.html');
-					//} else {
+				var user_request = this.models.user.load(uri_bundle.params.id);
+				user_request.ready(function (user) {
+					if (user === null && uri_bundle.source === "server") {
+						view.statusNotFound('404.html');
+					} else {
 						view.set('user', user);	
 						view.render('one.html');
-					//}
+					}
 				});
 
-				user_promise.error(view.statusError.bind(view));
+				user_request.error(view.statusError.bind(view));
 			},
 			keys : ['id']
 		}]

@@ -53,7 +53,7 @@ var Server = exports.Server = function Server (description) {
 					params : url.query,
 					cookie : cookie,
 					headers : request.headers,
-					public : true
+					source : "server"
 				}, response);
 			});
 		} else {
@@ -63,7 +63,7 @@ var Server = exports.Server = function Server (description) {
 				params : url.query,
 				cookie : cookie,
 				headers : request.headers,
-				public : true
+				source : "server"
 			}, response);
 		}
 
