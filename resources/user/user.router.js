@@ -10,7 +10,7 @@ module.exports = new Router({
 
 				session_request.ready(function (user) {
 					view.set('user', user);
-					view.render('logged_in.html');
+					view.render('login.html');
 				});
 
 				session_request.error(view.statusError.bind(view));
@@ -21,30 +21,35 @@ module.exports = new Router({
 
 				// validate the login data
 				user_request.ready(function (user) {
+
 					// validate password
 					if (user.checkPassword(uri_bundle.params.password)) {
 						var session_request = resource.models.session.start(uri_bundle.headers, user, uri_bundle.cookie);
+
 						session_request.ready(function (session) {
-							view.statusRedirect('/users/login');
+							view.statusRedirect('/');
 						});
+
 						session_request.error(view.statusError.bind(view));
 					} else {
-						view.set('login', 'password fail');
+						view.set('password_fail', 'true');
 						view.render('login.html');
 					}
 				});
+
+				user_request.error(view.statusError.bind(view));
 			}
 		},{
 			match : /^\/users$/,
 			GET : function (uri_bundle, view) {
 				var users_promise = this.models.user.getAll();
+
 				users_promise.ready(function (users) {
 					view.set('users', users);
 					view.render('many.html');
-				})
-			},
-			options : {
-				modes : ['text/html']
+				});
+
+				users_promise.error(view.statusError.bind(view));
 			}
 		},{
 			match : /^\/users\/(\d+)$/,
@@ -59,13 +64,7 @@ module.exports = new Router({
 					//}
 				});
 
-				user_promise.error(function (error) {
-					view.statusError(error);
-					console.log(error);
-				});
-			},
-			options : {
-				modes : ['text/html']
+				user_promise.error(view.statusError.bind(view));
 			},
 			keys : ['id']
 		}]

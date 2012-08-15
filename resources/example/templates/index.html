@@ -1,16 +1,18 @@
-Hello {{user}}, I'm {{user_two}}
-<br />
-The old cookie was : {{cookie_old_value}}
-<br />
-The new cookie should be : {{cookie_new_value}}
-
-<br /><br />
-{{private}}
-<br />
-<br />
-
-<form method="POST" action="/users/login">
-	email: <input type="text" name="email" /> <br />
-	pass: <input type="text" name="password" />
-	<input type="submit" name="Log In" />
-</form>
+<div class="main">
+	<h1>Roads.js Example Blog</h1>
+	<div class="post">
+		<span class="byline">by <a href="/users/1">Aaron</a></span>
+		<span class="content"> blahblahblah </span>
+	</div>
+	<div class="post">
+		<span class="byline">by <a href="/users/1">Aaron</a></span>
+		<span class="content"> blahblahblah </span>
+	</div>
+	<div class="post">
+		<span class="byline">by <a href="/users/1">Aaron</a></span>
+		<span class="content"> blahblahblah </span>
+	</div>
+</div>
+<div class="sidebar">
+	{{{login}}}
+</div>
