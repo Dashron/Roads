@@ -98,6 +98,10 @@ Resource.prototype.request = function (uri_bundle, view) {
 		};
 	}
 
+	if (typeof uri_bundle.method != "string") {
+		uri_bundle.method = "GET";
+	}
+
 	// clean up the success path, and have processRoute return a promise
 	this.processRoute(uri_bundle, function (route, route_resource) {
 		// If the template provided is actually a server response, we need to build the very first view
