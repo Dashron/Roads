@@ -18,6 +18,10 @@ module.exports = new Router({
 						sort : 'recent',
 					}
 				}, view.child('posts'));
+
+				view.error(function (error) {
+					this.statusError(error);
+				});
 				
 				view.render('index.html');
 			}

@@ -340,7 +340,8 @@ View.prototype.child = function view_child(key, template) {
 	new_view.parent = this;
 	new_view.root = this.root;
 	new_view.dir = this.dir;
-
+	new_view.error(this._error);
+	
 	if (template) {
 		new_view.setTemplate(template);
 	}
