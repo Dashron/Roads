@@ -12,7 +12,13 @@ module.exports = new Router({
 					headers: uri_bundle.headers
 				}, view.child('login', 'current_user_widget.html'));
 
-				this.resources.user.request('/users/1', view.child('blog_user', 'byline.html'));
+				this.resources.user.request({
+					uri: '/users/1/posts',
+					params: {
+						sort : 'recent',
+					}
+				}, view.child('posts'));
+				
 				view.render('index.html');
 			}
 		}]

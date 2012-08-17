@@ -8,8 +8,8 @@ module.exports = new Router({
 			match : /^\/posts$/,
 			GET : function (uri_bundle, view) {
 				var post_promise = null;
-				if (uri_bundle.params.user_id) {
-					post_promise = this.models.post.getForUser(uri_bundle.params.user_id);
+				if (uri_bundle.prefix.model) {
+					post_promise = this.models.post.getForUser(uri_bundle.prefix.model);
 				} else {
 					post_promise = this.models.post.getAll();
 				}
@@ -21,8 +21,18 @@ module.exports = new Router({
 				});
 			},
 			POST : function (uri_bundle, view) {
+				/*var valid = this.models.post.validate({
+					title : uri_bundle.title,
+					body : uri_bundle.body
+				});
 
-
+				if (valid) {
+					var post = new (this.models.post.Model)();
+					post.title = valid.title;
+					post.body = valid.body;
+					//post.user_id = // We have to now implement sessions.
+					post.save();
+				}*/
 			},
 			keys : ['id'],
 			options : {

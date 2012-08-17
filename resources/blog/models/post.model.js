@@ -25,14 +25,14 @@ PostModule.setModel({
 	}
 });
 
-PostModule.getForUser = function (user_id, pager) {
+PostModule.getForUser = function (user, pager) {
 	var sql = 'select * from blog_post where user_id = ?';
 	
 	if (typeof pager === "object") {
 		sql = sql + pager.getSql();
 	}
 
-	return this.collection(sql, [user_id]);
+	return this.collection(sql, [user.id]);
 };
 
 PostModule.getAll = function (pager) {

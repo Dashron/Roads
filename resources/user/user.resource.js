@@ -7,5 +7,8 @@ module.exports = new Resource('user', {
 			'user' : require('./models/user.model'),
 			'session' : require('./models/session.model')
 		}
+	},
+	dependencies : {
+		"blog" : require('../blog/blog.resource')
 	}
 });

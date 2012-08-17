@@ -67,6 +67,30 @@ module.exports = new Router({
 				user_request.error(view.statusError.bind(view));
 			},
 			keys : ['id']
+		},{
+			match : /^\/users\/(\d+)\/posts$/,
+			GET : function (uri_bundle, view) {
+				var resource = this;
+				var user_request = this.models.user.load(uri_bundle.params.id);
+
+				user_request.ready(function (user) {
+					if (user === null) {
+							view.statusNotFound('404.html');
+					} else {
+						view.set('user', user);
+						// this will not work. it should be a request through the blog system
+						resource.resources.blog.request({
+							uri: '/posts',
+							prefix: {
+								model : user
+							}
+						}, view);
+					}
+				});
+
+				user_request.error(view.statusError.bind(view));
+			},
+			keys : ['id']
 		}]
 	}
 });

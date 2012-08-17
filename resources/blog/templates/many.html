@@ -2,9 +2,9 @@
 	{{#each posts}}
 		<div class="post">
 			<span class="title">{{title}}</span>
-			{{#with user}}
-				<span class="byline"> By: {{email}} </span>
-			{{/with}}
+			{{#user}}
+				<span class="byline"> By: <a href="/users/{{id}}">{{email}}</a> </span>
+			{{/user}}
 			<span clss="body">{{body}}</span>
 		</div>
 	{{/each}}
