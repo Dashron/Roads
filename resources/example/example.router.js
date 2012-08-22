@@ -20,10 +20,11 @@ module.exports = new Router({
 				}, view.child('posts'));
 
 				view.error(function (error) {
-					this.statusError(error);
+					console.log(error);
+					this.statusError(error, '500.html');
 				});
 				
-				view.render('index.html');
+				//view.render('index.html');
 			}
 		}]
 	},

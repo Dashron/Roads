@@ -11,8 +11,22 @@ var Database = require('./components/database').Database;
 new Database("default", {
 	hostname: 'localhost',
 	user : 'gfw',
-	database: 'gfw'
-}).connect();
+	database: 'gfww'
+}).on('error', function (err) {
+	if (!err.fatal) {
+		return;
+	}
+
+    if (err.code !== 'PROTOCOL_CONNECTION_LOST') {
+      throw err;
+    }
+
+    //todo reconnect
+	console.log(err);
+	
+}).connect(function (err) {
+	console.log(err);
+});
 
 
 var resource_name = process.argv[2] || "example";
