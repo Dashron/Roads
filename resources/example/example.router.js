@@ -24,7 +24,7 @@ module.exports = new Router({
 					this.statusError(error, '500.html');
 				});
 				
-				//view.render('index.html');
+				view.render('index.html');
 			}
 		}]
 	},
