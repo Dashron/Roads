@@ -1,6 +1,6 @@
 # ATTENTION
 
-I am starting to have second thoughts about the resource based structure of this framework. It works wonderfully for API's, but when you try to build real sites in it, it feels restrictive. 
+I am starting to have second thoughts about the resource based structure of this framework. It works wonderfully for APIs, but when you try to build real sites in it, it feels restrictive. 
 
 My current plan is to split the View and Model components out into their own libraries, and then experiment with alternative structures.
 
