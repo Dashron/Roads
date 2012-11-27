@@ -1,3 +1,19 @@
+# ATTENTION
+
+I am starting to have second thoughts about the resource based structure of this framework. It works wonderfully for APIs, but when you try to build real sites it feels restrictive. 
+
+My current plan is to split the View and Model components out into their own libraries, and then experiment with alternative structures.
+
+Roads will become the all encompasing name for a set of modules and standards, and this project will turn into a series of examples.
+
+Upcoming Examples : 
+* Webserver
+* Chatserver
+* Multi User Text Based Adventure (with web components to show how everything can work together)
+
+
+-------------------------
+
 "For people who have places to be, and things to do"
 
 This framework has been designed to make the development of websites and resource oriented web services easier.
