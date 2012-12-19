@@ -2,9 +2,16 @@
 
 I am starting to have second thoughts about the resource based structure of this framework. It works wonderfully for APIs, but when you try to build real sites it feels restrictive. 
 
-My current plan is to split the View and Model components out into their own libraries, and then experiment with alternative structures.
+The model and view components have been split into their own libraries.
 
-Roads will become the all encompasing name for a set of modules and standards, and this project will turn into a series of examples.
+The view component is : http://github.com/Dashron/Bifocals
+
+The models are : http://github.com/Dashron/Roads-Models
+
+
+Next I plan on spinning off two different controller systems. One will act like the router included in this project, one will be a traditional MVC.
+
+Once the pieces are together, I will include a bunch of examples in this project, showing how every bit can work together.
 
 Upcoming Examples : 
 * Webserver
