@@ -1,0 +1,18 @@
+{
+	"port" : 8080,
+	"connections" : {
+		"mysql" : {
+			"default" : {
+				"host": "",
+				"user" : "",
+				"database" : ""
+			}
+		},
+		"redis" : {
+			"default" : {
+				"host" : "",
+				"port" : 6379
+			}
+		}
+	}
+}

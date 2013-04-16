@@ -1,16 +1,14 @@
+"use strict";
+
 var fs_module = require('fs');
-var Renderer = require('../../components/view').Renderer;
 var util_module = require('util');
 var http_module = require('http');
+var Renderer = require('bifocals').Renderer;
 
-/**
- * This function allows you to build a renderer that responds to a certain content type
- * 	
- * @param  {string} content_type
- * @return {Renderer} 
- */
-var buildFileRenderer = function (content_type) {
-	var FileRenderer = function() {
+module.exports.get = function (content_type) {
+
+	// flat file renderer
+	var FileRenderer = function FileRenderer() {
 		Renderer.call(this);
 	}
 
@@ -20,7 +18,7 @@ var buildFileRenderer = function (content_type) {
 		var _self = this;
 
 		if (this.response instanceof http_module.ServerResponse) {
-			this.response.setHeader('Content-Type', content_type)
+			this.response.setHeader('Content-Type', content_type);
 			this.response.status_code = 200;
 		}
 
@@ -39,10 +37,4 @@ var buildFileRenderer = function (content_type) {
 	}
 
 	return FileRenderer;
-}
-
-module.exports = {
-	'text/css' : buildFileRenderer('text/css'),
-	'text/javascript' : buildFileRenderer('text/javascript'),
-	'text/plain' : buildFileRenderer('text/plain')
 };

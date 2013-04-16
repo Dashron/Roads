@@ -1,41 +1,26 @@
+"use strict";
+
+var http_module = require('http');
 var util_module = require('util');
 var fs_module = require('fs');
-var http_module = require('http');
 var handlebars = require('handlebars');
-
-var Renderer = require('../../components/view').Renderer;
-
-
-/**
- * Renders the view output as json
- */
-var JsonRenderer = function() {
-	Renderer.call(this);
-};
-util_module.inherits(JsonRenderer, Renderer);
-
-/**
- * Requests the data to be rendered
- */
-JsonRenderer.prototype.render = function () {
-	if (this.response instanceof http_module.ServerResponse) {
-		this.response.setHeader('Content-Type', 'application/json');
-		this.response.status_code = 200;
-	}
-
-	this.response.write(JSON.stringify(this.data));
-	this.response.end();
-}
-
-var compiled_views = {};
+var Renderer = require('bifocals').Renderer;
 
 /**
  * Renders a view as html via the Mu2 module
  */
-var HandlebarsRenderer = function() {
+var HandlebarsRenderer = module.exports = function HandlebarsRenderer () {
 	Renderer.call(this);
 };
+
 util_module.inherits(HandlebarsRenderer, Renderer);
+
+/**
+ * Cache the compiled views in a "path => function" mapping
+ * 
+ * @type {Object}
+ */
+var compiled_views = {};
 
 /**
  * Requests the provided template to be rendered
@@ -50,7 +35,7 @@ HandlebarsRenderer.prototype.render = function (template) {
 		this.response.status_code = 200;
 	}
 
-	if (typeof compiled_views[template] == "undefined" || compiled_views[template] == null) {
+	//if (typeof compiled_views[template] == "undefined" || compiled_views[template] == null) {
 		var stream = fs_module.createReadStream(template);
 
 		var buffer = '';
@@ -66,9 +51,11 @@ HandlebarsRenderer.prototype.render = function (template) {
 		stream.on('error', function (err) {
 			_self._error(err);
 		});
-	} else {
-		this.executeTemplate(template);
-	}
+	/*} else {
+		process.nextTick(function () {
+			_self.executeTemplate(template);
+		})
+	}*/
 };
 
 /**
@@ -85,8 +72,3 @@ HandlebarsRenderer.prototype.executeTemplate = function (template) {
 	this._end();
 	this.response.end();
 };
-
-module.exports = {
-	'application/json' : JsonRenderer,
-	'text/html' : HandlebarsRenderer
-}
