@@ -14,5 +14,10 @@
 				"port" : 6379
 			}
 		}
+	},
+	"resources" : {
+		"/blog" : "blog",
+		"/user" : "user",
+		"/" : "example"
 	}
 }

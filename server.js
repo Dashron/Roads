@@ -1,15 +1,17 @@
 "use strict";
+// This file sucks. Todo: make this suck less
+
 
 var mode = 'dev';
 //var mode = 'prod';
 
-var bifocals_module = require('bifocals');
 var http_server = require('roads-httpserver');
+var Resource = require('./base/resource');
+
 var Models = require('roads-models');
 require('./libs/roadsmodelpromise.js').mixin(Models.ModelRequest.prototype);
 
-var router = require('./base/router');
-
+var bifocals_module = require('bifocals');
 var file_renderer = require('./libs/renderers/file_renderer');
 bifocals_module.addRenderer('text/css', file_renderer.get('text/css'));
 bifocals_module.addRenderer('text/javascript', file_renderer.get('text/javascript'));
@@ -34,13 +36,30 @@ function setUpConfig() {
 function connectToDatabases(onReady) {
 	return Models.Connection.connect(global.config.server.connections)
 		.error(function (err) {
-			console.log(err);
+			/*console.log(err);
 			console.log(global.config.server.connections);
 			console.log('create database roads;');
 			console.log('create user roads;');
 			console.log("grant all on roads.* to roads@'localhost';");
-			throw new Error('An error has occured when connecting to the database');
+			throw new Error('An error has occured when connecting to the database');*/
+            console.log(err);
+            console.log(global.config.server.connections);
+            console.log('create database lang;');
+            console.log('use lang;');
+            console.log('create user lang;');
+            console.log("grant all on lang.* to lang@'localhost';");
+            console.log("CREATE TABLE `language` (`id` int(10) unsigned NOT NULL AUTO_INCREMENT, `name` varchar(128) NOT NULL, PRIMARY KEY (`id`));");
+            console.log("CREATE TABLE `word_type` (`id` int(10) unsigned NOT NULL AUTO_INCREMENT, `language_id` int(10) unsigned NOT NULL, `name` varchar(128) NOT NULL, PRIMARY KEY (`id`));");
+            console.log("CREATE TABLE `word` (`id` int(10) unsigned NOT NULL AUTO_INCREMENT, `language_id` int(10) unsigned NOT NULL, `word_type_id` int(10) unsigned NOT NULL, `name` varchar(128) NOT NULL, PRIMARY KEY (`id`));");
+            throw new Error('An error has occured when connecting to the database');
 		});
+}
+
+function assignRoute(route, resource, server) {
+	console.log('assigning route ' + route);
+	server.onRequest(route, function (request, view, next) {
+		resource.route(request, view);
+	});
 }
 
 function buildWebServer() {
@@ -65,24 +84,18 @@ function buildWebServer() {
 		}
 
 		// we don't want the url to ever end with a slash
-		if (request.url.path != '/' && request.url.path.charAt(request.url.path.length - 1) === '/') {
+		if (request.url.path !== '/' && request.url.path.charAt(request.url.path.length - 1) === '/') {
 			return view.statusRedirect(request.url.path.slice(0, -1), 301);
 		}
 
 		next(request, view);
 	});
 
-	server.onRequest('/static', function handleRequest (request, view, next) {	
-		if (!router.static(request, view)) {
-			next();
-		}
-	});
+	var resources = global.config.server.resources;
 
-	server.onRequest('/', function (request, view, next) {
-		if (!router.dynamic(request, view)) {
-			view.statusNotFound();
-		}
-	});
+	for (var key in resources) {
+		assignRoute(key, Resource.get(resources[key]), server);
+	}
 
 	return server;
 }
