@@ -1,5 +1,13 @@
 "use strict";
 
+/**
+* resource.js
+* Copyright(c) 2012 Aaron Hedges <aaron@dashron.com>
+* MIT Licensed
+ */
+
+var Config = require('./config');
+
 var resources = {};
 
 module.exports.root_dir = __dirname + '/../resources/';
@@ -105,8 +113,11 @@ function findUrlMatches(keys, matches) {
  * @return {[type]}
  */
 Resource.prototype.route = function resource_route (request, view, next) {
-	var matches = null;
-	//view.content_type = 'text/html';
+	var matches = request.url.pathname.match(/^\/(([\w.\/-]+)\.(js|css|txt|html|ico))$/);
+
+	if (matches) {
+		return this.routeStatic(request, view, matches);
+	}
 
 	for (var i = 0; i < this.routes.length; i ++) {
 		matches = request.url.pathname.match(this.routes[i].route);
@@ -131,7 +142,7 @@ Resource.prototype.route = function resource_route (request, view, next) {
 			var route = controller[this.routes[i].view];
 
 			// allow the method to be overriden by the value sent as _method via POST
-			if (request.POST._method) {
+			if (request.method !== "GET" && typeof request.POST === "object" && typeof request.POST._method === "string") {
 				request.method = request.url.query._method;
 				delete request.url._method;
 			}
@@ -148,6 +159,9 @@ Resource.prototype.route = function resource_route (request, view, next) {
 
 			// if after all this hubub we have found a route, execute it
 			if (route) {
+				// todo: add a way to configure this via the route
+				view.content_type = 'text/html';
+
 				// Templates are executed first, and the route is passed along as a "next" parameter which can be executed.
 				// All routes have the resource as "this"
 				if (this.routes[i].template !== false) {
@@ -155,7 +169,9 @@ Resource.prototype.route = function resource_route (request, view, next) {
 						this.routes[i].template = "main";
 					}
 
-					this.controller('template')[this.routes[i].template].call(this, request, view, route.bind(this));
+					// todo: this d
+					var base_resource = module.exports.get(Config.get('web.base_resource'));
+					base_resource.controller('template')[this.routes[i].template].call(base_resource, request, view, route.bind(this));
 					return true;
 				} else {
 					route.call(this, request, view);
@@ -167,37 +183,40 @@ Resource.prototype.route = function resource_route (request, view, next) {
 		}
 	}
 	
+	view.content_type = 'text/html';
+	view.dir = module.exports.get(Config.get('web.base_resource')).dir + '/templates/server/';
 	view.statusNotFound('404.html');
 	return false;
 };
 
-Resource.prototype.routeStatic = function (request, view) {
-	/*var matches = request.url.match(/^\/(([\w.\/-]+)\.(js|css|txt|html|ico))$/);
-
+Resource.prototype.routeStatic = function (request, view, matches) {
 	if (matches) {
+		var dir = this.dir;
+		view.dir = dir + '/static';
+
 		view.error(function (error) {
 			console.log(error);
-			view.dir = view.dir + '/templates/';
-			view.statusNotFound('404.html');
+			//view.dir = dir + '/templates/';
+			view.statusNotFound(/*'404.html'*/);
 		});
 
 		if (matches[3] === 'js') {
-			view.dir = view.dir + '/js/';
+			view.dir = dir + '/js/';
 			view.content_type = "text/javascript";
 			view.render(matches[1]);
 		} else if (matches[3] === 'css') {
-			view.dir = view.dir + '/css/';
+			view.dir = dir + '/css/';
 			view.content_type = "text/css";
 			view.render(matches[1]);
 		} else {
 			view.content_type = "text/html";
-			view.dir = view.dir;
-			view.statusNotFound('404.html');
+			//view.dir = dir;
+			view.statusNotFound(/*'404.html'*/);
 		}
 		return true;
 	} else {
 		return false;
-	}*/
+	}
 };
 
 

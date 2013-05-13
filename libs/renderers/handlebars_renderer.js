@@ -1,5 +1,11 @@
 "use strict";
 
+/**
+* handlebars_renderer.js
+* Copyright(c) 2012 Aaron Hedges <aaron@dashron.com>
+* MIT Licensed
+ */
+
 var http_module = require('http');
 var util_module = require('util');
 var fs_module = require('fs');

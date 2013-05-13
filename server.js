@@ -1,6 +1,11 @@
 "use strict";
-// This file sucks. Todo: make this suck less
+/**
+* server.js
+* Copyright(c) 2012 Aaron Hedges <aaron@dashron.com>
+* MIT Licensed
+ */
 
+// This file sucks. Todo: make this suck less
 
 var mode = 'dev';
 //var mode = 'prod';
@@ -8,6 +13,7 @@ var mode = 'dev';
 var http_server = require('roads-httpserver');
 var Resource = require('./base/resource');
 
+var Config = require('./base/config');
 var Models = require('roads-models');
 require('./libs/roadsmodelpromise.js').mixin(Models.ModelRequest.prototype);
 
@@ -23,27 +29,27 @@ connectToDatabases().ready(function () {
 	console.log('successfully connected to all databases');
 
 	buildWebServer().start(function () {
-		console.log('listening for ' + (global.config.server.hostname ? global.config.server.hostname : "127.0.0.1") + ':' + global.config.server.port);
+		console.log('listening for ' + (Config.get('server.hostname') ? Config.get('server.hostname') : "127.0.0.1") + ':' + Config.get('server.port'));
 	});
 });
 
 function setUpConfig() {
-	global.config = {};
-	global.config.server = require('./config/' + mode + '/server');
-	global.config.web = require('./config/' + mode + '/web');
+	Config.load('server', require('./config/' + mode + '/server.json'));
+	Config.load('web', require('./config/' + mode + '/web.json'));
 }
 
 function connectToDatabases(onReady) {
-	return Models.Connection.connect(global.config.server.connections)
+	return Models.Connection.connect(Config.get('server.connections'))
 		.error(function (err) {
 			/*console.log(err);
-			console.log(global.config.server.connections);
+			console.log(Config.get('server.connections'));
 			console.log('create database roads;');
 			console.log('create user roads;');
 			console.log("grant all on roads.* to roads@'localhost';");
 			throw new Error('An error has occured when connecting to the database');*/
+			//TODO: can we put this into the models and config somehow?
             console.log(err);
-            console.log(global.config.server.connections);
+            console.log(Config.get('server.connections'));
             console.log('create database lang;');
             console.log('use lang;');
             console.log('create user lang;');
@@ -66,21 +72,21 @@ function buildWebServer() {
 	console.log('setting up web server');
 
 	var server = new http_server.Server({
-		hostname : global.config.server.hostname,
-		port : global.config.server.port		
+		hostname : Config.get('server.hostname'),
+		port : Config.get('server.port')		
 	});
 
 	server.onRequest('*', function (request, response, next) {
 		var view = new bifocals_module.Bifocals(response);
-		view.default500Template = 'server/500.html';
-		view.dir = __dirname + '/web';
+		view.default500Template = __dirname + Config.get('web.templates.500.html');
+		view.dir = __dirname + '/resources';
 
 		//view.error(view.statusError.bind(view));
 		console.log(request.method + ' ' + request.url.path);
 
 		// maybe move this into server
-		if (global.config.web.cookie.domain) {
-			request.cookie.setDomain(global.config.web.cookie.domain);
+		if (Config.get('web.cookie.domain')) {
+			request.cookie.setDomain(Config.get('web.cookie.domain'));
 		}
 
 		// we don't want the url to ever end with a slash
@@ -91,7 +97,7 @@ function buildWebServer() {
 		next(request, view);
 	});
 
-	var resources = global.config.server.resources;
+	var resources = Config.get('web.resources');
 
 	for (var key in resources) {
 		assignRoute(key, Resource.get(resources[key]), server);

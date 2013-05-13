@@ -1,5 +1,11 @@
 "use strict";
 
+/**
+* file_renderer.js
+* Copyright(c) 2012 Aaron Hedges <aaron@dashron.com>
+* MIT Licensed
+ */
+
 var fs_module = require('fs');
 var util_module = require('util');
 var http_module = require('http');
@@ -10,7 +16,7 @@ module.exports.get = function (content_type) {
 	// flat file renderer
 	var FileRenderer = function FileRenderer() {
 		Renderer.call(this);
-	}
+	};
 
 	util_module.inherits(FileRenderer, Renderer);
 
@@ -34,7 +40,7 @@ module.exports.get = function (content_type) {
 		stream.on('end', function () {
 			_self.response.end();
 		});
-	}
+	};
 
 	return FileRenderer;
 };

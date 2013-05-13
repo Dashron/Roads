@@ -1,5 +1,11 @@
 "use strict";
 
+/**
+* roadsmodelpromise.js
+* Copyright(c) 2012 Aaron Hedges <aaron@dashron.com>
+* MIT Licensed
+ */
+
 module.exports.mixin = function (ModelPromisePrototype) {
 	ModelPromisePrototype.error = function (view) {
 		if (typeof view === 'function') {

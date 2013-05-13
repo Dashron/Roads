@@ -5,6 +5,10 @@ config/dev/web.json
 config/prod/server.json
 config/prod/web.json
 
+resources/*
+!resources/official
+!resources/example
+
 .project
 .settings
 roads.sublime-project

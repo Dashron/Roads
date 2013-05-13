@@ -2,5 +2,11 @@
 	"enabled" : true,
 	"cookie" : {
 		"domain" : "127.0.0.1"
-	}
+	},
+	"resources" : {
+		"/blog" : "example/blog",
+		"/user" : "official/user",
+		"/" : "example/example"
+	},
+	"base_resource" : "example/example"
 }
