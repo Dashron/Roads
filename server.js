@@ -78,7 +78,9 @@ function buildWebServer() {
 
 	server.onRequest('*', function (request, response, next) {
 		var view = new bifocals_module.Bifocals(response);
-		view.default500Template = __dirname + Config.get('web.templates.500.html');
+		view.default500Template = Resource.get(Config.get('web.base_resource')).dir + '/templates/' + Config.get('web.templates.500');
+
+		view.error(view.statusError.bind(view));
 		view.dir = __dirname + '/resources';
 
 		//view.error(view.statusError.bind(view));
