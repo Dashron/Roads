@@ -114,6 +114,7 @@ function findUrlMatches(keys, matches) {
  */
 Resource.prototype.route = function resource_route (request, view, next) {
 	var matches = request.url.pathname.match(/^\/(([\w.\/-]+)\.(js|css|txt|html|ico))$/);
+	var matched_route = null;
 
 	if (matches) {
 		return this.routeStatic(request, view, matches);
@@ -121,71 +122,81 @@ Resource.prototype.route = function resource_route (request, view, next) {
 
 	for (var i = 0; i < this.routes.length; i ++) {
 		matches = request.url.pathname.match(this.routes[i].route);
-
 		if (matches) {
-			view.dir = this.dir + '/templates/';
-			
-			// if the route regex contained groups, assign the groups as getvals relative to the "keys" parameters
-			if (matches.length > 1 && typeof this.routes[i].keys === "object") {
-				var extra_get_vals = {};
+			matched_route = this.routes[i];
+			break;
+		}
+	}
 
-				// First element is always the matched selection, and not a group
-				matches.shift();
-				extra_get_vals = findUrlMatches(this.routes[i].keys, matches);
+	if (matches) {
+		// if the route regex contained groups, assign the groups as getvals relative to the "keys" parameters
+		if (matches.length > 1 && typeof matched_route.keys === "object") {
+			var extra_get_vals = {};
 
-				for(var key in extra_get_vals) {
-					request.url.query[key] = extra_get_vals[key];
-				}
+			// First element is always the matched selection, and not a group
+			matches.shift();
+			extra_get_vals = findUrlMatches(matched_route.keys, matches);
+
+			for(var key in extra_get_vals) {
+				request.url.query[key] = extra_get_vals[key];
 			}
+		}
 
-			var controller = this.controller(this.routes[i].controller);
-			var route = controller[this.routes[i].view];
+		var controller = this.controller(this.routes[i].controller);
+		var route = controller[matched_route.view];
 
-			// allow the method to be overriden by the value sent as _method via POST
-			if (request.method !== "GET" && typeof request.POST === "object" && typeof request.POST._method === "string") {
-				request.method = request.url.query._method;
-				delete request.url._method;
-			}
-			
-			// if the route isn't a direct route, but contains a hash of METHOD => ROUTE pairs, find the proper route
-			if (typeof route === "object") {
-				if (typeof route[request.method] === "undefined") {
-					view.statusUnsupportedMethod(Object.keys(route));
-					return true;
-				} else {
-					route = route[request.method];
-				}
-			}
-
-			// if after all this hubub we have found a route, execute it
-			if (route) {
-				// todo: add a way to configure this via the route
-				view.content_type = 'text/html';
-
-				// Templates are executed first, and the route is passed along as a "next" parameter which can be executed.
-				// All routes have the resource as "this"
-				if (this.routes[i].template !== false) {
-					if (typeof this.routes[i].template !== "string") {
-						this.routes[i].template = "main";
-					}
-
-					// todo: this d
-					var base_resource = module.exports.get(Config.get('web.base_resource'));
-					base_resource.controller('template')[this.routes[i].template].call(base_resource, request, view, route.bind(this));
-					return true;
-				} else {
-					route.call(this, request, view);
-					return true;
-				}
+		// allow the method to be overriden by the value sent as _method via POST
+		if (request.method !== "GET" && typeof request.POST === "object" && typeof request.POST._method === "string") {
+			request.method = request.url.query._method;
+			delete request.url._method;
+		}
+		
+		// if the route isn't a direct route, but contains a hash of METHOD => ROUTE pairs, find the proper route
+		if (typeof route === "object") {
+			if (typeof route[request.method] === "undefined") {
+				view.statusUnsupportedMethod(Object.keys(route));
+				return true;
 			} else {
-				throw new Error('could not find controller: ' + this.routes[i].controller + ' and view :' + this.routes[i].view);
+				route = route[request.method];
 			}
+		}
+
+		// if after all this hubub we have found a route, execute it
+		if (route) {
+			// todo: add a way to configure this via the route
+			view.content_type = 'text/html';
+
+			// Templates are executed first, and the route is passed along as a "next" parameter which can be executed.
+			// All routes have the resource as "this"
+			if (matched_route.template !== false) {
+				if (typeof matched_route.template !== "string") {
+					matched_route.template = "main";
+				}
+
+				var base_resource = module.exports.get(Config.get('web.base_resource'));
+				var this_resource = this;
+
+				// Update the template directory to be the base dir's template directory
+				view.dir = base_resource.dir + '/templates/';
+
+				base_resource.controller('template')[matched_route.template].call(base_resource, request, view, function (request, view) {
+					// update the child view's template dir to be the appropriate resources template dir
+					view.dir = this_resource.dir + '/templates/';
+					route.call(this_resource, request, view);
+				});
+				return true;
+			} else {
+				view.dir = this.dir + '/templates/';
+				route.call(this, request, view);
+				return true;
+			}
+		} else {
+			throw new Error('could not find controller: ' + matched_route.controller + ' and view :' + matched_route.view);
 		}
 	}
 	
 	view.content_type = 'text/html';
-	view.dir = module.exports.get(Config.get('web.base_resource')).dir + '/templates/server/';
-	view.statusNotFound('404.html');
+	view.statusNotFound(module.exports.get(Config.get('web.base_resource')).dir + '/templates/' + Config.get('web.templates.404'));
 	return false;
 };
 
