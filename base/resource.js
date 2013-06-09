@@ -28,6 +28,10 @@ module.exports.get = function getResource (label) {
 	return resources[label];
 };
 
+/**
+ * [Resource description]
+ * @param {[type]} resource [description]
+ */
 var Resource = module.exports.Resource = function Resource (resource) {
 	var key = null;
 
@@ -80,6 +84,15 @@ Resource.prototype.model = function resource_model (key) {
 };
 
 /**
+ * [resource_getResource description]
+ * @param  {[type]} key [description]
+ * @return {[type]}     [description]
+ */
+Resource.prototype.resource = function resource_getResource (key) {
+	return module.exports.get(key);
+};
+
+/**
  * [getController description]
  * @param  {[type]} key [description]
  * @return {[type]}     [description]
@@ -106,6 +119,43 @@ function findUrlMatches(keys, matches) {
 }
 
 /**
+ * Todo: route should use this method. Port all code directly related to showing a view into this method.
+ * Include a  "template" parameter in the request.
+ * 
+ * @param  {[type]} request [description]
+ * @param  {[type]} view    [description]
+ * @return {[type]}         [description]
+ */
+Resource.prototype.request = function resource_request (route_info, view) {
+	if (typeof route_info.method !== "string") {
+		route_info.method = "GET";
+	}
+
+	if (!route_info.controller || !route_info.view) {
+		throw new Error('controller and view are required');
+	}
+
+	var controller = this.controller(route_info.controller);
+	var route = controller[route_info.view];
+	view.dir = this.dir + '/templates/';
+	
+	// todo: add a way to configure this via the route_info
+	view.content_type = 'text/html';
+
+	if (typeof route === "object") {
+		if (typeof route[route_info.method] === "undefined") {
+			view.statusUnsupportedMethod(Object.keys(route));
+			return true;
+		} else {
+			return route[route_info.method].call(this, route_info.request, view, route_info.next_request);
+		}
+	} else {
+		// call request directly
+		return route.call(this, route_info.request, view, route_info.next_request);
+	}
+};
+
+/**
  * [route description]
  * @param  {[type]}   request
  * @param  {[type]}   view
@@ -116,10 +166,12 @@ Resource.prototype.route = function resource_route (request, view, next) {
 	var matches = request.url.pathname.match(/^\/(([\w.\/-]+)\.(js|css|txt|html|ico))$/);
 	var matched_route = null;
 
+	// If this is obviously a static file, route that way
 	if (matches) {
 		return this.routeStatic(request, view, matches);
 	}
 
+	// Find the first route matching the url pathname
 	for (var i = 0; i < this.routes.length; i ++) {
 		matches = request.url.pathname.match(this.routes[i].route);
 		if (matches) {
@@ -128,7 +180,8 @@ Resource.prototype.route = function resource_route (request, view, next) {
 		}
 	}
 
-	if (matches) {
+	// if there is a match, do stuff
+	if (matches && matched_route) {
 		// if the route regex contained groups, assign the groups as getvals relative to the "keys" parameters
 		if (matches.length > 1 && typeof matched_route.keys === "object") {
 			var extra_get_vals = {};
@@ -141,57 +194,38 @@ Resource.prototype.route = function resource_route (request, view, next) {
 				request.url.query[key] = extra_get_vals[key];
 			}
 		}
-
-		var controller = this.controller(this.routes[i].controller);
-		var route = controller[matched_route.view];
-
-		// allow the method to be overriden by the value sent as _method via POST
-		if (request.method !== "GET" && typeof request.POST === "object" && typeof request.POST._method === "string") {
-			request.method = request.url.query._method;
-			delete request.url._method;
-		}
 		
-		// if the route isn't a direct route, but contains a hash of METHOD => ROUTE pairs, find the proper route
-		if (typeof route === "object") {
-			if (typeof route[request.method] === "undefined") {
-				view.statusUnsupportedMethod(Object.keys(route));
-				return true;
-			} else {
-				route = route[request.method];
+		// Templates are executed first, and the route is passed along as a "next" parameter which can be executed.
+		if (matched_route.template !== false) {
+			if (typeof matched_route.template !== "string") {
+				matched_route.template = "main";
 			}
-		}
 
-		// if after all this hubub we have found a route, execute it
-		if (route) {
-			// todo: add a way to configure this via the route
-			view.content_type = 'text/html';
+			var base_resource = module.exports.get(Config.get('web.base_resource'));
+			var this_resource = this;
 
-			// Templates are executed first, and the route is passed along as a "next" parameter which can be executed.
-			// All routes have the resource as "this"
-			if (matched_route.template !== false) {
-				if (typeof matched_route.template !== "string") {
-					matched_route.template = "main";
+			base_resource.request({
+				controller : 'template',
+				view : matched_route.template,
+				request : request,
+				next_request : function (request, view) {
+					// call the next request with the appropriate variables
+					this_resource.request({
+						controller : matched_route.controller,
+						view : matched_route.view,
+						request : request
+					}, view);
 				}
-
-				var base_resource = module.exports.get(Config.get('web.base_resource'));
-				var this_resource = this;
-
-				// Update the template directory to be the base dir's template directory
-				view.dir = base_resource.dir + '/templates/';
-
-				base_resource.controller('template')[matched_route.template].call(base_resource, request, view, function (request, view) {
-					// update the child view's template dir to be the appropriate resources template dir
-					view.dir = this_resource.dir + '/templates/';
-					route.call(this_resource, request, view);
-				});
-				return true;
-			} else {
-				view.dir = this.dir + '/templates/';
-				route.call(this, request, view);
-				return true;
-			}
+			}, view);
+			return true;
 		} else {
-			throw new Error('could not find controller: ' + matched_route.controller + ' and view :' + matched_route.view);
+			// call the request without any future data
+			this.request({
+				controller : matched_route.controller,
+				view : matched_route.view,
+				request : request
+			}, view);
+			return true;
 		}
 	}
 	

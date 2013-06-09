@@ -96,6 +96,12 @@ function buildWebServer() {
 			return view.statusRedirect(request.url.path.slice(0, -1), 301);
 		}
 
+		// TODO: move to http server
+		if (request.method !== "GET" && typeof request.POST === "object" && typeof request.POST._method === "string") {
+			request.method = request.url.query._method;
+			delete request.url._method;
+		}
+		
 		next(request, view);
 	});
 
