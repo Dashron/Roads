@@ -1,77 +1,70 @@
-var Router = require('../../components/router').RegexRouter;
+"use strict";
 
-module.exports = new Router({
-	catch_all : /^\/users/,
-	routes : {
-		public : [{
-			match : /^\/users\/login$/,
-			GET : function (uri_bundle, view) {
-				var session_request = this.models.session.getUser(uri_bundle.cookie, uri_bundle.headers);
+module.exports = {
+	auth : {
+		GET : function (request, view) {
+			var session_request = this.model('session').getUser(request.cookie, request.headers);
 
-				session_request.ready(function (user) {
+			session_request
+				.ready(function (user) {
 					view.set('user', user);
 					view.render('login.html');
-				});
+				})
+				.error(view);
+		},
+		POST : function (request, view) {
+			var resource = this;
 
-				session_request.error(view.statusError.bind(view));
-			},
-			POST : function (uri_bundle, view) {
-				var resource = this;
-				var user_request = this.models.user.load(uri_bundle.params.email, 'email');
-
-				// validate the login data
-				user_request.ready(function (user) {
+			this.model('user').load(request.url.query.email, 'email')
+				.ready(function (user) {
 
 					// validate password
-					if (user.checkPassword(uri_bundle.params.password)) {
-						var session_request = resource.models.session.start(uri_bundle.headers, user, uri_bundle.cookie);
-
-						session_request.ready(function (session) {
-							view.statusRedirect('/');
-						});
-
-						session_request.error(view.statusError.bind(view));
+					if (user.checkPassword(request.params.password)) {
+						resource.model('session').start(request.headers, user, request.cookie)
+							.ready(function (session) {
+								view.statusRedirect('/');
+							})
+							.error(view);
 					} else {
 						view.set('password_fail', 'true');
 						view.render('login.html');
 					}
-				});
-
-				user_request.error(view.statusError.bind(view));
-			}
-		},{
-			match : /^\/users$/,
-			GET : function (uri_bundle, view) {
-				var users_promise = this.models.user.getAll();
-
-				users_request.ready(function (users) {
+				})
+				.error(view);
+		},
+		DELETE : function (request, view) {
+			
+		}
+	},
+	many : {
+		GET : function (request, view) {
+			this.model('user').getAll()
+				.ready(function (users) {
 					view.set('users', users);
 					view.render('many.html');
-				});
-
-				users_request.error(view.statusError.bind(view));
-			}
-		},{
-			match : /^\/users\/(\d+)$/,
-			GET : function (uri_bundle, view) {
-				var user_request = this.models.user.load(uri_bundle.params.id);
-				user_request.ready(function (user) {
-					if (user === null && uri_bundle.source === "server") {
+				})
+				.error(view);
+		}
+	},
+	one : {
+		GET : function (request, view) {
+			this.model('user').load(request.params.id)
+				.ready(function (user) {
+					if (user === null && request.source === "server") {
 						view.statusNotFound('404.html');
 					} else {
 						view.set('user', user);	
 						view.render('one.html');
 					}
-				});
-
-				user_request.error(view.statusError.bind(view));
-			},
-			keys : ['id']
-		},{
+				})
+				.error(view);
+		}
+	}/*,
+	{
 			match : /^\/users\/(\d+)\/posts$/,
-			GET : function (uri_bundle, view) {
+			GET : function (request, view) {
 				var resource = this;
-				var user_request = this.models.user.load(uri_bundle.params.id);
+				var user_request = this.models.user.load(request.params.id);
 
 				user_request.ready(function (user) {
 					if (user === null) {
@@ -92,5 +85,5 @@ module.exports = new Router({
 			},
 			keys : ['id']
 		}]
-	}
-});
+	}*/
+};

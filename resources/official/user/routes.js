@@ -1,24 +1,20 @@
 module.exports = [ {
 		route : /^\/users$/,
-		controller : 'user/user',
+		controller : 'user',
 		view : 'many'
 	}, 
 
 	// login/logout
 	{
-		route : /^\/users\/login$/,
-		controller : 'user/auth',
-		view : 'login'
-	}, {
-		route : /^\/users\/logout$/,
-		controller : 'user/auth',
-		view : 'logout'
+		route : /^\/users\/auth$/,
+		controller : 'user',
+		view : 'auth'
 	},
 
 	// profile pages
 	{
 		route : /^\/me$/,
-		controller : 'user/profile',
+		controller : 'profile',
 		view : 'self'
 	}
 ];

@@ -1,10 +1,10 @@
 "use strict";
 
-var model_component = require('roads-models');
-var model_module = model_component.Model;
-var ModelRequest = model_component.ModelRequest;
-var CachedModelModule = model_component.CachedModel;
-var connections = model_component.Connection;
+var roads_models = require('roads-models');
+
+var CachedModelModule = roads_models.CachedModel;
+var connections = roads_models.Connection;
+var ModelRequest = roads_models.ModelRequest;
 
 var crypto_module = require('crypto');
 
@@ -94,7 +94,7 @@ SessionModule.start = function start (request, cookie, user, options) {
 	var _self = this;
 	var new_request = new ModelRequest(this);
 
-	if (typeof options != "object") {
+	if (typeof options !== "object") {
 		options = {};
 	}
 	
@@ -134,26 +134,23 @@ SessionModule.start = function start (request, cookie, user, options) {
  */
 SessionModule.stop = function (request) {
 	var session = request.cookie.get('rsess');
-	var new_request = new ModelRequest(this);
 	var session_request = this.load(session, 'session');
 
 	request.cookie['delete']('rsess');
 
-	session_request.error(new_request._error.bind(new_request));
-
-	session_request.ready(function (data) {
+	session_request.addModifier(function (data) {
 		if (data) {
 			var delete_request = data['delete']();
 			delete_request.ready(function () {
-				new_request._ready(null);
+				session_request._ready(null);
 			});
-			delete_request.error(new_request._error.bind(new_request));
+			delete_request.error(session_request._error.bind(session_request));
 		} else {
-			new_request._ready(null);
+			session_request._ready(null);
 		}
 	});
 
-	return new_request;
+	return session_request;
 };
 
 /**
@@ -164,32 +161,35 @@ SessionModule.stop = function (request) {
  */
 SessionModule.getUser = function (cookie, ip, headers) {	
 	var session = cookie.get('rsess');
-	var new_request = new ModelRequest(this);
 
-	if (session) {
-		var load_request = this.load(session, 'session');
-		load_request.error(new_request._error.bind(new_request));
-
-		load_request.ready(function (session_data) {
-			if (session_data) {
-				// if the ip and user agent are the same
-				if (session_data.ip === ip && session_data.userAgentMatches(headers['user-agent'])) {
-					var user_request = UserModel.load(session_data.user_id);
-					user_request.ready(new_request._ready.bind(new_request));
-					user_request.error(new_request._error.bind(new_request));
-				} else {
-					//SessionModule.stop(request);
-					new_request._ready(null);
-				}
-			} else {
-				new_request._ready(null);
-			}
-		});
-	} else {
+	// If there is no session in the cookie, we still need to return a request that completes at a later time
+	if (!session) {
+		var session_request = new ModelRequest(this);
+		
 		process.nextTick(function () {
-			new_request._ready(null);
+			session_request._ready(null);
 		});
+
+		return session_request;
 	}
 
-	return new_request;
+	var load_request = this.load(session, 'session');
+
+	load_request.addModifier(function (session_data) {
+		if (session_data) {
+			// if the ip and user agent are the same
+			if (session_data.ip === ip && session_data.userAgentMatches(headers['user-agent'])) {
+				var user_request = UserModel.load(session_data.user_id);
+				user_request.ready(load_request._ready.bind(load_request));
+				user_request.error(load_request._error.bind(load_request));
+			} else {
+				//SessionModule.stop(request);
+				load_request._ready(null);
+			}
+		} else {
+			load_request._ready(null);
+		}
+	});
+
+	return load_request;
 };

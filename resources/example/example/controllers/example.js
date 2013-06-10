@@ -3,20 +3,22 @@
 module.exports = {
 	main : {
 		GET : function (request, view) {
-			/*this.resource('official/user')
+			this.resource('official/user')
 				.request({
 					controller : 'user',
-					view : 'auth'
+					view : 'auth',
+					request : request
 				}, 
 				view.child('login', 'current_user_widget.html')
 			);
 
-			this.resource('example/blog')
+			/*this.resource('example/blog')
 				.request({
 					path : '/blog/posts',
 					query : {
 						sort : 'newest'
-					}
+					},
+					request : request
 				}, 
 				view.child('posts')
 			);*/

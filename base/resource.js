@@ -98,7 +98,13 @@ Resource.prototype.resource = function resource_getResource (key) {
  * @return {[type]}     [description]
  */
 Resource.prototype.controller = function resource_controller (key) {
-	return this.controllers[key];
+	var controller = this.controllers[key];
+	
+	if (controller === null || typeof controller === "undefined") {
+		throw new Error('Roads could not find the controller "' + key + '"');
+	}
+
+	return controller;
 };
 
 
@@ -136,6 +142,11 @@ Resource.prototype.request = function resource_request (route_info, view) {
 	}
 
 	var controller = this.controller(route_info.controller);
+
+	if (controller[route_info.view] === null || typeof controller[route_info.view] === "undefined") {
+		throw new Error('Roads could not find the view "' + route_info.view + '" within the controller "' + route_info.controller + '"');
+	}
+
 	var route = controller[route_info.view];
 	view.dir = this.dir + '/templates/';
 	

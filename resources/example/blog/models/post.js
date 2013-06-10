@@ -1,8 +1,13 @@
-var model_module = require(__dirname.replace('/resources/blog/models', '/components/model'));
-var Database = require('../../../components/database').Database;
+"use strict";
 
-var PostModule = module.exports = new model_module.ModelModule();
-PostModule.connection = new Database('default');
+var model_component = require('roads-models');
+
+var CachedModelModule = model_component.CachedModel;
+var connections = model_component.Connection;
+
+var PostModule = module.exports = new CachedModelModule();
+PostModule.connection = connections.getConnection('mysql', 'default');
+PostModule.redis = connections.getConnection('redis', 'default');
 PostModule.setModel({
 	table : 'blog_post',
 	fields : {
@@ -13,7 +18,7 @@ PostModule.setModel({
 			type : 'id',
 			// required for any preload field
 			assign_to : 'user',
-			model_module : require('../../user/models/user.model')
+			//model_module : require('../../user/models/user.model')
 		},
 		title : {
 			type : 'string',

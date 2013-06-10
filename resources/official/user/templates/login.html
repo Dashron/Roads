@@ -5,7 +5,7 @@
 	{{#if password_fail}}
 		<span class="error"> You have entered an invalid password
 	{{/if}}
-	<form method="POST" action="/users/login">
+	<form method="POST" action="/users/auth">
 		email: <input type="text" name="email" /> <br />
 		pass: <input type="text" name="password" />
 		<input type="submit" name="Log In" />
