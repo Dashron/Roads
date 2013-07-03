@@ -15,6 +15,18 @@ module.exports = {
 			} else {
 				route(request, child);
 			}
+		},
+		POST : function (request, view, route) {
+			route(request, view);
+		},
+		PATCH : function (request, view, route) {
+			route(request, view);
+		},
+		PUT : function (request, view, route) {
+			route(request, view);
+		},
+		DELETE : function (request, view, route) {
+			route(request, view);
 		}
 	}
 };

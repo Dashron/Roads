@@ -14,13 +14,12 @@ module.exports = {
 		},
 		POST : function (request, view) {
 			var resource = this;
-
-			this.model('user').load(request.url.query.email, 'email')
+			this.model('user').load(request.body.email, 'email')
 				.ready(function (user) {
 
 					// validate password
-					if (user.checkPassword(request.params.password)) {
-						resource.model('session').start(request.headers, user, request.cookie)
+					if (user.checkPassword(request.body.password)) {
+						resource.model('session').start(request, request.cookie, user)
 							.ready(function (session) {
 								view.statusRedirect('/');
 							})

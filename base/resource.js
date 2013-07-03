@@ -134,7 +134,11 @@ function findUrlMatches(keys, matches) {
  */
 Resource.prototype.request = function resource_request (route_info, view) {
 	if (typeof route_info.method !== "string") {
-		route_info.method = "GET";
+		if (typeof route_info.request.method === "string") {
+			route_info.method = route_info.request.method;
+		} else {
+			route_info.method = "GET";
+		}
 	}
 
 	if (!route_info.controller || !route_info.view) {
