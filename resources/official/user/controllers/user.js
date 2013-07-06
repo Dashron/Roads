@@ -33,17 +33,6 @@ module.exports = {
 			
 		}
 	},
-	require_login : function (request, view, next) {
-		this.model('session').getUser(request)
-			.ready(function (user) {
-				if (!user) {
-					return request.statusUnauthorized();
-				} else {
-					return next(request, view);
-				}
-			})
-			.error(view);
-	},
 	many : {
 		GET : function (request, view) {
 			this.model('user').getAll()

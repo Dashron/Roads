@@ -14,10 +14,6 @@ module.exports = {
 
 			this.resource('example/blog')
 				.request({
-					/*path : '/blog/posts',
-					query : {
-						sort : 'newest'
-					},*/
 					controller : 'posts',
 					view : 'many',
 					request : request

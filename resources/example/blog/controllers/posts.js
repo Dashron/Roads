@@ -22,10 +22,15 @@ module.exports = {
 					})
 					.error(view);
 			} else {
-				this.model('post').getAll().preload('user_id')
+				_self.model('post').getAll().preload('user_id')
 					.ready(function (posts) {
+						if (request.user) {
+							view.set('user', request.user);
+							console.log('user found');
+							view.child('add').render('add.html');
+						}
+
 						view.set('posts', posts);
-						view.child('add').render('add.html');
 						view.render('many.html');
 					})
 					.error(view);
@@ -34,28 +39,24 @@ module.exports = {
 		POST : function (request, view) {
 			var _self = this;
 
-			this.resource('official/user').model('session').getUser(request)
-				.ready(function (user) {
-					if (user) {
-						var post = new (_self.model('post')).Model();
-						post.title = request.body.title;
-						post.body = request.body.body;
-						post.user_id = user.id;
+			if (request.user) {
+				var post = new (_self.model('post')).Model();
+				post.title = request.body.title;
+				post.body = request.body.body;
+				post.user_id = request.user.id;
 
-						post.save()
-							.ready(function (post) {
-								view.statusRedirect('/blog/posts');
-							})
-							.error(view)
-							.validationError(function (errors) {
-								view.set('invalid_fields', errors);
-								view.render('add.html');
-							});
-					} else {
-						view.statusUnauthorized();
-					}
-				})
-				.error(view);
+				post.save()
+					.ready(function (post) {
+						view.statusRedirect('/blog/posts');
+					})
+					.error(view)
+					.validationError(function (errors) {
+						view.set('invalid_fields', errors);
+						view.render('add.html');
+					});
+			} else {
+				view.statusUnauthorized();
+			}
 		}
 	}, 
 	one : {
