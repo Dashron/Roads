@@ -1,10 +1,10 @@
 module.exports = [ {
-	route : /^\/posts$/,
-	controller : 'blog',
+	route : /^\/blog\/posts$/,
+	controller : 'posts',
 	view : 'many'
 }, {
-	route : /^\/posts\/(\d+)$/,
-	controller : 'blog',
+	route : /^\/blog\/posts\/(\d+)$/,
+	controller : 'posts',
 	view : 'one',
 	keys : ['id']
 }];

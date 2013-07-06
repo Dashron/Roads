@@ -1,5 +1,7 @@
-<form method="POST" action="/posts">
-	<input type="text" name="title" />
-	<textarea name="body"></textarea>
+{{invalid_fields}}
+<h1>Add Post</h1>
+<form method="POST" action="/blog/posts">
+	<label for="title">Title:</label><input id="title" type="text" name="title" /><br />
+	<label for="body">Body:</label><textarea id="body" name="body"></textarea><br />
 	<input type="submit" value="Add Post" />
 </form>

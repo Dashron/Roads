@@ -1,11 +1,16 @@
 <div id="blog_posts">
-	{{#each posts}}
-		<div class="post">
-			<span class="title">{{title}}</span>
-			{{#user}}
-				<span class="byline"> By: <a href="/users/{{id}}">{{email}}</a> </span>
-			{{/user}}
-			<span clss="body">{{body}}</span>
-		</div>
-	{{/each}}
+	{{#if posts}}
+		{{#each posts}}
+			<div class="post">
+				<span class="title">{{title}}</span>
+				{{#user}}
+					<span class="byline"> By: <a href="/users/{{id}}">{{email}}</a> </span>
+				{{/user}}
+				<span clss="body">{{body}}</span>
+			</div>
+		{{/each}}
+	{{else}}
+		There are no blog posts
+	{{/if}}
 </div>
+{{{add}}}

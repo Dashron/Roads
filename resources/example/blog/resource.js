@@ -2,7 +2,7 @@ var resource = require('../../../base/resource');
 
 module.exports = new resource.Resource({
 	controllers : {
-		blog : __dirname + '/controllers/blog'
+		posts : __dirname + '/controllers/posts'
 	},
 	models : {
 		post : __dirname + '/models/post'

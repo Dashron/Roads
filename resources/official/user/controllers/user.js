@@ -3,9 +3,7 @@
 module.exports = {
 	auth : {
 		GET : function (request, view) {
-			var session_request = this.model('session').getUser(request.cookie, request.headers);
-
-			session_request
+			this.model('session').getUser(request)
 				.ready(function (user) {
 					view.set('user', user);
 					view.render('login.html');
@@ -19,7 +17,7 @@ module.exports = {
 
 					// validate password
 					if (user.checkPassword(request.body.password)) {
-						resource.model('session').start(request, request.cookie, user)
+						resource.model('session').start(request, user)
 							.ready(function (session) {
 								view.statusRedirect('/');
 							})
@@ -34,6 +32,17 @@ module.exports = {
 		DELETE : function (request, view) {
 			
 		}
+	},
+	require_login : function (request, view, next) {
+		this.model('session').getUser(request)
+			.ready(function (user) {
+				if (!user) {
+					return request.statusUnauthorized();
+				} else {
+					return next(request, view);
+				}
+			})
+			.error(view);
 	},
 	many : {
 		GET : function (request, view) {

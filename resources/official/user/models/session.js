@@ -13,6 +13,10 @@ var UserModel = require('./user');
 var SessionModule = module.exports = new CachedModelModule();
 SessionModule.connection = connections.getConnection('mysql', 'default');
 SessionModule.redis = connections.getConnection('redis', 'default');
+
+/**
+ * create table session (id int(10) unsigned not null primary key AUTO_INCREMENT, user_id int(10) unsigned not null, session varchar(88) not null, ip varchar(16) not null, user_agent varchar(40) not null, created_on datetime not null)
+ */
 SessionModule.setModel({
 	table : 'session',
 	fields : {
@@ -44,7 +48,7 @@ SessionModule.setModel({
 			sha1.update(check);
 			return this.user_agent === sha1.digest('hex');
 		},
-		refresh : function (cookie, options) {
+		refresh : function (request, options) {
 			/*var _self = this;
 			var new_request = new model_module.ModelRequest(this);
 
@@ -90,8 +94,9 @@ SessionModule.setModel({
  * @param  {[type]} options [description]
  * @return {[type]}         [description]
  */
-SessionModule.start = function start (request, cookie, user, options) {
+SessionModule.start = function start (request, user, options) {
 	var _self = this;
+	var cookie = request.cookie;
 	var new_request = new ModelRequest(this);
 
 	if (typeof options !== "object") {
@@ -100,6 +105,7 @@ SessionModule.start = function start (request, cookie, user, options) {
 	
 	cookie['delete']('rsess');
 
+	// todo: include byte length in options
 	crypto_module.randomBytes(64, function (err, buff) {
 		if (err) {
 			throw err;
@@ -159,7 +165,10 @@ SessionModule.stop = function (request) {
  * @param  {[type]} ip     [description]
  * @return {[type]}        [description]
  */
-SessionModule.getUser = function (cookie, ip, headers) {	
+SessionModule.getUser = function (request) {
+	var cookie = request.cookie;
+	var ip = request.ip;
+	var headers = request.headers;
 	var session = cookie.get('rsess');
 
 	// If there is no session in the cookie, we still need to return a request that completes at a later time

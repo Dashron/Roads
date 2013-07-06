@@ -12,16 +12,18 @@ module.exports = {
 				view.child('login', 'current_user_widget.html')
 			);
 
-			/*this.resource('example/blog')
+			this.resource('example/blog')
 				.request({
-					path : '/blog/posts',
+					/*path : '/blog/posts',
 					query : {
 						sort : 'newest'
-					},
+					},*/
+					controller : 'posts',
+					view : 'many',
 					request : request
 				}, 
 				view.child('posts')
-			);*/
+			);
 			
 			view.render('index.html');
 		}

@@ -1,7 +1,11 @@
 <ul>
-{{#each users}}
-	<li>
-		{{this.id}}: {{this.email}}
-	</li>
-{{/each}}
+	{{#if users}}
+		{{#each users}}
+			<li>
+				{{this.id}}: {{this.email}}
+			</li>
+		{{/each}}
+	{{else}}
+		There are no users
+	{{/endif}}
 </ul>

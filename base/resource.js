@@ -80,6 +80,9 @@ Resource.prototype.dir = null;
  * @return {[type]}     [description]
  */
 Resource.prototype.model = function resource_model (key) {
+	if (!this.models && this === {}) {
+		throw new Error('You have improperly tried to create a resource. Please wrap the model module in parens, separate of the "Model()" portion.');
+	}
 	return this.models[key];
 };
 
