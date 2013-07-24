@@ -6,7 +6,7 @@ require('./libs/roadsmodelpromise.js').mixin(Models.ModelRequest.prototype);
 
 var Config = require('./base/config');
 var http_server = require('roads-httpserver');
-var Resource = require('./base/resource');
+var Project = require('./base/project');
 var bifocals_module = require('bifocals');
 
 /**
@@ -52,14 +52,14 @@ module.exports.db = function (onReady) {
 /**
  * [assignRoute description]
  * @param  {[type]} route    [description]
- * @param  {[type]} resource [description]
+ * @param  {[type]} project [description]
  * @param  {[type]} server   [description]
  * @return {[type]}          [description]
  */
-function assignRoute(route, resource, server) {
+function assignRoute(route, project, server) {
       console.log('assigning route ' + route);
       server.onRequest(route, function (request, view, next) {
-            resource.route(request, view);
+            project.route(request, view, next);
       });
 }
 
@@ -78,10 +78,10 @@ module.exports.webserver = function (fn) {
 
       server.onRequest('*', function (request, response, next) {
             var view = new bifocals_module.Bifocals(response);
-            view.default500Template = Resource.get(Config.get('web.base_resource')).dir + '/templates/' + Config.get('web.templates.500');
+            view.default500Template = Project.get(Config.get('web.projects./')).dir + '/templates/' + Config.get('web.templates.500');
 
             view.error(view.statusError.bind(view));
-            view.dir = __dirname + '/resources';
+            view.dir = __dirname + '/projects';
 
             //view.error(view.statusError.bind(view));
             console.log(request.method + ' ' + request.url.path);
@@ -105,10 +105,10 @@ module.exports.webserver = function (fn) {
             next(request, view);
       });
 
-      var resources = Config.get('web.resources');
+      var projects = Config.get('web.projects');
 
-      for (var key in resources) {
-            assignRoute(key, Resource.get(resources[key]), server);
+      for (var key in projects) {
+            assignRoute(key, Project.get(projects[key]), server);
       }
 
       return server;

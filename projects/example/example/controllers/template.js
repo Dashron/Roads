@@ -1,7 +1,7 @@
 "use strict";
 
 var locate_user = function (request, view, next) {
-	this.resource('official/user').model('session').getUser(request)
+	this.project('official/user').model('session').getUser(request)
 		.ready(function (user) {
 			request.user = user;
 			next(request, view);
@@ -14,13 +14,13 @@ module.exports = {
 		GET : function (request, view, next) {
 			locate_user.call(this, request, view, function (request, view) {
 				var child = view.child('content');
-				var this_resource = this;
+				var this_project = this;
 
 				view.render('template.html');
 
 				if (request.next_route) {
 					next(request, child, function (request, next) {
-						this_resource.request(request.next_route);
+						this_project.request(request.next_route);
 					});
 				} else {
 					next(request, child);

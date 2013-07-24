@@ -5,8 +5,8 @@ var model_component = require('roads-models');
 var CachedModelModule = model_component.CachedModel;
 var connections = model_component.Connection;
 
-var Resource = require('../../../../base/resource');
-var UserModule = Resource.get('official/user').model('user');
+var Project = require('../../../../base/project');
+var UserModule = Project.get('official/user').model('user');
 
 var PostModule = module.exports = new CachedModelModule();
 PostModule.connection = connections.getConnection('mysql', 'default');

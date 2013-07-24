@@ -3,12 +3,11 @@
 	"cookie" : {
 		"domain" : "127.0.0.1"
 	},
-	"resources" : {
+	"projects" : {
 		"/blog" : "example/blog",
 		"/user" : "official/user",
 		"/" : "example/example"
 	},
-	"base_resource" : "example/example",
 	"templates" : {
 		"500" : "server/500.html",
 		"404" : "server/404.html"

@@ -7,7 +7,7 @@ module.exports = {
 			var _self = this;
 
 			if (request.url.query.user) {
-				this.resource('official/user').model('user').load(request.url.query.user)
+				this.project('official/user').model('user').load(request.url.query.user)
 					.ready(function (user) {
 						if (user) {
 							_self.model('post').getForUser(user).preload('user_id')
@@ -65,7 +65,7 @@ module.exports = {
 			//view.set('post', post);
 
 			// should this view.child load templates from the blog folder? or from the user folder?
-			//this.resource('user').request('/users/' + post.user_id, view.child('author'));
+			//this.project('user').request('/users/' + post.user_id, view.child('author'));
 			view.render('one.html');
 		},
 		PUT : function (request, view) {

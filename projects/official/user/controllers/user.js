@@ -11,13 +11,13 @@ module.exports = {
 				.error(view);
 		},
 		POST : function (request, view) {
-			var resource = this;
+			var project = this;
 			this.model('user').load(request.body.email, 'email')
 				.ready(function (user) {
 
 					// validate password
 					if (user.checkPassword(request.body.password)) {
-						resource.model('session').start(request, user)
+						project.model('session').start(request, user)
 							.ready(function (session) {
 								view.statusRedirect('/');
 							})
@@ -45,7 +45,7 @@ module.exports = {
 	},
 	one : {
 		GET : function (request, view) {
-			this.model('user').load(request.params.id)
+			this.model('user').load(request.url.query.id)
 				.ready(function (user) {
 					if (user === null && request.source === "server") {
 						view.statusNotFound('404.html');
@@ -60,7 +60,7 @@ module.exports = {
 	{
 			match : /^\/users\/(\d+)\/posts$/,
 			GET : function (request, view) {
-				var resource = this;
+				var project = this;
 				var user_request = this.models.user.load(request.params.id);
 
 				user_request.ready(function (user) {
@@ -69,7 +69,7 @@ module.exports = {
 					} else {
 						view.set('user', user);
 						// this will not work. it should be a request through the blog system
-						resource.resources.blog.request({
+						project.projects.blog.request({
 							uri: '/posts',
 							prefix: {
 								model : user
