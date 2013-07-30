@@ -13,14 +13,8 @@ module.exports = new project.Project({
 			controller : 'user',
 			view : 'many',
 			routes : {
-				'#id' : {
-					controller : 'user',
-					view : 'one'
-				},
-				'auth' : {
-					controller : 'user',
-					view : 'auth'
-				}
+				'#id' : 'one',
+				'auth' : 'auth'
 			}
 		},
 		'me' : {

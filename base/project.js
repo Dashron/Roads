@@ -29,6 +29,40 @@ module.exports.get = function getProject (label) {
 };
 
 /**
+ * [ description]
+ * @param  {[type]} route [description]
+ * @return {[type]}       [description]
+ */
+var apply_route_inheritance = function (route) {
+	var controller = route.controller;
+	var view = null;
+	var sub_route = null;
+
+	if (!route.routes) {
+		return;
+	}
+
+	for (var key in route.routes) {
+		sub_route = route.routes[key];
+
+		if (typeof sub_route === "string") {
+			view = sub_route;
+
+			route.routes[key] = {
+				controller : controller,
+				view : view
+			}
+		}
+
+		if (!sub_route.controller) {
+			sub_route.controller = controller;
+		}
+
+		apply_route_inheritance(sub_route);
+	}
+};
+
+/**
  * [Project description]
  * @param {[type]} definition [description]
  */
@@ -51,14 +85,14 @@ var Project = module.exports.Project = function Project (definition) {
 
 	var route = null;
 
-	for (var i in this.routes) {
-		route = this.routes[i];
+	for (key in this.routes) {
+		route = this.routes[key];
 
 		if ((!route.controller || !route.view) && !route.uri) {
 			throw new Error('you must supply a controller and view, or uri for each route');
 		}
 
-		// route inheritance should all be handled here
+		apply_route_inheritance(route);
 	}
 };
 

@@ -12,10 +12,7 @@ module.exports = new project.Project({
 			controller : 'posts',
 			view : 'many',
 			routes : {
-				'#id' : {
-					controller : 'posts',
-					view : 'one'
-				}
+				'#id' : 'one'
 			}
 		}
 	}
