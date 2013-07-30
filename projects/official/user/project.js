@@ -1,4 +1,11 @@
 var project = require('../../../base/project');
+var Config = require('../../../base/config');
+
+var default_template = {
+	project : Config.get('web.projects./'),
+	controller : 'template',
+	view : 'main'
+};
 
 module.exports = new project.Project({
 	controllers : {
@@ -10,6 +17,7 @@ module.exports = new project.Project({
 	},
 	routes : {
 		'users' : {
+			template : default_template,
 			controller : 'user',
 			view : 'many',
 			routes : {
@@ -18,6 +26,7 @@ module.exports = new project.Project({
 			}
 		},
 		'me' : {
+			template : default_template,
 			controller : 'user',
 			view : 'one'
 		}

@@ -35,6 +35,8 @@ module.exports.get = function getProject (label) {
  */
 var apply_route_inheritance = function (route) {
 	var controller = route.controller;
+	var template = route.template;
+
 	var view = null;
 	var sub_route = null;
 
@@ -49,16 +51,19 @@ var apply_route_inheritance = function (route) {
 			view = sub_route;
 
 			route.routes[key] = {
-				controller : controller,
 				view : view
 			}
 		}
 
-		if (!sub_route.controller) {
-			sub_route.controller = controller;
+		if (typeof sub_route.controller === "undefined") {
+			route.routes[key].controller = controller;
 		}
 
-		apply_route_inheritance(sub_route);
+		if (typeof sub_route.template == "undefined" && typeof template != "undefined") {
+			route.routes[key].template = template;
+		}
+
+		apply_route_inheritance(route.routes[key]);
 	}
 };
 
@@ -173,15 +178,15 @@ Project.prototype.render = function project_request (route_info, request, view, 
 		throw new Error("request uri's are not yet supported");
 	} else {
 		if (route_info.template) {
-			var main_project = module.exports.get(Config.get('web.projects./'));
+			var main_project = module.exports.get(route_info.template.project);
 			var this_project = this;
 
 			return main_project.render({
-				controller : 'template',
-				view : route_info.template
+				controller : route_info.template.controller,
+				view : route_info.template.view
 			}, request, view, function next_request (request, view) {
 				// call the next request with the appropriate variables
-				return this_project.request({
+				return this_project.render({
 					controller : route_info.controller,
 					view : route_info.view
 				}, request, view, next);
