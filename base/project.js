@@ -202,10 +202,9 @@ Project.prototype.route = function project_route (request, view, next) {
 		var parts = request.url.pathname.split('/');
 		// if the uri starts wiht a forward slash, we will have an empty string at the start of the array
 		var part = parts.shift();
-		console.log(parts);
+
 		// loop through every part separated by slashes and incrementally check them against the routes
 		while (part = parts.shift()) {
-			console.log('checking part:' + part + ' [' + parts.length + ']');
 			route = this._partMatches(routes, part, request);
 
 			// if we found a matching route
@@ -213,7 +212,6 @@ Project.prototype.route = function project_route (request, view, next) {
 				break;
 			}
 
-			console.log('route found');
 			// if we need to dig deeper
 			if (route.routes && parts.length) {
 				routes = route.routes;
@@ -248,7 +246,7 @@ Project.prototype._partMatches = function project__partMatches (routes, request_
 		}
 
 		if (url_part[0] === '#') {
-			if (Number(request_url) != NaN) {
+			if (!isNaN(Number(request_url))) {
 				request.url.query[url_part.substring(1)] = request_url;
 				return routes[url_part];
 			}
