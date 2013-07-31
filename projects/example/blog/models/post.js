@@ -33,6 +33,18 @@ PostModule.setModel({
 		body : {
 			type : 'string',
 		}
+	},
+	events : {
+		onSave : function (request) {
+			PostModule.addToCachedCollection("getForUser", [this.user_id], this.id, request);
+			PostModule.addToCachedCollection("getAll", [], this.id, request);
+			request._ready(this);
+		},
+		onDelete : function (request) {
+			PostModule.removeFromCachedCollection("getForUser", [this.user_id], this.id, request);
+			PostModule.removeFromCachedCollection("getAll", [], this.id, request);
+			request._ready(this);	
+		}
 	}
 });
 

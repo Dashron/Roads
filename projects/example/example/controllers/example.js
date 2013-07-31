@@ -14,7 +14,6 @@ module.exports = {
 				request, view.child('login', 'current_user_widget.html')
 			);
 
-
 			blog_project
 				.render({
 					controller : 'posts',

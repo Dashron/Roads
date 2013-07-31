@@ -47,7 +47,7 @@ module.exports = {
 
 				post.save()
 					.ready(function (post) {
-						view.statusRedirect('/blog/posts');
+						view.statusRedirect('/');
 					})
 					.error(view)
 					.validationError(function (errors) {
