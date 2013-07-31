@@ -1,8 +1,8 @@
 {
   "name": "roads",
-  "version": "0.7.3",
+  "version": "0.8.0",
   "engines": {
-    "node": ">=0.6.0"
+    "node": ">=0.10.0"
   },
   "author": {
     "name": "Aaron Hedges",
@@ -10,12 +10,12 @@
     "url": "www.dashron.com"
     },
   "scripts": {"start": "node server.js"},
-  "description": "A resource oriented web framework",
+  "description": "A strictly RESTful web framework",
   "keywords": ["server", "http", "api"],
   "homepage": "https://github.com/Dashron/roads",
   "bugs": { 
     "url" : "http://github.com/Dashron/roads/issues", 
-    "email" : "contact@roadsjs.com"
+    "email" : "aaron@dashron.com"
   },
   "repository" : { 
     "type" : "git",
