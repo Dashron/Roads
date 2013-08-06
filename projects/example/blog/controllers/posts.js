@@ -60,6 +60,7 @@ module.exports = {
 	}, 
 	one : {
 		GET : function (request, view) {
+			// todo: maybe we can have a common template that loads the post from the id url. some of this code matches DELETE and PATCH
 			var _self = this;
 
 			if (!request.url.query.id) {
@@ -80,6 +81,7 @@ module.exports = {
 				.error(view);
 		},
 		DELETE : function (request, view) {
+			// todo: maybe we can have a common template that loads the post from the id url. tons of this code matches GET and PATCH
 			var _self = this;
 			
 			if (!request.url.query.id) {
@@ -92,6 +94,10 @@ module.exports = {
 
 			_self.model('post').load(request.url.query.id)
 				.ready(function (post) {
+					if (!post) {
+						return  view.statusNotFound();
+					}
+
 					if (post.user_id !== request.user.id) {
 						return view.statusUnauthorized();
 					} else {
@@ -105,7 +111,51 @@ module.exports = {
 				.error(view);
 		},
 		PATCH : function (request, view) {
+			// todo: maybe we can have a common template that loads the post from the id url. tons of this code matches GET and DELETE
+			var _self = this;
+			var body = request.body.body;
+			var title = request.body.title;
 
+			if (!request.url.query.id) {
+				return view.statusNotFound();
+			}
+
+			if (!request.user) {
+				return view.statusUnauthorized();
+			}
+
+			_self.model('post').load(request.url.query.id)
+				.ready(function (post) {
+					if (!post) {
+						return  view.statusNotFound();
+					}
+
+					if (post.user_id !== request.user.id) {
+						return view.statusUnauthorized();
+					} else {
+						var update = false;
+
+						if (body) {
+							post.body = body;
+							update = true;
+						}
+
+						if (title) {
+							post.title = title;
+							update = true;
+						}
+
+						post.save()
+							.error(view)
+							.ready(function () {
+								view.statusRedirect('/posts/' + post.id);
+							})
+							.validationError(function (errors) {
+								view.set('invalid_fields', errors);
+								view.render('add.html');
+							});
+					}
+				});
 		}
 	},
 };
