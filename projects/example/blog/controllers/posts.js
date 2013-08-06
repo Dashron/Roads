@@ -25,8 +25,7 @@ module.exports = {
 				_self.model('post').getAll().preload('user_id')
 					.ready(function (posts) {
 						if (request.user) {
-							view.set('user', request.user);
-							console.log('user found');
+							view.set('authenticated_user', request.user);
 							view.child('add').render('add.html');
 						}
 
@@ -61,20 +60,52 @@ module.exports = {
 	}, 
 	one : {
 		GET : function (request, view) {
-			
-			//view.set('post', post);
+			var _self = this;
 
-			// should this view.child load templates from the blog folder? or from the user folder?
-			//this.project('user').request('/users/' + post.user_id, view.child('author'));
-			view.render('one.html');
+			if (!request.url.query.id) {
+				return view.statusNotFound();
+			}
+
+			_self.model('post').load(request.url.query.id)
+				.preload('user_id')
+				.ready(function (post) {
+					view.set('post', post);
+					console.log(post);
+					if (request.user && request.user.id === post.user_id) {
+						view.render('one.auth.html');
+					} else {
+						view.render('one.html');
+					}
+				})
+				.error(view);
 		},
-		PUT : function (request, view) {
+		DELETE : function (request, view) {
+			var _self = this;
+			
+			if (!request.url.query.id) {
+				return view.statusNotFound();
+			}
 
-			//view.redirect('/posts/' + post.id);
+			if (!request.user) {
+				return view.statusUnauthorized();
+			}
+
+			_self.model('post').load(request.url.query.id)
+				.ready(function (post) {
+					if (post.user_id !== request.user.id) {
+						return view.statusUnauthorized();
+					} else {
+						post.delete()
+							.ready(function () {
+								view.statusRedirect('/posts');
+							})
+							.error(view);
+					}
+				})
+				.error(view);
 		},
 		PATCH : function (request, view) {
 
-			//view.redirect('/posts/' + post.id);
 		}
 	},
 };

@@ -1,0 +1,25 @@
+{{#post}}
+	<div class="post">
+		<form method="POST" action="/posts/{{id}}">
+			
+			<label for="title">Title</label><input type="text" id="title" name="title" value="{{title}}"/><br />
+			{{#user}}
+				<span class="byline"> By: <a href="/users/{{id}}">{{email}}</a> </span><br />
+			{{/user}}
+			{{^user}}
+				<span class="byline"> By: Unknown User</span><br />
+			{{/user}}
+			<label for="body">Body</label><textarea name="body">{{body}}</textarea><br />
+
+			<input type="hidden" name="_method" value="PATCH" />
+			<input type="submit" value="Update Post" />
+		</form>
+		<form method="POST" action="/posts/{{id}}">
+			<input type="hidden" name="_method" value="DELETE" />
+			<input type="submit" value="Delete Post" />
+		</form>
+	</div>
+{{/post}}
+{{^post}}
+	Post not found
+{{/post}}

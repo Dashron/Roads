@@ -1,13 +1,15 @@
+<hr />
 <div id="blog_posts">
 	{{#if posts}}
 		{{#each posts}}
 			<div class="post">
-				<span class="title">{{title}}</span>
+				<span class="title"><a href="/posts/{{id}}">{{title}}</a></span><br />
 				{{#user}}
-					<span class="byline"> By: <a href="/users/{{id}}">{{email}}</a> </span>
+					<span class="byline"> By: <a href="/users/{{id}}">{{email}}</a> </span><br />
 				{{/user}}
 				<span clss="body">{{body}}</span>
 			</div>
+			<hr/ >
 		{{/each}}
 	{{else}}
 		There are no blog posts
