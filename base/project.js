@@ -197,14 +197,21 @@ Project.prototype.render = function project_request (route_info, request, view, 
 
 			// todo: add a way to configure this via the route
 			view.content_type = 'text/html';
+			
+			var method = request.method;
+
+			// allow postbody overrides of the http method so that we can structure our http methods
+			if (method === "POST" && request.body._method) {
+				method = request.body._method;
+			}
 
 			var route = this.controller(route_info.controller)[route_info.view];
 			if (typeof route === "object") {
-				if (typeof route[request.method] === "undefined") {
+				if (typeof route[method] === "undefined") {
 					view.statusUnsupportedMethod(Object.keys(route));
 					return true;
 				} else {
-					return route[request.method].call(this, request, view, next);
+					return route[method].call(this, request, view, next);
 				}
 			} else {
 				// call request directly
