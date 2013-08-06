@@ -38,6 +38,16 @@ UserModule.setModel({
 		checkPassword : function checkPassword(password) {
 			return this._password === crypto_module.createHash('sha256').update(password).digest('hex');
 		}
+	},
+	events : {
+		onSave : function (request) {
+			UserModule.addToCachedCollection("getAll", [], this.id, request);
+			request._ready(this);
+		},
+		onDelete : function (request, id) {
+			UserModule.removeFromCachedCollection("getAll", [], id, request);
+			request._ready(this);	
+		}
 	}
 });
 

@@ -40,9 +40,9 @@ PostModule.setModel({
 			PostModule.addToCachedCollection("getAll", [], this.id, request);
 			request._ready(this);
 		},
-		onDelete : function (request) {
-			PostModule.removeFromCachedCollection("getForUser", [this.user_id], this.id, request);
-			PostModule.removeFromCachedCollection("getAll", [], this.id, request);
+		onDelete : function (request, id) {
+			PostModule.removeFromCachedCollection("getForUser", [this.user_id], id, request);
+			PostModule.removeFromCachedCollection("getAll", [], id, request);
 			request._ready(this);	
 		}
 	}
