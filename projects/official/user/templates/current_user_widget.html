@@ -1,6 +1,9 @@
 {{#user}}
 	Welcome, {{email}}!<br />
-	<a href="/users/logout">log out</a>
+	<form method="POST" action="/users/auth">
+		<input type="hidden" value="DELETE" name="_method">
+		<input type="submit" value="log out">
+	</form>
 {{/user}}
 {{^user}}
 	Please <a href="/users/auth">log in</a>

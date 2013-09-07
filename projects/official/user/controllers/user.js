@@ -30,7 +30,11 @@ module.exports = {
 				.error(view);
 		},
 		DELETE : function (request, view) {
-			
+			this.model('session').stop(request)
+				.ready(function () {
+					view.statusRedirect('/');
+				})
+				.error(view);
 		}
 	},
 	many : {

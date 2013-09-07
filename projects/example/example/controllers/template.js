@@ -3,7 +3,7 @@
 var locate_user = function (request, view, next) {
 	this.project('official/user').model('session').getUser(request)
 		.ready(function (user) {
-			request.user = user;
+			request.cur_user = user;
 			next(request, view);
 		})
 		.error(view);

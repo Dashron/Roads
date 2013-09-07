@@ -45,25 +45,31 @@ PostModule.setModel({
 			PostModule.removeFromCachedCollection("getAll", [], id, request);
 			request._ready(this);	
 		}
+	}, 
+	sorts : {
+		alphabetical : {
+			field : 'title',
+			direction : 'ASC'
+		}
 	}
 });
 
-PostModule.getForUser = function (user, pager) {
+PostModule.getForUser = function (user, pager, sort) {
 	var sql = 'select * from blog_post where user_id = ?';
-	
-	if (pager) {
-		sql = sql + pager.getSql();
-	}
 
-	return this.cachedCollection(sql, [user.id], 'getForUser');
+	return this.cachedCollection(sql, [user.id], {
+		key : 'getForUser',
+		sort : sort,
+		pager : pager
+	});
 };
 
-PostModule.getAll = function (pager) {
+PostModule.getAll = function (pager, sort) {
 	var sql = 'select * from blog_post';
-	
-	if (pager) {
-		sql = sql + pager.getSql();
-	}
 
-	return this.cachedCollection(sql, 'getAll');
+	return this.cachedCollection(sql, {
+		key : 'getAll',
+		sort : sort,
+		pager : pager
+	});
 };

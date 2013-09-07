@@ -5,12 +5,17 @@ module.exports = {
 		GET : function (request, view) {
 			var post_request = null;
 			var _self = this;
+			var sort = request.url.query.sort;
+			var pager = {
+				page : request.url.query.page,
+				per_page : request.url.query.per_page
+			};
 
 			if (request.url.query.user) {
 				this.project('official/user').model('user').load(request.url.query.user)
 					.ready(function (user) {
 						if (user) {
-							_self.model('post').getForUser(user).preload('user_id')
+							_self.model('post').getForUser(user, pager, sort).preload('user_id')
 								.ready(function (posts) {
 									view.set('posts', posts);
 									view.render('many.html');
@@ -22,10 +27,10 @@ module.exports = {
 					})
 					.error(view);
 			} else {
-				_self.model('post').getAll().preload('user_id')
+				_self.model('post').getAll(pager, sort).preload('user_id')
 					.ready(function (posts) {
-						if (request.user) {
-							view.set('authenticated_user', request.user);
+						if (request.cur_user) {
+							view.set('authenticated_user', request.cur_user);
 							view.child('add').render('add.html');
 						}
 
@@ -38,15 +43,15 @@ module.exports = {
 		POST : function (request, view) {
 			var _self = this;
 
-			if (request.user) {
+			if (request.cur_user) {
 				var post = new (_self.model('post')).Model();
 				post.title = request.body.title;
 				post.body = request.body.body;
-				post.user_id = request.user.id;
+				post.user_id = request.cur_user.id;
 
 				post.save()
 					.ready(function (post) {
-						view.statusRedirect('/');
+						view.statusRedirect('/?sort=alphabetical');
 					})
 					.error(view)
 					.validationError(function (errors) {
@@ -72,7 +77,7 @@ module.exports = {
 				.ready(function (post) {
 					view.set('post', post);
 					console.log(post);
-					if (request.user && request.user.id === post.user_id) {
+					if (request.cur_user && request.cur_user.id === post.user_id) {
 						view.render('one.auth.html');
 					} else {
 						view.render('one.html');
@@ -88,7 +93,7 @@ module.exports = {
 				return view.statusNotFound();
 			}
 
-			if (!request.user) {
+			if (!request.cur_user) {
 				return view.statusUnauthorized();
 			}
 
@@ -98,7 +103,7 @@ module.exports = {
 						return  view.statusNotFound();
 					}
 
-					if (post.user_id !== request.user.id) {
+					if (post.user_id !== request.cur_user.id) {
 						return view.statusUnauthorized();
 					} else {
 						post.delete()
@@ -120,7 +125,7 @@ module.exports = {
 				return view.statusNotFound();
 			}
 
-			if (!request.user) {
+			if (!request.cur_user) {
 				return view.statusUnauthorized();
 			}
 
@@ -130,7 +135,7 @@ module.exports = {
 						return  view.statusNotFound();
 					}
 
-					if (post.user_id !== request.user.id) {
+					if (post.user_id !== request.cur_user.id) {
 						return view.statusUnauthorized();
 					} else {
 						var update = false;
