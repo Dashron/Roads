@@ -12,19 +12,31 @@ db.ready(function () {
 	var password = process.argv[3];
 
 	if (email && password) {
-		var model = new user_model.Model();
-		model.email = email;
-		model.password = password;
-		model.save()
+		user_model.load(email, 'email')
+			.ready(function (user) {
+				if (user) {
+					console.log('Emails should be unique, the user with the email:' + email + ' already exists');
+					Connections.disconnect();
+				} else {
+					var model = new user_model.Model();
+					model.email = email;
+					model.password = password;
+					model.save()
+						.error(function (err) {
+							throw err;
+						})
+						.ready(function () {
+							console.log('User created with email:' + email + ' and password:' + password);
+							console.log(model);
+							Connections.disconnect();
+						});
+				}
+			})
 			.error(function (err) {
 				throw err;
-			})
-			.ready(function () {
-				console.log('User created with email:' + email + ' and password:' + password);
-				console.log(model);
-				Connections.disconnect();
 			});
 	} else {
 		console.log('You must provide an email and password');
+		Connections.disconnect();
 	}
 });
