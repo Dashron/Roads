@@ -15,16 +15,21 @@ module.exports = {
 			this.model('user').load(request.body.email, 'email')
 				.ready(function (user) {
 
-					// validate password
-					if (user.checkPassword(request.body.password)) {
-						project.model('session').start(request, user)
-							.ready(function (session) {
-								view.statusRedirect('/');
-							})
-							.error(view);
-					} else {
+					if (!user) {
 						view.set('password_fail', 'true');
 						view.render('login.html');
+					} else {
+						// validate password
+						if (user.checkPassword(request.body.password)) {
+							project.model('session').start(request, user)
+								.ready(function (session) {
+									view.statusRedirect('/');
+								})
+								.error(view);
+						} else {
+							view.set('password_fail', 'true');
+							view.render('login.html');
+						}
 					}
 				})
 				.error(view);

@@ -45,6 +45,7 @@ module.exports.db = function (onReady) {
                   console.log('create user roads;');
                   console.log("grant all on roads.* to roads@'localhost';");
                   console.log("create table user (id int(10) unsigned not null primary key auto_increment, email varchar(256) not null, name varchar(128), password varchar (64) not null)");
+                  console.log("create table session (id int(10) unsigned not null primary key auto_increment, user_id int(10) unsigned not null, session varchar(88) not null, ip varchar(16) not null, user_agent varchar(40) not null, created_on datetime not null )");
                   throw new Error('An error has occured when connecting to the database');
             });
 };
