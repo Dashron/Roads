@@ -7,13 +7,15 @@
  */
 
 module.exports.mixin = function (ModelPromisePrototype) {
+	var old_error = ModelPromisePrototype.error;
+
 	ModelPromisePrototype.error = function (view) {
-		if (typeof view === 'function') {
-			this._error = view;
-		} else {
+		if (view.statusError) {
 			this._error = function (error) {
 				view.statusError(error);
 			};
+		} else {
+			old_error.call(this, view);
 		}
 
 		return this;
