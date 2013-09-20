@@ -1,4 +1,6 @@
-{{invalid_fields}}
+{{#each invalid_fields}}
+	{{@key}} : {{this}}<br />
+{{/each}}
 <h1>Add Post</h1>
 <form method="POST" action="/posts">
 	<label for="title">Title:</label><input id="title" type="text" name="title" /><br />
