@@ -250,7 +250,8 @@ Project.prototype.route = function project_route (request, view, next) {
 		var part = parts.shift();
 
 		// loop through every part separated by slashes and incrementally check them against the routes
-		while (part = parts.shift()) {
+		while (parts.length) {
+			part = parts.shift()
 			route = this._partMatches(routes, part, request);
 
 			// if we found a matching route
@@ -286,6 +287,11 @@ Project.prototype.route = function project_route (request, view, next) {
  * @return {[type]}
  */
 Project.prototype._partMatches = function project__partMatches (routes, request_url, request) {
+	// block urls that contain double forward slashes (localhost/maps//tiles)
+	if (!request_url.length) {
+		return false;
+	}
+
 	for (var url_part in routes) {
 		if (request_url === url_part) {
 			return routes[url_part];
