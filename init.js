@@ -1,5 +1,5 @@
 "use strict";
-var mode = 'dev';
+var mode = process.env['ROADS_ENV'] || 'dev';
 
 var Models = require('roads-models');
 require('./libs/roadsmodelpromise.js').mixin(Models.ModelRequest.prototype);

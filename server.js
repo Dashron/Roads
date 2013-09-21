@@ -5,11 +5,6 @@
 * MIT Licensed
  */
 
-// This file sucks. Todo: make this suck less
-
-var mode = 'dev';
-//var mode = 'prod';
-
 var init = require('./init');
 
 init.config();
