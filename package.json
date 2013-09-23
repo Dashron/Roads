@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "bifocals": ">=1.2",
-    "roads-httpserver": ">=0.5.7",
+    "roads-httpserver": ">=0.5.8",
     "handlebars": "*",
     "roads-models": ">=0.4.3"
   }

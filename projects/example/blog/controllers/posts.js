@@ -12,10 +12,10 @@ module.exports = {
 			};
 
 			if (request.url.query.user) {
-				this.project('official/user').model('user').load(request.url.query.user)
+				this.project('official/users').model('users').load(request.url.query.user)
 					.ready(function (user) {
 						if (user) {
-							_self.model('post').getForUser(user, pager, sort).preload('user_id')
+							_self.model('posts').getForUser(user, pager, sort).preload('user_id')
 								.ready(function (posts) {
 									view.set('posts', posts);
 									view.render('many.html');
@@ -27,7 +27,7 @@ module.exports = {
 					})
 					.error(view);
 			} else {
-				_self.model('post').getAll(pager, sort).preload('user_id')
+				_self.model('posts').getAll(pager, sort).preload('user_id')
 					.ready(function (posts) {
 						if (request.cur_user) {
 							view.set('authenticated_user', request.cur_user);
@@ -44,7 +44,7 @@ module.exports = {
 			var _self = this;
 
 			if (request.cur_user) {
-				var post = new (_self.model('post')).Model();
+				var post = new (_self.model('posts')).Model();
 				post.title = request.body.title;
 				post.body = request.body.body;
 				post.user_id = request.cur_user.id;
@@ -72,11 +72,10 @@ module.exports = {
 				return view.statusNotFound();
 			}
 
-			_self.model('post').load(request.url.query.id)
+			_self.model('posts').load(request.url.query.id)
 				.preload('user_id')
 				.ready(function (post) {
 					view.set('post', post);
-					console.log(post);
 					if (request.cur_user && request.cur_user.id === post.user_id) {
 						view.render('one.auth.html');
 					} else {
@@ -97,7 +96,7 @@ module.exports = {
 				return view.statusUnauthorized();
 			}
 
-			_self.model('post').load(request.url.query.id)
+			_self.model('posts').load(request.url.query.id)
 				.ready(function (post) {
 					if (!post) {
 						return  view.statusNotFound();
@@ -129,7 +128,7 @@ module.exports = {
 				return view.statusUnauthorized();
 			}
 
-			_self.model('post').load(request.url.query.id)
+			_self.model('posts').load(request.url.query.id)
 				.ready(function (post) {
 					if (!post) {
 						return  view.statusNotFound();

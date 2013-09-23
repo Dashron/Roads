@@ -9,16 +9,16 @@ var default_template = {
 
 module.exports = new project.Project({
 	controllers : {
-		user : require(__dirname + '/controllers/user'),
+		users : require(__dirname + '/controllers/users'),
 	},
 	models : {
-		session : require(__dirname + '/models/session'),
-		user : require(__dirname + '/models/user')
+		sessions : require(__dirname + '/models/sessions'),
+		users : require(__dirname + '/models/users')
 	},
 	routes : {
 		'users' : {
 			template : default_template,
-			controller : 'user',
+			controller : 'users',
 			view : 'many',
 			routes : {
 				'#id' : 'one',
@@ -27,7 +27,7 @@ module.exports = new project.Project({
 		},
 		'me' : {
 			template : default_template,
-			controller : 'user',
+			controller : 'users',
 			view : 'one'
 		}
 	}

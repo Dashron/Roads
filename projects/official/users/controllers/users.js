@@ -3,7 +3,7 @@
 module.exports = {
 	auth : {
 		GET : function (request, view) {
-			this.model('session').getUser(request)
+			this.model('sessions').getUser(request)
 				.ready(function (user) {
 					view.set('user', user);
 					view.render('login.html');
@@ -12,7 +12,7 @@ module.exports = {
 		},
 		POST : function (request, view) {
 			var project = this;
-			this.model('user').load(request.body.email, 'email')
+			this.model('users').load(request.body.email, 'email')
 				.ready(function (user) {
 
 					if (!user) {
@@ -21,7 +21,7 @@ module.exports = {
 					} else {
 						// validate password
 						if (user.checkPassword(request.body.password)) {
-							project.model('session').start(request, user)
+							project.model('sessions').start(request, user)
 								.ready(function (session) {
 									view.statusRedirect('/');
 								})
@@ -35,7 +35,7 @@ module.exports = {
 				.error(view);
 		},
 		DELETE : function (request, view) {
-			this.model('session').stop(request)
+			this.model('sessions').stop(request)
 				.ready(function () {
 					view.statusRedirect('/');
 				})
@@ -44,7 +44,7 @@ module.exports = {
 	},
 	many : {
 		GET : function (request, view) {
-			this.model('user').getAll()
+			this.model('users').getAll()
 				.ready(function (users) {
 					view.set('users', users);
 					view.render('many.html');
@@ -54,7 +54,7 @@ module.exports = {
 	},
 	one : {
 		GET : function (request, view) {
-			this.model('user').load(request.url.query.id)
+			this.model('users').load(request.url.query.id)
 				.ready(function (user) {
 					if (user === null && request.source === "server") {
 						view.statusNotFound('404.html');

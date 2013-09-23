@@ -1,7 +1,7 @@
 "use strict";
 
 var locate_user = function (request, view, next) {
-	this.project('official/user').model('session').getUser(request)
+	this.project('official/users').model('sessions').getUser(request)
 		.ready(function (user) {
 			request.cur_user = user;
 			next(request, view);

@@ -8,17 +8,17 @@ var ModelRequest = roads_models.ModelRequest;
 
 var crypto_module = require('crypto');
 
-var UserModel = require('./user');
+var UsersModel = require('./users');
 
-var SessionModule = module.exports = new CachedModelModule();
-SessionModule.connection = connections.getConnection('mysql', 'default');
-SessionModule.redis = connections.getConnection('redis', 'default');
+var SessionsModule = module.exports = new CachedModelModule();
+SessionsModule.connection = connections.getConnection('mysql', 'default');
+SessionsModule.redis = connections.getConnection('redis', 'default');
 
 /**
- * create table session (id int(10) unsigned not null primary key AUTO_INCREMENT, user_id int(10) unsigned not null, session varchar(88) not null, ip varchar(16) not null, user_agent varchar(40) not null, created_on datetime not null)
+ * create table sessions (id int(10) unsigned not null primary key AUTO_INCREMENT, user_id int(10) unsigned not null, session varchar(88) not null, ip varchar(16) not null, user_agent varchar(40) not null, created_on datetime not null)
  */
-SessionModule.setModel({
-	table : 'session',
+SessionsModule.setModel({
+	table : 'sessions',
 	fields : {
 		id : {
 			type : 'id'
@@ -27,7 +27,7 @@ SessionModule.setModel({
 			type : 'id',
 			// required for any preload field
 			assign_to : 'user',
-			model_module : UserModel
+			model_module : UsersModel
 		},
 		session : {
 			type : 'string'
@@ -94,7 +94,7 @@ SessionModule.setModel({
  * @param  {[type]} options [description]
  * @return {[type]}         [description]
  */
-SessionModule.start = function start (request, user, options) {
+SessionsModule.start = function start (request, user, options) {
 	var _self = this;
 	var cookie = request.cookie;
 	var new_request = new ModelRequest(this);
@@ -138,7 +138,7 @@ SessionModule.start = function start (request, user, options) {
  * @param  {[type]} cookie [description]
  * @return {[type]}        [description]
  */
-SessionModule.stop = function (request) {
+SessionsModule.stop = function (request) {
 	var session = request.cookie.get('rsess');
 	var session_request = this.load(session, 'session');
 
@@ -165,7 +165,7 @@ SessionModule.stop = function (request) {
  * @param  {[type]} ip     [description]
  * @return {[type]}        [description]
  */
-SessionModule.getUser = function (request) {
+SessionsModule.getUser = function (request) {
 	var cookie = request.cookie;
 	var ip = request.ip;
 	var headers = request.headers;
@@ -188,11 +188,11 @@ SessionModule.getUser = function (request) {
 		if (session_data) {
 			// if the ip and user agent are the same
 			if (session_data.ip === ip && session_data.userAgentMatches(headers['user-agent'])) {
-				var user_request = UserModel.load(session_data.user_id);
+				var user_request = UsersModel.load(session_data.user_id);
 				user_request.ready(load_request._ready.bind(load_request));
 				user_request.error(load_request._error.bind(load_request));
 			} else {
-				//SessionModule.stop(request);
+				//SessionsModule.stop(request);
 				load_request._ready(null);
 			}
 		} else {

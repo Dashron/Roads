@@ -3,18 +3,15 @@
 module.exports = {
 	main : {
 		GET : function (request, view) {
-			var user_project = this.project('official/user');
-			var blog_project = this.project('example/blog');
-
-			user_project
+			this.project('official/users')
 				.render({
-					controller : 'user',
+					controller : 'users',
 					view : 'auth'
 				}, 
 				request, view.child('login', 'current_user_widget.html')
 			);
 
-			blog_project
+			this.project('example/blog')
 				.render({
 					controller : 'posts',
 					view : 'many'

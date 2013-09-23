@@ -12,7 +12,7 @@ module.exports = new project.Project({
 		posts : require(__dirname + '/controllers/posts')
 	},
 	models : {
-		post : require(__dirname + '/models/post')
+		posts : require(__dirname + '/models/posts')
 	},
 	routes : {
 		'posts' : {
