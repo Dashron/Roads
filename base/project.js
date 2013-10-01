@@ -198,7 +198,7 @@ Project.prototype.render = function project_request (route_info, request, view, 
 			// todo: add a way to configure this via the route
 			view.content_type = 'text/html';
 			
-			var method = request.method;
+			var method = route_info.method || request.method;
 
 			// allow postbody overrides of the http method so that we can structure our http methods
 			if (method === "POST" && request.body._method) {
