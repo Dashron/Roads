@@ -90,17 +90,6 @@ module.exports.webserver = function (fn) {
 		if (Config.get('web.cookie.domain')) {
 			request.cookie.setDomain(Config.get('web.cookie.domain'));
 		}
-
-		// we don't want the url to ever end with a slash
-		if (request.url.path !== '/' && request.url.path.charAt(request.url.path.length - 1) === '/') {
-			return view.statusRedirect(request.url.path.slice(0, -1), 301);
-		}
-
-		// TODO: move to http server
-		if (request.method !== "GET" && typeof request.POST === "object" && typeof request.POST._method === "string") {
-			request.method = request.url.query._method;
-			delete request.url._method;
-		}
 		
 		next(request, view);
 	});
