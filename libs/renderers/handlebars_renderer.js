@@ -42,7 +42,7 @@ HandlebarsRenderer.prototype.render = function (template) {
 	}
 
 	//if (typeof compiled_views[template] == "undefined" || compiled_views[template] == null) {
-		var stream = fs_module.createReadStream(template);
+		var stream = fs_module.createReadStream(template + '.html');
 
 		var buffer = '';
 		stream.on('data', function (chunk) {

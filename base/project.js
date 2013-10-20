@@ -194,9 +194,6 @@ Project.prototype.render = function project_request (route_info, request, view, 
 
 		} else {
 			view.dir = this.dir + '/templates/';
-
-			// todo: add a way to configure this via the route
-			view.content_type = 'text/html';
 			
 			var method = route_info.method || request.method;
 

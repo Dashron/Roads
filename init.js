@@ -19,6 +19,7 @@ module.exports.bifocals = function () {
 	bifocals_module.addRenderer('text/css', file_renderer.get('text/css'));
 	bifocals_module.addRenderer('text/javascript', file_renderer.get('text/javascript'));
 	bifocals_module.addRenderer('text/html', require('./libs/renderers/handlebars_renderer'));
+	bifocals_module.addRenderer('application/json', require('./libs/renderers/json_renderer'));
 };
 
 /**
@@ -79,6 +80,13 @@ module.exports.webserver = function (fn) {
 	server.onRequest('*', function (request, response, next) {
 		var view = new bifocals_module.Bifocals(response);
 		view.default500Template = Project.get(Config.get('web.projects./')).dir + '/templates/' + Config.get('web.templates.500');
+
+		// allow accept headers to be in the server, and defined in the route
+		if (request.headers.accept.indexOf('application/json') != -1) {
+			view.content_type = 'application/json';
+		} else {
+			view.content_type = 'text/html';
+		}
 
 		view.error(view.statusError.bind(view));
 		view.dir = __dirname + '/projects';

@@ -1,6 +1,6 @@
 {
   "name": "roads",
-  "version": "0.8.7",
+  "version": "0.8.8",
   "engines": {
     "node": ">=0.10.0"
   },
@@ -22,9 +22,9 @@
      "url" : "git://github.com/Dashron/roads.git"
   },
   "dependencies": {
-    "bifocals": ">=1.2",
+    "bifocals": ">=1.2.2",
     "roads-httpserver": ">=0.5.8",
     "handlebars": "*",
-    "roads-models": ">=0.4.3"
+    "roads-models": ">=0.4.5"
   }
 }
