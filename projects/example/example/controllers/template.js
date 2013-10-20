@@ -16,7 +16,7 @@ module.exports = {
 				var child = view.child('content');
 				var this_project = this;
 
-				view.render('template.html');
+				view.render('template');
 
 				if (request.next_route) {
 					next(request, child, function (request, next) {

@@ -8,7 +8,7 @@ module.exports = {
 					controller : 'users',
 					view : 'auth'
 				}, 
-				request, view.child('login', 'current_user_widget.html')
+				request, view.child('login', 'current_user_widget')
 			);
 
 			this.project('example/blog')
@@ -19,7 +19,7 @@ module.exports = {
 				request, view.child('posts')
 			);
 			
-			view.render('index.html');
+			view.render('index');
 		}
 	}
 };

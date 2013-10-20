@@ -18,7 +18,7 @@ module.exports = {
 							_self.model('posts').getForUser(user, pager, sort).preload('user_id')
 								.ready(function (posts) {
 									view.set('posts', posts);
-									view.render('many.html');
+									view.render('many');
 								})
 								.error(view);
 						} else {
@@ -31,11 +31,11 @@ module.exports = {
 					.ready(function (posts) {
 						if (request.cur_user) {
 							view.set('authenticated_user', request.cur_user);
-							view.child('add').render('add.html');
+							view.child('add').render('add');
 						}
 
 						view.set('posts', posts);
-						view.render('many.html');
+						view.render('many');
 					})
 					.error(view);
 			}
@@ -56,7 +56,7 @@ module.exports = {
 					.error(view)
 					.validationError(function (errors) {
 						view.set('invalid_fields', errors);
-						view.render('add.html');
+						view.render('add');
 					});
 			} else {
 				view.statusUnauthorized();
@@ -77,9 +77,9 @@ module.exports = {
 				.ready(function (post) {
 					view.set('post', post);
 					if (request.cur_user && request.cur_user.id === post.user_id) {
-						view.render('one.auth.html');
+						view.render('one.auth');
 					} else {
-						view.render('one.html');
+						view.render('one');
 					}
 				})
 				.error(view);
@@ -156,7 +156,7 @@ module.exports = {
 							})
 							.validationError(function (errors) {
 								view.set('invalid_fields', errors);
-								view.render('add.html');
+								view.render('add');
 							});
 					}
 				});

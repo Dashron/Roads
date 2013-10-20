@@ -6,7 +6,7 @@ module.exports = {
 			this.model('sessions').getUser(request)
 				.ready(function (user) {
 					view.set('user', user);
-					view.render('login.html');
+					view.render('login');
 				})
 				.error(view);
 		},
@@ -17,7 +17,7 @@ module.exports = {
 
 					if (!user) {
 						view.set('password_fail', 'true');
-						view.render('login.html');
+						view.render('login');
 					} else {
 						// validate password
 						if (user.checkPassword(request.body.password)) {
@@ -28,7 +28,7 @@ module.exports = {
 								.error(view);
 						} else {
 							view.set('password_fail', 'true');
-							view.render('login.html');
+							view.render('login');
 						}
 					}
 				})
@@ -47,7 +47,7 @@ module.exports = {
 			this.model('users').getAll()
 				.ready(function (users) {
 					view.set('users', users);
-					view.render('many.html');
+					view.render('many');
 				})
 				.error(view);
 		}
@@ -57,10 +57,10 @@ module.exports = {
 			this.model('users').load(request.url.query.id)
 				.ready(function (user) {
 					if (user === null && request.source === "server") {
-						view.statusNotFound('404.html');
+						view.statusNotFound('404');
 					} else {
 						view.set('user', user);	
-						view.render('one.html');
+						view.render('one');
 					}
 				})
 				.error(view);
@@ -74,7 +74,7 @@ module.exports = {
 
 				user_request.ready(function (user) {
 					if (user === null) {
-							view.statusNotFound('404.html');
+							view.statusNotFound('404');
 					} else {
 						view.set('user', user);
 						// this will not work. it should be a request through the blog system
