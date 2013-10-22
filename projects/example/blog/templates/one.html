@@ -1,9 +1,7 @@
 {{#post}}
 	<div class="post">
 		<span class="title">{{title}}</span> <br />
-		{{#user}}
-			<span class="byline"> By: <a href="/users/{{id}}">{{email}}</a> </span><br />
-		{{/user}}
+		{{{render "official/users" "byline"}}}
 		<span class="body">{{body}}</span><br />
 	</div>
 {{/post}}

@@ -12,6 +12,16 @@ var fs_module = require('fs');
 var handlebars = require('handlebars');
 var Renderer = require('bifocals').Renderer;
 
+handlebars.registerHelper('render', function (project, view) {
+	var template = __dirname + '/../../projects/' + project + '/templates/' + view + '.html';
+
+	//if (typeof compiled_views[template] == "undefined" || compiled_views[template] == null) {
+		var buffer = fs_module.readFileSync(template);
+		compiled_views[template] = handlebars.compile(buffer.toString());
+	//}
+	return compiled_views[template](this);
+});
+
 /**
  * Renders a view as html via the Mu2 module
  */

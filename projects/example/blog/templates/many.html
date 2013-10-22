@@ -4,9 +4,7 @@
 		{{#each posts}}
 			<div class="post">
 				<span class="title"><a href="/posts/{{id}}">{{title}}</a></span><br />
-				{{#user}}
-					<span class="byline"> By: <a href="/users/{{id}}">{{email}}</a> </span><br />
-				{{/user}}
+				{{{render "official/users" "byline"}}}
 				<span clss="body">{{body}}</span>
 			</div>
 			<hr/ >
