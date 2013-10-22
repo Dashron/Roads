@@ -75,6 +75,10 @@ module.exports = {
 			_self.model('posts').load(request.url.query.id)
 				.preload('user_id')
 				.ready(function (post) {
+					if (!post) {
+						return view.statusNotFound();
+					}
+
 					view.set('post', post);
 					if (request.cur_user && request.cur_user.id === post.user_id) {
 						view.render('one.auth');
