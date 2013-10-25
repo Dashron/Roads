@@ -82,7 +82,7 @@ module.exports.webserver = function (fn) {
 		view.default500Template = Project.get(Config.get('web.projects./')).dir + '/templates/' + Config.get('web.templates.500');
 
 		// allow accept headers to be in the server, and defined in the route
-		if (request.headers.accept.indexOf('application/json') != -1) {
+		if (request.headers.accept && request.headers.accept.indexOf('application/json') != -1) {
 			view.content_type = 'application/json';
 		} else {
 			view.content_type = 'text/html';
