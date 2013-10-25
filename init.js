@@ -79,27 +79,30 @@ module.exports.webserver = function (fn) {
 
 	server.onRequest('*', function (request, response, next) {
 		var view = new bifocals_module.Bifocals(response);
+		view.content_type = 'text/html';
 		view.default500Template = Project.get(Config.get('web.projects./')).dir + '/templates/' + Config.get('web.templates.500');
 
-		// allow accept headers to be in the server, and defined in the route
-		if (request.headers.accept && request.headers.accept.indexOf('application/json') != -1) {
-			view.content_type = 'application/json';
-		} else {
-			view.content_type = 'text/html';
+		try {
+			// allow accept headers to be in the server, and defined in the route
+			if (request.headers.accept && request.headers.accept.indexOf('application/json') != -1) {
+				view.content_type = 'application/json';
+			}
+
+			view.error(view.statusError.bind(view));
+			view.dir = __dirname + '/projects';
+
+			//view.error(view.statusError.bind(view));
+			console.log(request.method + ' ' + request.url.path);
+
+			// maybe move this into server
+			if (Config.get('web.cookie.domain')) {
+				request.cookie.setDomain(Config.get('web.cookie.domain'));
+			}
+			
+			next(request, view);
+		} catch (e) {
+			view.statusError(e);
 		}
-
-		view.error(view.statusError.bind(view));
-		view.dir = __dirname + '/projects';
-
-		//view.error(view.statusError.bind(view));
-		console.log(request.method + ' ' + request.url.path);
-
-		// maybe move this into server
-		if (Config.get('web.cookie.domain')) {
-			request.cookie.setDomain(Config.get('web.cookie.domain'));
-		}
-		
-		next(request, view);
 	});
 
 	var projects = Config.get('web.projects');
