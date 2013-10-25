@@ -14,5 +14,6 @@
 				"port" : 6379
 			}
 		}
-	}
+	},
+	"newrelic" : false
 }

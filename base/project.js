@@ -202,6 +202,10 @@ Project.prototype.render = function project_request (route_info, request, view, 
 				method = request.body._method;
 			}
 
+			if (Config.get('server.newrelic') === true) {
+				require('newrelic').setControllerName(route_info.controller, method + '/' + route_info.view);
+			}
+
 			var route = this.controller(route_info.controller)[route_info.view];
 			if (typeof route === "object") {
 				if (typeof route[method] === "undefined") {
