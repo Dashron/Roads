@@ -11,6 +11,8 @@ module.exports = {
 				per_page : request.url.query.per_page
 			};
 
+			view.set('cur_user', request.cur_user);
+
 			if (request.url.query.user) {
 				this.project('official/users').model('users').load(request.url.query.user)
 					.ready(function (user) {
