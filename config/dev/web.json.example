@@ -4,12 +4,12 @@
 		"domain" : "127.0.0.1"
 	},
 	"projects" : {
-		"/blog" : "example/blog",
-		"/user" : "official/user",
+		"/posts" : "example/blog",
+		"/users" : "official/users",
 		"/" : "example/example"
 	},
 	"templates" : {
-		"500" : "server/500.html",
-		"404" : "server/404.html"
+		"500" : "server/500",
+		"404" : "server/404"
 	}
 }
