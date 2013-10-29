@@ -33,14 +33,16 @@ JsonRenderer.prototype.render = function (template) {
 	}
 
 	try {
-		var fn = this.template(template + '.js');
-		var object = fn(this.data);
+		var fn = this.template(template);
+		var object = fn.call(this, this.data);
 		if (this.response instanceof http_module.ServerResponse) {
 			object = JSON.stringify(object);
 		}
 		
 		this.response.write(object);
 	} catch (error) {
+		throw error;
+		//console.error(error);
 		this._error(error, template);
 	}
 	this._end();
@@ -54,3 +56,18 @@ JsonRenderer.prototype.template = function (template) {
 				
 	return require(template + '.js');
 };
+
+
+JsonRenderer.prototype.collection = function (items) {
+	return {
+		items : items,
+		total : items.length
+	};
+}
+
+JsonRenderer.prototype.transform = function (project, template, data) {
+	console.log(data);
+	var fn = this.template(__dirname + '/../../projects/' + project + '/templates/' + template);
+	var object = fn.call(this, data);
+	return object;
+}
