@@ -65,8 +65,7 @@ JsonRenderer.prototype.collection = function (items) {
 	};
 }
 
-JsonRenderer.prototype.transform = function (project, template, data) {
-	console.log(data);
+JsonRenderer.prototype.json = function (project, template, data) {
 	var fn = this.template(__dirname + '/../../projects/' + project + '/templates/' + template);
 	var object = fn.call(this, data);
 	return object;
