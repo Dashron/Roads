@@ -3,13 +3,7 @@
 module.exports = {
 	main : {
 		GET : function (request, view) {
-			this.project('official/users')
-				.render({
-					controller : 'users',
-					view : 'auth'
-				}, 
-				request, view.child('login', 'current_user_widget')
-			);
+			view.set('cur_user', request.cur_user);
 
 			this.project('example/blog')
 				.render({

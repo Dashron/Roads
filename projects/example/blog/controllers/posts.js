@@ -15,7 +15,8 @@ module.exports = {
 				this.project('official/users').model('users').load(request.url.query.user)
 					.ready(function (user) {
 						if (user) {
-							_self.model('posts').getForUser(user, pager, sort).preload('user_id')
+							_self.model('posts').getForUser(user, pager, sort)
+								.preload('user_id')
 								.ready(function (posts) {
 									view.set('posts', posts);
 									view.render('many');
@@ -27,10 +28,15 @@ module.exports = {
 					})
 					.error(view);
 			} else {
-				_self.model('posts').getAll(pager, sort).preload('user_id')
+				if (sort && sort != "alphabetical") {
+					view.statusRedirect(request.url.path);
+				}
+				
+				_self.model('posts').getAll(pager, sort)
+					.preload('user_id')
 					.ready(function (posts) {
 						if (request.cur_user) {
-							view.set('authenticated_user', request.cur_user);
+							view.set('cur_user', request.cur_user);
 							view.child('add').render('add');
 						}
 
