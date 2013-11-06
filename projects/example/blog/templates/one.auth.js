@@ -14,8 +14,7 @@ module.exports = function transform (data) {
 		},
 		'delete' : {
 			uri : '/posts/' + post.id,
-			method : 'DELETE',
-			fields : ['title', 'body']
+			method : 'DELETE'
 		}
 	};
 

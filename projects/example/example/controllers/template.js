@@ -14,6 +14,8 @@ module.exports = {
 		GET : function (request, view, next) {
 			locate_user.call(this, request, view, function (request, view) {
 				var child = view.child('content');
+				child.set('cur_user', request.cur_user);
+				
 				var this_project = this;
 
 				view.render('template');

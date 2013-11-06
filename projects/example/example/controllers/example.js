@@ -3,7 +3,6 @@
 module.exports = {
 	main : {
 		GET : function (request, view) {
-			view.set('cur_user', request.cur_user);
 
 			this.project('example/blog')
 				.render({
