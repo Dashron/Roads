@@ -210,9 +210,11 @@ Project.prototype.render = function project_request (route_info, request, view, 
 				} else {
 					return route[method].call(this, request, view, next);
 				}
-			} else {
+			} else if (route) {
 				// call request directly
 				return route.call(this, request, view, next);
+			} else {
+				return view.statusError(new Error('invalid route called through render: c=' + route_info.controller + ' v=' + route_info.view));
 			}
 		}
 	}
