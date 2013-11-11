@@ -13,13 +13,32 @@ var handlebars = require('handlebars');
 var Renderer = require('bifocals').Renderer;
 
 handlebars.registerHelper('render', function (project, view) {
+	var args = Array.prototype.slice.call(arguments);
+	var options = args.pop();
+	var data = null;
+	project = args.shift();
+	view = args.shift();
+
+	// this allows you to add a bunch of key, value args after the project and view. The original data is lost, and we use the parameters instead
+	// {{render project view key value key value key value}} (etc..)
+	if (args.length > 0) {
+		// lose the original data, it's probably not a valid context anyway
+		data = {};
+
+		for (var i = 0; i < args.length; i++) {
+			data[args[i]] = args[++i];
+		}
+	} else {
+		data = this;
+	}
+
 	var template = __dirname + '/../../projects/' + project + '/templates/' + view + '.html';
 
 	//if (typeof compiled_views[template] == "undefined" || compiled_views[template] == null) {
 		var buffer = fs_module.readFileSync(template);
 		compiled_views[template] = handlebars.compile(buffer.toString());
 	//}
-	return compiled_views[template](this);
+	return compiled_views[template](data);
 });
 
 /**
