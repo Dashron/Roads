@@ -66,7 +66,7 @@ JsonRenderer.prototype.collection = function (items) {
 }
 
 JsonRenderer.prototype.json = function (project, template, data) {
-	var fn = this.template(__dirname + '/../../projects/' + project + '/templates/' + template);
+	var fn = this.template(__dirname + '/../../projects/' + project + '/api/' + template);
 	var object = fn.call(this, data);
 	return object;
 }

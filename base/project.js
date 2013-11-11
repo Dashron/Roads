@@ -193,7 +193,8 @@ Project.prototype.render = function project_request (route_info, request, view, 
 			});
 
 		} else {
-			view.dir = this.dir + '/templates/';
+			// this is a major hack. make this better
+			view.dir = (view.content_type == 'application/json') ? this.dir + '/api/' : this.dir + '/templates/';
 			
 			var method = route_info.method || request.method;
 

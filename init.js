@@ -80,12 +80,14 @@ module.exports.webserver = function (fn) {
 	server.onRequest('*', function (request, response, next) {
 		var view = new bifocals_module.Bifocals(response);
 		view.content_type = 'text/html';
-		view.default500Template = Project.get(Config.get('web.projects./')).dir + '/templates/' + Config.get('web.templates.500');
-
+		
 		try {
 			// allow accept headers to be in the server, and defined in the route
 			if (request.headers.accept && request.headers.accept.indexOf('application/json') != -1) {
 				view.content_type = 'application/json';
+				view.default500Template = Project.get(Config.get('web.projects./')).dir + '/api/' + Config.get('web.templates.500');
+			} else {
+				view.default500Template = Project.get(Config.get('web.projects./')).dir + '/templates/' + Config.get('web.templates.500');
 			}
 
 			view.error(view.statusError.bind(view));
