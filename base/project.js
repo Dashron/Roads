@@ -393,11 +393,11 @@ Project.prototype.routeStatic = function (request, view, matches) {
 		});
 
 		if (matches[3] === 'js') {
-			view.dir = dir + '/js/';
+			view.dir = view.dir + '/js/';
 			view.content_type = "text/javascript";
 			view.render(matches[1]);
 		} else if (matches[3] === 'css') {
-			view.dir = dir + '/css/';
+			view.dir = view.dir + '/css/';
 			view.content_type = "text/css";
 			view.render(matches[1]);
 		} else {
