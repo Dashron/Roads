@@ -25,6 +25,6 @@
     "bifocals": ">=1.2.3",
     "roads-httpserver": ">=0.6.0",
     "handlebars": "*",
-    "roads-models": ">=0.5.2"
+    "roads-models": ">=0.5.4"
   }
 }

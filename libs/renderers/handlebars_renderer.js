@@ -41,6 +41,11 @@ handlebars.registerHelper('render', function (project, view) {
 	return compiled_views[template](data);
 });
 
+handlebars.registerHelper('radio', function(name, value, selected_value) {
+	var selected = (value == selected_value ? 'checked="checked"' : '');
+	return '<input type="radio" name="' + name + '" value="' + value + '"' +  selected + '>';
+});
+
 /**
  * Renders a view as html via the Mu2 module
  */
