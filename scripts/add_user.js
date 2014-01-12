@@ -7,7 +7,7 @@ init.config();
 
 var db = init.db();
 db.ready(function () {
-	var user_model = require('../projects/official/user/models/user');
+	var user_model = require('../projects/official/users/models/users');
 	var email = process.argv[2];
 	var password = process.argv[3];
 
