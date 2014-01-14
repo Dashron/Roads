@@ -11,6 +11,9 @@ var util_module = require('util');
 var fs_module = require('fs');
 var handlebars = require('handlebars');
 var Renderer = require('bifocals').Renderer;
+var Config = require('../../base/config');
+
+var cache_templates = false || Config.get('web.templates.cache');
 
 handlebars.registerHelper('render', function (project, view) {
 	var args = Array.prototype.slice.call(arguments);
@@ -34,10 +37,10 @@ handlebars.registerHelper('render', function (project, view) {
 
 	var template = __dirname + '/../../projects/' + project + '/templates/' + view + '.html';
 
-	//if (typeof compiled_views[template] == "undefined" || compiled_views[template] == null) {
+	if (!cache_templates || (typeof compiled_views[template] == "undefined" || compiled_views[template] == null)) {
 		var buffer = fs_module.readFileSync(template);
 		compiled_views[template] = handlebars.compile(buffer.toString());
-	//}
+	}
 	return compiled_views[template](data);
 });
 
@@ -75,7 +78,7 @@ HandlebarsRenderer.prototype.render = function (template) {
 		this.response.status_code = 200;
 	}
 
-	//if (typeof compiled_views[template] === "undefined" || compiled_views[template] === null) {
+	if (!cache_templates || (typeof compiled_views[template] === "undefined" || compiled_views[template] === null)) {
 		var stream = fs_module.createReadStream(template + '.html');
 
 		var buffer = '';
@@ -91,11 +94,11 @@ HandlebarsRenderer.prototype.render = function (template) {
 		stream.on('error', function (err) {
 			_self._error(err, template);
 		});
-	/*} else {
+	} else {
 		process.nextTick(function () {
 			_self.executeTemplate(template);
 		})
-	}*/
+	}
 };
 
 /**
