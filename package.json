@@ -1,6 +1,6 @@
 {
   "name": "roads",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "engines": {
     "node": ">=0.10.0"
   },
@@ -25,6 +25,6 @@
     "bifocals": ">=1.2.3",
     "roads-httpserver": ">=0.6.0",
     "handlebars": "*",
-    "roads-models": ">=0.6.1"
+    "roads-models": ">=0.6.4"
   }
 }

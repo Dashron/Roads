@@ -41,8 +41,6 @@ JsonRenderer.prototype.render = function (template) {
 		
 		this.response.write(object);
 	} catch (error) {
-		throw error;
-		//console.error(error);
 		this._error(error, template);
 	}
 	this._end();
