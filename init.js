@@ -18,6 +18,7 @@ module.exports.bifocals = function () {
 	// move into a config somehow
 	bifocals_module.addRenderer('text/css', file_renderer.get('text/css'));
 	bifocals_module.addRenderer('text/javascript', file_renderer.get('text/javascript'));
+	bifocals_module.addRenderer('image/png', file_renderer.get('image/png'));
 	bifocals_module.addRenderer('text/html', require('./libs/renderers/handlebars_renderer'));
 	bifocals_module.addRenderer('application/json', require('./libs/renderers/json_renderer'));
 };

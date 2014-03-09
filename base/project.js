@@ -230,7 +230,7 @@ Project.prototype.render = function project_request (route_info, request, view, 
  * @return {[type]}
  */
 Project.prototype.route = function project_route (request, view, next) {
-	var matches = request.url.pathname.match(/^\/(([\w.\/-]+)\.(js|css|txt|html|ico))$/);
+	var matches = request.url.pathname.match(/^\/(([\w.\/-]+)\.(js|css|txt|html|ico|png))$/);
 	var matched_route = null;
 
 	// If this is obviously a static file, route that way
@@ -400,6 +400,11 @@ Project.prototype.routeStatic = function (request, view, matches) {
 		} else if (matches[3] === 'css') {
 			view.dir = view.dir + '/css/';
 			view.content_type = "text/css";
+			view.render(matches[1]);
+		} else if (matches[3] === 'png') {
+			view.dir = view.dir + '/img/';
+			view.content_type = 'image/png'
+			console.log('image');
 			view.render(matches[1]);
 		} else {
 			view.content_type = "text/html";
