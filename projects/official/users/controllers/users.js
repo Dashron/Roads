@@ -21,11 +21,12 @@ module.exports = {
 					} else {
 						// validate password
 						if (user.checkPassword(request.body.password)) {
-							project.model('sessions').start(request, user)
-								.ready(function (session) {
-									view.statusRedirect('/');
-								})
-								.error(view);
+							project.model('sessions').start(request, user, {
+								expires : new Date(2015, 0, 1)
+							}).ready(function (session) {
+								view.statusRedirect('/');
+							})
+							.error(view);
 						} else {
 							view.set('password_fail', 'true');
 							view.render('login');
