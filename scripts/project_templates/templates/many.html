@@ -1,0 +1,31 @@
+<h3>Maps</h3>
+<table class="table">
+	<tr>
+		<th>
+			ID
+		</th>
+		<th>
+			Name
+		</th>
+		<th>
+			Description
+		</th>
+	</tr>
+	\{{#each maps}}
+		<tr>
+			<td>
+				<a href="/maps/\{{id}}">\{{id}}</a>
+			</td>
+			<td>
+				\{{name}}
+			</td>
+			<td>
+				\{{description}}
+			</td>
+		</tr>
+	\{{/each}}
+</table>
+
+\{{#if cur_user}}
+	\{{{render "entyr/maps" "maps/one.auth"}}}
+\{{/if}}

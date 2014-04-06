@@ -1,0 +1,15 @@
+\{{#with map}}
+	<div class="panel panel-default">
+		<!-- Default panel contents -->
+		<div class="panel-heading">Map</div>
+		<div class="panel-body">
+			\{{id}}<br />
+			\{{name}}<br />
+			\{{description}}<br />
+			Tile Side: \{{tile_side}}<br />
+			\{{{render "entyr/maps" "tiles/one" "tile" start_tile "bucket" ../bucket "neighbors" ../neighbors}}}
+		</div>
+
+		\{{{../tiles}}}
+	</div>
+\{{/with}}
