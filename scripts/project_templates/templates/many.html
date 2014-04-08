@@ -4,28 +4,16 @@
 		<th>
 			ID
 		</th>
-		<th>
-			Name
-		</th>
-		<th>
-			Description
-		</th>
 	</tr>
-	\{{#each maps}}
+	{{#each {{SUBPROJECT_PLURAL}}}}
 		<tr>
 			<td>
-				<a href="/maps/\{{id}}">\{{id}}</a>
-			</td>
-			<td>
-				\{{name}}
-			</td>
-			<td>
-				\{{description}}
+				<a href="/{{SUBPROJECT_PLURAL}}/{{id}}">{{id}}</a>
 			</td>
 		</tr>
-	\{{/each}}
+	{{/each}}
 </table>
 
-\{{#if cur_user}}
-	\{{{render "entyr/maps" "maps/one.auth"}}}
-\{{/if}}
+{{#if cur_user}}
+	{{{render "{{PROJECT_NAME}}" "one.auth"}}}
+{{/if}}

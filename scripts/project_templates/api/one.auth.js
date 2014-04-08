@@ -6,21 +6,16 @@ module.exports = function transform (data) {
 		return null;
 	}
 
-	var map = data.map ? data.map : data;
-	map.tiles = data.tiles;
-	var result = this.json('entyr/maps', 'maps/one', {
-		map : map,
-		neighbors : data.neighbors,
-		tiles : data.tiles
-	});
+	var {{SUBPROJECT_SINGULAR}} = data.{{SUBPROJECT_SINGULAR}} ? data.{{SUBPROJECT_SINGULAR}} : data;
+	var result = this.json('{{PROJECT_NAME}}', '{{SUBPROJECT_PLURAL}}/one');
 
 	result.actions = {
 		'delete' : {
-			uri : '/maps/' + map.id,
+			uri : '/{{SUBPROJECT_PLURAL}}/' + {{SUBPROJECT_SINGULAR}}.id,
 			method : 'DELETE'
 		},
 		'edit' : {
-			uri : '/maps/' + map.id,
+			uri : '/{{SUBPROJECT_PLURAL}}/' + {{SUBPROJECT_SINGULAR}}.id,
 			method : 'PATCH',
 			fields : ['name', 'description']
 		}

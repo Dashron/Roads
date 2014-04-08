@@ -1,5 +1,5 @@
-var project_module = require('../../../base/project');
-var Config = require('../../../base/config');
+var project_module = require('../../base/project');
+var Config = require('../../base/config');
 
 var default_template = {
 	project : Config.get('web.projects./'),

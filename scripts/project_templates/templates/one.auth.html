@@ -1,54 +1,27 @@
-\{{#if map.id}}
-	\{{#with map}}
+{{#if {{SUBPROJECT_SINGULAR}}.id}}
+	{{#with {{SUBPROJECT_SINGULAR}}}}
 		<div class="panel panel-default">
 			<div class="panel-heading">
-				<h3 class="panel-title">Edit Map</h3>
+				<h3 class="panel-title">Edit {{SUBPROJECT_SINGULAR}}</h3>
 			</div>
 			<div class="panel-body">
-				<form method="POST" action="/maps/\{{id}}">
+				<form method="POST" action="/{{SUBPROJECT_PLURAL}}/{{id}}">
 					<input type="hidden" name="_method" value="PATCH">
 
-					<div class="form-group">
+					<!--<div class="form-group">
 						<label for="map_name">Name:</label>
 						<input id="map_name" class="form-control" type="text" name="name" value="\{{name}}"/>
-					</div>
-
-					<div class="form-group">
-						<label for="map_height">Height:</label>
-						<input id="map_height" class="form-control" type="text" name="height" value="\{{height}}"/>
-					</div>
-
-					<div class="form-group">
-						<label for="map_width">Width:</label>
-						<input id="map_width" class="form-control" type="text" name="width" value="\{{width}}"/>
-					</div>
-
-					<div class="form-group">
-						<label for="map_tile_side">Tile Side:</label>
-						<input id="map_tile_side" class="form-control" type="text" name="tile_side" value="\{{tile_side}}"/>
-					</div>
-
-					<div class="form-group">
-						<label for="map_start_tile">Start Tile:</label>
-						<input id="map_start_tile" class="form-control" name="start_tile_id" value="\{{start_tile_id}}">
-						\{{{render "entyr/maps" "tiles/one" "tile" start_tile "bucket" ../bucket "neighbors" ../neighbors}}}
-					</div>
-
-					<div class="form-group">
-						<label for="map_description">Description:</label>
-						<textarea id="map_description" class="form-control" name="description">\{{description}}</textarea>
-					</div>
+					</div>-->
 
 					<button type="submit" class="btn btn-primary">Edit</button>
 				</form>
-				<form method="POST" action="/maps/\{{id}}">
+				<form method="POST" action="/{{SUBPROJECT_PLURAL}}/{{id}}">
 					<input type="hidden" value="DELETE" name="_method">
 					<button type="submid" class="btn btn-danger">Delete</button>
 				</form>
 			</div>
-			\{{{../tiles}}}
 		</div>
-	\{{/with}}
-\{{else}}
-	\{{{render "entyr/maps" "maps/add"}}}
-\{{/if}}
+	{{/with}}
+{{else}}
+	{{{render "{{PROJECT_NAME}}" "add"}}}
+{{/if}}

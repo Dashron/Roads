@@ -5,14 +5,14 @@ module.exports = {
 		GET : function (request, view) {
 			var project = this;
 
-			this.model('{{SUBPROJECT_PLURAL}}').load(request.url.query.{{SUBPROJECT_SINGLE}}_id)
+			this.model('{{SUBPROJECT_PLURAL}}').load(request.url.query.{{SUBPROJECT_SINGULAR}}_id)
 				.error(view)
-				.ready(function ({{SUBPROJECT_SINGLE}}) {
-					if (!{{SUBPROJECT_SINGLE}}) {
+				.ready(function ({{SUBPROJECT_SINGULAR}}) {
+					if (!{{SUBPROJECT_SINGULAR}}) {
 						return view.statusNotFound('server/404');
 					}
 
-					view.set('{{SUBPROJECT_SINGLE}}', {{SUBPROJECT_SINGLE}});
+					view.set('{{SUBPROJECT_SINGULAR}}', {{SUBPROJECT_SINGULAR}});
 
 					if (request.cur_user) {
 						view.render('one.auth');
@@ -28,14 +28,14 @@ module.exports = {
 				return view.statusUnauthorized();
 			}
 
-			this.model('{{SUBPROJECT_PLURAL}}').load(request.url.query.{{SUBPROJECT_SINGLE}}_id)
+			this.model('{{SUBPROJECT_PLURAL}}').load(request.url.query.{{SUBPROJECT_SINGULAR}}_id)
 				.error(view)
-				.ready(function ({{SUBPROJECT_SINGLE}}) {
-					if (!{{SUBPROJECT_SINGLE}}) {
+				.ready(function ({{SUBPROJECT_SINGULAR}}) {
+					if (!{{SUBPROJECT_SINGULAR}}) {
 						return view.statusNotFound('server/404');
 					}
 
-					{{SUBPROJECT_SINGLE}}.delete()
+					{{SUBPROJECT_SINGULAR}}.delete()
 						.error(view)
 						.ready(function () {
 							view.statusRedirect('/{{SUBPROJECT_PLURAL}}');
@@ -48,10 +48,10 @@ module.exports = {
 				return view.statusUnauthorized();
 			}
 
-			this.model('{{SUBPROJECT_PLURAL}}').load(request.url.query.{{SUBPROJECT_SINGLE}}_id)
+			this.model('{{SUBPROJECT_PLURAL}}').load(request.url.query.{{SUBPROJECT_SINGULAR}}_id)
 				.error(view)
-				.ready(function ({{SUBPROJECT_SINGLE}}) {
-					if (!{{PROJECT_SINGLE}}) {
+				.ready(function ({{SUBPROJECT_SINGULAR}}) {
+					if (!{{SUBPROJECT_SINGULAR}}) {
 						return view.statusNotFound('server/404');
 					}
 
@@ -62,14 +62,14 @@ module.exports = {
 					height
 					width*/
 
-					{{SUBPROJECT_SINGLE}}.save()
+					{{SUBPROJECT_SINGULAR}}.save()
 						.error(view)
 						.validationError(function (invalid_fields) {
 							view.set('invalid_fields', invalid_fields);
 							view.render('one');
 						})
-						.ready(function ({{SUBPROJECT_SINGLE}}) {
-							view.statusRedirect('/{{SUBPROJECT_PLURAL}}/' + {{SUBPROJECT_SINGLE}}.id);
+						.ready(function ({{SUBPROJECT_SINGULAR}}) {
+							view.statusRedirect('/{{SUBPROJECT_PLURAL}}/' + {{SUBPROJECT_SINGULAR}}.id);
 						});
 				});
 		}
@@ -89,12 +89,12 @@ module.exports = {
 				return view.statusUnauthorized();
 			}
 
-			var {{SUBPROJECT_SINGLE}} = new (this.model('{{SUBPROJECT_PLURAL}}').Model)();
+			var {{SUBPROJECT_SINGULAR}} = new (this.model('{{SUBPROJECT_PLURAL}}').Model)();
 			
-			{{SUBPROJECT_SINGLE}}.save()
+			{{SUBPROJECT_SINGULAR}}.save()
 				.error(view)
-				.ready(function ({{SUBPROJECT_SINGLE}}) {
-					view.statusRedirect('/{{SUBPROJECT_PLURAL}}/' + {{SUBPROJECT_SINGLE}}.id);
+				.ready(function ({{SUBPROJECT_SINGULAR}}) {
+					view.statusRedirect('/{{SUBPROJECT_PLURAL}}/' + {{SUBPROJECT_SINGULAR}}.id);
 				});
 		}
 	}

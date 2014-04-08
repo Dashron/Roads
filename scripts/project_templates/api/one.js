@@ -6,20 +6,10 @@ module.exports = function transform (data) {
 		return null;
 	}
 
-	var map = data.map ? data.map : data;
+	var {{SUBPROJECT_SINGULAR}} = data.{{SUBPROJECT_SINGULAR}} ? data.{{SUBPROJECT_SINGULAR}} : data;
 
 	var result = {
-		uri : '/maps/' + map.id,
-		name : map.name,
-		description : map.description,
-		height : map.height,
-		width : map.width,
-		start_tile : this.json("entyr/maps", "tiles/one", {
-			tile : map.start_tile,
-			neighbors : data.neighbors
-		}),
-		tile_side_length : map.tile_side,
-		tiles : data.tiles
+		uri : '/{{SUBPROJECT_PLURAL}}/' + {{SUBPROJECT_SINGULAR}}.id
 	};
 
 	return result;
