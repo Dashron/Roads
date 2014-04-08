@@ -15,19 +15,46 @@ if (!data['{{SUBPROJECT_SINGULAR}}']) {
 	throw new Error('You must provide a singular subproject name as the second argument');
 }
 
-if (!data['{{SUBPROJECT_SINGULAR}}']) {
+if (!data['{{SUBPROJECT_PLURAL}}']) {
 	data['{{SUBPROJECT_PLURAL}}'] = data['{{SUBPROJECT_SINGULAR}}'] + 's';
 }
 
+
+
+
 var final_dir = __dirname + '../projects/' + data['{{PROJECT_NAME}}'];
+
+var dirs = data['{{PROJECT_NAME}}'].split('/');
+if (dirs.length > 1) {
+	var cur_folder = __dirname + '/../projects';
+
+	for (var i = 0; i < dirs.length - 1; i++) {
+		cur_folder = cur_folder + '/' + dirs[i];
+		console.log('initalizing folder : ' + cur_folder);
+		try { 
+			fs_module.mkdirSync(cur_folder);
+		} catch (e) {
+			// only fail if the folder doesn't exist
+			if (!e.code === 'EEXIST') {
+				throw e;
+			}
+		}
+	}
+}
+
 transferDirectory(__dirname + '/project_templates', data, __dirname + '/../projects/' + data['{{PROJECT_NAME}}'] );
 
 function transferDirectory(directory, data, final_dir) {
 	var files = fs_module.readdirSync(directory);
 	var i = null;
 
+	console.log('creating folder : ' + final_dir);
 	fs_module.mkdir(final_dir, function (err, response) {
 		if (err) {
+			if (err.code === 'EEXIST') {
+				throw new Error('This project subfolder already exists');
+			}
+
 			throw err;
 		}
 
@@ -39,6 +66,7 @@ function transferDirectory(directory, data, final_dir) {
 
 function checkFile (path, data, final_dir) {
 	var item_name = path.split('/').pop();
+
 	item_name = item_name.replace('SUBPROJECT_PLURAL', data['{{SUBPROJECT_PLURAL}}']);
 	item_name = item_name.replace('SUBPROJECT_SINGULAR', data['{{SUBPROJECT_SINGULAR}}']);
 
