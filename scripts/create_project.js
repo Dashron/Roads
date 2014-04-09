@@ -3,6 +3,8 @@ var fs_module = require('fs');
 
 var data = {
 	'{{PROJECT_NAME}}' : process.argv[2],
+	// TOOD: This makes no sense as a subproject
+	// It should be called MODEL_SINGULAR and MODEL_PLURAL
 	'{{SUBPROJECT_SINGULAR}}' : process.argv[3],
 	'{{SUBPROJECT_PLURAL}}' : process.argv[4]
 }

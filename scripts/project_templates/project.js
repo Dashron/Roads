@@ -1,3 +1,4 @@
+// These relative paths won't work with submodules. This needs to be addressed in the script, or manually (preferably in the script)
 var project_module = require('../../base/project');
 var Config = require('../../base/config');
 

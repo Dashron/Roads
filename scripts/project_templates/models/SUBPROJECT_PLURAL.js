@@ -4,7 +4,6 @@ var model_component = require('roads-models');
 
 var CachedModelModule = model_component.CachedModel;
 var connections = model_component.Connection;
-var Config = require('../../../base/config');
 
 /**
 CREATE TABLE `{{SUBPROJECT_PLURAL}}` (
