@@ -1,11 +1,31 @@
-<ul>
-	{{#if users}}
-		{{#each users}}
-			<li>
-				{{this.id}}: {{this.email}}
-			</li>
-		{{/each}}
-	{{else}}
-		There are no users
-	{{/endif}}
-</ul>
+<h3>users</h3>
+<table class="table">
+	<tr>
+		<th>
+			ID
+		</th>
+		<th>
+			Name
+		</th>
+		<th>
+			Email
+		</th>
+	</tr>
+	{{#each users}}
+		<tr>
+			<td>
+				<a href="/users/{{id}}">{{id}}</a>
+			</td>
+			<td>
+				{{name}}
+			</td>
+			<td>
+				{{email}}
+			</td>
+		</tr>
+	{{/each}}
+</table>
+
+{{#if cur_user}}
+	{{{render "official/users" "one.auth"}}}
+{{/if}}

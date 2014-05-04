@@ -1,36 +1,32 @@
 "use strict";
 
 module.exports = {
-	auth : {
+	me : {
 		GET : function (request, view) {
-			this.model('sessions').getUser(request)
-				.ready(function (user) {
-					view.set('user', user);
-					view.render('login');
-				})
-				.error(view);
+			var project = this;
+
+			if (!request.cur_user) {
+				return view.statusUnauthorized();
+			}
+
+			view.set('user', request.cur_user);
+			view.render('one.auth');
 		},
 		POST : function (request, view) {
 			var project = this;
 			this.model('users').load(request.body.email, 'email')
 				.ready(function (user) {
 
-					if (!user) {
+					if (user && user.checkPassword(request.body.password)) {
+						project.model('sessions').start(request, user, {
+							expires : new Date(2015, 0, 1)
+						}).ready(function (session) {
+							view.statusRedirect('/');
+						})
+						.error(view);
+					} else {
 						view.set('password_fail', 'true');
 						view.render('login');
-					} else {
-						// validate password
-						if (user.checkPassword(request.body.password)) {
-							project.model('sessions').start(request, user, {
-								expires : new Date(2015, 0, 1)
-							}).ready(function (session) {
-								view.statusRedirect('/');
-							})
-							.error(view);
-						} else {
-							view.set('password_fail', 'true');
-							view.render('login');
-						}
 					}
 				})
 				.error(view);
@@ -43,54 +39,104 @@ module.exports = {
 				.error(view);
 		}
 	},
+	one : {
+		GET : function (request, view) {
+			var project = this;
+
+			this.model('users').load(request.url.query.user_id)
+				.error(view)
+				.ready(function (user) {
+					if (!user) {
+						return view.statusNotFound('server/404');
+					}
+
+					view.set('user', user);
+
+					if (request.cur_user) {
+						view.render('one.auth');
+					} else {
+						view.render('one');
+					}
+				});
+			
+		},
+		DELETE : function (request, view) {
+			if (!request.cur_user) {
+				// todo: role based auth
+				return view.statusUnauthorized();
+			}
+
+			this.model('users').load(request.url.query.user_id)
+				.error(view)
+				.ready(function (user) {
+					if (!user) {
+						return view.statusNotFound('server/404');
+					}
+
+					user.delete()
+						.error(view)
+						.ready(function () {
+							view.statusRedirect('/users');
+						});
+				});
+		},
+		PATCH : function (request, view) {
+			if (!request.cur_user) {
+				// todo: role based auth
+				return view.statusUnauthorized();
+			}
+
+			this.model('users').load(request.url.query.user_id)
+				.error(view)
+				.ready(function (user) {
+					if (!user) {
+						return view.statusNotFound('server/404');
+					}
+
+					user.email = request.body.email;
+					user.name = request.body.name;
+
+					if (user.checkPassword(request.body.old_password) && request.body.new_password) {
+						user.password = request.body.new_password;
+					}
+
+					user.save()
+						.error(view)
+						.validationError(function (invalid_fields) {
+							view.set('invalid_fields', invalid_fields);
+							view.render('one');
+						})
+						.ready(function (user) {
+							view.statusRedirect('/users/' + user.id);
+						});
+				});
+		}
+	},
 	many : {
 		GET : function (request, view) {
 			this.model('users').getAll()
+				.error(view)
 				.ready(function (users) {
 					view.set('users', users);
 					view.render('many');
-				})
-				.error(view);
-		}
-	},
-	one : {
-		GET : function (request, view) {
-			this.model('users').load(request.url.query.id)
-				.ready(function (user) {
-					if (user === null && request.source === "server") {
-						view.statusNotFound('404');
-					} else {
-						view.set('user', user);	
-						view.render('one');
-					}
-				})
-				.error(view);
-		}
-	}/*,
-	{
-			match : /^\/users\/(\d+)\/posts$/,
-			GET : function (request, view) {
-				var project = this;
-				var user_request = this.models.user.load(request.params.id);
-
-				user_request.ready(function (user) {
-					if (user === null) {
-							view.statusNotFound('404');
-					} else {
-						view.set('user', user);
-						// this will not work. it should be a request through the blog system
-						project.projects.blog.request({
-							uri: '/posts',
-							prefix: {
-								model : user
-							}
-						}, view);
-					}
 				});
+		},
+		POST : function (request, view) {
+			if (!request.cur_user) {
+				// todo: role based auth
+				return view.statusUnauthorized();
+			}
 
-				user_request.error(view.statusError.bind(view));
-			},
-			keys : ['id']
-		}]
-	}*/
+			var user = new (this.model('users').Model)();
+			user.email = request.body.email;
+			user.password = request.body.password;
+			user.name = request.body.name;
+			
+			user.save()
+				.error(view)
+				.ready(function (user) {
+					view.statusRedirect('/users/' + user.id);
+				});
+		}
+	}
 };

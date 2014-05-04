@@ -21,14 +21,13 @@ module.exports = new project.Project({
 			controller : 'users',
 			view : 'many',
 			routes : {
-				'#id' : 'one',
-				'auth' : 'auth'
+				'#user_id' : 'one'
 			}
 		},
 		'me' : {
 			template : default_template,
 			controller : 'users',
-			view : 'one'
+			view : 'me'
 		}
 	}
 });

@@ -1,6 +1,9 @@
-{{#user}}
-	This is a user template for user {{id}} : "{{email}}"
-{{/user}}
-{{^user}}
-	User not found!
-{{/user}}
+{{#with users}}
+	<div class="panel panel-default">
+		<!-- Default panel contents -->
+		<div class="panel-heading">users</div>
+		<div class="panel-body">
+			{{id}}<br />
+		</div>
+	</div>
+{{/with}}

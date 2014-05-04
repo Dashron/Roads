@@ -1,3 +1,6 @@
+"use strict";
+
+
 module.exports = function transform (data) {
 	if (data === null) {
 		return null;
@@ -5,8 +8,11 @@ module.exports = function transform (data) {
 
 	var user = data.user ? data.user : data;
 
-	return {
+	var result = {
 		uri : '/users/' + user.id,
-		email : user.email
-	}
-};
+		name : user.name,
+		permissions : user.permissions.toArray()
+	};
+
+	return result;
+}

@@ -36,7 +36,16 @@ UsersModule.setModel({
 	},
 	methods : {
 		checkPassword : function checkPassword(password) {
+			if (!password) {
+				return false;
+			}
 			return this._password === crypto_module.createHash('sha256').update(password).digest('hex');
+		}
+	},
+	sorts : {
+		'most_recent' : {
+			field : 'id',
+			direction : 'ASC'
 		}
 	},
 	events : {
@@ -51,6 +60,76 @@ UsersModule.setModel({
 	}
 });
 
-UsersModule.getAll = function () {
-	return this.cachedCollection('select id from users', 'all');
+UsersModule.getAll = function (sort) {
+	return this.cachedCollection('select id from ' + this._definition.table, {
+		key : 'getAll',
+		sort : 'most_recent'
+	});
 };
+
+
+/**
+ * [BitwiseHelper description]
+ * @param {[type]} val       [description]
+ * @param {[type]} constants [description]
+ * @param {[type]} changeVal [description]
+ */
+var BitwiseHelper = function (val, constants, changeVal) {
+	this.val = val;
+	this.constants = constants;
+	this.changeVal = changeVal;
+};
+
+BitwiseHelper.prototype.val = null;
+BitwiseHelper.prototype.constants = null;
+
+/**
+ * [has description]
+ * @param  {[type]}  constant [description]
+ * @return {Boolean}          [description]
+ */
+BitwiseHelper.prototype.has = function (constant) {
+	var val = this.constants[constant];
+
+	if (typeof val === "undefined" || val === null) {
+		throw new Error('Constant ' + constant + ' is not defined in the user config');
+	}
+
+	return val & this.val === val;
+};
+
+/**
+ * [enable description]
+ * @param  {[type]} constant [description]
+ * @return {[type]}          [description]
+ */
+BitwiseHelper.prototype.enable = function (constant) {
+	this.val = this.val & this.constants[constant];
+	this.changeVal(this.constants[constant], true);
+};
+
+/**
+ * [disable description]
+ * @param  {[type]} constant [description]
+ * @return {[type]}          [description]
+ */
+BitwiseHelper.prototype.disable = function (constant) {
+	this.val = this.val ^ this.constants[constant];
+	this.changeVal(this.constants[constant], false);
+};
+
+/**
+ * [toArray description]
+ * @return {[type]} [description]
+ */
+BitwiseHelper.prototype.toArray = function () {
+	var constants = [];
+
+	for (var key in this.constants) {
+		if (this.has(key)) {
+			constants.push(key);
+		}
+	}
+
+	return constants;
+}
