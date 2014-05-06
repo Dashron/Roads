@@ -31,6 +31,24 @@ UsersModule.setModel({
 			length : 64,
 			set : function (password) {
 				this._password = crypto_module.createHash('sha256').update(password).digest('hex');
+			} 
+		},
+		permissions : {
+			type : 'number',
+			length : 10,
+			get : function () {
+				return this._perm_bitwise;
+			},
+			set : function (val) {
+				var _self = this;
+
+				this._perm_bitwise = new BitwiseHelper(val, Config.get('user.permissions'), function (val, enable) {
+					if (enable) {
+						_self._permissions = _self._permissions & val;
+					} else {
+						_self._permissions = _self._permissions ^ val;
+					}
+				});
 			}
 		}
 	},
