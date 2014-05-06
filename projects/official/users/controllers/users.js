@@ -1,4 +1,5 @@
 "use strict";
+var Config = require('../../../../base/config');
 
 module.exports = {
 	me : {
@@ -52,6 +53,7 @@ module.exports = {
 
 					view.set('user', user);
 
+					view.set('permissions', Config.get('web.user.permissions'));
 					if (request.cur_user) {
 						view.render('one.auth');
 					} else {
@@ -96,6 +98,14 @@ module.exports = {
 					user.email = request.body.email;
 					user.name = request.body.name;
 
+					if (!Array.isArray(request.body.permissions)) {
+						request.body.permissions = [request.body.permissions];
+					}
+
+					for (var i = 0; i < request.body.permissions.length; i++) {
+						user.getPermissions().enable(request.body.permissions[i]);
+					}
+
 					if (user.checkPassword(request.body.old_password) && request.body.new_password) {
 						user.password = request.body.new_password;
 					}
@@ -118,6 +128,7 @@ module.exports = {
 				.error(view)
 				.ready(function (users) {
 					view.set('users', users);
+					view.set('permissions', Config.get('web.user.permissions'));
 					view.render('many');
 				});
 		},

@@ -1,7 +1,10 @@
-TODO DELETE THIS 
-
 {{#user}}
-	You have already logged in
+	Welcome 
+	{{#if name}}
+		{{name}}
+	{{else}}
+		User {{id}}
+	{{/if}}
 {{/user}}
 {{^user}}
 	{{#if password_fail}}

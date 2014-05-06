@@ -11,7 +11,8 @@ module.exports = {
 				}, 
 				request, view.child('posts')
 			);
-			
+
+			view.set('user', request.cur_user);
 			view.render('index');
 		}
 	}

@@ -6,9 +6,17 @@ var CachedModelModule = model_component.CachedModel;
 var connections = model_component.Connection;
 
 var crypto_module = require('crypto');
+var Config = require('../../../../base/config');
 
 /**
- * create table users (id int(10) unsigned not null primary key auto_increment, email varchar(256) not null, name varchar(128), password varchar (64) not null)
+CREATE TABLE `users` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `email` varchar(256) NOT NULL,
+  `name` varchar(128) DEFAULT NULL,
+  `password` varchar(64) NOT NULL,
+  `permissions` int(10) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+) 
  */
 var UsersModule = module.exports = new CachedModelModule();
 UsersModule.connection = connections.getConnection('mysql', 'default');
@@ -35,29 +43,30 @@ UsersModule.setModel({
 		},
 		permissions : {
 			type : 'number',
-			length : 10,
-			get : function () {
-				return this._perm_bitwise;
-			},
-			set : function (val) {
-				var _self = this;
-
-				this._perm_bitwise = new BitwiseHelper(val, Config.get('user.permissions'), function (val, enable) {
-					if (enable) {
-						_self._permissions = _self._permissions & val;
-					} else {
-						_self._permissions = _self._permissions ^ val;
-					}
-				});
-			}
+			length : 10
 		}
 	},
 	methods : {
-		checkPassword : function checkPassword(password) {
+		checkPassword : function checkPassword (password) {
 			if (!password) {
 				return false;
 			}
 			return this._password === crypto_module.createHash('sha256').update(password).digest('hex');
+		},
+		getPermissions : function getPermissions () {
+			var _self = this;
+
+			if (!this._perm_bitwise) {
+				this._perm_bitwise = new BitwiseHelper(_self.permissions, Config.get('web.user.permissions'), function (val, enable) {
+					if (enable) {
+						_self.permissions = _self.permissions | val;
+					} else {
+						_self.permissions = _self.permissions ^ val;
+					}
+				});
+			}
+
+			return this._perm_bitwise;
 		}
 	},
 	sorts : {
@@ -94,6 +103,15 @@ UsersModule.getAll = function (sort) {
  */
 var BitwiseHelper = function (val, constants, changeVal) {
 	this.val = val;
+
+	if (typeof val === "undefined" || isNaN(val)) {
+		throw new Error('You must provide a valid bitwise value to the bitwise helper');
+	}
+
+	if (!typeof constants === "object" && constants != null) {
+		throw new Error('You must provide an array of variable constants to the bitwise helper');
+	}
+
 	this.constants = constants;
 	this.changeVal = changeVal;
 };
@@ -113,7 +131,7 @@ BitwiseHelper.prototype.has = function (constant) {
 		throw new Error('Constant ' + constant + ' is not defined in the user config');
 	}
 
-	return val & this.val === val;
+	return this.val & val === val;
 };
 
 /**
@@ -122,7 +140,7 @@ BitwiseHelper.prototype.has = function (constant) {
  * @return {[type]}          [description]
  */
 BitwiseHelper.prototype.enable = function (constant) {
-	this.val = this.val & this.constants[constant];
+	this.val = this.val | this.constants[constant];
 	this.changeVal(this.constants[constant], true);
 };
 

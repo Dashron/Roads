@@ -4,13 +4,15 @@
 		{{#each posts}}
 			<div class="post">
 				<span class="title"><a href="/posts/{{id}}">{{title}}</a></span><br />
-				{{{render "official/users" "byline"}}}
+				{{#if user}}
+					<a href="/users/{{user.id}}">{{user.name}}</a>
+				{{/if}}
 				<span clss="body">{{body}}</span>
 			</div>
 			<hr/ >
 		{{/each}}
 	{{else}}
-		There are no blog posts
+		There are no blog posts.
 	{{/if}}
 </div>
 {{#if cur_user}}

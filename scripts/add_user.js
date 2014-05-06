@@ -28,6 +28,7 @@ db.ready(function () {
 						.ready(function () {
 							console.log('User created with email:' + email + ' and password:' + password);
 							console.log(model);
+							// next tick this because the rebuilt sorts are thrown into extra next ticks
 							Connections.disconnect();
 						});
 				}
