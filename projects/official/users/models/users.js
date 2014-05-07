@@ -131,7 +131,7 @@ BitwiseHelper.prototype.has = function (constant) {
 		throw new Error('Constant ' + constant + ' is not defined in the user config');
 	}
 
-	return this.val & val === val;
+	return (this.val & val) === val;
 };
 
 /**

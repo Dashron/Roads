@@ -26,7 +26,7 @@
 			<div class="form-group">
 				<label for="user_email">Permissions:</label><br />
 				{{#each permissions}}
-					<input type="checkbox" value="{{@key}}">{{this}}<br />
+					{{checkbox "permissions" @key "create_user"}}
 				{{/each}}
 			</div>
 

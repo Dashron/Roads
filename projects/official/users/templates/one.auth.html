@@ -19,10 +19,9 @@
 					</div>
 
 					<div class="form-group">
-					{{permissions}}
 						<label for="user_email">Permissions:</label><br />
 						{{#each ../permissions}}
-							<input type="checkbox" name="permissions" value="{{@key}}">{{@key}}<br />
+							{{{checkbox "permissions" @key ../../user_permissions}}}<br />
 						{{/each}}
 					</div>
 

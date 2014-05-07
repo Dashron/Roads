@@ -54,6 +54,7 @@ module.exports = {
 					view.set('user', user);
 
 					view.set('permissions', Config.get('web.user.permissions'));
+					view.set('user_permissions', user.getPermissions().toArray());
 					if (request.cur_user) {
 						view.render('one.auth');
 					} else {

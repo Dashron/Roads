@@ -49,6 +49,15 @@ handlebars.registerHelper('radio', function(name, value, selected_value) {
 	return '<input type="radio" name="' + name + '" value="' + value + '"' +  selected + '>';
 });
 
+handlebars.registerHelper('checkbox', function(name, value, selected_values) {
+	if (!Array.isArray(selected_values)) {
+		selected_values = [selected_values];
+	}
+
+	var selected = (selected_values.indexOf(value) > -1 ? 'checked="checked"' : '');
+	return value + ' <input type="checkbox" name="' + name + '" value="' + value + '"' +  selected + '>';
+});
+
 /**
  * Renders a view as html via the Mu2 module
  */
