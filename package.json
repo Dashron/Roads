@@ -22,7 +22,7 @@
      "url" : "git://github.com/Dashron/roads.git"
   },
   "dependencies": {
-    "bifocals": ">=1.2.3",
+    "bifocals": ">=1.3.0",
     "roads-httpserver": ">=0.6.1",
     "handlebars": "*",
     "roads-models": ">=0.6.6"

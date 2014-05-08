@@ -11,6 +11,7 @@ module.exports = {
 				per_page : request.url.query.per_page
 			};
 
+			// move this to /users/id/blog
 			if (request.url.query.user) {
 				this.project('official/users').model('users').load(request.url.query.user)
 					.ready(function (user) {
@@ -49,7 +50,7 @@ module.exports = {
 		POST : function (request, view) {
 			var _self = this;
 
-			if (request.cur_user) {
+			if (request.cur_user && request.cur_user.hasPermission('create_posts')) {
 				var post = new (_self.model('posts')).Model();
 				post.title = request.body.title;
 				post.body = request.body.body;
@@ -102,7 +103,7 @@ module.exports = {
 				return view.statusNotFound();
 			}
 
-			if (!request.cur_user) {
+			if (!request.cur_user || !request.cur_user.hasPermission('create_posts')) {
 				return view.statusUnauthorized();
 			}
 
@@ -134,7 +135,7 @@ module.exports = {
 				return view.statusNotFound();
 			}
 
-			if (!request.cur_user) {
+			if (!request.cur_user || !request.cur_user.hasPermisison('edit_posts')) {
 				return view.statusUnauthorized();
 			}
 

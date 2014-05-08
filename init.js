@@ -85,10 +85,18 @@ module.exports.webserver = function (fn) {
 		try {
 			// allow accept headers to be in the server, and defined in the route
 			if (request.headers.accept && request.headers.accept.indexOf('application/json') != -1) {
+				// todo: set this somewhere else
 				view.content_type = 'application/json';
-				view.default500Template = Project.get(Config.get('web.projects./')).dir + '/api/' + Config.get('web.templates.500');
+
+				var api_templates = Project.get(Config.get('web.projects./')).dir + '/api/';
+				view.setDefaultTemplate(500, api_templates + Config.get('web.templates.error'));
+				view.setDefaultTemplate(404, api_templates + Config.get('web.templates.notfound'));
+				view.setDefaultTemplate(401, api_templates + Config.get('web.templates.unauthorized'));
 			} else {
-				view.default500Template = Project.get(Config.get('web.projects./')).dir + '/templates/' + Config.get('web.templates.500');
+				var templates = Project.get(Config.get('web.projects./')).dir + '/templates/';
+				view.setDefaultTemplate(500, templates + Config.get('web.templates.error'));
+				view.setDefaultTemplate(404, templates + Config.get('web.templates.notfound'));
+				view.setDefaultTemplate(401, templates + Config.get('web.templates.unauthorized'));
 			}
 
 			view.error(view.statusError.bind(view));
@@ -101,7 +109,13 @@ module.exports.webserver = function (fn) {
 			if (Config.get('web.cookie.domain')) {
 				request.cookie.setDomain(Config.get('web.cookie.domain'));
 			}
+		} catch (e) {
+			console.log('Failed to initalize the http request');
+			console.log(e);
+			view.statusError(e);
+		}
 			
+		try {
 			next(request, view);
 		} catch (e) {
 			view.statusError(e);

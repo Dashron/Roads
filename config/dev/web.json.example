@@ -6,10 +6,20 @@
 	"projects" : {
 		"/posts" : "example/blog",
 		"/users" : "official/users",
+		"/me" : "official/users",
 		"/" : "example/example"
 	},
 	"templates" : {
-		"500" : "server/500",
-		"404" : "server/404"
+		"error" : "server/error",
+		"notfound" : "server/notfound",
+		"unauthorized" : "server/unauthorized"
+	},
+	"user" : {
+		"permissions" : {
+			"create_users" : 1,
+			"edit_users" : 2,
+			"create_posts" : 4,
+			"edit_posts" : 8
+		}
 	}
 }

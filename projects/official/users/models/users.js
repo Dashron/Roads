@@ -67,6 +67,9 @@ UsersModule.setModel({
 			}
 
 			return this._perm_bitwise;
+		},
+		hasPermission : function hasPermission (permission) {
+			return this.getPermissions().has(permission);
 		}
 	},
 	sorts : {

@@ -64,7 +64,7 @@ module.exports = {
 			
 		},
 		DELETE : function (request, view) {
-			if (!request.cur_user) {
+			if (!request.cur_user || !request.cur_user.hasPermission('create_users') || request.cur_user.id != request.url.query.user_id) {
 				// todo: role based auth
 				return view.statusUnauthorized();
 			}
@@ -84,7 +84,7 @@ module.exports = {
 				});
 		},
 		PATCH : function (request, view) {
-			if (!request.cur_user) {
+			if (!request.cur_user || !request.cur_user.hasPermission('edit_users') || request.cur_user.id != request.url.query.user_id) {
 				// todo: role based auth
 				return view.statusUnauthorized();
 			}
@@ -134,7 +134,7 @@ module.exports = {
 				});
 		},
 		POST : function (request, view) {
-			if (!request.cur_user) {
+			if (!request.cur_user || request.cur_user.hasPermission('create_users')) {
 				// todo: role based auth
 				return view.statusUnauthorized();
 			}

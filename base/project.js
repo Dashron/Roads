@@ -270,7 +270,7 @@ Project.prototype.route = function project_route (request, view, next) {
 		console.log('route not found');
 		// we have a url part which does not properly match a route, so 404
 		view.content_type = 'text/html';
-		return view.statusNotFound(module.exports.get(Config.get('web.projects./')).dir + '/templates/' + Config.get('web.templates.404'));
+		return view.statusNotFound();
 	}
 
 	// render the located route
