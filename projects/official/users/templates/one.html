@@ -1,9 +1,26 @@
-{{#with users}}
-	<div class="panel panel-default">
-		<!-- Default panel contents -->
-		<div class="panel-heading">users</div>
-		<div class="panel-body">
-			{{id}}<br />
-		</div>
-	</div>
+{{#with user}}
+	<table class="table">
+		<tr>
+			<th>
+				ID
+			</th>
+			<th>
+				Name
+			</th>
+			<th>
+				Email
+			</th>
+		</tr>
+			<tr>
+				<td>
+					<a href="/users/{{id}}">{{id}}</a>
+				</td>
+				<td>
+					{{name}}
+				</td>
+				<td>
+					{{email}}
+				</td>
+			</tr>
+	</table>
 {{/with}}

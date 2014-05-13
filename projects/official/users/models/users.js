@@ -172,3 +172,13 @@ BitwiseHelper.prototype.toArray = function () {
 
 	return constants;
 }
+
+/**
+ * [reset description]
+ * @return {[type]} [description]
+ */
+BitwiseHelper.prototype.reset = function () {
+	for (var key in this.constants) {
+		this.disable(key);
+	}
+}
