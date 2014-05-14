@@ -104,17 +104,19 @@ module.exports = {
 					user.email = request.body.email;
 					user.name = request.body.name;
 
-					// Note, this isn't really valid for a patch. We should be making a PUT request if we want to update the entire state of the 
-					// permissions whether or not hte key is provided
-					user.getPermissions().reset();
+					if (request.cur_user.hasPermission('users.edit')) {
+						// Note, this isn't really valid for a patch. We should be making a PUT request if we want to update the entire state of the 
+						// permissions whether or not hte key is provided
+						user.getPermissions().reset();
 
-					if (request.body.permissions /*&& request.cur_user.hasPermission('users.edit')*/) {
-						if (!Array.isArray(request.body.permissions)) {
-							request.body.permissions = [request.body.permissions];
-						}
+						if (request.body.permissions) {
+							if (!Array.isArray(request.body.permissions)) {
+								request.body.permissions = [request.body.permissions];
+							}
 
-						for (var i = 0; i < request.body.permissions.length; i++) {
-							user.getPermissions().enable(request.body.permissions[i]);
+							for (var i = 0; i < request.body.permissions.length; i++) {
+								user.getPermissions().enable(request.body.permissions[i]);
+							}
 						}
 					}
 
