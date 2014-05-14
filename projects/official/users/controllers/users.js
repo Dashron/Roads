@@ -56,7 +56,7 @@ module.exports = {
 					view.set('permissions', Config.get('web.user.permissions'));
 					view.set('user_permissions', user.getPermissions().toArray());
 
-					if (request.cur_user.id == request.url.query.user_id || request.cur_user.hasPermission('users.edit')) {
+					if (request.cur_user && (request.cur_user.id == request.url.query.user_id || request.cur_user.hasPermission('users.edit'))) {
 						if (request.cur_user.hasPermission('users.edit')) {
 							view.set('can_edit_permissions', true);
 						}
@@ -138,7 +138,11 @@ module.exports = {
 				.error(view)
 				.ready(function (users) {
 					view.set('users', users);
-					view.set('can_create_users', request.cur_user.hasPermission('users.create'))
+
+					if (request.cur_user) {
+						view.set('can_create_users', request.cur_user.hasPermission('users.create'));
+					}
+
 					view.set('permissions', Config.get('web.user.permissions'));
 					view.render('many');
 				});
