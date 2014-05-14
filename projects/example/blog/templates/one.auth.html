@@ -3,7 +3,7 @@
 		<form method="POST" action="/posts/{{id}}">
 			
 			<label for="title">Title</label><input type="text" id="title" name="title" value="{{title}}"/><br />
-			{{{render "official/users" "byline"}}}
+			{{{render "official/users" "one"}}}
 			<label for="body">Body</label><textarea name="body">{{body}}</textarea><br />
 
 			<input type="hidden" name="_method" value="PATCH" />

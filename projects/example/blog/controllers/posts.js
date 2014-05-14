@@ -50,7 +50,7 @@ module.exports = {
 		POST : function (request, view) {
 			var _self = this;
 
-			if (request.cur_user && request.cur_user.hasPermission('create_posts')) {
+			if (request.cur_user && request.cur_user.hasPermission('posts.create')) {
 				var post = new (_self.model('posts')).Model();
 				post.title = request.body.title;
 				post.body = request.body.body;
@@ -103,7 +103,7 @@ module.exports = {
 				return view.statusNotFound();
 			}
 
-			if (!request.cur_user || !request.cur_user.hasPermission('create_posts')) {
+			if (!request.cur_user || !request.cur_user.hasPermission('posts.create')) {
 				return view.statusUnauthorized();
 			}
 
@@ -135,7 +135,7 @@ module.exports = {
 				return view.statusNotFound();
 			}
 
-			if (!request.cur_user || !request.cur_user.hasPermisison('edit_posts')) {
+			if (!request.cur_user || !request.cur_user.hasPermission('posts.edit')) {
 				return view.statusUnauthorized();
 			}
 

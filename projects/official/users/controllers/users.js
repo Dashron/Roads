@@ -56,8 +56,8 @@ module.exports = {
 					view.set('permissions', Config.get('web.user.permissions'));
 					view.set('user_permissions', user.getPermissions().toArray());
 
-					if (request.cur_user.id == request.url.query.user_id || request.cur_user.hasPermission('edit_users')) {
-						if (request.cur_user.hasPermission('edit_users')) {
+					if (request.cur_user.id == request.url.query.user_id || request.cur_user.hasPermission('users.edit')) {
+						if (request.cur_user.hasPermission('users.edit')) {
 							view.set('can_edit_permissions', true);
 						}
 						view.render('one.auth');
@@ -68,7 +68,7 @@ module.exports = {
 			
 		},
 		DELETE : function (request, view) {
-			if (!request.cur_user || !request.cur_user.hasPermission('create_users') || request.cur_user.id != request.url.query.user_id) {
+			if (!request.cur_user || !request.cur_user.hasPermission('users.create') || request.cur_user.id != request.url.query.user_id) {
 				// todo: role based auth
 				return view.statusUnauthorized();
 			}
@@ -89,7 +89,7 @@ module.exports = {
 		},
 		PATCH : function (request, view) {
 			// edit users permission allows you to edit any users, and to update your own permissions
-			if (!request.cur_user || !(request.cur_user.id == request.url.query.user_id || request.cur_user.hasPermission('edit_users'))) {
+			if (!request.cur_user || !(request.cur_user.id == request.url.query.user_id || request.cur_user.hasPermission('users.edit'))) {
 				// todo: role based auth
 				return view.statusUnauthorized();
 			}
@@ -108,7 +108,7 @@ module.exports = {
 						request.body.permissions = [request.body.permissions];
 					}
 
-					if (request.cur_user.hasPermission('edit_users')) {
+					if (request.cur_user.hasPermission('users.edit')) {
 						user.getPermissions().reset();
 
 						for (var i = 0; i < request.body.permissions.length; i++) {
@@ -138,13 +138,13 @@ module.exports = {
 				.error(view)
 				.ready(function (users) {
 					view.set('users', users);
-					view.set('can_create_users', request.cur_user.hasPermission('create_users'))
+					view.set('can_create_users', request.cur_user.hasPermission('users.create'))
 					view.set('permissions', Config.get('web.user.permissions'));
 					view.render('many');
 				});
 		},
 		POST : function (request, view) {
-			if (!request.cur_user || request.cur_user.hasPermission('create_users')) {
+			if (!request.cur_user || !request.cur_user.hasPermission('users.create')) {
 				// todo: role based auth
 				return view.statusUnauthorized();
 			}
