@@ -67,6 +67,18 @@ var apply_route_inheritance = function (route) {
 	}
 };
 
+var extend = function (current_obj, extended_obj) {
+	if (typeof current_obj !== "object") {
+		return extended_obj;
+	}
+
+	for (var key in extended_obj) {
+		current_obj[key] = extend(current_obj[key], extended_obj[key]);
+	}
+
+	return current_obj;
+};
+
 /**
  * [Project description]
  * @param {[type]} definition [description]
@@ -124,6 +136,27 @@ Project.prototype.models = null;
  * @type {[type]}
  */
 Project.prototype.dir = null;
+
+/**
+ * [extend description]
+ * @param  {[type]} definition [description]
+ * @return {[type]}            [description]
+ */
+Project.prototype.extend = function project_extend (definition) {
+	this.controllers = extend(this.controllers, definition.controllers);
+
+	// todo: would be great to actually be able to extend existing models
+	for (key in definition.models) {
+		if (typeof this.model[key] != "undefined") {
+			throw new Error('Extending or overriding existing models is not yet supported');
+		}
+
+		this.models[key] = definition.models[key];
+	}
+
+	this.routes = extend(this.routes, definition.routes);
+	return this;
+};
 
 /**
  * [model description]
