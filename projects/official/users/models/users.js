@@ -143,6 +143,10 @@ BitwiseHelper.prototype.has = function (constant) {
  * @return {[type]}          [description]
  */
 BitwiseHelper.prototype.enable = function (constant) {
+	if (typeof this.constants[constant] === "undefined" || this.constants[constant] === null) {
+		throw new Error('Constant ' + constant + ' is not defined in the user config');
+	}
+
 	this.val = this.val | this.constants[constant];
 	this.changeVal(this.constants[constant], true);
 };
@@ -153,8 +157,14 @@ BitwiseHelper.prototype.enable = function (constant) {
  * @return {[type]}          [description]
  */
 BitwiseHelper.prototype.disable = function (constant) {
-	this.val = this.val ^ this.constants[constant];
-	this.changeVal(this.constants[constant], false);
+	if (typeof this.constants[constant] === "undefined" || this.constants[constant] === null) {
+		throw new Error('Constant ' + constant + ' is not defined in the user config');
+	}
+
+	if (this.has(constant)) {
+		this.val = this.val ^ this.constants[constant];
+		this.changeVal(this.constants[constant], false);
+	}
 };
 
 /**
