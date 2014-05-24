@@ -1,5 +1,9 @@
 The Roads.js framework is still currently in heavy development. 
 
+## Important Note!
+This project now has support for the `yield` keyword. The example assumes you are using it, but it is NOT required to use this project.
+To run the example, make sure you have at least node 0.11 and type node --harmony server.js
+
 Code is structured into "Projects". Each project has its own folder structure and primary project.js file.
 
 Project.js defines the resources and routes associated with each project. Each project can be mounted to a first tier url part via the websites configuration file.

@@ -2,7 +2,7 @@
 
 module.exports = {
 	many : {
-		GET : function (request, view) {
+		GET : function* (request, view) {
 			var post_request = null;
 			var _self = this;
 			var sort = request.url.query.sort;
@@ -13,38 +13,32 @@ module.exports = {
 
 			// move this to /users/id/blog
 			if (request.url.query.user) {
-				this.project('official/users').model('users').load(request.url.query.user)
-					.ready(function (user) {
-						if (user) {
-							_self.model('posts').getForUser(user, pager, sort)
-								.preload('user_id')
-								.ready(function (posts) {
-									view.set('posts', posts);
-									view.render('many');
-								})
-								.error(view);
-						} else {
-							view.statusNotFound();
-						}
-					})
-					.error(view);
+				var user = yield this.project('official/users')
+					.model('users')
+					.load(request.url.query.user);
+
+				var posts = yield _self.model('posts')
+					.getForUser(user, pager, sort)
+					.preload('user_id');
+
+				view.set('posts', posts);
+				view.render('many');
 			} else {
 				if (sort && sort != "alphabetical") {
 					view.statusRedirect(request.url.path);
 				}
 				
-				_self.model('posts').getAll(pager, sort)
-					.preload('user_id')
-					.ready(function (posts) {
-						if (request.cur_user) {
-							view.set('cur_user', request.cur_user);
-							view.child('add').render('add');
-						}
+				var posts = yield _self.model('posts')
+					.getAll(pager, sort)
+					.preload('user_id');
 
-						view.set('posts', posts);
-						view.render('many');
-					})
-					.error(view);
+				if (request.cur_user) {
+					view.set('cur_user', request.cur_user);
+					view.child('add').render('add');
+				}
+
+				view.set('posts', posts);
+				view.render('many');
 			}
 		},
 		POST : function (request, view) {

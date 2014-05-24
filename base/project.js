@@ -242,7 +242,8 @@ Project.prototype.render = function project_request (route_info, request, view, 
 					view.statusUnsupportedMethod(Object.keys(route));
 					return true;
 				} else {
-					return route[method].call(this, request, view, next);
+					return this.callAsync(route[method], request, view, next);
+					//return route[method].call(this, request, view, next);
 				}
 			} else if (route) {
 				// call request directly
@@ -253,6 +254,46 @@ Project.prototype.render = function project_request (route_info, request, view, 
 		}
 	}
 };
+
+Project.prototype.callAsync = function (route_method, request, view, next) {
+	var gen = route_method.call(this, request, view, next);
+
+	// We don't usually return stuff from normal, un-asterisked methods so assume if there's no return value we should die.
+	// It might be better to identify the generator explicitly.
+	if (!gen) {
+		return;
+	}
+
+	// stepInto progresses the state of the route_method execution where yield is a breakpoint controlled by next
+	var stepInto = function(val) {
+		var gen_response = gen.next(val);
+
+		// If the generator claims to be done, it means the function has successfully executed all the way to the final character
+		if(gen_response.done) {
+			return;
+		}
+
+		// Tie in to our currently duck typed (todo get a reasonable standard promise setup) callback helpers
+		gen_response.value.ready(function (response) {
+			// now that we have a second (or possibly later) execution, this will recurse back into stepInto.
+			// The response is passed through, and provided as the new val to generator.next(val). Think of "val" as the return value for yield.
+			stepInto(response);
+		}).error(function (err) {
+			// This provides universal error handling without the controllers having to type anything, it's a miracle!
+			view.error(err);
+		});
+	};
+
+	// Run once to start the ball rolling, the first time next is called will be within this function. This executes the method up until the first yield statement
+	// Think of yield like equals, the right hand side of yield is a parameter and the left hand side of yield is the output.
+	// 
+	// It's a little weirder once you yield back up to callAsync, because the equals metaphor kind of falls apart. 
+	// The right hand side of the yield lines up with the left hand side of a generator.next() invocation.
+	// 
+	// As mentioned earlier though, the first generator.next() invocation doesn't line up with a yield, it lines up with the core function invocation.
+	// So since there's no yield, there's nowhere for the first parameter passed to next(parameter) to go, so it's ignored and not provided in this invocation
+	stepInto();
+}
 
 /**
  * Find the proper route for the provided request object

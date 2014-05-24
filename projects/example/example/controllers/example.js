@@ -2,7 +2,7 @@
 
 module.exports = {
 	main : {
-		GET : function (request, view) {
+		GET : function* (request, view) {
 
 			this.project('example/blog')
 				.render({
