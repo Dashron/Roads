@@ -279,8 +279,8 @@ Project.prototype.callAsync = function (route_method, request, view, next) {
 			// The response is passed through, and provided as the new val to generator.next(val). Think of "val" as the return value for yield.
 			stepInto(response);
 		}).error(function (err) {
-			// This provides universal error handling without the controllers having to type anything, it's a miracle!
-			view.error(err);
+			console.log('err');
+			gen.throw(err);
 		});
 	};
 

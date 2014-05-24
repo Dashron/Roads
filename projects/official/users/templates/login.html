@@ -5,6 +5,10 @@
 	{{else}}
 		User {{id}}
 	{{/if}}
+	<form method="POST" action="/me">
+		<input type="hidden" value="DELETE" name="_method">
+		<input type="submit" value="Log Out" />
+	</form>
 {{/user}}
 {{^user}}
 	{{#if password_fail}}
@@ -13,6 +17,6 @@
 	<form method="POST" action="/me">
 		email: <input type="text" name="email" /> <br />
 		pass: <input type="text" name="password" />
-		<input type="submit" name="Log In" />
+		<input type="submit" value="Log In" />
 	</form>
 {{/user}}

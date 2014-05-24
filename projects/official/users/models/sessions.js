@@ -117,6 +117,7 @@ SessionsModule.start = function start (request, user, options) {
 		var session_model = new _self.Model();
 		session_model.session = options.value;
 
+		// no ipv6 support yet. todo.
 		session_model.ip = request.connection.remoteAddress;
 		session_model.user_id = user.id;
 
@@ -187,7 +188,8 @@ SessionsModule.getUser = function (request) {
 	load_request.addModifier(function (session_data) {
 		if (session_data) {
 			// if the ip and user agent are the same
-			if (session_data.ip === ip && session_data.userAgentMatches(headers['user-agent'])) {
+			// no ipv6 support yet
+			if (/*session_data.ip === ip && */session_data.userAgentMatches(headers['user-agent'])) {
 				var user_request = UsersModel.load(session_data.user_id);
 				user_request.ready(load_request._ready.bind(load_request));
 				user_request.error(load_request._error.bind(load_request));

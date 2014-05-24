@@ -41,7 +41,7 @@ module.exports = {
 				view.render('many');
 			}
 		},
-		POST : function (request, view) {
+		POST : function* (request, view) {
 			var _self = this;
 
 			if (request.cur_user && request.cur_user.hasPermission('posts.create')) {
@@ -50,22 +50,20 @@ module.exports = {
 				post.body = request.body.body;
 				post.user_id = request.cur_user.id;
 
-				post.save()
-					.ready(function (post) {
-						view.statusRedirect('/?sort=alphabetical');
-					})
-					.error(view)
+				var post = yield post.save()
 					.validationError(function (errors) {
 						view.set('invalid_fields', errors);
 						view.render('add');
 					});
+
+				view.statusRedirect('/?sort=alphabetical');
 			} else {
 				view.statusUnauthorized();
 			}
 		}
 	}, 
 	one : {
-		GET : function (request, view) {
+		GET : function* (request, view) {
 			// todo: maybe we can have a common template that loads the post from the id url. some of this code matches DELETE and PATCH
 			var _self = this;
 
@@ -73,23 +71,21 @@ module.exports = {
 				return view.statusNotFound();
 			}
 
-			_self.model('posts').load(request.url.query.id)
-				.preload('user_id')
-				.ready(function (post) {
-					if (!post) {
-						return view.statusNotFound();
-					}
+			var post = yield _self.model('posts').load(request.url.query.id)
+				.preload('user_id');
 
-					view.set('post', post);
-					if (request.cur_user && request.cur_user.id === post.user_id) {
-						view.render('one.auth');
-					} else {
-						view.render('one');
-					}
-				})
-				.error(view);
+			if (!post) {
+				return view.statusNotFound();
+			}
+
+			view.set('post', post);
+			if (request.cur_user && request.cur_user.id === post.user_id) {
+				view.render('one.auth');
+			} else {
+				view.render('one');
+			}
 		},
-		DELETE : function (request, view) {
+		DELETE : function* (request, view) {
 			// todo: maybe we can have a common template that loads the post from the id url. tons of this code matches GET and PATCH
 			var _self = this;
 			
@@ -101,25 +97,20 @@ module.exports = {
 				return view.statusUnauthorized();
 			}
 
-			_self.model('posts').load(request.url.query.id)
-				.ready(function (post) {
-					if (!post) {
-						return  view.statusNotFound();
-					}
+			var post = yield _self.model('posts').load(request.url.query.id);
+				
+			if (!post) {
+				return  view.statusNotFound();
+			}
 
-					if (post.user_id !== request.cur_user.id) {
-						return view.statusUnauthorized();
-					} else {
-						post.delete()
-							.ready(function () {
-								view.statusRedirect('/posts');
-							})
-							.error(view);
-					}
-				})
-				.error(view);
+			if (post.user_id !== request.cur_user.id) {
+				return view.statusUnauthorized();
+			} else {
+				var post = yield post.delete();
+				view.statusRedirect('/posts');
+			}
 		},
-		PATCH : function (request, view) {
+		PATCH : function* (request, view) {
 			// todo: maybe we can have a common template that loads the post from the id url. tons of this code matches GET and DELETE
 			var _self = this;
 			var body = request.body.body;
@@ -133,38 +124,34 @@ module.exports = {
 				return view.statusUnauthorized();
 			}
 
-			_self.model('posts').load(request.url.query.id)
-				.ready(function (post) {
-					if (!post) {
-						return  view.statusNotFound();
-					}
+			var post = yield _self.model('posts').load(request.url.query.id);
+			if (!post) {
+				return  view.statusNotFound();
+			}
 
-					if (post.user_id !== request.cur_user.id) {
-						return view.statusUnauthorized();
-					} else {
-						var update = false;
+			if (post.user_id !== request.cur_user.id) {
+				return view.statusUnauthorized();
+			} else {
+				var update = false;
 
-						if (body) {
-							post.body = body;
-							update = true;
-						}
+				if (body) {
+					post.body = body;
+					update = true;
+				}
 
-						if (title) {
-							post.title = title;
-							update = true;
-						}
+				if (title) {
+					post.title = title;
+					update = true;
+				}
 
-						post.save()
-							.error(view)
-							.ready(function () {
-								view.statusRedirect('/posts/' + post.id);
-							})
-							.validationError(function (errors) {
-								view.set('invalid_fields', errors);
-								view.render('add');
-							});
-					}
-				});
+				var saved_post = yield post.save()
+					.validationError(function (errors) {
+						view.set('invalid_fields', errors);
+						view.render('add');
+					});
+
+				view.statusRedirect('/posts/' + post.id);
+			}
 		}
 	},
 };
