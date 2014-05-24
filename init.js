@@ -130,3 +130,9 @@ module.exports.webserver = function (fn) {
 
 	return server;
 };
+
+process.on('uncaughtException', function (err) {
+	console.log('uncaught exception');
+	console.log(err);
+	throw err;
+});

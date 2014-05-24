@@ -118,7 +118,7 @@ SessionsModule.start = function start (request, user, options) {
 		session_model.session = options.value;
 
 		// no ipv6 support yet. todo.
-		session_model.ip = request.connection.remoteAddress;
+		//session_model.ip = request.connection.remoteAddress;
 		session_model.user_id = user.id;
 
 		var sha1 = crypto_module.createHash('sha1');
