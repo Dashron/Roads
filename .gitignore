@@ -1,5 +1,4 @@
 node_modules
-old
 config/dev/server.json
 config/dev/web.json
 config/prod/server.json

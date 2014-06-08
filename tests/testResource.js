@@ -1,0 +1,1 @@
+var Resource = require('../lib/resource');

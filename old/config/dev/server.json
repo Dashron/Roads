@@ -1,0 +1,19 @@
+{
+	"port" : 8080,
+	"connections" : {
+		"mysql" : {
+			"default" : {
+				"host": "localhost",
+				"user" : "roads",
+				"database" : "roads"
+			}
+		},
+		"redis" : {
+			"default" : {
+				"host" : "localhost",
+				"port" : 6379
+			}
+		}
+	},
+	"newrelic" : false
+}
