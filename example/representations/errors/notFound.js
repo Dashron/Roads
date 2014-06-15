@@ -6,6 +6,5 @@ module.exports = Promise.coroutine(function* (url) {
 	representation.error = 'There is no resource located at ' + url.pathname;
 	representation.code = 404;
 
-	this.status = 404;
 	return representation;
 });

@@ -6,6 +6,5 @@ module.exports = Promise.coroutine(function (error) {
 	representation.error = error.message;
 	representation.code = 406;
 
-	this.status = 406;
 	return representation;
 });
