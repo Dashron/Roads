@@ -1,7 +1,5 @@
-var Resource = require('../../lib/resource').Resource;
-var Response = require('../../lib/response').Response;
-
-var UserRepresentation = require('../representations/user');
+var Resource = require('../../lib/resource');
+var Response = require('../../lib/response');
 
 /**
  * [one description]
@@ -25,7 +23,7 @@ module.exports.many = new Resource({
 		GET : function* (request) {
 			var users = yield users_model.getAll();
 
-			return new Response(CollectionRepresentation(users, UserRepresentation));
+			return new Response(CollectionRepresentation(users, this.representations.user));
 		}
 	}
 });

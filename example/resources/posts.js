@@ -1,4 +1,4 @@
-var Resource = require('../../lib/resource').Resource;
+var Resource = require('../../lib/resource');
 
 /**
  * [many description]

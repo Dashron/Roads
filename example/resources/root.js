@@ -1,5 +1,5 @@
-var Resource = require('../../lib/resource').Resource;
-var Response = require('../../lib/response').Response;
+var Resource = require('../../lib/resource');
+var Response = require('../../lib/response');
 var Promise = require('bluebird');
 
 /**
