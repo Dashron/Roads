@@ -1,5 +1,6 @@
 var Resource = require('../../lib/resource').Resource;
 var Response = require('../../lib/response').Response;
+var Promise = require('bluebird');
 
 /**
  * [one description]
@@ -11,13 +12,13 @@ module.exports.many = new Resource({
 		'posts' : require('./posts').many
 	},
 	methods : {
-		GET : function (request) {
-			return new Response(function () {
+		GET : function* (request) {
+			return new Response(Promise.coroutine(function* () {
 				return {
 					"users" : "/users",
 					"posts" : "/posts"
 				};
-			});
+			})());
 		}
 	}
 });
