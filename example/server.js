@@ -19,7 +19,7 @@ require('http').createServer(function (request, http_response) {
 
 	request.on('end', function () {
 		request.body = body;
-		api[request.method](request);
+		api[request.method](request)
 			.then(function (response) {
 				response.writeTo(http_response)
 					.then(function () {
