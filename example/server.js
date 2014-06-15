@@ -19,8 +19,13 @@ require('http').createServer(function (request, http_response) {
 
 	request.on('end', function () {
 		request.body = body;
-		var response = api[request.method](request);
-		response.writeTo(http_response);
+		api[request.method](request);
+			.then(function (response) {
+				response.writeTo(http_response)
+					.then(function () {
+						http_response.end();
+					});
+			});
 	});
 
 	request.on('error', function (err) {
@@ -28,6 +33,7 @@ require('http').createServer(function (request, http_response) {
 
 		response.status = 500;
 		response.writeTo(http_response);
+		http_response.end();
 	});
 
 }).listen(8080, function () {

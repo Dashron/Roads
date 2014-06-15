@@ -11,7 +11,7 @@ module.exports.many = new Resource({
 		'posts' : require('./posts').many
 	},
 	methods : {
-		GET : function* (request) {
+		GET : function (request) {
 			return new Response(function () {
 				return {
 					"users" : "/users",
