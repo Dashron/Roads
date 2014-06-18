@@ -1,6 +1,7 @@
 var api = new (require('../lib/api').API)(require('./resources/root').many, {
-	users   : require('./representations/user'),
-	post    : require('./representations/post'),
+	user : require('./representations/user'),
+	post : require('./representations/post'),
+	collection : require('./representations/collection'),
 	server  : {
 		unknown : require('./representations/server/unknown'),
 		notFound : require('./representations/server/notFound'),
@@ -10,6 +11,6 @@ var api = new (require('../lib/api').API)(require('./resources/root').many, {
 });
 
 require('http').createServer(api.server.bind(api))
-	.listen(8080, function () {
+	.listen(8081, function () {
 		console.log('server has started');
 	});

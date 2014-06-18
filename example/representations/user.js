@@ -1,6 +1,6 @@
 var Promise = require('bluebird');
 
-module.exports = Promise.coroutine(function (user) {
+module.exports = Promise.coroutine(function* (user) {
 	var representation = {};
 
 	representation.uri = '/users/' + user.id;

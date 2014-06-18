@@ -1,6 +1,8 @@
 var Resource = require('../../lib/resource');
 var Response = require('../../lib/response');
 
+var Users = require('../mock_db/users');
+
 /**
  * [one description]
  * @type {Resource}
@@ -8,7 +10,12 @@ var Response = require('../../lib/response');
 module.exports.one = new Resource({
 	resources : {
 		'posts' : require('./user/user.posts').many
-	}	
+	},
+	methods : {
+		GET : function* (request) {
+			return new Response(this.representations.user(yield Users.get('id=1')));
+		}
+	}
 });
 
 /**
@@ -21,9 +28,7 @@ module.exports.many = new Resource({
 	},
 	methods : {
 		GET : function* (request) {
-			var users = yield users_model.getAll();
-
-			return new Response(CollectionRepresentation(users, this.representations.user));
+			return new Response(this.representations.collection(yield Users.get('all'), this.representations.user));
 		}
 	}
 });
