@@ -1,5 +1,3 @@
-var Promise = require('bluebird');
-
-module.exports = Promise.coroutine(function* (methods) {
+module.exports = function* (methods) {
 	return methods;
-});
+};

@@ -1,6 +1,4 @@
-var Promise = require('bluebird');
-
-module.exports = Promise.coroutine(function* (user) {
+module.exports = function* (user) {
 	var representation = {};
 
 	representation.uri = '/users/' + user.id;
@@ -9,4 +7,4 @@ module.exports = Promise.coroutine(function* (user) {
 	representation.email = user.email;
 
 	return representation;
-});
+};

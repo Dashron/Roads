@@ -1,5 +1,6 @@
-var Resource = require('../../lib/resource');
-var Response = require('../../lib/response');
+var roads = require('../../index');
+var Resource = roads.Resource;
+var Response = roads.Response;
 var Promise = require('bluebird');
 
 /**
