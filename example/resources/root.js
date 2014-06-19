@@ -13,7 +13,7 @@ module.exports.many = new Resource({
 		'posts' : require('./posts').many
 	},
 	methods : {
-		GET : function* (request) {
+		GET : function* (url, body, headers) {
 			return new Response(Promise.coroutine(function* () {
 				return {
 					"users" : "/users",
