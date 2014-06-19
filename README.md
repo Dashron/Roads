@@ -1,26 +1,12 @@
-The Roads.js framework is still currently in heavy development. 
+The Roads.js API Framework
 
-## Important Note!
-This project now has support for the `yield` keyword. The example assumes you are using it, but it is NOT required to use this project.
-To run the example, make sure you have at least node 0.11 and type `node --harmony server.js`
+This is an organizational framework for developing API's in node.js. It requires generator support, so you should be using node 0.11.13 or higher with the `--harmony` flag enabled.
 
+At the moment, your best bet is to check out the example project.
 
-## Structure
-Code is structured into "Projects". Each project has its own folder structure and primary project.js file.
+server.js registers some representations to the api service, and then connects an http server to the api service.
 
-Project.js defines the resources and routes associated with each project. Each project can be mounted to a first tier url part via the websites configuration file.
+the resources all tie to endpoints. You must start with a root resource, which connects to the rest of the sub resources via the routes object. Route keys can be a literal value (users), a string variable ($user_name) or a numeric variable (#user_id). Any variables are assigned to the args key of the url parameter provided to every route. Each resource contains a list of methods, which is a key value pairing of HTTP_METHOD : ROUTE_FUNCTION. The route function should be a generator, and `this` will be bound to the API object. You can reference this.representations to find specific representations
 
-Routing is a tree representing the "folder-like" structure of a RESTful URL. Each route key is a url part. Url parts are the text between slashes.
-
-Models are all Roads-Models, but this is not mandatory.
-
-You can get a feel for the structure by looking at all the included projects. The example project works, but is missing some minor features and design. To try it, run the mysql statements below and type `node server.js` from within the roads folder.
-
-mysql required for the example site:
-
-    create database roadsmodelstest;
-    create user roadsmodelstest identified by roads;
-    grant all on roadsmodelstest.* to roadsmodelstest@'localhost' identified by 'roads';
-	create table user ( id int(10) unsigned NOT NULL AUTO_INCREMENT, email varchar(256) NOT NULL, name varchar(128) DEFAULT NULL, password varchar(64) NOT NULL, PRIMARY KEY (`id`) )
-	create table session (id int(10) unsigned not null primary key AUTO_INCREMENT, user_id int(10) unsigned not null, session varchar(88) not null, ip varchar(16) not null, user_agent varchar(40) not null, created_on datetime not null)
-	create table blog_post (id int(10) unsigned not null primary key AUTO_INCREMENT, user_id int(10) unsigned not null, title varchar(180) not null, body text)
+the representations should all be generator functions. They take one or more values, and return a json representation of those values. Some representations are required for the base API functionality. These are `server.unknown`,`server.notFound`,`server.notAllowed`,`server.options`.
+todo: find a better way to keep track of representations.
