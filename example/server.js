@@ -5,15 +5,23 @@ Promise.coroutine.addYieldHandler(function(yieldedValue) {
     if (Array.isArray(yieldedValue)) return Promise.all(yieldedValue);
 });
 
-var api = new (require('../index').API)(require('./resources/root').many, {
-	user : require('./representations/user'),
-	post : require('./representations/post'),
-	collection : require('./representations/collection'),
-	server  : {
-		unknown : require('./representations/server/unknown'),
-		notFound : require('./representations/server/notFound'),
-		notAllowed : require('./representations/server/notAllowed'),
-		options : require('./representations/server/options')
+var roads = require('../index');
+var api = new roads.API(require('./resources/root').many);
+
+var notFoundRepresentation = require('./representations/server/notFound');
+var notAllowedRepresentation = require('./representations/server/notAllowed');
+var unknownRepresentation = require('./representations/server/unknown');
+
+api.onError(function (error) {
+	console.log(error);
+	switch (error.code) {
+		case 404:
+			return new roads.Response(notFoundRepresentation(error), 404);
+		case 405:
+			return new roads.Response(notAllowedRepresentation(error), 405);
+		case 500:
+		default:
+			return new roads.Response(unknownRepresentation(error), 500);
 	}
 });
 

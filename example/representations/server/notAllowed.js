@@ -1,6 +1,6 @@
-module.exports = function* (methods) {
+module.exports = require('bluebird').coroutine(function* (error) {
 	return {
-		allow : methods,
+		allow : error.message,
 		code : 405
 	};
-};
+});

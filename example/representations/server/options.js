@@ -1,3 +1,3 @@
-module.exports = function* (methods) {
-	return methods;
+module.exports = function* (error) {
+	return error.message;
 };

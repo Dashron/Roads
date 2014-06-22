@@ -3,6 +3,7 @@ var Resource = roads.Resource;
 var Response = roads.Response;
 
 var Users = require('../mock_db/users');
+var userRepresentation = require('../representations/user');
 
 /**
  * [one description]
@@ -15,16 +16,16 @@ module.exports.one = new Resource({
 	methods : {
 		GET : function* (url, body, headers) {
 			if (!url.args.user_id) {
-				return new Response(this.representations.server.notFound(url.pathname, 'user'), 404);
+				throw new roads.HttpError('User not found', 404);
 			}
 
 			var user = yield Users.get('id=' + url.args.user_id);
 
 			if (!user) {
-				return new Response(this.representations.server.notFound(url.pathname, 'user'), 404);
+				throw new roads.HttpError('User not found', 404);
 			}
 
-			return new Response(this.representations.user(user));
+			return new Response(userRepresentation(user));
 		}
 	}
 });

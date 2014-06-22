@@ -27,7 +27,7 @@ var get = function (key) {
 			return posts[1];
 		case "id=3" :
 			return posts[2];
-		case " user_id=2" :
+		case "user_id=2" :
 			return [posts[1], posts[2]];
 	}
 };

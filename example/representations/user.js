@@ -1,4 +1,4 @@
-module.exports = function* (user) {
+module.exports = require('bluebird').coroutine(function* (user) {
 	var representation = {};
 
 	representation.uri = '/users/' + user.id;
@@ -7,4 +7,4 @@ module.exports = function* (user) {
 	representation.email = user.email;
 
 	return representation;
-};
+});
