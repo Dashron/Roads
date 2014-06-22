@@ -1,6 +1,6 @@
 var Promise = require('bluebird');
 
-module.exports = function* (array, representation) {
+module.exports = Promise.coroutine(function* (array, representation) {
 	var response = {
 		total : array.length,
 		collection : Promise.coroutine(function* () {
@@ -15,4 +15,4 @@ module.exports = function* (array, representation) {
 	};
 
 	return response;
-};
+});

@@ -4,6 +4,7 @@ var Response = roads.Response;
 
 var Users = require('../mock_db/users');
 var userRepresentation = require('../representations/user');
+var collectionRepresentation = require('../representations/collection');
 
 /**
  * [one description]
@@ -40,7 +41,7 @@ module.exports.many = new Resource({
 	},
 	methods : {
 		GET : function* (url, body, headers) {
-			return new Response(this.representations.collection(yield Users.get('all'), this.representations.user));
+			return new Response(collectionRepresentation(yield Users.get('all'), userRepresentation));
 		}
 	}
 });
