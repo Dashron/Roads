@@ -1,3 +1,5 @@
+"use strict";
+
 var Promise = require('bluebird');
 
 // bluebird 2.0 took array yields out of the standard library, so we have to re-implement it here. It is not used in roads, just the examples

@@ -1,6 +1,8 @@
-var user_representation = require('./user');
+"use strict";
 
-module.exports = function* (post) {
+var userRepresentation = require('./user');
+
+module.exports = require('bluebird').coroutine(function* (post) {
 	var representation = {};
 
 	representation.name = post.title;
@@ -10,4 +12,4 @@ module.exports = function* (post) {
 	};
 
 	return representation;
-};
+});

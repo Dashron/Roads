@@ -1,3 +1,5 @@
+"use strict";
+
 module.exports = require('bluebird').coroutine(function* (user) {
 	var representation = {};
 
