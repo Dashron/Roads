@@ -20,7 +20,7 @@ var posts = [{
 }];
 
 var get = function (key) {
-		switch (key) {
+	switch (key) {
 		case "all" : 
 			return posts;
 		case "id=1" :
@@ -29,9 +29,17 @@ var get = function (key) {
 			return posts[1];
 		case "id=3" :
 			return posts[2];
+		case "user_id=1" :
+			return [posts[0]];
 		case "user_id=2" :
 			return [posts[1], posts[2]];
 	}
+
+	if (key.indexOf('user_id=') === 0) {
+		return [];
+	}
+
+	return null;
 };
 
 module.exports.get = function (key, callback) {
