@@ -5,6 +5,9 @@ var Resource = roads.Resource;
 var Response = roads.Response;
 
 var Posts = require('../../mock_db/posts');
+var userRepresentation = require('../../representations/user');
+var postRepresentation = require('../../representations/post');
+var collectionRepresentation = require('../../representations/collection');
 
 /**
  * [one description]
@@ -14,20 +17,20 @@ module.exports.one = new Resource({
 	methods : {
 		GET : function* (url, body, headers) {
 			if (!url.args.user_id) {
-				return new Response(this.representations.server.notFound(url.pathname, 'user'), 404);
+				throw new roads.HttpError('user', 404);
 			}
 
 			if (!url.args.post_id) {
-				return new Response(this.representations.server.notFound(url.pathname, 'post'), 404);
+				throw new roads.HttpError('post', 404);
 			}
 
 			var post = yield Posts.get('id=' + url.args.post_id);
 
 			if (!post || post.user_id != url.args.user_id) {
-				return new Response(this.representations.server.notFound(url.pathname, 'post'), 404);
+				throw new roads.HttpError('post', 404);
 			}
 
-			return new Response(this.representations.post(post));
+			return new Response(postRepresentation(post));
 		}
 	}
 });
@@ -43,10 +46,10 @@ module.exports.many = new Resource({
 	methods : {
 		GET : function* (url, body, headers) {
 			if (!url.args.user_id) {
-				return new Response(this.representations.server.notFound(url.pathname, 'user'), 404);
+				throw new roads.HttpError('user', 404);
 			}
 
-			return new Response(this.representations.collection(yield Posts.get('user_id=' + url.args.user_id), this.representations.post));
+			return new Response(collectionRepresentation(yield Posts.get('user_id=' + url.args.user_id), postRepresentation));
 		}
 	}
 });

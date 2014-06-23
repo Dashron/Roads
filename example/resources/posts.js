@@ -5,7 +5,10 @@ var Resource = roads.Resource;
 var Response = roads.Response;
 
 var Posts = require('../mock_db/posts');
-
+var Users = require('../mock_db/users');
+var userRepresentation = require('../representations/user');
+var postRepresentation = require('../representations/post');
+var collectionRepresentation = require('../representations/collection')
 /**
  * [one description]
  * @type {Resource}
@@ -14,16 +17,18 @@ module.exports.one = new Resource({
 	methods : {
 		GET : function* (url, body, headers) {
 			if (!url.args.post_id) {
-				return new Response(this.representations.server.notFound(url.pathname, 'post'), 404);
+				throw new roads.HttpError('post', 404);
 			}
 
 			var post = yield Posts.get('id=' + url.args.post_id);
 
 			if (!post) {
-				return new Response(this.representations.server.notFound(url.pathname, 'post'), 404);
+				throw new roads.HttpError('post', 404);
 			}
 
-			return new Response(this.representations.post(post));
+			post.user = yield Users.get('id=' + post.user_id);
+
+			return new Response(postRepresentation(post));
 		}
 	}
 });
@@ -38,7 +43,28 @@ module.exports.many = new Resource({
 	},
 	methods : {
 		GET : function* (url, body, headers) {
-			return new Response(this.representations.collection(yield Posts.get('all'), this.representations.post));
+			var posts = yield Posts.get('all');
+
+			var users = [];
+
+			posts.forEach(function (post) {
+				users.push(Users.get('id=' + post.user_id));
+			});
+
+			users = yield users;
+
+			// this is super lazy. don't try this at home
+			posts.forEach(function (post) {
+				users.forEach(function (user) {
+					if (post.user_id === user.id) {
+						post.user = user;
+					}
+				});
+			});
+
+			console.log(posts);
+
+			return new Response(collectionRepresentation(posts, postRepresentation));
 		}
 	}
 });
