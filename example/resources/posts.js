@@ -62,8 +62,6 @@ module.exports.many = new Resource({
 				});
 			});
 
-			console.log(posts);
-
 			return new Response(collectionRepresentation(posts, postRepresentation));
 		}
 	}
