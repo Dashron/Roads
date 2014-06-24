@@ -1,10 +1,10 @@
-var response_module = require('../lib/response');
+var filter_module = require('../lib/response_filter');
 
 /**
  * TEST FIELD EXPANSION
  */
 exports.testExpandingSingleField = function (test) {
-	var expansion = response_module.expandFields(['test']);
+	var expansion = filter_module.expandFields(['test']);
 
 	test.deepEqual({
 		'test' : true
@@ -13,7 +13,7 @@ exports.testExpandingSingleField = function (test) {
 };
 
 exports.testExpandingMultipleFields = function (test) {
-	var expansion = response_module.expandFields(['test', 'stuff']);
+	var expansion = filter_module.expandFields(['test', 'stuff']);
 	
 	test.deepEqual({
 		'test' : true,
@@ -23,7 +23,7 @@ exports.testExpandingMultipleFields = function (test) {
 };
 
 exports.testExpandingSingleNestedField = function (test) {
-	var expansion = response_module.expandFields(['test.one']);
+	var expansion = filter_module.expandFields(['test.one']);
 	
 	test.deepEqual({
 		'test' : {
@@ -34,7 +34,7 @@ exports.testExpandingSingleNestedField = function (test) {
 };
 
 exports.testExpandingMultipleNestedFields = function (test) {
-	var expansion = response_module.expandFields(['test.one', 'hello.one']);
+	var expansion = filter_module.expandFields(['test.one', 'hello.one']);
 	
 	test.deepEqual({
 		'test' : {
@@ -48,7 +48,7 @@ exports.testExpandingMultipleNestedFields = function (test) {
 };
 
 exports.testExpandingMultipleMatchingNestedFields = function (test) {
-	var expansion = response_module.expandFields(['test.one', 'test.two']);
+	var expansion = filter_module.expandFields(['test.one', 'test.two']);
 	
 	test.deepEqual({
 		'test' : {

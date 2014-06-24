@@ -1,4 +1,4 @@
-var response_module = require('../lib/response');
+var filter_module = require('../lib/response_filter');
 
 
 function testResponseObject () {
@@ -26,7 +26,7 @@ function testResponseObject () {
 exports.testNullFilter = function (test) {
 	test.expect(1);
 
-	var filter = response_module.filterObject(true, testResponseObject())
+	var filter = filter_module.filterObject(true, testResponseObject())
 		.then(function (filtered) {
 			test.deepEqual(testResponseObject(), filtered);
 			test.done();
@@ -37,7 +37,7 @@ exports.testEmptyFilter = function (test) {
 	// empty requests no valid 
 	test.expect(1);
 
-	response_module.filterObject({}, testResponseObject())
+	filter_module.filterObject({}, testResponseObject())
 		.then(function (filtered) {
 			test.deepEqual(null, filtered);
 			test.done();
@@ -47,7 +47,7 @@ exports.testEmptyFilter = function (test) {
 exports.testSingleFilter = function (test) {
 	test.expect(1);
 
-	response_module.filterObject({
+	filter_module.filterObject({
 		"name" : true
 	}, testResponseObject())
 		.then(function (filtered) {
@@ -61,7 +61,7 @@ exports.testSingleFilter = function (test) {
 exports.testMultipleFilter = function (test) {
 	test.expect(1);
 
-	response_module.filterObject({
+	filter_module.filterObject({
 		"name" : true,
 		"description" : true
 	}, testResponseObject())
@@ -77,7 +77,7 @@ exports.testMultipleFilter = function (test) {
 exports.testObjectFilter = function (test) {
 	test.expect(1);
 
-	response_module.filterObject({
+	filter_module.filterObject({
 		"active_image" : true
 	}, testResponseObject())
 		.then(function (filtered) {
@@ -96,7 +96,7 @@ exports.testObjectFilter = function (test) {
 exports.testMultiLevelObjectFilter = function (test) {
 	test.expect(1);
 
-	response_module.filterObject({
+	filter_module.filterObject({
 		"active_image" : {
 			"type" : true
 		}
@@ -116,7 +116,7 @@ exports.testMultiLevelObjectFilter = function (test) {
 exports.testArrayFilter = function (test) {
 	test.expect(1);
 
-	response_module.filterObject({
+	filter_module.filterObject({
 		"name" : true,
 		"images" : true
 	}, testResponseObject())
@@ -138,7 +138,7 @@ exports.testArrayFilter = function (test) {
 exports.testMultiLevelArrayFilter = function (test) {
 	test.expect(1);
 
-	response_module.filterObject({
+	filter_module.filterObject({
 		"name" : true,
 		"images" : {
 			"url" : true
