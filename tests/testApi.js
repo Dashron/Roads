@@ -1,5 +1,7 @@
 var Resource = require('../lib/resource');
 var API = require('../lib/api');
+var url_module = require('url');
+var Promise = require('bluebird');
 
 /**
  * Create a mock resource
@@ -37,6 +39,102 @@ function createResource (methods, resources) {
 
 	return new Resource(definition);
 }
+
+/**
+ * Ensure that we can find the proper resource for a url
+ * 
+ * @param  {[type]} test [description]
+ * @return {[type]}      [description]
+ */
+exports.testlocateResource = function (test) {
+	var resource = createResource(['GET']);
+	var api = new API(resource);
+
+	test.equal(resource, api.locateResource(url_module.parse('/')));
+	test.done();
+};
+
+/**
+ * Ensure we get a proper success route
+ * 
+ * @param  {[type]} test [description]
+ * @return {[type]}      [description]
+ */
+exports.testSuccessLocateRoute = function (test) {
+	var resource = createResource(['GET']);
+	var api = new API(resource);
+
+	var route = Promise.coroutine(api.locateRoute(url_module.parse('/'), 'GET'));
+
+	route({path : 'a'}, 'b', 'c').then(function (response) {
+		test.deepEqual({
+			path : 'a',
+			method : 'GET',
+			body : 'b',
+			headers : 'c'
+		}, response);
+
+		test.done();
+	});
+};
+
+/**
+ * Ensure we get a proper failed url route
+ * 
+ * @param  {[type]} test [description]
+ * @return {[type]}      [description]
+ */
+exports.testInvalidPathLocateRoute = function (test) {
+	var resource = createResource(['GET']);
+	var api = new API(resource);
+
+	var route = Promise.coroutine(api.locateRoute(url_module.parse('/stuff'), 'GET'));
+
+	route({path : 'a'}, 'b', 'c').then(function (response) {
+		test.ok(false);
+		test.done();
+	}).catch(function (e) {
+		test.equal(e.code, 404);
+		test.equal(e.message, '/stuff');
+
+		test.done();
+	});
+};
+
+/**
+ * Ensure we get a proper failed method route
+ * 
+ * @param  {[type]} test [description]
+ * @return {[type]}      [description]
+ */
+exports.testInvalidMethodLocateRoute = function (test) {
+	var resource = createResource(['GET']);
+	var api = new API(resource);
+
+	var route = Promise.coroutine(api.locateRoute(url_module.parse('/'), 'POST'));
+
+	route({path : 'a'}, 'b', 'c').then(function (response) {
+		test.ok(false);
+		test.done();
+	}).catch(function (e) {
+		test.equal(e.code, 405);
+		test.deepEqual(e.message, ['GET']);
+
+		test.done();
+	});
+};
+
+/**
+ * We need to do a bunch of stuff here
+ * 
+ * @param  {[type]} test [description]
+ * @return {[type]}      [description]
+ */
+exports.testServer = function (test) {
+	// incomplete
+	test.done();
+};
+
 
 /**
  * Ensure that the basic request system lines up
