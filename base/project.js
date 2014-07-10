@@ -273,15 +273,24 @@ Project.prototype.callAsync = function (route_method, request, view, next) {
 			return;
 		}
 
-		// Tie in to our currently duck typed (todo get a reasonable standard promise setup) callback helpers
-		gen_response.value.ready(function (response) {
-			// now that we have a second (or possibly later) execution, this will recurse back into stepInto.
-			// The response is passed through, and provided as the new val to generator.next(val). Think of "val" as the return value for yield.
-			stepInto(response);
-		}).error(function (err) {
-			console.log('err');
-			gen.throw(err);
-		});
+		// this sucks, we need a better way to identify a promise like thing
+		if (gen_response.value.ready) {
+			// Tie in to our currently duck typed (todo get a reasonable standard promise setup) callback helpers
+			gen_response.value.ready(function (response) {
+				// now that we have a second (or possibly later) execution, this will recurse back into stepInto.
+				// The response is passed through, and provided as the new val to generator.next(val). Think of "val" as the return value for yield.
+				stepInto(response);
+			}).error(function (err) {
+				console.log('err');
+				gen.throw(err);
+			});
+		} else {
+			var value = gen_response.value;
+
+			for (var i in value) {
+				handleReady(value, i, stepInto);
+			}
+		}
 	};
 
 	// Run once to start the ball rolling, the first time next is called will be within this function. This executes the method up until the first yield statement
@@ -294,6 +303,23 @@ Project.prototype.callAsync = function (route_method, request, view, next) {
 	// So since there's no yield, there's nowhere for the first parameter passed to next(parameter) to go, so it's ignored and not provided in this invocation
 	stepInto();
 }
+
+var handleReady = function (vals, key, stepInto, generator) {
+	vals[key].ready(function(response) {
+		vals[key] = response;
+
+		for (var i in vals) {
+			// this sucks. we should have a base class for promises that everythin relies on
+			if (vals[i].ready) {
+				return;
+			}
+		}
+
+		stepInto(vals);
+	}).error(function (err) {
+		generator.throw(err);
+	});
+};
 
 /**
  * Find the proper route for the provided request object
