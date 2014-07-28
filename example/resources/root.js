@@ -16,12 +16,10 @@ module.exports.many = new Resource({
 	},
 	methods : {
 		GET : function* (url, body, headers) {
-			return new Response(Promise.coroutine(function* () {
-				return {
-					"users" : "/users",
-					"posts" : "/posts"
-				};
-			})());
+			return new Response({
+				"users" : "/users",
+				"posts" : "/posts"
+			});
 		}
 	}
 });
