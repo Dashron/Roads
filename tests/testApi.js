@@ -50,7 +50,7 @@ exports.testlocateResource = function (test) {
 	var resource = createResource(['GET']);
 	var api = new API(resource);
 
-	test.equal(resource, api.locateResource(url_module.parse('/')));
+	test.equal(resource, api._locateResource(url_module.parse('/')));
 	test.done();
 };
 
@@ -64,7 +64,7 @@ exports.testSuccessLocateRoute = function (test) {
 	var resource = createResource(['GET']);
 	var api = new API(resource);
 
-	var route = Promise.coroutine(api.locateRoute(url_module.parse('/'), 'GET'));
+	var route = Promise.coroutine(api._locateRoute(url_module.parse('/'), 'GET'));
 
 	route({path : 'a'}, 'b', 'c').then(function (response) {
 		test.deepEqual({
@@ -88,7 +88,7 @@ exports.testInvalidPathLocateRoute = function (test) {
 	var resource = createResource(['GET']);
 	var api = new API(resource);
 
-	var route = Promise.coroutine(api.locateRoute(url_module.parse('/stuff'), 'GET'));
+	var route = Promise.coroutine(api._locateRoute(url_module.parse('/stuff'), 'GET'));
 
 	route({path : 'a'}, 'b', 'c').then(function (response) {
 		test.ok(false);
@@ -111,7 +111,7 @@ exports.testInvalidMethodLocateRoute = function (test) {
 	var resource = createResource(['GET']);
 	var api = new API(resource);
 
-	var route = Promise.coroutine(api.locateRoute(url_module.parse('/'), 'POST'));
+	var route = Promise.coroutine(api._locateRoute(url_module.parse('/'), 'POST'));
 
 	route({path : 'a'}, 'b', 'c').then(function (response) {
 		test.ok(false);
