@@ -1,4 +1,4 @@
-The Roads.js API Framework
+# The Roads.js API Framework
 
 Roads is a framework for creating APIs in node.js. It requires generator support, so you should be using node 0.11.13 or higher with the `--harmony` flag enabled.
 
@@ -12,28 +12,27 @@ Roads is a framework for creating APIs in node.js. It requires generator support
 
 # Index
 
- - API
+ - Roads.API
   - new API(`Resource` rootResource)
   - onError(`Function` fn)
   - onRequest(`Function` fn)
   - request(`String` method, `String` url, `dynamic` body, `Object` headers)
   - server(`IncomingMessage` httpRequest, `ServerResponse` httpResponse)
-
- - Resource
+ - Roads.Resource
   - new Resource(`Object` definition)
   - allowsMethod(`String` method)
   - getValidMethods()
   - getResourceKey(`String` request_url)
   - OPTIONS(`String` url, `dynamic` body, `Object` headers)
-
- - Response
+ - Roads.Response
   - new Response(`Object` data, `Number` status, `Object` headers)
   - getData()
   - filter(`dynamic` fields)
   - writeTo(`ServerResponse` httpResponse, `Boolean` end)
+ - Roads.HttpError
 
 
-# API
+# Roads.API
 
 ## new API(`Resource` rootResource)
 ### API Constructor
@@ -159,7 +158,7 @@ API.prototype.request = function (method, url, body, headers) {
  */
 API.prototype.server = function (http_request, http_response) {
 
-# RESOURCE
+# Roads.Resource
 
 //TODO: add direct spec references
 var Resource = module.exports = function Resource (definition) {
@@ -191,7 +190,7 @@ Resource.prototype.getResourceKey = function (request_url) {
  */
 Resource.prototype.OPTIONS = function* (url, body, headers) {
 
-# RESPONSE
+# Roads.Response
 
 var Response = module.exports = function Response (data, status, headers) {
 
@@ -215,3 +214,6 @@ Response.prototype.filter = function (fields) {
  * @return {[type]}          [description]
  */
 Response.prototype.writeTo = function(http_response, end) {
+
+
+# Roads.HttpError
