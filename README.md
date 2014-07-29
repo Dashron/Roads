@@ -13,24 +13,24 @@ Roads is a framework for creating APIs in node.js. It requires generator support
 # Index
 
  - API
- -- new API(`Resource` rootResource)
- -- onError(`Function` fn)
- -- onRequest(`Function` fn)
- -- request(`String` method, `String` url, `dynamic` body, `Object` headers)
- -- server(`IncomingMessage` httpRequest, `ServerResponse` httpResponse)
+  - new API(`Resource` rootResource)
+  - onError(`Function` fn)
+  - onRequest(`Function` fn)
+  - request(`String` method, `String` url, `dynamic` body, `Object` headers)
+  - server(`IncomingMessage` httpRequest, `ServerResponse` httpResponse)
 
  - Resource
- -- new Resource(`Object` definition)
- -- allowsMethod(`String` method)
- -- getValidMethods()
- -- getResourceKey(`String` request_url)
- -- OPTIONS(`String` url, `dynamic` body, `Object` headers)
+  - new Resource(`Object` definition)
+  - allowsMethod(`String` method)
+  - getValidMethods()
+  - getResourceKey(`String` request_url)
+  - OPTIONS(`String` url, `dynamic` body, `Object` headers)
 
  - Response
- -- new Response(`Object` data, `Number` status, `Object` headers)
- -- getData()
- -- filter(`dynamic` fields)
- -- writeTo(`ServerResponse` httpResponse, `Boolean` end)
+  - new Response(`Object` data, `Number` status, `Object` headers)
+  - getData()
+  - filter(`dynamic` fields)
+  - writeTo(`ServerResponse` httpResponse, `Boolean` end)
 
 
 # API
