@@ -8,10 +8,13 @@
     "name": "Aaron Hedges",
     "email": "aaron@dashron.com",
     "url": "www.dashron.com"
-    },
+  },
   "description": "A Resource oriented API Framework",
   "keywords": ["api", "framework"],
   "homepage": "https://github.com/Dashron/roads",
+  "scripts": {
+    "test": "node --harmony ./node_modules/nodeunit/bin/nodeunit ./tests"
+  },
   "bugs": { 
     "url" : "http://github.com/Dashron/roads/issues", 
     "email" : "aaron@dashron.com"
@@ -22,5 +25,8 @@
   },
   "dependencies": {
     "bluebird": ">=2.1.2"
+  },
+  "devDependencies": {
+    "nodeunit": "0.9.0"
   }
 }
