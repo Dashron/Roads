@@ -18,17 +18,19 @@ Roads is a framework for creating APIs in node.js. It requires generator support
   - [onRequest(`Function` fn)](#apionrequestfunction-fn)
   - [request(`String` method, `String` url, `dynamic` body, `Object` headers)](#apirequeststring-method-string-url-dynamic-body-object-headers)
   - [server(`IncomingMessage` http_request, `ServerResponse` http_response)](#apiserverincomingmessage-http_request-serverresponse-http_response)
- - [Roads.Resource](#)
-  - [new Resource(`Object` definition)](#)
- - [Roads.Response](#)
-  - [new Response(`Object` data, `Number` status, `Object` headers)](#)
-  - [getData()](#)
-  - [filter(`dynamic` fields)](#)
-  - [writeTo(`ServerResponse` httpResponse, `Boolean` end)](#)
- - [Roads.HttpError](#)
-
+ - [Roads.Resource](#roadsresource)
+  - [new Resource(`Object` definition)](#new-resourceobject-definition)
+ - [Roads.Response](#roadsresponse)
+  - [new Response(`Object` data, `Number` status, `Object` headers)](#new-responsedynamic-data-number-status-object-headers)
+  - [getData()](#responsegetdata)
+  - [filter(`dynamic` fields)](#responsefilterarray-fields)
+  - [writeTo(`ServerResponse` httpResponse, `Boolean` end)](##responsewritetoserverresponse-http_response-boolean-end)
+ - [Roads.HttpError](#roadshttperror)
+  - [new HttpError(`string` message, `number` code)](#new-httperrorstring-message-number-code)
 
 # Roads.API
+
+The API is a container that holds a series of Resource objects. It exposes a [request](#apirequeststring-method-string-url-dynamic-body-object-headers) method which allows you to interact directly with resources.
 
 ## new API(`Resource` root_resource)
 ### API Constructor
