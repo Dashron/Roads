@@ -28,12 +28,12 @@ Roads is a framework for creating APIs in node.js. It requires generator support
  - [Roads.HttpError](#roadshttperror)
   - [new HttpError(`string` message, `number` code)](#new-httperrorstring-message-number-code)
 
-# Roads.API
+## Roads.API
 
 The API is a container that holds a series of Resource objects. It exposes a [request](#apirequeststring-method-string-url-dynamic-body-object-headers) method which allows you to interact directly with resources.
 
-## new API(`Resource` root_resource)
-### API Constructor
+### new API(`Resource` root_resource)
+**API Constructor**
 
 Creates your API object, so you can use it directly or bind it to an HTTP server. A resource must be provided to this constructor.
 This resource will be used to generate the response for the root endpoint ( [protocol]://[host]/ ), and can link off to sub resources to define the rest of the endpoints.
@@ -43,8 +43,8 @@ This resource will be used to generate the response for the root endpoint ( [pro
 
     var api = new roads.API(root_resource);
 
-## API.onError(`Function` fn)
-### Assign an error handler to the API object
+### API.onError(`Function` fn)
+**Assign an error handler to the API object**
 
 You must provide a callback to the onError function. This callback will be called any time an error is thrown from a resource, or from the API object. The only parameter will be an `error` object.
 
@@ -72,14 +72,14 @@ There are only 3 errors that can be thrown from the API object
     });
 
 
-## API.onRequest(`Function` fn)
-### Add a custom handler for every request
+### API.onRequest(`Function` fn)
+**Add a custom handler for every request**
 
 You must provide a callback to the onRequest function. This callback will be called any time a request is made on the API object. This callback will be provided four parameters
- - *`url`* `string` The url that was provided to the request
- - *`body`* `object` The body that was provided to the request, after it was properly parsed into an object
- - *`headers`* `object` The headers that were provided to the request
-  - *`next`* `function` The proper routed function that this url should execute. It can take a single parameter, which will be passed through as the final parameter of a resource route. You can read more about the resource routes at <link>
+ - **`url`** `string` The url that was provided to the request
+ - **`body`** `object` The body that was provided to the request, after it was properly parsed into an object
+ - **`headers`** `object` The headers that were provided to the request
+  - **`next`** `function` The proper routed function that this url should execute. It can take a single parameter, which will be passed through as the final parameter of a resource route. You can read more about the resource routes at <link>
 
 This callback also must return a response object to be properly sent to the user.
 
@@ -108,8 +108,8 @@ This callback also must return a response object to be properly sent to the user
     	extras.example === "test";
     }
 
-## API.request(`string` method, `string` url, `dynamic` body, `object` headers)
-### Make a request to the API.
+### API.request(`string` method, `string` url, `dynamic` body, `object` headers)
+**Make a request to the API.**
 
 This function will locate the appropriate route for the provided parameters and execute it and return a <link>thenable (Promises/A compatible promise).
 On success, you should receive a <link>Response object
@@ -133,34 +133,34 @@ On failure, you should receive an error. This error might be an <link>HttpError
     });
 
 
-## API.server(`IncomingMessage` http_request, `ServerResponse` http_response)
-### An onRequest callback for http.createServer()
+### API.server(`IncomingMessage` http_request, `ServerResponse` http_response)
+**An onRequest callback for http.createServer()**
 
 Helper function so the api can be thrown directly into http.createServer
 
 
-# Roads.Resource
+## Roads.Resource
 
-## new Resource(`object` definition)
-### Constructor
+### new Resource(`object` definition)
+**Constructor**
 
-# Roads.Response
+## Roads.Response
 
-## new Response(`dynamic` data, `number` status, `object` headers)
-### Constructor
+### new Response(`dynamic` data, `number` status, `object` headers)
+**Constructor**
 
-## Response.getData()
-### Get the final data from the response, after all parsing
-
-
-## Response.filter(`array` fields)
-### Assign a whitelist of field keys that should be allowed to pass through getData
-
-## Response.writeTo(`ServerResponse` http_response, `boolean` end)
-### A helper function to retrieve the response data and write it out to a server
+### Response.getData()
+**Get the final data from the response, after all parsing**
 
 
-# Roads.HttpError
+### Response.filter(`array` fields)
+**Assign a whitelist of field keys that should be allowed to pass through getData**
 
-## new HttpError(`string` message, `number` code)
-### A helper error, that when thrown will turn into an HTTP status code, and json message
+### Response.writeTo(`ServerResponse` http_response, `boolean` end)
+**A helper function to retrieve the response data and write it out to a server**
+
+
+## Roads.HttpError
+
+### new HttpError(`string` message, `number` code)
+**A helper error, that when thrown will turn into an HTTP status code, and json message**
