@@ -12,29 +12,25 @@ Roads is a framework for creating APIs in node.js. It requires generator support
 
 # Index
 
- - Roads.API
-  - new API(`Resource` rootResource)
-  - onError(`Function` fn)
-  - onRequest(`Function` fn)
-  - request(`String` method, `String` url, `dynamic` body, `Object` headers)
-  - server(`IncomingMessage` httpRequest, `ServerResponse` httpResponse)
- - Roads.Resource
-  - new Resource(`Object` definition)
-  - allowsMethod(`String` method)
-  - getValidMethods()
-  - getResourceKey(`String` request_url)
-  - OPTIONS(`String` url, `dynamic` body, `Object` headers)
- - Roads.Response
-  - new Response(`Object` data, `Number` status, `Object` headers)
-  - getData()
-  - filter(`dynamic` fields)
-  - writeTo(`ServerResponse` httpResponse, `Boolean` end)
- - Roads.HttpError
+ - [Roads.API](#roadsapi)
+  - [new API(`Resource` root_resource)](#new-apiresource-rootresource)
+  - [onError(`Function` fn)](#apionerrorfunction-fn)
+  - [onRequest(`Function` fn)](#apionrequestfunction-fn)
+  - [request(`String` method, `String` url, `dynamic` body, `Object` headers)](#apirequeststring-method-string-url-dynamic-body-object-headers)
+  - [server(`IncomingMessage` http_request, `ServerResponse` http_response)](#)
+ - [Roads.Resource](#)
+  - [new Resource(`Object` definition)](#)
+ - [Roads.Response](#)
+  - [new Response(`Object` data, `Number` status, `Object` headers)](#)
+  - [getData()](#)
+  - [filter(`dynamic` fields)](#)
+  - [writeTo(`ServerResponse` httpResponse, `Boolean` end)](#)
+ - [Roads.HttpError](#)
 
 
 # Roads.API
 
-## new API(`Resource` rootResource)
+## new API(`Resource` root_resource)
 ### API Constructor
 
 Creates your API object, so you can use it directly or bind it to an HTTP server. A resource must be provided to this constructor.
@@ -43,7 +39,7 @@ This resource will be used to generate the response for the root endpoint ( [pro
     var roads = require('roads');
     var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at <link> for information about the Resource constructor.
 
-    var api = new roads.API(root_esource);
+    var api = new roads.API(root_resource);
 
 ## API.onError(`Function` fn)
 ### Assign an error handler to the API object
@@ -59,11 +55,7 @@ There are only 3 errors that can be thrown from the API object
 
  This callback can return a Response object, which will be rendered for the user if possible.
 
-
-    var roads = require('roads');
-    var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at <link> for information about the Resource constructor.
-
-    var api = new roads.API(root_esource);
+    var api = new roads.API(root_resource);
     api.onError(function (error) {
         console.log(error);
         switch (error.code) {
@@ -139,81 +131,34 @@ On failure, you should receive an error. This error might be an <link>HttpError
     });
 
 
-/**
- * Make a request into the API
- * 
- * @param  string method
- * @param  string url     
- * @param  string body    
- * @param  array headers 
- * @return string
- */
-API.prototype.request = function (method, url, body, headers) {
+## API.server(`IncomingMessage` http_request, `ServerResponse` http_response)
+### An onRequest callback for http.createServer()
 
-/**
- * Helper function so the api can be thrown directly into http.createServer
- * 
- * @param  ClientRequest http_request
- * @param  ServerResponse http_response
- */
-API.prototype.server = function (http_request, http_response) {
+Helper function so the api can be thrown directly into http.createServer
+
 
 # Roads.Resource
 
-//TODO: add direct spec references
-var Resource = module.exports = function Resource (definition) {
-
-/**
- * [allowedMethod description]
- * @param  {[type]} method [description]
- * @return {[type]}        [description]
- */
-Resource.prototype.allowsMethod = function (method) {
-
-/**
- * [getValidMethods description]
- * @return {[type]} [description]
- */
-Resource.prototype.getValidMethods = function () {
-
-
-/**
- * [getResource description]
- * @param  {[type]} request_url [description]
- * @return {[type]}             [description]
- */
-Resource.prototype.getResourceKey = function (request_url) {
-
-/**
- * [OPTIONS description]
- * @type {[type]}
- */
-Resource.prototype.OPTIONS = function* (url, body, headers) {
+## new Resource(`object` definition)
+### Constructor
 
 # Roads.Response
 
-var Response = module.exports = function Response (data, status, headers) {
+## new Response(`dynamic` data, `number` status, `object` headers)
+### Constructor
 
-/**
- * [getData description]
- * @return {[type]} [description]
- */
-Response.prototype.getData = function () {
+## Response.getData()
+### Get the final data from the response, after all parsing
 
-/**
- * Load the fields whitelist for the final representation
- * 
- * @param  {[type]} fields [description]
- * @return {[type]}        [description]
- */
-Response.prototype.filter = function (fields) {
 
-/**
- * [write description]
- * @param  {[type]} response [description]
- * @return {[type]}          [description]
- */
-Response.prototype.writeTo = function(http_response, end) {
+## Response.filter(`array` fields)
+### Assign a whitelist of field keys that should be allowed to pass through getData
+
+## Response.writeTo(`ServerResponse` http_response, `boolean` end)
+### A helper function to retrieve the response data and write it out to a server
 
 
 # Roads.HttpError
+
+## new HttpError(`string` message, `number` code)
+### A helper error, that when thrown will turn into an HTTP status code, and json message
