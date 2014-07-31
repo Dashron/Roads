@@ -24,7 +24,7 @@ Roads is a framework for creating APIs in node.js. It requires generator support
   - [new Response(`Object` data, `Number` status, `Object` headers)](#new-responsedynamic-data-number-status-object-headers)
   - [getData()](#responsegetdata)
   - [filter(`dynamic` fields)](#responsefilterarray-fields)
-  - [writeTo(`ServerResponse` httpResponse, `Boolean` end)](##responsewritetoserverresponse-http_response-boolean-end)
+  - [writeTo(`ServerResponse` httpResponse, `Boolean` end)](#responsewritetoserverresponse-http_response-boolean-end)
  - [Roads.HttpError](#roadshttperror)
   - [new HttpError(`string` message, `number` code)](#new-httperrorstring-message-number-code)
 
