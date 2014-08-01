@@ -24,7 +24,7 @@ Roads is a framework for creating APIs in node.js. It requires generator support
   - [new Response(`Object` data, `Number` status, `Object` headers)](#new-responsedynamic-data-number-status-object-headers)
   - [getData()](#responsegetdata)
   - [filter(`dynamic` fields)](#responsefilterarray-fields)
-  - [writeTo(`ServerResponse` httpResponse, `Boolean` end)](#responsewritetoserverresponse-http_response-boolean-end)
+  - [writeTo(`ServerResponse` httpResponse, `Boolean` end)](##responsewritetoserverresponse-http_response-boolean-end)
  - [Roads.HttpError](#roadshttperror)
   - [new HttpError(`string` message, `number` code)](#new-httperrorstring-message-number-code)
 
@@ -32,11 +32,14 @@ Roads is a framework for creating APIs in node.js. It requires generator support
 
 The API is a container that holds a series of Resource objects. It exposes a [request](#apirequeststring-method-string-url-dynamic-body-object-headers) method which allows you to interact directly with resources.
 
+To create all of your api endpoints, you start with the root_resource, and assign [sub-resources](#roadsresource).
+
 ### new API(`Resource` root_resource)
 **API Constructor**
 
-Creates your API object, so you can use it directly or bind it to an HTTP server. A resource must be provided to this constructor.
-This resource will be used to generate the response for the root endpoint ( [protocol]://[host]/ ), and can link off to sub resources to define the rest of the endpoints.
+Creates your API object, so you can use it directly or bind it to an [HTTP server](http://nodejs.org/api/http.html#http_http_createserver_requestlistener). 
+
+ - `[Resource](#roadsresource)` **root_resource** : Required. Used to generate the [response](#roadsresponse) for the root endpoint ( [protocol]://[host]/ ).
  
     var roads = require('roads');
     var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at <link> for information about the Resource constructor.
@@ -46,16 +49,16 @@ This resource will be used to generate the response for the root endpoint ( [pro
 ### API.onError(`Function` fn)
 **Assign an error handler to the API object**
 
-You must provide a callback to the onError function. This callback will be called any time an error is thrown from a resource, or from the API object. The only parameter will be an `error` object.
+ name | type            | required | description
+ -----|-----------------|----------|-------------
+ fn   | Function(error) | Yes      | A callback that will be executed any time an error is thrown from within a resource, or from the API object. The only parameter will be an `error` object.
 
-There are only 3 errors that can be thrown from the API object
+This callback can return a Response object, which will be rendered for the user if possible.
+
+Independent of any errors thrown by your resources, the API object can surface one of three errors.
  - *new roads.HttpError(parsed_url.pathname, 404)* If the endpoint could not be found
  - *new roads.HttpError(resource.getValidMethods(), 405);* If the endpoint was found, but the HTTP method was not supported
  - *new Error()* If an unexpected error occurs
-
- Any other error (and possibly some of the three above) can be thrown from a resource object, and will be surfaced through this callback.
-
- This callback can return a Response object, which will be rendered for the user if possible.
 
     var api = new roads.API(root_resource);
     api.onError(function (error) {
@@ -75,13 +78,16 @@ There are only 3 errors that can be thrown from the API object
 ### API.onRequest(`Function` fn)
 **Add a custom handler for every request**
 
-You must provide a callback to the onRequest function. This callback will be called any time a request is made on the API object. This callback will be provided four parameters
- - **`url`** `string` The url that was provided to the request
- - **`body`** `object` The body that was provided to the request, after it was properly parsed into an object
- - **`headers`** `object` The headers that were provided to the request
-  - **`next`** `function` The proper routed function that this url should execute. It can take a single parameter, which will be passed through as the final parameter of a resource route. You can read more about the resource routes at <link>
+ name | type                               | required | description
+ -----|------------------------------------|----------|---------------
+ fn   | Function(url, body, headers, next) | yes      | Will be called any time a request is made on the API object. This callback will be provided four parameters
+ 
+ - `string` **url** : The url that was provided to the request
+ - `object` **body**  : The body that was provided to the request, after it was properly parsed into an object
+ - `object` **headers**  : The headers that were provided to the request
+  - `function` **next**  : The resource method that this request expected. You may optionally execute this method. If you provide a parameter, it will become the fourth parameter of the <link>resource method.
 
-This callback also must return a response object to be properly sent to the user.
+This callback must return a response object. You do not have to return the response from the `next` method, you can return an entirely different response object.
 
 	// Example of an onRequest handler
     api.onRequest(function* (url, body, headers, next) {
@@ -99,21 +105,17 @@ This callback also must return a response object to be properly sent to the user
 	    
 	    // This would also be a good place to identify the authenticated user, or api app and add it to the extras
     
-    	// execute the actual route, and return the response
+    	// execute the actual resource method, and return the response
     	return next(extras);
     });
-
-    // Example of resource route that accepts the extra data from an `onRequest` handler. This would be called when `onRequest` calls `next(extras)`
-    GET : function* (url, body, headers, extras) {
-    	extras.example === "test";
-    }
 
 ### API.request(`string` method, `string` url, `dynamic` body, `object` headers)
 **Make a request to the API.**
 
-This function will locate the appropriate route for the provided parameters and execute it and return a <link>thenable (Promises/A compatible promise).
-On success, you should receive a <link>Response object
-On failure, you should receive an error. This error might be an <link>HttpError
+
+This function will locate the appropriate <link>resource method for the provided parameters and execute it and return a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A).
+On success, you should receive a [Response](#roadsresponse) object
+On failure, you should receive an error. This error might be an [HttpError](#roadshttperror)
 
     var promise = api.request('GET', '/users/dashron');
     
@@ -144,10 +146,21 @@ Helper function so the api can be thrown directly into http.createServer
 ### new Resource(`object` definition)
 **Constructor**
 
+    // Example of resource method that accepts the extra data from an `onRequest` handler. This would be called when `onRequest` calls `next(extras)`
+    GET : function* (url, body, headers, extras) {
+      extras.example === "test";
+    }
+
 ## Roads.Response
+
+The response object contains all of the information you want to send to the client. This includes the body, status code and all applicable headers. 
 
 ### new Response(`dynamic` data, `number` status, `object` headers)
 **Constructor**
+
+Build a response object. 
+ - `data` : 
+
 
 ### Response.getData()
 **Get the final data from the response, after all parsing**
