@@ -60,11 +60,11 @@ This callback can return a Response object, which will be rendered for the user 
 
 Independent of any errors thrown by your resources, the API object can surface one of three errors.
 
-code                                                    | message                                                          | description
---------------------------------------------------------|------------------------------------------------------------------|-----------------------------
-`new roads.HttpError(parsed_url.pathname, 404);`        | The request pathname                                             | If the endpoint could not be found
-`new roads.HttpError(resource.getValidMethods(), 405);` | An array of HTTP methods that can be requested for this resource | If the endpoint was found, but the HTTP method was not supported
-`new Error();`                                          | Dependant on the error                                           | If an unexpected error occurs
+type                 | message                                                          | status | description
+----------|------------------------------------------------------------------|-------------------------------------------|-----------------------------
+HttpError            | The request pathname                                             | 404    | If the endpoint could not be found                                  
+HttpError            | An array of HTTP methods that can be requested for this resource | 405    | If the endpoint was found, but the HTTP method was not supported
+Other (likely Error) | Dependant on the error                                           | 500    | If any other error is thrown
 
 
 
