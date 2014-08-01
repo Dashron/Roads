@@ -206,11 +206,23 @@ name        | type                               | description
 
 Create a response object. 
 
+    new Response({"uri" : "..."}, 200, {"last-modified":"2014-04-27 00:00:00"});
+
 ### Response.getData()
 **Get the final data from the response, after all parsing**
 
+The result will always be a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A), no matter what data has been provided to the Response object.
+
+    response.getData()
+        .then(function (data) {
+            console.log(data);
+        })
+        error(function (error) {
+            console.log(error);
+        });
 
 ### Response.filter(*array* fields)
+**Assign a whitelist of field keys that should be allowed to pass through getData**
 
 name        | type  | description
  -----------|-------|---------------
@@ -225,8 +237,6 @@ name        | type  | description
                 }
             });
         });
-
-**Assign a whitelist of field keys that should be allowed to pass through getData**
 
 ### Response.writeTo(*ServerResponse* http_response, *boolean* end)
 **A helper function to retrieve the response data and write it out to a server**
