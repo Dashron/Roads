@@ -39,12 +39,16 @@ To create all of your api endpoints, you start with the root_resource, and assig
 
 Creates your API object, so you can use it directly or bind it to an [HTTP server](http://nodejs.org/api/http.html#http_http_createserver_requestlistener). 
 
- - `[Resource](#roadsresource)` **root_resource** : Required. Used to generate the [response](#roadsresponse) for the root endpoint ( [protocol]://[host]/ ).
- 
+ name          | type            | required | description
+ --------------|-----------------|----------|-------------
+ root_resource | [Resource](#roadsresource) | yes | Used to generate the [response](#roadsresponse) for the root endpoint ( [protocol]://[host]/ ).
+
+
+
     var roads = require('roads');
     var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at <link> for information about the Resource constructor.
-
     var api = new roads.API(root_resource);
+
 
 ### API.onError(`Function` fn)
 **Assign an error handler to the API object**
@@ -56,9 +60,14 @@ Creates your API object, so you can use it directly or bind it to an [HTTP serve
 This callback can return a Response object, which will be rendered for the user if possible.
 
 Independent of any errors thrown by your resources, the API object can surface one of three errors.
- - *new roads.HttpError(parsed_url.pathname, 404)* If the endpoint could not be found
- - *new roads.HttpError(resource.getValidMethods(), 405);* If the endpoint was found, but the HTTP method was not supported
- - *new Error()* If an unexpected error occurs
+
+code                                                    | description
+--------------------------------------------------------|------------
+`new roads.HttpError(parsed_url.pathname, 404);`        | If the endpoint could not be found
+`new roads.HttpError(resource.getValidMethods(), 405);` | If the endpoint was found, but the HTTP method was not supported
+`new Error();`                                          | If an unexpected error occurs
+
+
 
     var api = new roads.API(root_resource);
     api.onError(function (error) {
@@ -75,38 +84,42 @@ Independent of any errors thrown by your resources, the API object can surface o
     });
 
 
+
 ### API.onRequest(`Function` fn)
 **Add a custom handler for every request**
 
  name | type                               | required | description
  -----|------------------------------------|----------|---------------
- fn   | Function(url, body, headers, next) | yes      | Will be called any time a request is made on the API object. This callback will be provided four parameters
+ fn   | Function(url, body, headers, next) | yes      | Will be called any time a request is made on the API object.
  
- - `string` **url** : The url that was provided to the request
- - `object` **body**  : The body that was provided to the request, after it was properly parsed into an object
- - `object` **headers**  : The headers that were provided to the request
-  - `function` **next**  : The resource method that this request expected. You may optionally execute this method. If you provide a parameter, it will become the fourth parameter of the <link>resource method.
+ This callback will be provided four parameters
+ 
+name     | type                               | description
+ --------|------------------------------------|---------------
+ url     | string                             | The url that was provided to the request
+ body    | object                             | The body that was provided to the request, after it was properly parsed into an object
+ headers | object                             | The headers that were provided to the request
+ next    | function                           | The resource method that this request expected. You may optionally execute this method. If you provide a parameter, it will become the fourth parameter of the <link>resource method.
 
 This callback must return a response object. You do not have to return the response from the `next` method, you can return an entirely different response object.
 
-	// Example of an onRequest handler
+    // Example of an onRequest handler
     api.onRequest(function* (url, body, headers, next) {
     	// define an extras object
-	    var extras = {
-	    	example : "test"
-	    };
-
+        var extras = {
+            example : "test"
+        };
+        
     	// kill trailing slash as long as we aren't at the root level
-	    if (url.path != '/' && url.path[url.path.length - 1] === '/') {
-		    return new roads.Response(null, 302, {
-	    		location : url.path.substring(0, url.path.length - 1)
-    		});
-	    }
-	    
-	    // This would also be a good place to identify the authenticated user, or api app and add it to the extras
+        if (url.path != '/' && url.path[url.path.length - 1] === '/') {
+            return new roads.Response(null, 302, {
+            location : url.path.substring(0, url.path.length - 1)
+        });
+    }
     
-    	// execute the actual resource method, and return the response
-    	return next(extras);
+    // This would also be a good place to identify the authenticated user, or api app and add it to the extras
+    // execute the actual resource method, and return the response
+        return next(extras);
     });
 
 ### API.request(`string` method, `string` url, `dynamic` body, `object` headers)
@@ -122,16 +135,16 @@ On failure, you should receive an error. This error might be an [HttpError](#roa
     promise.then(function (response) {
         // you can't predict error fields easily, so we don't apply the filter on errors
         response.getData()
-        	.then(function(data) {
-        		console.log(data);
-        	})
+            .then(function(data) {
+                console.log(data);
+            })
             .catch(function (err) {
                 console.log(err);
-        	});
+            });
     });
-
+    
     promise.catch(function (err) {
-    	console.log(err);
+        console.log(err);
     });
 
 
