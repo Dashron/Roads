@@ -32,7 +32,7 @@ Roads is a framework for creating APIs in node.js. It requires generator support
 
 The API is a container that holds a series of Resource objects. It exposes a [request](#apirequeststring-method-string-url-dynamic-body-object-headers) method which allows you to interact directly with resources.
 
-To create all of your api endpoints, you start with the root_resource, and assign [sub-resources](#roadsresource).
+To create all of your api endpoints, you start with the root_resource, and assign sub-[resources](#roadsresource).
 
 ### new API(*Resource* root_resource)
 **API Constructor**
@@ -61,7 +61,7 @@ This callback can return a Response object, which will be rendered for the user 
 Independent of any errors thrown by your resources, the API object can surface one of three errors.
 
 type                 | message                                                          | status | description
-----------|------------------------------------------------------------------|-------------------------------------------|-----------------------------
+---------------------|------------------------------------------------------------------|--------|-----------------------------
 HttpError            | The request pathname                                             | 404    | If the endpoint could not be found                                  
 HttpError            | An array of HTTP methods that can be requested for this resource | 405    | If the endpoint was found, but the HTTP method was not supported
 Other (likely Error) | Dependant on the error                                           | 500    | If any other error is thrown
@@ -98,7 +98,7 @@ name     | type                               | description
  url     | string                             | The url that was provided to the request
  body    | object                             | The body that was provided to the request, after it was properly parsed into an object
  headers | object                             | The headers that were provided to the request
- next    | function                           | The resource method that this request expected. You may optionally execute this method. If you provide a parameter, it will become the fourth parameter of the <link>resource method.
+ next    | function                           | The [resource method](#) that this request expected. You may optionally execute this method. If you provide a parameter, it will become the fourth parameter of the [resource method](#).
 
 This callback must return a response object. You do not have to return the response from the `next` method, you can return an entirely different response object.
 
@@ -125,7 +125,7 @@ This callback must return a response object. You do not have to return the respo
 **Make a request to the API.**
 
 
-This function will locate the appropriate <link>resource method for the provided parameters and execute it and return a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A).
+This function will locate the appropriate <link>resource method for the provided parameters, execute it and return a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A).
 On success, you should receive a [Response](#roadsresponse) object
 On failure, you should receive an error. This error might be an [HttpError](#roadshttperror)
 
@@ -152,16 +152,44 @@ On failure, you should receive an error. This error might be an [HttpError](#roa
 
 Helper function so the api can be thrown directly into http.createServer
 
+    require('http').createServer(api.server.bind(api))
+        .listen(8081, function () {
+            console.log('server has started');
+        });
+
 
 ## Roads.Resource
+
+Each resource represents a single endpoint. The definition provided to the constructor defines how the resource operates, and all methods exposed on a resource are intended to be used by other parts of the roads framework.
 
 ### new Resource(*Object* definition)
 **Constructor**
 
-    // Example of resource method that accepts the extra data from an `onRequest` handler. This would be called when `onRequest` calls `next(extras)`
-    GET : function* (url, body, headers, extras) {
-      extras.example === "test";
-    }
+name        | type                               | description
+ -----------|------------------------------------|---------------
+ definition | object                             | A definition which describes how the resource should operate
+
+The definition only looks for two fields.
+
+name        | type                               | description
+ -----------|------------------------------------|---------------
+ resources  | object                             | Each key is a [url part](#), and each value is a sub-[resource](#roadsresource)
+ methods    | object                             | Each key is an HTTP method, and each value is a [resource method](#).
+
+    module.exports.many = new Resource({
+        resources : {
+            'users' : require('./users').many,
+            'posts' : require('./posts').many
+        },
+        methods : {
+            GET : function* (url, body, headers, extras) {
+                return new Response({
+                    "users" : "/users",
+                    "posts" : "/posts"
+                });
+            }
+        }
+    });
 
 ## Roads.Response
 
@@ -170,15 +198,34 @@ The response object contains all of the information you want to send to the clie
 ### new Response(*dynamic* data, *number* status, *Object* headers)
 **Constructor**
 
-Build a response object. 
- - `data` : 
+name        | type                               | description
+ -----------|------------------------------------|---------------
+ data       | dynamic                            | A definition which describes how the resource should operate
+ status     | number                             | The HTTP Status code
+ headers    | object                             | Key value pairs of http headers.
 
+Create a response object. 
 
 ### Response.getData()
 **Get the final data from the response, after all parsing**
 
 
 ### Response.filter(*array* fields)
+
+name        | type  | description
+ -----------|-------|---------------
+ fields     | array | A whitelist of fields that should be included in the response. For nested fields, use dot notation (eg. pictures.uri)
+
+    response.fields(['name', pictures.uri']).getData()
+        .then(function (data) {
+            deepEquals(data, {
+                "name" : ... ,
+                "pictures" : {
+                    "uri" : "..."
+                }
+            });
+        });
+
 **Assign a whitelist of field keys that should be allowed to pass through getData**
 
 ### Response.writeTo(*ServerResponse* http_response, *boolean* end)
