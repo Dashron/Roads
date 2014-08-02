@@ -98,7 +98,7 @@ name     | type                               | description
  url     | string                             | The url that was provided to the request
  body    | object                             | The body that was provided to the request, after it was properly parsed into an object
  headers | object                             | The headers that were provided to the request
- next    | function                           | The [resource method](#) that this request expected. You may optionally execute this method. If you provide a parameter, it will become the fourth parameter of the [resource method](#).
+ next    | function                           | The [resource method](#resource-method) that this request expected. You may optionally execute this method. If you provide a parameter, it will become the fourth parameter of the [resource method](#resource-method).
 
 This callback must return a response object. You do not have to return the response from the `next` method, you can return an entirely different response object.
 
@@ -173,8 +173,8 @@ The definition only looks for two fields.
 
 name        | type                               | description
  -----------|------------------------------------|---------------
- resources  | object                             | Each key is a [url part](#), and each value is a sub-[resource](#roadsresource)
- methods    | object                             | Each key is an HTTP method, and each value is a [resource method](#).
+ resources  | object                             | Each key is a [url part](#url-part), and each value is a sub-[resource](#roadsresource)
+ methods    | object                             | Each key is an HTTP method, and each value is a [resource method](#resource-method).
 
     module.exports.many = new Resource({
         resources : {
