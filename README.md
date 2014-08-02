@@ -191,6 +191,59 @@ name        | type                               | description
         }
     });
 
+#### URL Part
+
+All URL routing happens through the resource definition, and through sub resources. The root resource represents a url without any path ([protocol]://[host]/). This root resource must define additional resources as sub resources, which will branch out after the root resource.
+
+Part       | Example   | Example values | Description
+-----------|-----------|----------------|--------------
+{literal}  | users     | users          | The provided value must explicitly match the url part
+#{key}     | #user_id  | 12445          | The provided value must be numeric
+${key}     | #username | dashron        | The provided value can be any series of non-forward slash, url valid characters
+
+In the following example, the only valid urls are /, /users and /users/{number}
+
+    var single = new Resource({
+    });
+
+    var many = new Resource({
+        resources : {
+            "#user_id" : single
+        }
+    });
+
+    var root = new Resource({
+        resources : {
+            "users" : many
+        }
+    });
+
+For variable fields, you can retrieve the variable in the url parameter. The url parameter will be an object, and will have an "args" parameter
+
+    var single = new Resource({
+        methods : function (url, body, headers, extras) {
+            console.log(url.args.user_id);
+        }
+    });
+
+    var many = new Resource({
+        resources : {
+            "#user_id" : single
+        }
+    });
+
+    var root = new Resource({
+        resources : {
+            "users" : many
+        }
+    });
+
+#### Resource Method
+
+Each method : function pair of the methods field describes how the API server will respond to an HTTP request. The function is called a "resource method". Resource methods must return a promise. This can either be by providing a generator function (which is automatically turned into a coroutine for you), or by providing a function and returning a promise manually.
+
+If a method is missing, the API will throw an HttpError. The message will contain all of the valid methods, and the status code will be 405.
+
 ## Roads.Response
 
 The response object contains all of the information you want to send to the client. This includes the body, status code and all applicable headers. 
