@@ -1,6 +1,8 @@
-module.exports = require('bluebird').coroutine(function* (error) {
+"use strict";
+
+module.exports = function (error) {
 	return {
 		error : 'There is no resource located at ' + error.message,
 		code : 404
 	};
-});
+};

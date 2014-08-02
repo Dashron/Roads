@@ -1,6 +1,6 @@
 "use strict";
 
-module.exports = require('bluebird').coroutine(function* (user) {
+module.exports = function (user) {
 	var representation = {};
 
 	representation.uri = '/users/' + user.id;
@@ -9,4 +9,4 @@ module.exports = require('bluebird').coroutine(function* (user) {
 	representation.email = user.email;
 
 	return representation;
-});
+};

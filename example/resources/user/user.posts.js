@@ -26,7 +26,7 @@ module.exports.one = new Resource({
 
 			var post = yield Posts.get('id=' + url.args.post_id);
 
-			if (!post || post.user_id != url.args.user_id) {
+			if (!post || post.user_id !== url.args.user_id) {
 				throw new roads.HttpError('post', 404);
 			}
 

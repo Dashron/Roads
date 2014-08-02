@@ -27,21 +27,21 @@ var get = function (key) {
 		case "id=3" :
 			return users[2];
 	}
-}
+};
 
 var insert = function (object) {
 	users.push(object);
 	return object;
-}
+};
 
 module.exports.get = function (key, callback) {
 	return new Promise(function (resolve, reject) {
 		resolve(get(key));
 	});
-}
+};
 
 module.exports.insert = function (object) {
 	return new Promise(function (resolve, reject) {
 		resolve(insert(key));
 	});
-}
+};

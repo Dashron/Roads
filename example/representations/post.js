@@ -2,7 +2,7 @@
 
 var userRepresentation = require('./user');
 
-module.exports = require('bluebird').coroutine(function* (post) {
+module.exports = function (post) {
 	var representation = {};
 
 	representation.uri = '/posts/' + post.id;
@@ -14,4 +14,4 @@ module.exports = require('bluebird').coroutine(function* (post) {
 	};
 
 	return representation;
-});
+};

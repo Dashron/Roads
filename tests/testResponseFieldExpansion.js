@@ -1,3 +1,5 @@
+"use strict";
+
 var filter_module = require('../lib/response_filter');
 
 /**

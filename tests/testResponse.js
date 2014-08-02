@@ -1,3 +1,5 @@
+"use strict";
+
 var Response = require('../lib/response');
 var url_module = require('url');
 var Promise = require('bluebird');

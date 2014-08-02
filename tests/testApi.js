@@ -1,3 +1,5 @@
+"use strict";
+
 var Resource = require('../lib/resource');
 var API = require('../lib/api');
 var url_module = require('url');
@@ -25,7 +27,7 @@ function createResource (methods, resources) {
 	var definition = {
 		methods : {
 		}
-	}
+	};
 
 	if (methods) {
 		methods.forEach(function (method) {

@@ -1,6 +1,7 @@
 {
 	"node" : true,
 	"es5" : true,
+	"esnext" : true,
 
 	"curly" : true,
 	"eqeqeq" : true,
@@ -18,7 +19,6 @@
 	"boss" : false,
 	"debug" : false,
 	"eqnull" : false,
-	"esnext" : false,
 	"evil" : false,
 	"expr" : false,
 	"funcscope" : false,

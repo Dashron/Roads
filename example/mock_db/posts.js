@@ -46,4 +46,4 @@ module.exports.get = function (key, callback) {
 	return new Promise(function (resolve, reject) {
 		resolve(get(key));
 	});
-}
+};

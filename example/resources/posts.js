@@ -8,7 +8,7 @@ var Posts = require('../mock_db/posts');
 var Users = require('../mock_db/users');
 var userRepresentation = require('../representations/user');
 var postRepresentation = require('../representations/post');
-var collectionRepresentation = require('../representations/collection')
+var collectionRepresentation = require('../representations/collection');
 /**
  * [one description]
  * @type {Resource}

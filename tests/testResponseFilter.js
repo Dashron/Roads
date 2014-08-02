@@ -1,3 +1,5 @@
+"use strict";
+
 var filter_module = require('../lib/response_filter');
 
 /**
@@ -26,25 +28,25 @@ function testResponseObject (expand_func) {
 			return {
 				"test" : "yeah",
 				"huh" : "what"
-			}
+			};
 		},
 		"delayed_array" : function () {
 			return [{
 				"name" : "bob",
 			}, {
 				"name" : "tom"
-			}]
+			}];
 		}
 	};
 
 	if (expand_func === true) {
-		response['delayed'] = response['delayed']();
-		response['delayed_obj'] = response['delayed_obj']();
-		response['delayed_array'] = response['delayed_array']();
+		response.delayed = response.delayed();
+		response.delayed_obj = response.delayed_obj();
+		response.delayed_array = response.delayed_array();
 	}
 
 	return response;
-};
+}
 
 /**
  * Test that true will render the whole response body

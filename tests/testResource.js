@@ -1,3 +1,5 @@
+"use strict";
+
 var Resource = require('../lib/resource');
 
 /**
@@ -19,7 +21,7 @@ function createResource (methods, resources) {
 	var definition = {
 		methods : {
 		}
-	}
+	};
 
 	if (methods) {
 		methods.forEach(function (method) {
@@ -149,7 +151,7 @@ exports.testGetUnsuccessfulResourceKey = function (test) {
 	test.ok(!resource.getResourceKey('stuff'));
 
 	test.done();
-}
+};
 
 /**
  * Ensure that string requests on an int route fail
@@ -165,7 +167,7 @@ exports.testGetUnsuccessfulIntResourceKey = function (test) {
 	test.ok(!resource.getResourceKey('stuff'));
 
 	test.done();
-}
+};
 
 /**
  * Ensure that strings after numbers don't screw anything up when you have a number
@@ -188,7 +190,7 @@ exports.testGetProperIntSubresourceResourceKey = function (test) {
 	});
 
 	test.done();
-}
+};
 
 /**
  * Ensure that strings after numbers don't screw anything up when you have a string
@@ -211,4 +213,4 @@ exports.testGetProperIStringSubresourceResourceKey = function (test) {
 	});
 
 	test.done();
-}
+};
