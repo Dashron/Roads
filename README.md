@@ -1,26 +1,301 @@
-The Roads.js framework is still currently in heavy development. 
+# The Roads.js API Framework
 
-## Important Note!
-This project now has support for the `yield` keyword. The example assumes you are using it, but it is NOT required to use this project.
-To run the example, make sure you have at least node 0.11 and type `node --harmony server.js`
+Roads is a framework for creating APIs in node.js. It requires generator support, so you should be using node 0.11.13 or higher with the `--harmony` flag enabled.
+
+# Why should I use Roads?
+
+1. It helps build an organized, resource oriented API through a nested routing structure.
+2. It can be required right from your code, or called over HTTP.
+3. It supports yield, for cleaner code.
+4. It supports delayed response execution. If your users don't want certain fields, the code associated will never be run
 
 
-## Structure
-Code is structured into "Projects". Each project has its own folder structure and primary project.js file.
+# Index
 
-Project.js defines the resources and routes associated with each project. Each project can be mounted to a first tier url part via the websites configuration file.
+ - [Roads.API](#roadsapi)
+  - [new API(*Resource* root_resource)](#new-apiresource-root_resource)
+  - [onError(*Function* fn)](#apionerrorfunction-fn)
+  - [onRequest(*Function* fn)](#apionrequestfunction-fn)
+  - [request(*string* method, *string* url, *dynamic* body, *Object* headers)](#apirequeststring-method-string-url-dynamic-body-object-headers)
+  - [server(*IncomingMessage* http_request, *ServerResponse* http_response)](#apiserverincomingmessage-http_request-serverresponse-http_response)
+ - [Roads.Resource](#roadsresource)
+  - [new Resource(*Object* definition)](#new-resourceobject-definition)
+ - [Roads.Response](#roadsresponse)
+  - [new Response(*Object* data, *number* status, *Object* headers)](#new-responsedynamic-data-number-status-object-headers)
+  - [getData()](#responsegetdata)
+  - [filter(*dynamic* fields)](#responsefilterarray-fields)
+  - [writeTo(*ServerResponse* httpResponse, *boolean* end)](##responsewritetoserverresponse-http_response-boolean-end)
+ - [Roads.HttpError](#roadshttperror)
+  - [new HttpError(*string* message, *number* code)](#new-httperrorstring-message-number-code)
 
-Routing is a tree representing the "folder-like" structure of a RESTful URL. Each route key is a url part. Url parts are the text between slashes.
+## Roads.API
 
-Models are all Roads-Models, but this is not mandatory.
+The API is a container that holds a series of Resource objects. It exposes a [request](#apirequeststring-method-string-url-dynamic-body-object-headers) method which allows you to interact directly with resources.
 
-You can get a feel for the structure by looking at all the included projects. The example project works, but is missing some minor features and design. To try it, run the mysql statements below and type `node server.js` from within the roads folder.
+To create all of your api endpoints, you start with the root_resource, and assign sub-[resources](#roadsresource).
 
-mysql required for the example site:
+### new API(*Resource* root_resource)
+**API Constructor**
 
-    create database roadsmodelstest;
-    create user roadsmodelstest identified by roads;
-    grant all on roadsmodelstest.* to roadsmodelstest@'localhost' identified by 'roads';
-	create table user ( id int(10) unsigned NOT NULL AUTO_INCREMENT, email varchar(256) NOT NULL, name varchar(128) DEFAULT NULL, password varchar(64) NOT NULL, PRIMARY KEY (`id`) )
-	create table session (id int(10) unsigned not null primary key AUTO_INCREMENT, user_id int(10) unsigned not null, session varchar(88) not null, ip varchar(16) not null, user_agent varchar(40) not null, created_on datetime not null)
-	create table blog_post (id int(10) unsigned not null primary key AUTO_INCREMENT, user_id int(10) unsigned not null, title varchar(180) not null, body text)
+ name          | type                       | required | description
+ --------------|----------------------------|----------|-------------
+ root_resource | [Resource](#roadsresource) | yes      | Used to generate the [response](#roadsresponse) for the root endpoint ( [protocol]://[host]/ ).
+
+Creates your API object, so you can use it directly or bind it to an [HTTP server](http://nodejs.org/api/http.html#http_http_createserver_requestlistener). 
+
+
+    var roads = require('roads');
+    var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at <link> for information about the Resource constructor.
+    var api = new roads.API(root_resource);
+
+
+### API.onError(*Function* fn)
+**Assign an error handler to the API object**
+
+ name | type                    | required | description
+ -----|-------------------------|----------|-------------
+ fn   | Function(*Error* error) | Yes      | A callback that will be executed any time an error is thrown from within a resource, or from the API object. The only parameter will be an `error` object.
+
+This callback can return a Response object, which will be rendered for the user if possible.
+
+Independent of any errors thrown by your resources, the API object can surface one of three errors.
+
+type                 | message                                                          | status | description
+---------------------|------------------------------------------------------------------|--------|-----------------------------
+HttpError            | The request pathname                                             | 404    | If the endpoint could not be found                                  
+HttpError            | An array of HTTP methods that can be requested for this resource | 405    | If the endpoint was found, but the HTTP method was not supported
+Other (likely Error) | Dependant on the error                                           | 500    | If any other error is thrown
+
+
+
+    var api = new roads.API(root_resource);
+    api.onError(function (error) {
+        console.log(error);
+        switch (error.code) {
+            case 404:
+                return new roads.Response(notFoundRepresentation(error), 404); 
+            case 405:
+                return new roads.Response(notAllowedRepresentation(error), 405); 
+            case 500:
+            default:
+                return new roads.Response(unknownRepresentation(error), 500); 
+        }
+    });
+
+
+
+### API.onRequest(*Function* fn)
+**Add a custom handler for every request**
+
+ name | type                                                                  | required | description
+ -----|-----------------------------------------------------------------------|----------|---------------
+ fn   | Function(*string* url,*object* body,*object* headers,*function* next) | yes      | Will be called any time a request is made on the API object.
+ 
+ This callback will be provided four parameters
+ 
+name     | type                               | description
+ --------|------------------------------------|---------------
+ url     | string                             | The url that was provided to the request
+ body    | object                             | The body that was provided to the request, after it was properly parsed into an object
+ headers | object                             | The headers that were provided to the request
+ next    | function                           | The [resource method](#resource-method) that this request expected. You may optionally execute this method. If you provide a parameter, it will become the fourth parameter of the [resource method](#resource-method).
+
+This callback must return a response object. You do not have to return the response from the `next` method, you can return an entirely different response object.
+
+    // Example of an onRequest handler
+    api.onRequest(function* (url, body, headers, next) {
+    	// define an extras object
+        var extras = {
+            example : "test"
+        };
+        
+    	// kill trailing slash as long as we aren't at the root level
+        if (url.path != '/' && url.path[url.path.length - 1] === '/') {
+            return new roads.Response(null, 302, {
+            location : url.path.substring(0, url.path.length - 1)
+        });
+    }
+    
+    // This would also be a good place to identify the authenticated user, or api app and add it to the extras
+    // execute the actual resource method, and return the response
+        return next(extras);
+    });
+
+### API.request(*string* method, *string* url, *dynamic* body, *Object* headers)
+**Make a request to the API.**
+
+
+This function will locate the appropriate <link>resource method for the provided parameters, execute it and return a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A).
+On success, you should receive a [Response](#roadsresponse) object
+On failure, you should receive an error. This error might be an [HttpError](#roadshttperror)
+
+    var promise = api.request('GET', '/users/dashron');
+    
+    promise.then(function (response) {
+        // you can't predict error fields easily, so we don't apply the filter on errors
+        response.getData()
+            .then(function(data) {
+                console.log(data);
+            })
+            .catch(function (err) {
+                console.log(err);
+            });
+    });
+    
+    promise.catch(function (err) {
+        console.log(err);
+    });
+
+
+### API.server(*IncomingMessage* http_request, *ServerResponse* http_response)
+**An onRequest callback for http.createServer()**
+
+Helper function so the api can be thrown directly into http.createServer
+
+    require('http').createServer(api.server.bind(api))
+        .listen(8081, function () {
+            console.log('server has started');
+        });
+
+
+## Roads.Resource
+
+Each resource represents a single endpoint. The definition provided to the constructor defines how the resource operates, and all methods exposed on a resource are intended to be used by other parts of the roads framework.
+
+### new Resource(*Object* definition)
+**Constructor**
+
+name        | type                               | description
+ -----------|------------------------------------|---------------
+ definition | object                             | A definition which describes how the resource should operate
+
+The definition only looks for two fields.
+
+name        | type                               | description
+ -----------|------------------------------------|---------------
+ resources  | object                             | Each key is a [url part](#url-part), and each value is a sub-[resource](#roadsresource)
+ methods    | object                             | Each key is an HTTP method, and each value is a [resource method](#resource-method).
+
+    module.exports.many = new Resource({
+        resources : {
+            'users' : require('./users').many,
+            'posts' : require('./posts').many
+        },
+        methods : {
+            GET : function* (url, body, headers, extras) {
+                return new Response({
+                    "users" : "/users",
+                    "posts" : "/posts"
+                });
+            }
+        }
+    });
+
+#### URL Part
+
+All URL routing happens through the resource definition, and through sub resources. The root resource represents a url without any path ([protocol]://[host]/). This root resource must define additional resources as sub resources, which will branch out after the root resource.
+
+Part       | Example   | Example values | Description
+-----------|-----------|----------------|--------------
+{literal}  | users     | users          | The provided value must explicitly match the url part
+#{key}     | #user_id  | 12445          | The provided value must be numeric
+${key}     | #username | dashron        | The provided value can be any series of non-forward slash, url valid characters
+
+In the following example, the only valid urls are /, /users and /users/{number}
+
+    var single = new Resource({
+    });
+
+    var many = new Resource({
+        resources : {
+            "#user_id" : single
+        }
+    });
+
+    var root = new Resource({
+        resources : {
+            "users" : many
+        }
+    });
+
+For variable fields, you can retrieve the variable in the url parameter. The url parameter will be an object, and will have an "args" parameter
+
+    var single = new Resource({
+        methods : function (url, body, headers, extras) {
+            console.log(url.args.user_id);
+        }
+    });
+
+    var many = new Resource({
+        resources : {
+            "#user_id" : single
+        }
+    });
+
+    var root = new Resource({
+        resources : {
+            "users" : many
+        }
+    });
+
+#### Resource Method
+
+Each method : function pair of the methods field describes how the API server will respond to an HTTP request. The function is called a "resource method". Resource methods must return a promise. This can either be by providing a generator function (which is automatically turned into a coroutine for you), or by providing a function and returning a promise manually.
+
+If a method is missing, the API will throw an HttpError. The message will contain all of the valid methods, and the status code will be 405.
+
+## Roads.Response
+
+The response object contains all of the information you want to send to the client. This includes the body, status code and all applicable headers. 
+
+### new Response(*dynamic* data, *number* status, *Object* headers)
+**Constructor**
+
+name        | type                               | description
+ -----------|------------------------------------|---------------
+ data       | dynamic                            | A definition which describes how the resource should operate
+ status     | number                             | The HTTP Status code
+ headers    | object                             | Key value pairs of http headers.
+
+Create a response object. 
+
+    new Response({"uri" : "..."}, 200, {"last-modified":"2014-04-27 00:00:00"});
+
+### Response.getData()
+**Get the final data from the response, after all parsing**
+
+The result will always be a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A), no matter what data has been provided to the Response object.
+
+    response.getData()
+        .then(function (data) {
+            console.log(data);
+        })
+        error(function (error) {
+            console.log(error);
+        });
+
+### Response.filter(*array* fields)
+**Assign a whitelist of field keys that should be allowed to pass through getData**
+
+name        | type  | description
+ -----------|-------|---------------
+ fields     | array | A whitelist of fields that should be included in the response. For nested fields, use dot notation (eg. pictures.uri)
+
+    response.fields(['name', pictures.uri']).getData()
+        .then(function (data) {
+            deepEquals(data, {
+                "name" : ... ,
+                "pictures" : {
+                    "uri" : "..."
+                }
+            });
+        });
+
+### Response.writeTo(*ServerResponse* http_response, *boolean* end)
+**A helper function to retrieve the response data and write it out to a server**
+
+
+## Roads.HttpError
+
+### new HttpError(*string* message, *number* code)
+**A helper error, that when thrown will turn into an HTTP status code, and json message**
