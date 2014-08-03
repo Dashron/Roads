@@ -27,11 +27,11 @@ api.onError(function (error) {
 	}
 });
 
-api.onRequest(function* (url, body, headers, next) {
+api.onRequest(function (url, body, headers, next) {
 	var extras = {};
 
 	// kill trailing slash as long as we aren't at the root level
-	if (url.path != '/' && url.path[url.path.length - 1] === '/') {
+	if (url.path !== '/' && url.path[url.path.length - 1] === '/') {
 		return new roads.Response(null, 302, {
 			location : url.path.substring(0, url.path.length - 1)
 		});
@@ -43,7 +43,7 @@ api.onRequest(function* (url, body, headers, next) {
 	}*/
 
 	return next(extras);
-});
+});//*/
 
 require('http').createServer(api.server.bind(api))
 	.listen(8081, function () {
