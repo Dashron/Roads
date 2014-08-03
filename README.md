@@ -93,6 +93,8 @@ Other (likely Error) | Dependant on the error                                   
  
  This callback will be provided four parameters
  
+ #### function(url, body, headers, next)
+
 name     | type                               | description
  --------|------------------------------------|---------------
  url     | string                             | The url that was provided to the request
@@ -125,7 +127,7 @@ This callback must return a response object. You do not have to return the respo
 **Make a request to the API.**
 
 
-This function will locate the appropriate <link>resource method for the provided parameters, execute it and return a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A).
+This function will locate the appropriate [resource method](#resource-method) for the provided parameters, execute it and return a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A).
 On success, you should receive a [Response](#roadsresponse) object
 On failure, you should receive an error. This error might be an [HttpError](#roadshttperror)
 
