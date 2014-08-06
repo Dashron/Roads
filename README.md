@@ -153,7 +153,7 @@ On failure, you should receive an error. This error might be an [HttpError](#roa
 ### API.server(*IncomingMessage* http_request, *ServerResponse* http_response)
 **An onRequest callback for http.createServer()**
 
-Helper function so the api can be thrown directly into http.createServer
+Helper function so the api can be thrown directly into http.createServer.
 
     require('http').createServer(api.server.bind(api))
         .listen(8081, function () {
@@ -269,20 +269,38 @@ Create a response object.
 
 The result will always be a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A), no matter what data has been provided to the Response object.
 
-    response.getData()
-        .then(function (data) {
-            console.log(data);
-        })
-        error(function (error) {
-            console.log(error);
+    api.request(http_request.method, http_request.url, body, http_request.headers)
+        .then(function (response) {
+            // Get the data, which will be a promise
+            return response.getData()
+                .then(function (data) {
+                    console.log(data);
+                    // NOTE: If any of your values are functions or promiess, you must pass them through the field filter for them to be properly expanded.
+                });
         });
 
-### Response.writeTo(*ServerResponse* http_response, *boolean* end)
+### Response.writeToServer(*dynamic* data, *ServerResponse* http_response)
 **A helper function to retrieve the response data and write it out to a server**
+
+    // execute the api logic and retrieve the appropriate response object
+    api.request(http_request.method, http_request.url, body, http_request.headers)
+        .then(function (response) {
+            // Get the data, which will be a promise
+            return response.getData()
+                .then(function (data) {
+                    // Filter the data
+                    return new FieldsFilter(data).filter(params.fields);
+                })
+                .then(function (filtered_data) {
+                    // wrap up and write the response to the server
+                    response.writeToServer(filtered_data, http_response);
+                    http_response.end();
+                });
+        })
 
 ## Roads.FieldsFilter
 
-Many APIs benefit from allowing users to limit which fields they want. If a user is only trying to display title and description, there's no need to provide tons of unrelated stats and metadata. This is the first benefit of the fields filter. When provided the response data of a route, and an array of valid fields, it filters out all unwanted fields.
+Many APIs benefit from allowing users to limit which fields they want. If a user is only trying to display title and description, there's no need to provide tons of unrelated stats and metadata. This is the first benefit of the fields filter. When provided the response data of a route, and an array of valid fields, The field filter will remove any unwanted fields.
 
     var f = new FieldsFilter({
         'test' : {
@@ -310,7 +328,7 @@ Many APIs benefit from allowing users to limit which fields they want. If a user
             });
         });
 
-The second benefit provided by this filter, is that you can provide function or promise values and the filter will expand them ONLY if the user has explicitly requested them. This allows you to avoid heavy DB queries or cache hits by intelligently structuring your responses.
+The second benefit is that you can provide function or promise values and the filter will expand them ONLY if the user has explicitly requested them. This allows you to avoid heavy DB queries or cache hits by intelligently structuring your responses.
 
     var f = new FieldsFilter({
         'test' : {
@@ -350,6 +368,8 @@ name        | type                               | description
  -----------|------------------------------------|---------------
  data       | dynamic                            | A piece of data that needs to be expanded and or filtered
 
+    var f = new FieldsFilter({"hello" : "goodbye"});
+
 ### filter(*Array* fields)
 **Filter down a set of data based on a whitelist of fields**
 
@@ -358,7 +378,7 @@ name        | type                               | description
  fields     | dynamic                            | An array of fields that should remain in the response. To represent a heirarchy use periods
 
 Reduce the data associated with this filter object to only contain the fields provided in the "fields" array
-If true is passed, the whole object will be expanded and all values will be returned.
+If true is passed, the whole object will be expanded and all fields returned.
 
     var f = new FieldsFilter({
         'test' : {
@@ -387,4 +407,11 @@ If true is passed, the whole object will be expanded and all values will be retu
 ## Roads.HttpError
 
 ### new HttpError(*string* message, *number* code)
-**A helper error, that when thrown will turn into an HTTP status code, and json message**
+**A helper error, that contain relevant HTTP error information**
+
+name        | type                               | description
+ -----------|------------------------------------|---------------
+ message    | string                             | A message describing the HTTP error
+ code       | number                             | An official [http status code](#http://www.httpstatus.es)
+
+    throw new Roads.HttpError('Page not found', 404);
