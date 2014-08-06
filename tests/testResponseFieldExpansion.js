@@ -1,6 +1,6 @@
 "use strict";
 
-var filter_module = require('../lib/response_filter');
+var FieldsFilter = require('../lib/fieldsfilter');
 
 /**
  * Test that single fields can be expanded properly
@@ -9,7 +9,8 @@ var filter_module = require('../lib/response_filter');
  * @return {[type]}      [description]
  */
 exports.testExpandingSingleField = function (test) {
-	var expansion = filter_module.expandFields(['test']);
+	var filter = new FieldsFilter();
+	var expansion = filter._expandFields(['test']);
 
 	test.deepEqual({
 		'test' : true
@@ -24,7 +25,8 @@ exports.testExpandingSingleField = function (test) {
  * @return {[type]}      [description]
  */
 exports.testExpandingMultipleFields = function (test) {
-	var expansion = filter_module.expandFields(['test', 'stuff']);
+	var filter = new FieldsFilter();
+	var expansion = filter._expandFields(['test', 'stuff']);
 	
 	test.deepEqual({
 		'test' : true,
@@ -40,7 +42,8 @@ exports.testExpandingMultipleFields = function (test) {
  * @return {[type]}      [description]
  */
 exports.testExpandingSingleNestedField = function (test) {
-	var expansion = filter_module.expandFields(['test.one']);
+	var filter = new FieldsFilter();
+	var expansion = filter._expandFields(['test.one']);
 	
 	test.deepEqual({
 		'test' : {
@@ -57,7 +60,8 @@ exports.testExpandingSingleNestedField = function (test) {
  * @return {[type]}      [description]
  */
 exports.testExpandingMultipleNestedFields = function (test) {
-	var expansion = filter_module.expandFields(['test.one', 'hello.one']);
+	var filter = new FieldsFilter();
+	var expansion = filter._expandFields(['test.one', 'hello.one']);
 	
 	test.deepEqual({
 		'test' : {
@@ -76,7 +80,8 @@ exports.testExpandingMultipleNestedFields = function (test) {
  * @return {[type]}      [description]
  */
 exports.testExpandingMultipleMatchingNestedFields = function (test) {
-	var expansion = filter_module.expandFields(['test.one', 'test.two']);
+	var filter = new FieldsFilter();
+	var expansion = filter._expandFields(['test.one', 'test.two']);
 	
 	test.deepEqual({
 		'test' : {

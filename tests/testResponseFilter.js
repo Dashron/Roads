@@ -1,6 +1,6 @@
 "use strict";
 
-var filter_module = require('../lib/response_filter');
+var FieldsFilter = require('../lib/fieldsfilter');
 
 /**
  * Create a mock object to expand
@@ -57,11 +57,12 @@ function testResponseObject (expand_func) {
 exports.testRenderAllFilter = function (test) {
 	test.expect(1);
 
-	var filter = filter_module.filter(true, testResponseObject())
-		.then(function (filtered) {
-			test.deepEqual(testResponseObject(true), filtered);
-			test.done();
-		});
+	var filter = new FieldsFilter(testResponseObject());
+	filter.filter(true)
+	.then(function (filtered) {
+		test.deepEqual(testResponseObject(true), filtered);
+		test.done();
+	});
 };//*/
 
 /**
@@ -74,11 +75,12 @@ exports.testEmptyFilter = function (test) {
 	// empty requests no valid 
 	test.expect(1);
 
-	filter_module.filter({}, testResponseObject())
-		.then(function (filtered) {
-			test.deepEqual(null, filtered);
-			test.done();
-		});
+	var filter = new FieldsFilter(testResponseObject());
+	filter.filter({})
+	.then(function (filtered) {
+		test.deepEqual(null, filtered);
+		test.done();
+	});
 };//*/
 
 /**
@@ -90,15 +92,16 @@ exports.testEmptyFilter = function (test) {
 exports.testSingleFilter = function (test) {
 	test.expect(1);
 
-	filter_module.filter({
+	var filter = new FieldsFilter(testResponseObject());
+	filter.filter({
 		"name" : true
-	}, testResponseObject())
-		.then(function (filtered) {
-			test.deepEqual({
-				"name" : "aaron"
-			}, filtered);
-			test.done();
-		});
+	})
+	.then(function (filtered) {
+		test.deepEqual({
+			"name" : "aaron"
+		}, filtered);
+		test.done();
+	});
 };//*/
 
 /**
@@ -110,17 +113,18 @@ exports.testSingleFilter = function (test) {
 exports.testMultipleFilter = function (test) {
 	test.expect(1);
 
-	filter_module.filter({
+	var filter = new FieldsFilter(testResponseObject());
+	filter.filter({
 		"name" : true,
 		"description" : true
-	}, testResponseObject())
-		.then(function (filtered) {
-			test.deepEqual({
-				"name" : "aaron",
-				"description" : "developer"
-			}, filtered);
-			test.done();
-		});
+	})
+	.then(function (filtered) {
+		test.deepEqual({
+			"name" : "aaron",
+			"description" : "developer"
+		}, filtered);
+		test.done();
+	});
 };//*/
 
 /**
@@ -132,19 +136,19 @@ exports.testMultipleFilter = function (test) {
 exports.testObjectFilter = function (test) {
 	test.expect(1);
 
-	filter_module.filter({
+	var filter = new FieldsFilter(testResponseObject());
+	filter.filter({
 		"active_image" : true
-	}, testResponseObject())
-		.then(function (filtered) {
-			test.deepEqual({
-				"active_image" :  {
-					"url" : "http://www.dashron.com/image1.png",
-					"type" : "profile"
-				}
-			}, filtered);
-			test.done();
-		});
-
+	})
+	.then(function (filtered) {
+		test.deepEqual({
+			"active_image" :  {
+				"url" : "http://www.dashron.com/image1.png",
+				"type" : "profile"
+			}
+		}, filtered);
+		test.done();
+	});
 
 };//*/
 
@@ -157,20 +161,20 @@ exports.testObjectFilter = function (test) {
 exports.testMultiLevelObjectFilter = function (test) {
 	test.expect(1);
 
-	filter_module.filterObject({
+	var filter = new FieldsFilter();
+	filter._filterObject({
 		"active_image" : {
 			"type" : true
 		}
 	}, testResponseObject())
-		.then(function (filtered) {
-			test.deepEqual({
-				"active_image" : {
-					"type" : "profile"
-				}
-			}, filtered);
-			test.done();
-		});
-
+	.then(function (filtered) {
+		test.deepEqual({
+			"active_image" : {
+				"type" : "profile"
+			}
+		}, filtered);
+		test.done();
+	});
 
 };//*/
 
@@ -183,23 +187,24 @@ exports.testMultiLevelObjectFilter = function (test) {
 exports.testArrayFilter = function (test) {
 	test.expect(1);
 
-	filter_module.filterObject({
+	var filter = new FieldsFilter();
+	filter._filterObject({
 		"name" : true,
 		"images" : true
 	}, testResponseObject())
-		.then(function (filtered) {
-			test.deepEqual({
-				"name" : "aaron",
-				"images" : [{
-					"url" : "http://www.dashron.com/image1.png",
-					"type" : "profile"
-				},{
-					"url" : "http://www.dashron.com/image2.png",
-					"type" : "background"
-				}]
-			}, filtered);
-			test.done();
-		});
+	.then(function (filtered) {
+		test.deepEqual({
+			"name" : "aaron",
+			"images" : [{
+				"url" : "http://www.dashron.com/image1.png",
+				"type" : "profile"
+			},{
+				"url" : "http://www.dashron.com/image2.png",
+				"type" : "background"
+			}]
+		}, filtered);
+		test.done();
+	});
 };//*/
 
 /**
@@ -211,23 +216,24 @@ exports.testArrayFilter = function (test) {
 exports.testMultiLevelArrayFilter = function (test) {
 	test.expect(1);
 
-	filter_module.filterObject({
+	var filter = new FieldsFilter();
+	filter._filterObject({
 		"name" : true,
 		"images" : {
 			"url" : true
 		}
 	}, testResponseObject())
-		.then(function (filtered) {
-			test.deepEqual({
-				"name" : "aaron",
-				"images" : [{
-					"url" : "http://www.dashron.com/image1.png"
-				},{
-					"url" : "http://www.dashron.com/image2.png"
-				}]
-			}, filtered);
-			test.done();
-		});
+	.then(function (filtered) {
+		test.deepEqual({
+			"name" : "aaron",
+			"images" : [{
+				"url" : "http://www.dashron.com/image1.png"
+			},{
+				"url" : "http://www.dashron.com/image2.png"
+			}]
+		}, filtered);
+		test.done();
+	});
 };//*/
 
 
@@ -240,15 +246,16 @@ exports.testMultiLevelArrayFilter = function (test) {
 exports.testFunctionFilterLiteral = function (test) {
 	test.expect(1);
 
-	filter_module.filterObject({
+	var filter = new FieldsFilter();
+	filter._filterObject({
 		"delayed" : true
 	}, testResponseObject())
-		.then(function (filtered) {
-			test.deepEqual({
-				"delayed" : "hello"
-			}, filtered);
-			test.done();
-		});
+	.then(function (filtered) {
+		test.deepEqual({
+			"delayed" : "hello"
+		}, filtered);
+		test.done();
+	});
 };//*/
 
 /**
@@ -260,19 +267,20 @@ exports.testFunctionFilterLiteral = function (test) {
 exports.testFunctionFilterObj = function (test) {
 	test.expect(1);
 
-	filter_module.filterObject({
+	var filter = new FieldsFilter();
+	filter._filterObject({
 		"delayed_obj" : {
 			"test" : true
 		}
 	}, testResponseObject())
-		.then(function (filtered) {
-			test.deepEqual({
-				"delayed_obj" : {
-					"test" : "yeah"
-				}
-			}, filtered);
-			test.done();
-		});
+	.then(function (filtered) {
+		test.deepEqual({
+			"delayed_obj" : {
+				"test" : "yeah"
+			}
+		}, filtered);
+		test.done();
+	});
 };//*/
 
 /**
@@ -284,19 +292,20 @@ exports.testFunctionFilterObj = function (test) {
 exports.testFunctionArrayFilter = function (test) {
 	test.expect(1);
 
-	filter_module.filterObject({
+	var filter = new FieldsFilter();
+	filter._filterObject({
 		"delayed_array" : {
 			"name" : true
 		}
 	}, testResponseObject())
-		.then(function (filtered) {
-			test.deepEqual({
-				"delayed_array" : [{
-					"name" : "bob"
-				}, {
-					"name" : "tom"
-				}]
-			}, filtered);
-			test.done();
-		});
+	.then(function (filtered) {
+		test.deepEqual({
+			"delayed_array" : [{
+				"name" : "bob"
+			}, {
+				"name" : "tom"
+			}]
+		}, filtered);
+		test.done();
+	});
 };//*/
