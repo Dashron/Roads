@@ -1,6 +1,7 @@
 "use strict";
 
 var FieldsFilter = require('../lib/fieldsfilter');
+var Promise = require('bluebird');
 
 /**
  * Create a mock object to expand
@@ -304,6 +305,42 @@ exports.testFunctionArrayFilter = function (test) {
 				"name" : "bob"
 			}, {
 				"name" : "tom"
+			}]
+		}, filtered);
+		test.done();
+	});
+};//*/
+
+/**
+ * Test that promises are properly expanded
+ */
+exports.testPromiseExpansionFilter = function (test) {
+	test.expect(1);
+
+	var filter = new FieldsFilter();
+	filter._filterObject(true, {
+		collection : Promise.coroutine(function* () {
+			var values = [];
+			
+			for (var i = 0; i < 5; i++) {
+				values.push({"hello" : "goodbye"});
+			}
+
+			return values;
+		})
+	})
+	.then(function (filtered) {
+		test.deepEqual({
+			"collection" : [{
+				"hello" : "goodbye"
+			}, {
+				"hello" : "goodbye"
+			},{
+				"hello" : "goodbye"
+			}, {
+				"hello" : "goodbye"
+			}, {
+				"hello" : "goodbye"
 			}]
 		}, filtered);
 		test.done();
