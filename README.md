@@ -23,7 +23,6 @@ Roads is a framework for creating APIs in node.js. It requires generator support
  - [Roads.Response](#roadsresponse)
   - [new Response(*Object* data, *number* status, *Object* headers)](#new-responsedynamic-data-number-status-object-headers)
   - [getData()](#responsegetdata)
-  - [filter(*dynamic* fields)](#responsefilterarray-fields)
   - [writeTo(*ServerResponse* httpResponse, *boolean* end)](##responsewritetoserverresponse-http_response-boolean-end)
  - [Roads.HttpError](#roadshttperror)
   - [new HttpError(*string* message, *number* code)](#new-httperrorstring-message-number-code)
@@ -134,7 +133,6 @@ On failure, you should receive an error. This error might be an [HttpError](#roa
     var promise = api.request('GET', '/users/dashron');
     
     promise.then(function (response) {
-        // you can't predict error fields easily, so we don't apply the filter on errors
         response.getData()
             .then(function(data) {
                 console.log(data);
@@ -274,23 +272,6 @@ The result will always be a [thenable (Promises/A compatible promise)](http://wi
         })
         error(function (error) {
             console.log(error);
-        });
-
-### Response.filter(*array* fields)
-**Assign a whitelist of field keys that should be allowed to pass through getData**
-
-name        | type  | description
- -----------|-------|---------------
- fields     | array | A whitelist of fields that should be included in the response. For nested fields, use dot notation (eg. pictures.uri)
-
-    response.fields(['name', pictures.uri']).getData()
-        .then(function (data) {
-            deepEquals(data, {
-                "name" : ... ,
-                "pictures" : {
-                    "uri" : "..."
-                }
-            });
         });
 
 ### Response.writeTo(*ServerResponse* http_response, *boolean* end)
