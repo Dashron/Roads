@@ -24,6 +24,9 @@ Roads is a framework for creating APIs in node.js. It requires generator support
   - [new Response(*Object* data, *number* status, *Object* headers)](#new-responsedynamic-data-number-status-object-headers)
   - [getData()](#responsegetdata)
   - [writeTo(*ServerResponse* httpResponse, *boolean* end)](##responsewritetoserverresponse-http_response-boolean-end)
+ - [Roads.FieldsFilter](#roadsfieldsfilter)
+  - [new FieldsFilter(*dynamic* data)](#new-fieldsfilterdynamic-data)
+  - [filter(*Array* fields)](#filterarray-fields)
  - [Roads.HttpError](#roadshttperror)
   - [new HttpError(*string* message, *number* code)](#new-httperrorstring-message-number-code)
 
@@ -277,6 +280,54 @@ The result will always be a [thenable (Promises/A compatible promise)](http://wi
 ### Response.writeTo(*ServerResponse* http_response, *boolean* end)
 **A helper function to retrieve the response data and write it out to a server**
 
+## Roads.FieldsFilter
+
+The fields filter is an object that allows you to expand a set of data depending on a list of valid fields.
+If your original data has a field that is represented in the parameter to the filter function, it will be retained.
+
+Any promises or functions that are found within the source data will be expanded if needed and ignored entirely if not
+
+
+### new FieldsFilter(*dynamic* data)
+**Create an object to help filter down a set of data**
+
+name        | type                               | description
+ -----------|------------------------------------|---------------
+ data       | dynamic                            | A piece of data that needs to be expanded and filtered
+
+### filter(*Array* fields)
+**Filter down a set of data based on a whitelist of fields**
+
+name        | type                               | description
+ -----------|------------------------------------|---------------
+ fields     | dynamic                            | An array of fields that should remain in the response. To represent a heirarchy use periods
+
+Reduce the data associated with this filter object to only contain the fields provided in the "fields" array
+If true is passed, the whole object will be expanded and all values will be returned.
+
+    var f = new FieldsFilter({
+        'test' : {
+            'one' : true,
+            'two' : true
+        },
+        'hello' : {
+            'one' : true,
+            'two' : true
+        }
+    });
+
+    f.filter(['test.one', 'hello'])
+        .then(function (response) {
+            console.log(response === {
+                'test' : {
+                    'one' : true
+                },
+                'hello' : {
+                    'one' : true,
+                    'two' : true
+                }
+            });
+        });
 
 ## Roads.HttpError
 
