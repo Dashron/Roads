@@ -95,7 +95,8 @@ Other (likely Error) | Dependant on the error                                   
  
  This callback will be provided four parameters
  
-#### function(url, body, headers, next)
+#### onRequest Callback 
+**function (*string* url, *Object* body, *Object* headers, *Function* next)**
 
 name     | type                               | description
  --------|------------------------------------|---------------
