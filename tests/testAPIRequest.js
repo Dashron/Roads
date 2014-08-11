@@ -54,7 +54,7 @@ exports.testRequest = function (test) {
 	api.request('GET', '/', 'yeah', {
 		"one" : "two"
 	}).then(function (response) {
-		test.deepEqual(response, {
+		test.deepEqual(response.data, {
 			path : '/',
 			method : 'GET',
 			body : 'yeah',
@@ -87,7 +87,7 @@ exports.testStringSubRequest = function (test) {
 	api.request('GET', '/huh', 'yeah', {
 		"one" : "two"
 	}).then(function (response) {
-		test.deepEqual(response, {
+		test.deepEqual(response.data, {
 			path : '/huh',
 			method : 'GET',
 			body : 'yeah',
@@ -120,7 +120,7 @@ exports.testNumberSubRequest = function (test) {
 	api.request('GET', '/1234', 'yeah', {
 		"one" : "two"
 	}).then(function (response) {
-		test.deepEqual(response, {
+		test.deepEqual(response.data, {
 			path : '/1234',
 			method : 'GET',
 			body : 'yeah',
@@ -182,7 +182,7 @@ exports.testMissingMethodRequest = function (test) {
 };
 
 /**
- * Ensure that the basic request system lines up
+ * Ensure that an onRequest handler that executes, then calls the actual route returns as expected
  */
 exports.testRequestWithHandlerCalled = function (test) {
 	var resource = createResource(['GET']);
@@ -196,7 +196,7 @@ exports.testRequestWithHandlerCalled = function (test) {
 	api.request('GET', '/', 'yeah', {
 		"one" : "two"
 	}).then(function (response) {
-		test.deepEqual(response, {
+		test.deepEqual(response.data, {
 			path : '/',
 			method : 'GET',
 			body : 'yeah',
@@ -210,7 +210,7 @@ exports.testRequestWithHandlerCalled = function (test) {
 };
 
 /**
- * Ensure that the basic request system lines up
+ * Ensure an onRequest handler that does not call the actual route returns as expected
  */
 exports.testRequestWithHandlerNotCalled = function (test) {
 	var resource = createResource(['GET']);
@@ -224,7 +224,7 @@ exports.testRequestWithHandlerNotCalled = function (test) {
 	api.request('GET', '/', 'yeah', {
 		"one" : "two"
 	}).then(function (new_response) {
-		test.equals(response, new_response);
+		test.deepEqual(response, new_response.data);
 		test.done();
 	});
 };
