@@ -95,7 +95,7 @@ Other (likely Error) | Dependant on the error                                   
  
  This callback will be provided four parameters
  
- #### function(url, body, headers, next)
+#### function(url, body, headers, next)
 
 name     | type                               | description
  --------|------------------------------------|---------------
@@ -133,7 +133,7 @@ This function will locate the appropriate [resource method](#resource-method) fo
 On success, you will receive a [Response](#roadsresponse) object
 On failure, you should receive an error. This error might be an [HttpError](#roadshttperror)
 
-**NOTE:** The response data will already be processed at this point through `[getData()](#responsegetdata)` and `[FieldsFilter](#roadsfieldsfilter)`. You should reference `response.data` directly, and not use `getData()`.
+**NOTE:** The response data will already be processed at this point through [`getData()`](#responsegetdata) and [`FieldsFilter`](#roadsfieldsfilter). You should reference `response.data` directly, and not use `getData()`.
 
     var promise = api.request('GET', '/users/dashron');
     
