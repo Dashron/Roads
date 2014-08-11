@@ -69,9 +69,6 @@ exports.testRequest = function (test) {
 
 /**
  * Ensure that the sub routes line up for strings
- * 
- * @param  {[type]} test [description]
- * @return {[type]}      [description]
  */
 exports.testStringSubRequest = function (test) {
 	var sub_resource = createResource(['GET']);
@@ -102,9 +99,6 @@ exports.testStringSubRequest = function (test) {
 
 /**
  * Ensure that the sub routes line up for numbers
- * 
- * @param  {[type]} test [description]
- * @return {[type]}      [description]
  */
 exports.testNumberSubRequest = function (test) {
 	var sub_resource = createResource(['GET']);
@@ -135,9 +129,6 @@ exports.testNumberSubRequest = function (test) {
 
 /**
  * Ensure that we get proper errors for invalid path requests
- * 
- * @param  {[type]} test [description]
- * @return {[type]}      [description]
  */
 exports.testMissingPathRequest = function (test) {
 	var resource = createResource(['GET']);
@@ -159,9 +150,6 @@ exports.testMissingPathRequest = function (test) {
 
 /**
  * Ensure that we get proper errors for invalid HTTP methods
- * 
- * @param  {[type]} test [description]
- * @return {[type]}      [description]
  */
 exports.testMissingMethodRequest = function (test) {
 	var resource = createResource(['GET']);

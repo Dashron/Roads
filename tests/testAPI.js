@@ -44,9 +44,6 @@ function createResource (methods, resources) {
 
 /**
  * Ensure that we can find the proper resource for a url
- * 
- * @param  {[type]} test [description]
- * @return {[type]}      [description]
  */
 exports.testlocateResource = function (test) {
 	var resource = createResource(['GET']);
