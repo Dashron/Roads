@@ -275,7 +275,9 @@ The result will always be a [thenable (Promises/A compatible promise)](http://wi
         });
 
 ### Response.writeToServer(*ServerResponse* http_response)
-**A helper function to retrieve the response data and write it out to a server**
+**A helper function to write the response object to a server response**
+
+This will apply the body, status code, and any applicable headers to the provided http_response. It will not end the response, so you need to do that yourself.
 
     // execute the api logic and retrieve the appropriate response object
     api.request(http_request.method, http_request.url, body, http_request.headers)
