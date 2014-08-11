@@ -396,7 +396,7 @@ If true is passed, the whole object will be expanded and all fields returned.
 ## Roads.HttpError
 
 ### new HttpError(*string* message, *number* code)
-**A helper error, that contain relevant HTTP error information**
+**A helper error, that contains information relevant to common HTTP errors**
 
 name        | type                               | description
  -----------|------------------------------------|---------------
