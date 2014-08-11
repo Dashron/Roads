@@ -23,7 +23,7 @@ Roads is a framework for creating APIs in node.js. It requires generator support
  - [Roads.Response](#roadsresponse)
   - [new Response(*Object* data, *number* status, *Object* headers)](#new-responsedynamic-data-number-status-object-headers)
   - [getData()](#responsegetdata)
-  - [writeTo(*ServerResponse* httpResponse)](##responsewritetoserverresponse-http_response)
+  - [writeTo(*ServerResponse* httpResponse)](#responsewritetoserverserverresponse-http_response)
  - [Roads.FieldsFilter](#roadsfieldsfilter)
   - [new FieldsFilter(*dynamic* data)](#new-fieldsfilterdynamic-data)
   - [filter(*Array* fields)](#filterarray-fields)
@@ -133,7 +133,7 @@ This function will locate the appropriate [resource method](#resource-method) fo
 On success, you will receive a [Response](#roadsresponse) object
 On failure, you should receive an error. This error might be an [HttpError](#roadshttperror)
 
-**NOTE:** The response data will already be processed at this point through [getData](#responsegetdata) and [FieldsFilter](#roadsfieldsfilter). You should reference `response.data` directly, and not use getData().
+**NOTE:** The response data will already be processed at this point through `[getData()](#responsegetdata)` and `[FieldsFilter](#roadsfieldsfilter)`. You should reference `response.data` directly, and not use `getData()`.
 
     var promise = api.request('GET', '/users/dashron');
     
@@ -265,13 +265,13 @@ Create a response object.
 
 The result will always be a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A), no matter what data has been provided to the Response object.
 
-**NOTE:** The [request](#apirequeststring-method-string-url-dynamic-body-object-headers) method will have already called getData. `getData()` is only useful if you have not yet called request, but need to expand a response object. If you call this, I highly recommend assigning the final value back into response.data, so that you do not have to process the response data multiple times. 
+**NOTE:** The [request](#apirequeststring-method-string-url-dynamic-body-object-headers) method will have already called `getData()`. `getData()` is only useful if you have not yet called request, but need to expand a response object. If you call this, I highly recommend assigning the final value back into response.data, so that you do not have to process the response data multiple times. 
 
     // Get the data, which will be a promise
     return response.getData()
         .then(function (data) {
             console.log(data);
-            // NOTE: If any of your values are functions or promiess, you must pass them through the field filter for them to be properly expanded.
+            // NOTE: If any of your values are functions or promises, you must pass them through the field filter for them to be properly expanded.
         });
 
 ### Response.writeToServer(*ServerResponse* http_response)
