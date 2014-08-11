@@ -23,7 +23,7 @@ Roads is a framework for creating APIs in node.js. It requires generator support
  - [Roads.Response](#roadsresponse)
   - [new Response(*Object* data, *number* status, *Object* headers)](#new-responsedynamic-data-number-status-object-headers)
   - [getData()](#responsegetdata)
-  - [writeTo(*ServerResponse* httpResponse, *boolean* end)](##responsewritetoserverresponse-http_response-boolean-end)
+  - [writeTo(*ServerResponse* httpResponse)](##responsewritetoserverresponse-http_response)
  - [Roads.FieldsFilter](#roadsfieldsfilter)
   - [new FieldsFilter(*dynamic* data)](#new-fieldsfilterdynamic-data)
   - [filter(*Array* fields)](#filterarray-fields)
@@ -130,19 +130,15 @@ This callback must return a response object. You do not have to return the respo
 
 
 This function will locate the appropriate [resource method](#resource-method) for the provided parameters, execute it and return a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A).
-On success, you should receive a [Response](#roadsresponse) object
+On success, you will receive a [Response](#roadsresponse) object
 On failure, you should receive an error. This error might be an [HttpError](#roadshttperror)
+
+**NOTE:** The response data will already be processed at this point through [getData](#responsegetdata) and [FieldsFilter](#roadsfieldsfilter). You should reference `response.data` directly, and not use getData().
 
     var promise = api.request('GET', '/users/dashron');
     
-    promise.then(function (response) {
-        response.getData()
-            .then(function(data) {
-                console.log(data);
-            })
-            .catch(function (err) {
-                console.log(err);
-            });
+    promise.then(function (response) {        
+        console.log(response.data);
     });
     
     promise.catch(function (err) {
@@ -269,34 +265,25 @@ Create a response object.
 
 The result will always be a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A), no matter what data has been provided to the Response object.
 
-    api.request(http_request.method, http_request.url, body, http_request.headers)
-        .then(function (response) {
-            // Get the data, which will be a promise
-            return response.getData()
-                .then(function (data) {
-                    console.log(data);
-                    // NOTE: If any of your values are functions or promiess, you must pass them through the field filter for them to be properly expanded.
-                });
+**NOTE:** The [request](#apirequeststring-method-string-url-dynamic-body-object-headers) method will have already called getData. `getData()` is only useful if you have not yet called request, but need to expand a response object. If you call this, I highly recommend assigning the final value back into response.data, so that you do not have to process the response data multiple times. 
+
+    // Get the data, which will be a promise
+    return response.getData()
+        .then(function (data) {
+            console.log(data);
+            // NOTE: If any of your values are functions or promiess, you must pass them through the field filter for them to be properly expanded.
         });
 
-### Response.writeToServer(*dynamic* data, *ServerResponse* http_response)
+### Response.writeToServer(*ServerResponse* http_response)
 **A helper function to retrieve the response data and write it out to a server**
 
     // execute the api logic and retrieve the appropriate response object
     api.request(http_request.method, http_request.url, body, http_request.headers)
         .then(function (response) {
             // Get the data, which will be a promise
-            return response.getData()
-                .then(function (data) {
-                    // Filter the data
-                    return new FieldsFilter(data).filter(params.fields);
-                })
-                .then(function (filtered_data) {
-                    // wrap up and write the response to the server
-                    response.writeToServer(filtered_data, http_response);
-                    http_response.end();
-                });
-        })
+            response.writeToServer(http_response);
+            http_response.end();
+        });
 
 ## Roads.FieldsFilter
 
