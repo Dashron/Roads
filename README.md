@@ -45,11 +45,11 @@ To create all of your api endpoints, you start with the root_resource, and assig
 
 Creates your API object, so you can use it directly or bind it to an [HTTP server](http://nodejs.org/api/http.html#http_http_createserver_requestlistener). 
 
-
-    var roads = require('roads');
-    var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at <link> for information about the Resource constructor.
-    var api = new roads.API(root_resource);
-
+```node
+var roads = require('roads');
+var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at <link> for information about the Resource constructor.
+var api = new roads.API(root_resource);
+```
 
 ### API.onError(*Function* fn)
 **Assign an error handler to the API object**
@@ -69,21 +69,21 @@ HttpError            | An array of HTTP methods that can be requested for this r
 Other (likely Error) | Dependant on the error                                           | 500    | If any other error is thrown
 
 
-
-    var api = new roads.API(root_resource);
-    api.onError(function (error) {
-        console.log(error);
-        switch (error.code) {
-            case 404:
-                return new roads.Response(notFoundRepresentation(error), 404); 
-            case 405:
-                return new roads.Response(notAllowedRepresentation(error), 405); 
-            case 500:
-            default:
-                return new roads.Response(unknownRepresentation(error), 500); 
-        }
-    });
-
+```node
+var api = new roads.API(root_resource);
+api.onError(function (error) {
+    console.log(error);
+    switch (error.code) {
+        case 404:
+            return new roads.Response(notFoundRepresentation(error), 404); 
+        case 405:
+            return new roads.Response(notAllowedRepresentation(error), 405); 
+        case 500:
+        default:
+            return new roads.Response(unknownRepresentation(error), 500); 
+    }
+});
+```
 
 
 ### API.onRequest(*Function* fn)
