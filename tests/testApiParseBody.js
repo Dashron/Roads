@@ -152,3 +152,18 @@ exports.testRequestWithInvalidJsonBody = function (test) {
 
 	test.done();
 };
+
+
+/**
+ * Ensure that a application/json header with an empty body doesn't blow stuff up. 
+ *
+ * This isn't really a valid workflow, but we should technically allow it.
+ */
+exports.testParseEmptyStringBody = function (test) {
+	var api = new API(createResource(['GET']));
+	var body = '';
+	
+	test.equal('', api._parseBody(body, "application/json"));
+
+	test.done();
+};
