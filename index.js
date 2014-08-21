@@ -11,4 +11,8 @@ module.exports.HttpError = function HttpError(message, code) {
 	Error.captureStackTrace(this, HttpError);
 };
 
+module.exports.HttpError.invalid_request = 400;
+module.exports.HttpError.unauthorized = 401;
+module.exports.HttpError.not_found = 403;
+
 require('util').inherits(module.exports.HttpError, Error);
