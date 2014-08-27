@@ -177,7 +177,7 @@ exports.testRequestWithHandlerCalled = function (test) {
 	var extra = {"extra": "data"};
 
 	var api = new API(resource);
-	api.onRequest(function (url, body, headers, next) {
+	api.onRequest(function (method, url, body, headers, next) {
 		return next(extra);
 	});//*/
 

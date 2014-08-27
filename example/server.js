@@ -27,7 +27,7 @@ api.onError(function (error) {
 	}
 });
 
-api.onRequest(function (url, body, headers, next) {
+api.onRequest(function (method, url, body, headers, next) {
 	var extras = {};
 
 	// kill trailing slash as long as we aren't at the root level
