@@ -91,15 +91,16 @@ api.onError(function (error) {
 
  name | type                                                                  | required | description
  -----|-----------------------------------------------------------------------|----------|---------------
- fn   | Function(*string* url,*object* body,*object* headers,*function* next) | yes      | Will be called any time a request is made on the API object.
+ fn   | Function(*string* method, *string* url,*object* body,*object* headers,*function* next) | yes      | Will be called any time a request is made on the API object.
  
  This callback will be provided four parameters
  
 #### onRequest Callback 
-**function (*string* url, *Object* body, *Object* headers, *Function* next)**
+**function (*string* method,*string* url, *Object* body, *Object* headers, *Function* next)**
 
 name     | type                               | description
  --------|------------------------------------|---------------
+ method  | string                             | The HTTP method that was provided to the request
  url     | string                             | The url that was provided to the request
  body    | object                             | The body that was provided to the request, after it was properly parsed into an object
  headers | object                             | The headers that were provided to the request
