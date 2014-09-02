@@ -13,6 +13,6 @@ module.exports.HttpError = function HttpError(message, code) {
 
 module.exports.HttpError.invalid_request = 400;
 module.exports.HttpError.unauthorized = 401;
-module.exports.HttpError.not_found = 403;
+module.exports.HttpError.not_found = 404;
 
 require('util').inherits(module.exports.HttpError, Error);
