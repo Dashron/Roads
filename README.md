@@ -13,13 +13,15 @@ Roads is a framework for creating APIs in node.js. It requires generator support
 # Index
 
  - [Roads.API](#roadsapi)
-  - [new API(*Resource* root_resource)](#new-apiresource-root_resource)
+  - [new API(*Resource* root_resource, *Object* context)](#new-apiresource-root_resource-object-context)
   - [onError(*Function* fn)](#apionerrorfunction-fn)
   - [onRequest(*Function* fn)](#apionrequestfunction-fn)
   - [request(*string* method, *string* url, *dynamic* body, *Object* headers)](#apirequeststring-method-string-url-dynamic-body-object-headers)
   - [server(*IncomingMessage* http_request, *ServerResponse* http_response)](#apiserverincomingmessage-http_request-serverresponse-http_response)
  - [Roads.Resource](#roadsresource)
   - [new Resource(*Object* definition)](#new-resourceobject-definition)
+  - [URL Part](#url-part)
+  - [Resource method](#resource-method)
  - [Roads.Response](#roadsresponse)
   - [new Response(*Object* data, *number* status, *Object* headers)](#new-responsedynamic-data-number-status-object-headers)
   - [getData()](#responsegetdata)
@@ -36,12 +38,13 @@ The API is a container that holds a series of Resource objects. It exposes a [re
 
 To create all of your api endpoints, you start with the root_resource, and assign sub-[resources](#roadsresource).
 
-### new API(*Resource* root_resource)
+### new API(*Resource* root_resource, *Object* context)
 **API Constructor**
 
  name          | type                       | required | description
  --------------|----------------------------|----------|-------------
  root_resource | [Resource](#roadsresource) | yes      | Used to generate the [response](#roadsresponse) for the root endpoint ( [protocol]://[host]/ ).
+ context       | Object                     | no       | An optional context that will become ```this``` within each [Resource Method](#resource-method). A ```request``` method will be added to this object, and will override any request variable you provide. The request method will be an alias for API.request.
 
 Creates your API object, so you can use it directly or bind it to an [HTTP server](http://nodejs.org/api/http.html#http_http_createserver_requestlistener). 
 
@@ -49,6 +52,17 @@ Creates your API object, so you can use it directly or bind it to an [HTTP serve
 var roads = require('roads');
 var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at <link> for information about the Resource constructor.
 var api = new roads.API(root_resource);
+```
+
+**API with a context**
+```node
+var roads = require('roads');
+var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at <link> for information about the Resource constructor.
+var api = new roads.API(root_resource, {
+    helperMethod : function () {
+        // be helpful
+    }
+});
 ```
 
 ### API.onError(*Function* fn)
@@ -87,13 +101,13 @@ api.onError(function (error) {
 
 
 ### API.onRequest(*Function* fn)
-**Add a custom handler for every request**
+**Add a custom handler for every request.**
 
  name | type                                                                  | required | description
  -----|-----------------------------------------------------------------------|----------|---------------
  fn   | Function(*string* method, *string* url,*object* body,*object* headers,*function* next) | yes      | Will be called any time a request is made on the API object.
  
- This callback will be provided four parameters
+ This will be called for every request, even for routes that do not exist. The callback will be provided four parameters
  
 #### onRequest Callback 
 **function (*string* method,*string* url, *Object* body, *Object* headers, *Function* next)**
@@ -198,7 +212,7 @@ All URL routing happens through the resource definition, and through sub resourc
 
 Part       | Example   | Example values | Description
 -----------|-----------|----------------|--------------
-{literal}  | users     | users          | The provided value must explicitly match the url part
+{literal}  | users     | users          | The provided value must explicitly match the [url part](#url-part)
 #{key}     | #user_id  | 12445          | The provided value must be numeric
 ${key}     | #username | dashron        | The provided value can be any series of non-forward slash, url valid characters
 
@@ -241,9 +255,12 @@ For variable fields, you can retrieve the variable in the url parameter. The url
 
 #### Resource Method
 
-Each method : function pair of the methods field describes how the API server will respond to an HTTP request. The function is called a "resource method". Resource methods must return a promise. This can either be by providing a generator function (which is automatically turned into a coroutine for you), or by providing a function and returning a promise manually.
+Each ```method : function``` pair of the methods field describes how the API server will respond to an HTTP request. The function is called a "resource method". Resource methods must return a promise. This can either be by providing a generator function (which is automatically turned into a coroutine for you), or by providing a function and returning a promise manually.
 
-If a method is missing, the API will throw an HttpError. The message will contain all of the valid methods, and the status code will be 405.
+If a method could not be located for the requested URL and method, the API will throw an HttpError. The message will contain all of the valid methods, and the status code will be 405.
+
+Each resource method has access to the API Context through ```this```. The API context is either an empty object with a ```request``` method (an alias to API.request), or is the object provided as the second parameter to [new API(*Resource* root_resource, *Object* context)](#new-apiresource-root_resource-object-context).
+
 
 ## Roads.Response
 
