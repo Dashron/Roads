@@ -20,7 +20,7 @@ Roads is a framework for creating APIs in node.js. It requires generator support
   - [server(*IncomingMessage* http_request, *ServerResponse* http_response)](#apiserverincomingmessage-http_request-serverresponse-http_response)
  - [Roads.Resource](#roadsresource)
   - [new Resource(*Object* definition)](#new-resourceobject-definition)
-  - [URL Part](#url-part)
+  - [URL Part (routing)](#url-part)
   - [Resource method](#resource-method)
  - [Roads.Response](#roadsresponse)
   - [new Response(*Object* data, *number* status, *Object* headers)](#new-responsedynamic-data-number-status-object-headers)
@@ -206,7 +206,7 @@ name        | type                               | description
         }
     });
 
-#### URL Part
+#### URL Part (routing)
 
 All URL routing happens through the resource definition, and through sub resources. The root resource represents a url without any path ([protocol]://[host]/). This root resource must define additional resources as sub resources, which will branch out after the root resource.
 
