@@ -45,6 +45,7 @@ To create all of your api endpoints, you start with the root_resource, and assig
  --------------|----------------------------|----------|-------------
  root_resource | [Resource](#roadsresource) | yes      | Used to generate the [response](#roadsresponse) for the root endpoint ( [protocol]://[host]/ ).
  context       | Object                     | no       | An optional context that will become ```this``` within each [Resource Method](#resource-method). A ```request``` method will be added to this object, and will override any request variable you provide. The request method will be an alias for API.request.
+ init          | function                   | no       | If provided, this function will be executed a single time during startup. `this` will be the resource context if provided.
 
 Creates your API object, so you can use it directly or bind it to an [HTTP server](http://nodejs.org/api/http.html#http_http_createserver_requestlistener). 
 
