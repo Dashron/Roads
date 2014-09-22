@@ -13,7 +13,7 @@ Roads is a framework for creating APIs in node.js. It requires generator support
 # Index
 
  - [Roads.API](#roadsapi)
-  - [new API(*Resource* root_resource, *Object* context)](#new-apiresource-root_resource-object-context)
+  - [new API(*Resource* root_resource)](#new-apiresource-root_resource)
   - [onError(*Function* fn)](#apionerrorfunction-fn)
   - [onRequest(*Function* fn)](#apionrequestfunction-fn)
   - [request(*string* method, *string* url, *dynamic* body, *Object* headers)](#apirequeststring-method-string-url-dynamic-body-object-headers)
@@ -38,14 +38,12 @@ The API is a container that holds a series of Resource objects. It exposes a [re
 
 To create all of your api endpoints, you start with the root_resource, and assign sub-[resources](#roadsresource).
 
-### new API(*Resource* root_resource, *Object* context)
+### new API(*Resource* root_resource)
 **API Constructor**
 
  name          | type                       | required | description
  --------------|----------------------------|----------|-------------
  root_resource | [Resource](#roadsresource) | yes      | Used to generate the [response](#roadsresponse) for the root endpoint ( [protocol]://[host]/ ).
- context       | Object                     | no       | An optional context that will become ```this``` within each [Resource Method](#resource-method). A ```request``` method will be added to this object, and will override any request variable you provide. The request method will be an alias for API.request.
- init          | function                   | no       | If provided, this function will be executed a single time during startup. `this` will be the resource context if provided.
 
 Creates your API object, so you can use it directly or bind it to an [HTTP server](http://nodejs.org/api/http.html#http_http_createserver_requestlistener). 
 
@@ -53,17 +51,6 @@ Creates your API object, so you can use it directly or bind it to an [HTTP serve
 var roads = require('roads');
 var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at <link> for information about the Resource constructor.
 var api = new roads.API(root_resource);
-```
-
-**API with a context**
-```node
-var roads = require('roads');
-var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at <link> for information about the Resource constructor.
-var api = new roads.API(root_resource, {
-    helperMethod : function () {
-        // be helpful
-    }
-});
 ```
 
 ### API.onError(*Function* fn)
@@ -260,7 +247,20 @@ Each ```method : function``` pair of the methods field describes how the API ser
 
 If a method could not be located for the requested URL and method, the API will throw an HttpError. The message will contain all of the valid methods, and the status code will be 405.
 
-Each resource method has access to the API Context through ```this```. The API context is either an empty object with a ```request``` method (an alias to API.request), or is the object provided as the second parameter to [new API(*Resource* root_resource, *Object* context)](#new-apiresource-root_resource-object-context).
+Each resource method has access to the request context through ```this```. Each ```this``` will be unique to the request, and will persist from the requestHandler into the actual request. Feel free to add any methods you want to this context, one is already provided. The request method of API.request can be called directly from within your resource method by calling ```this.request```. This request will receive it's own unique context, because I have not spent the time to make it work otherwise. If you think it would be useful to persist a single context through sub-requests let me know!
+
+    var api = new API(new Resource({
+        methods : {
+            GET : function (url, body, headers, extras) {
+                return this.request('GET', this.uri);
+            }
+        }
+    }));
+
+    api.onRequest(function* (method, url, body, headers, next) {
+        this.uri = '/me';
+        return yield next();
+    });
 
 
 ## Roads.Response
