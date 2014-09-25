@@ -8,6 +8,30 @@ var Promise = require('bluebird');
 /**
  * Ensure that the request context is the context provided in the API constructor
  */
+exports.testAPIContextExists = function (test) {
+	var response_string = 'blahblahwhatwhatwhat';
+
+	var api = new API(new Resource({
+		methods : {
+			GET : function (url, body, headers) {
+				return this.request('POST', '/');
+			},
+			POST : function (url, body, headers) {
+				return response_string;
+			}
+		}
+	}));
+
+	api.request('GET', '/')
+		.then(function (val) {
+			test.equal(val.data, response_string);
+			test.done();
+		});
+};
+
+/**
+ * Ensure that the request context is the context provided in the API constructor
+ */
 exports.testAPIContextPersists = function (test) {
 	var response_string = 'blahblahwhatwhatwhat';
 
