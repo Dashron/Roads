@@ -112,11 +112,6 @@ This callback must return a response object. You do not have to return the respo
 
     // Example of an onRequest handler
     api.onRequest(function* (url, body, headers, next) {
-    	// define an extras object
-        var extras = {
-            example : "test"
-        };
-        
     	// kill trailing slash as long as we aren't at the root level
         if (url.path != '/' && url.path[url.path.length - 1] === '/') {
             return new roads.Response(null, 302, {
@@ -124,9 +119,11 @@ This callback must return a response object. You do not have to return the respo
         });
     }
     
-    // This would also be a good place to identify the authenticated user, or api app and add it to the extras
+    // This would also be a good place to identify the authenticated user, or api app and add it to the current request context
+    // eg: this.cur_user = user;
+
     // execute the actual resource method, and return the response
-        return next(extras);
+        return next();
     });
 
 ### API.request(*string* method, *string* url, *dynamic* body, *Object* headers)
@@ -185,7 +182,7 @@ name        | type                               | description
             'posts' : require('./posts').many
         },
         methods : {
-            GET : function* (url, body, headers, extras) {
+            GET : function* (url, body, headers) {
                 return new Response({
                     "users" : "/users",
                     "posts" : "/posts"
@@ -224,7 +221,7 @@ In the following example, the only valid urls are /, /users and /users/{number}
 For variable fields, you can retrieve the variable in the url parameter. The url parameter will be an object, and will have an "args" parameter
 
     var single = new Resource({
-        methods : function (url, body, headers, extras) {
+        methods : function (url, body, headers) {
             console.log(url.args.user_id);
         }
     });
@@ -251,7 +248,7 @@ Each resource method has access to the request context through ```this```. Each 
 
     var api = new API(new Resource({
         methods : {
-            GET : function (url, body, headers, extras) {
+            GET : function (url, body, headers) {
                 return this.request('GET', this.uri);
             }
         }

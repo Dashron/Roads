@@ -66,7 +66,7 @@ exports.testAPIContextUniqueness = function (test) {
 
 	var api = new API(new Resource({
 		methods : {
-			GET : function (url, body, headers, extras) {
+			GET : function (url, body, headers) {
 				return this.confirmString();
 			}
 		}

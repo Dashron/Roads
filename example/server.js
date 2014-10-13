@@ -28,8 +28,6 @@ api.onError(function (error) {
 });
 
 api.onRequest(function (method, url, body, headers, next) {
-	var extras = {};
-
 	// kill trailing slash as long as we aren't at the root level
 	if (url.path !== '/' && url.path[url.path.length - 1] === '/') {
 		return new roads.Response(null, 302, {
@@ -39,10 +37,10 @@ api.onRequest(function (method, url, body, headers, next) {
 	
 	// find authenticated user
 	/*if (user) {
-		extras.cur_user = user;
+		this.cur_user = user;
 	}*/
 
-	return next(extras);
+	return next();
 });//*/
 
 require('http').createServer(api.server.bind(api))
