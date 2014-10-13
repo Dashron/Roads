@@ -44,7 +44,9 @@
 <li>It can be required right from your code, or called over HTTP.</li>
 <li>It supports yield, for cleaner code.</li>
 <li>It supports delayed response execution. If your users don't want certain fields, the code associated will never be run</li>
-</ol><h1>
+</ol>
+
+<h1>
 <a name="index" class="anchor" href="#index"><span class="octicon octicon-link"></span></a>Index</h1>
 
 <ul>
@@ -64,6 +66,8 @@
 
 <ul>
 <li><a href="#new-resourceobject-definition">new Resource(<em>Object</em> definition)</a></li>
+<li><a href="#url-part">URL Part (routing)</a></li>
+<li><a href="#resource-method">Resource method</a></li>
 </ul>
 </li>
 <li>
@@ -72,7 +76,7 @@
 <ul>
 <li><a href="#new-responsedynamic-data-number-status-object-headers">new Response(<em>Object</em> data, <em>number</em> status, <em>Object</em> headers)</a></li>
 <li><a href="#responsegetdata">getData()</a></li>
-<li><a href="##responsewritetoserverresponse-http_response-boolean-end">writeTo(<em>ServerResponse</em> httpResponse, <em>boolean</em> end)</a></li>
+<li><a href="#responsewritetoserverserverresponse-http_response">writeTo(<em>ServerResponse</em> httpResponse)</a></li>
 </ul>
 </li>
 <li>
@@ -90,7 +94,9 @@
 <li><a href="#new-httperrorstring-message-number-code">new HttpError(<em>string</em> message, <em>number</em> code)</a></li>
 </ul>
 </li>
-</ul><h2>
+</ul>
+
+<h2>
 <a name="roadsapi" class="anchor" href="#roadsapi"><span class="octicon octicon-link"></span></a>Roads.API</h2>
 
 <p>The API is a container that holds a series of Resource objects. It exposes a <a href="#apirequeststring-method-string-url-dynamic-body-object-headers">request</a> method which allows you to interact directly with resources.</p>
@@ -103,21 +109,27 @@
 <p><strong>API Constructor</strong></p>
 
 <table>
-<thead><tr>
+<thead>
+<tr>
 <th>name</th>
 <th>type</th>
 <th>required</th>
 <th>description</th>
-</tr></thead>
-<tbody><tr>
+</tr>
+</thead>
+<tbody>
+<tr>
 <td>root_resource</td>
 <td><a href="#roadsresource">Resource</a></td>
 <td>yes</td>
 <td>Used to generate the <a href="#roadsresponse">response</a> for the root endpoint ( [protocol]://[host]/ ).</td>
-</tr></tbody>
-</table><p>Creates your API object, so you can use it directly or bind it to an <a href="http://nodejs.org/api/http.html#http_http_createserver_requestlistener">HTTP server</a>. </p>
+</tr>
+</tbody>
+</table>
 
-<pre><code>var roads = require('roads');
+<p>Creates your API object, so you can use it directly or bind it to an <a href="http://nodejs.org/api/http.html#http_http_createserver_requestlistener">HTTP server</a>. </p>
+
+<pre lang="node"><code>var roads = require('roads');
 var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at &lt;link&gt; for information about the Resource constructor.
 var api = new roads.API(root_resource);
 </code></pre>
@@ -128,29 +140,37 @@ var api = new roads.API(root_resource);
 <p><strong>Assign an error handler to the API object</strong></p>
 
 <table>
-<thead><tr>
+<thead>
+<tr>
 <th>name</th>
 <th>type</th>
 <th>required</th>
 <th>description</th>
-</tr></thead>
-<tbody><tr>
+</tr>
+</thead>
+<tbody>
+<tr>
 <td>fn</td>
 <td>Function(<em>Error</em> error)</td>
 <td>Yes</td>
 <td>A callback that will be executed any time an error is thrown from within a resource, or from the API object. The only parameter will be an <code>error</code> object.</td>
-</tr></tbody>
-</table><p>This callback can return a Response object, which will be rendered for the user if possible.</p>
+</tr>
+</tbody>
+</table>
+
+<p>This callback can return a Response object, which will be rendered for the user if possible.</p>
 
 <p>Independent of any errors thrown by your resources, the API object can surface one of three errors.</p>
 
 <table>
-<thead><tr>
+<thead>
+<tr>
 <th>type</th>
 <th>message</th>
 <th>status</th>
 <th>description</th>
-</tr></thead>
+</tr>
+</thead>
 <tbody>
 <tr>
 <td>HttpError</td>
@@ -171,7 +191,9 @@ var api = new roads.API(root_resource);
 <td>If any other error is thrown</td>
 </tr>
 </tbody>
-</table><pre><code>var api = new roads.API(root_resource);
+</table>
+
+<pre lang="node"><code>var api = new roads.API(root_resource);
 api.onError(function (error) {
     console.log(error);
     switch (error.code) {
@@ -189,32 +211,48 @@ api.onError(function (error) {
 <h3>
 <a name="apionrequestfunction-fn" class="anchor" href="#apionrequestfunction-fn"><span class="octicon octicon-link"></span></a>API.onRequest(<em>Function</em> fn)</h3>
 
-<p><strong>Add a custom handler for every request</strong></p>
+<p><strong>Add a custom handler for every request.</strong></p>
 
 <table>
-<thead><tr>
+<thead>
+<tr>
 <th>name</th>
 <th>type</th>
 <th>required</th>
 <th>description</th>
-</tr></thead>
-<tbody><tr>
+</tr>
+</thead>
+<tbody>
+<tr>
 <td>fn</td>
-<td>Function(<em>string</em> url,<em>object</em> body,<em>object</em> headers,<em>function</em> next)</td>
+<td>Function(<em>string</em> method, <em>string</em> url,<em>object</em> body,<em>object</em> headers,<em>function</em> next)</td>
 <td>yes</td>
 <td>Will be called any time a request is made on the API object.</td>
-</tr></tbody>
-</table><p>This callback will be provided four parameters</p>
+</tr>
+</tbody>
+</table>
 
-<p>#### function(url, body, headers, next)</p>
+<p>This will be called for every request, even for routes that do not exist. The callback will be provided four parameters</p>
+
+<h4>
+<a name="onrequest-callback" class="anchor" href="#onrequest-callback"><span class="octicon octicon-link"></span></a>onRequest Callback</h4>
+
+<p><strong>function (<em>string</em> method,<em>string</em> url, <em>Object</em> body, <em>Object</em> headers, <em>Function</em> next)</strong></p>
 
 <table>
-<thead><tr>
+<thead>
+<tr>
 <th>name</th>
 <th>type</th>
 <th>description</th>
-</tr></thead>
+</tr>
+</thead>
 <tbody>
+<tr>
+<td>method</td>
+<td>string</td>
+<td>The HTTP method that was provided to the request</td>
+</tr>
 <tr>
 <td>url</td>
 <td>string</td>
@@ -236,15 +274,12 @@ api.onError(function (error) {
 <td>The <a href="#resource-method">resource method</a> that this request expected. You may optionally execute this method. If you provide a parameter, it will become the fourth parameter of the <a href="#resource-method">resource method</a>.</td>
 </tr>
 </tbody>
-</table><p>This callback must return a response object. You do not have to return the response from the <code>next</code> method, you can return an entirely different response object.</p>
+</table>
+
+<p>This callback must return a response object. You do not have to return the response from the <code>next</code> method, you can return an entirely different response object.</p>
 
 <pre><code>// Example of an onRequest handler
 api.onRequest(function* (url, body, headers, next) {
-    // define an extras object
-    var extras = {
-        example : "test"
-    };
-
     // kill trailing slash as long as we aren't at the root level
     if (url.path != '/' &amp;&amp; url.path[url.path.length - 1] === '/') {
         return new roads.Response(null, 302, {
@@ -252,9 +287,11 @@ api.onRequest(function* (url, body, headers, next) {
     });
 }
 
-// This would also be a good place to identify the authenticated user, or api app and add it to the extras
+// This would also be a good place to identify the authenticated user, or api app and add it to the current request context
+// eg: this.cur_user = user;
+
 // execute the actual resource method, and return the response
-    return next(extras);
+    return next();
 });
 </code></pre>
 
@@ -264,19 +301,15 @@ api.onRequest(function* (url, body, headers, next) {
 <p><strong>Make a request to the API.</strong></p>
 
 <p>This function will locate the appropriate <a href="#resource-method">resource method</a> for the provided parameters, execute it and return a <a href="http://wiki.commonjs.org/wiki/Promises/A">thenable (Promises/A compatible promise)</a>.
-On success, you should receive a <a href="#roadsresponse">Response</a> object
+On success, you will receive a <a href="#roadsresponse">Response</a> object
 On failure, you should receive an error. This error might be an <a href="#roadshttperror">HttpError</a></p>
+
+<p><strong>NOTE:</strong> The response data will already be processed at this point through <a href="#responsegetdata"><code>getData()</code></a> and <a href="#roadsfieldsfilter"><code>FieldsFilter</code></a>. You should reference <code>response.data</code> directly, and not use <code>getData()</code>.</p>
 
 <pre><code>var promise = api.request('GET', '/users/dashron');
 
-promise.then(function (response) {
-    response.getData()
-        .then(function(data) {
-            console.log(data);
-        })
-        .catch(function (err) {
-            console.log(err);
-        });
+promise.then(function (response) {        
+    console.log(response.data);
 });
 
 promise.catch(function (err) {
@@ -308,24 +341,32 @@ promise.catch(function (err) {
 <p><strong>Constructor</strong></p>
 
 <table>
-<thead><tr>
+<thead>
+<tr>
 <th>name</th>
 <th>type</th>
 <th>description</th>
-</tr></thead>
-<tbody><tr>
+</tr>
+</thead>
+<tbody>
+<tr>
 <td>definition</td>
 <td>object</td>
 <td>A definition which describes how the resource should operate</td>
-</tr></tbody>
-</table><p>The definition only looks for two fields.</p>
+</tr>
+</tbody>
+</table>
+
+<p>The definition only looks for two fields.</p>
 
 <table>
-<thead><tr>
+<thead>
+<tr>
 <th>name</th>
 <th>type</th>
 <th>description</th>
-</tr></thead>
+</tr>
+</thead>
 <tbody>
 <tr>
 <td>resources</td>
@@ -339,13 +380,15 @@ promise.catch(function (err) {
 <td>Each key is an HTTP method, and each value is a <a href="#resource-method">resource method</a>.</td>
 </tr>
 </tbody>
-</table><pre><code>module.exports.many = new Resource({
+</table>
+
+<pre><code>module.exports.many = new Resource({
     resources : {
         'users' : require('./users').many,
         'posts' : require('./posts').many
     },
     methods : {
-        GET : function* (url, body, headers, extras) {
+        GET : function* (url, body, headers) {
             return new Response({
                 "users" : "/users",
                 "posts" : "/posts"
@@ -356,23 +399,26 @@ promise.catch(function (err) {
 </code></pre>
 
 <h4>
-<a name="url-part" class="anchor" href="#url-part"><span class="octicon octicon-link"></span></a>URL Part</h4>
+<a name="url-part-routing" class="anchor" href="#url-part-routing"><span class="octicon octicon-link"></span></a>URL Part (routing)</h4>
 
 <p>All URL routing happens through the resource definition, and through sub resources. The root resource represents a url without any path ([protocol]://[host]/). This root resource must define additional resources as sub resources, which will branch out after the root resource.</p>
 
 <table>
-<thead><tr>
+<thead>
+<tr>
 <th>Part</th>
 <th>Example</th>
 <th>Example values</th>
 <th>Description</th>
-</tr></thead>
+</tr>
+</thead>
 <tbody>
 <tr>
 <td>{literal}</td>
 <td>users</td>
 <td>users</td>
-<td>The provided value must explicitly match the url part</td>
+<td>The provided value must explicitly match the <a href="#url-part">url part</a>
+</td>
 </tr>
 <tr>
 <td>#{key}</td>
@@ -387,7 +433,9 @@ promise.catch(function (err) {
 <td>The provided value can be any series of non-forward slash, url valid characters</td>
 </tr>
 </tbody>
-</table><p>In the following example, the only valid urls are /, /users and /users/{number}</p>
+</table>
+
+<p>In the following example, the only valid urls are /, /users and /users/{number}</p>
 
 <pre><code>var single = new Resource({
 });
@@ -408,7 +456,7 @@ var root = new Resource({
 <p>For variable fields, you can retrieve the variable in the url parameter. The url parameter will be an object, and will have an "args" parameter</p>
 
 <pre><code>var single = new Resource({
-    methods : function (url, body, headers, extras) {
+    methods : function (url, body, headers) {
         console.log(url.args.user_id);
     }
 });
@@ -429,9 +477,25 @@ var root = new Resource({
 <h4>
 <a name="resource-method" class="anchor" href="#resource-method"><span class="octicon octicon-link"></span></a>Resource Method</h4>
 
-<p>Each method : function pair of the methods field describes how the API server will respond to an HTTP request. The function is called a "resource method". Resource methods must return a promise. This can either be by providing a generator function (which is automatically turned into a coroutine for you), or by providing a function and returning a promise manually.</p>
+<p>Each <code>method : function</code> pair of the methods field describes how the API server will respond to an HTTP request. The function is called a "resource method". Resource methods must return a promise. This can either be by providing a generator function (which is automatically turned into a coroutine for you), or by providing a function and returning a promise manually.</p>
 
-<p>If a method is missing, the API will throw an HttpError. The message will contain all of the valid methods, and the status code will be 405.</p>
+<p>If a method could not be located for the requested URL and method, the API will throw an HttpError. The message will contain all of the valid methods, and the status code will be 405.</p>
+
+<p>Each resource method has access to the request context through <code>this</code>. Each <code>this</code> will be unique to the request, and will persist from the requestHandler into the actual request. Feel free to add any methods you want to this context, one is already provided. The request method of API.request can be called directly from within your resource method by calling <code>this.request</code>. This request will receive it's own unique context, because I have not spent the time to make it work otherwise. If you think it would be useful to persist a single context through sub-requests let me know!</p>
+
+<pre><code>var api = new API(new Resource({
+    methods : {
+        GET : function (url, body, headers) {
+            return this.request('GET', this.uri);
+        }
+    }
+}));
+
+api.onRequest(function* (method, url, body, headers, next) {
+    this.uri = '/me';
+    return yield next();
+});
+</code></pre>
 
 <h2>
 <a name="roadsresponse" class="anchor" href="#roadsresponse"><span class="octicon octicon-link"></span></a>Roads.Response</h2>
@@ -444,11 +508,13 @@ var root = new Resource({
 <p><strong>Constructor</strong></p>
 
 <table>
-<thead><tr>
+<thead>
+<tr>
 <th>name</th>
 <th>type</th>
 <th>description</th>
-</tr></thead>
+</tr>
+</thead>
 <tbody>
 <tr>
 <td>data</td>
@@ -466,7 +532,9 @@ var root = new Resource({
 <td>Key value pairs of http headers.</td>
 </tr>
 </tbody>
-</table><p>Create a response object. </p>
+</table>
+
+<p>Create a response object. </p>
 
 <pre><code>new Response({"uri" : "..."}, 200, {"last-modified":"2014-04-27 00:00:00"});
 </code></pre>
@@ -478,37 +546,30 @@ var root = new Resource({
 
 <p>The result will always be a <a href="http://wiki.commonjs.org/wiki/Promises/A">thenable (Promises/A compatible promise)</a>, no matter what data has been provided to the Response object.</p>
 
-<pre><code>api.request(http_request.method, http_request.url, body, http_request.headers)
-    .then(function (response) {
-        // Get the data, which will be a promise
-        return response.getData()
-            .then(function (data) {
-                console.log(data);
-                // NOTE: If any of your values are functions or promiess, you must pass them through the field filter for them to be properly expanded.
-            });
+<p><strong>NOTE:</strong> The <a href="#apirequeststring-method-string-url-dynamic-body-object-headers">request</a> method will have already called <code>getData()</code>. <code>getData()</code> is only useful if you have not yet called request, but need to expand a response object. If you call this, I highly recommend assigning the final value back into response.data, so that you do not have to process the response data multiple times. </p>
+
+<pre><code>// Get the data, which will be a promise
+return response.getData()
+    .then(function (data) {
+        console.log(data);
+        // NOTE: If any of your values are functions or promises, you must pass them through the field filter for them to be properly expanded.
     });
 </code></pre>
 
 <h3>
-<a name="responsewritetoserverdynamic-data-serverresponse-http_response" class="anchor" href="#responsewritetoserverdynamic-data-serverresponse-http_response"><span class="octicon octicon-link"></span></a>Response.writeToServer(<em>dynamic</em> data, <em>ServerResponse</em> http_response)</h3>
+<a name="responsewritetoserverserverresponse-http_response" class="anchor" href="#responsewritetoserverserverresponse-http_response"><span class="octicon octicon-link"></span></a>Response.writeToServer(<em>ServerResponse</em> http_response)</h3>
 
-<p><strong>A helper function to retrieve the response data and write it out to a server</strong></p>
+<p><strong>A helper function to write the response object to a server response</strong></p>
+
+<p>This will apply the body, status code, and any applicable headers to the provided http_response. It will not end the response, so you need to do that yourself.</p>
 
 <pre><code>// execute the api logic and retrieve the appropriate response object
 api.request(http_request.method, http_request.url, body, http_request.headers)
     .then(function (response) {
         // Get the data, which will be a promise
-        return response.getData()
-            .then(function (data) {
-                // Filter the data
-                return new FieldsFilter(data).filter(params.fields);
-            })
-            .then(function (filtered_data) {
-                // wrap up and write the response to the server
-                response.writeToServer(filtered_data, http_response);
-                http_response.end();
-            });
-    })
+        response.writeToServer(http_response);
+        http_response.end();
+    });
 </code></pre>
 
 <h2>
@@ -583,17 +644,23 @@ f.filter(['test.one', 'hello'])
 <p><strong>Create an object to help filter down a set of data</strong></p>
 
 <table>
-<thead><tr>
+<thead>
+<tr>
 <th>name</th>
 <th>type</th>
 <th>description</th>
-</tr></thead>
-<tbody><tr>
+</tr>
+</thead>
+<tbody>
+<tr>
 <td>data</td>
 <td>dynamic</td>
 <td>A piece of data that needs to be expanded and or filtered</td>
-</tr></tbody>
-</table><pre><code>var f = new FieldsFilter({"hello" : "goodbye"});
+</tr>
+</tbody>
+</table>
+
+<pre><code>var f = new FieldsFilter({"hello" : "goodbye"});
 </code></pre>
 
 <h3>
@@ -602,17 +669,23 @@ f.filter(['test.one', 'hello'])
 <p><strong>Filter down a set of data based on a whitelist of fields</strong></p>
 
 <table>
-<thead><tr>
+<thead>
+<tr>
 <th>name</th>
 <th>type</th>
 <th>description</th>
-</tr></thead>
-<tbody><tr>
+</tr>
+</thead>
+<tbody>
+<tr>
 <td>fields</td>
 <td>dynamic</td>
 <td>An array of fields that should remain in the response. To represent a heirarchy use periods</td>
-</tr></tbody>
-</table><p>Reduce the data associated with this filter object to only contain the fields provided in the "fields" array
+</tr>
+</tbody>
+</table>
+
+<p>Reduce the data associated with this filter object to only contain the fields provided in the "fields" array
 If true is passed, the whole object will be expanded and all fields returned.</p>
 
 <pre><code>var f = new FieldsFilter({
@@ -646,14 +719,16 @@ f.filter(['test.one', 'hello'])
 <h3>
 <a name="new-httperrorstring-message-number-code" class="anchor" href="#new-httperrorstring-message-number-code"><span class="octicon octicon-link"></span></a>new HttpError(<em>string</em> message, <em>number</em> code)</h3>
 
-<p><strong>A helper error, that contain relevant HTTP error information</strong></p>
+<p><strong>A helper error, that contains information relevant to common HTTP errors</strong></p>
 
 <table>
-<thead><tr>
+<thead>
+<tr>
 <th>name</th>
 <th>type</th>
 <th>description</th>
-</tr></thead>
+</tr>
+</thead>
 <tbody>
 <tr>
 <td>message</td>
@@ -666,7 +741,9 @@ f.filter(['test.one', 'hello'])
 <td>An official http status code</td>
 </tr>
 </tbody>
-</table><pre><code>throw new Roads.HttpError('Page not found', 404);
+</table>
+
+<pre><code>throw new Roads.HttpError('Page not found', 404);
 </code></pre>
       </section>
     </div>
