@@ -48,7 +48,7 @@ exports.testAPIContextPersists = function (test) {
 			return response_string;
 		};
 
-		return yield next('data');
+		return yield next();
 	});
 
 	api.request('GET', '/')
