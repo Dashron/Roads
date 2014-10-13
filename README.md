@@ -240,9 +240,9 @@ For variable fields, you can retrieve the variable in the url parameter. The url
 
 #### Resource Method
 
-Each ```method : function``` pair of the methods field describes how the API server will respond to an HTTP request. The function is called a "resource method". Resource methods must return a promise. This can either be by providing a generator function (which is automatically turned into a coroutine for you), or by providing a function and returning a promise manually.
+Each ```method : function``` pair of the methods field describes how the API server will respond to an HTTP request. The function is called a "resource method". Resource methods must return a promise.
 
-If a method could not be located for the requested URL and method, the API will throw an HttpError. The message will contain all of the valid methods, and the status code will be 405.
+If a method could not be located for the provided URL and method, the API will throw an HttpError. The error's message will contain all of the valid methods, and the status code will be 405.
 
 Each resource method has access to the request context through ```this```. Each ```this``` will be unique to the request, and will persist from the requestHandler into the actual request. Feel free to add any methods you want to this context, one is already provided. The request method of API.request can be called directly from within your resource method by calling ```this.request```. This request will receive it's own unique context, because I have not spent the time to make it work otherwise. If you think it would be useful to persist a single context through sub-requests let me know!
 
