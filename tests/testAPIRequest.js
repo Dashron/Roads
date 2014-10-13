@@ -174,11 +174,10 @@ exports.testMissingMethodRequest = function (test) {
  */
 exports.testRequestWithHandlerCalled = function (test) {
 	var resource = createResource(['GET']);
-	var extra = {"extra": "data"};
 
 	var api = new API(resource);
 	api.onRequest(function (method, url, body, headers, next) {
-		return next(extra);
+		return next();
 	});//*/
 
 	api.request('GET', '/', 'yeah', {

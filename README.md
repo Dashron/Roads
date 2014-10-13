@@ -14,7 +14,6 @@ Roads is a framework for creating APIs in node.js. It requires generator support
 
  - [Roads.API](#roadsapi)
   - [new API(*Resource* root_resource)](#new-apiresource-root_resource)
-  - [onError(*Function* fn)](#apionerrorfunction-fn)
   - [onRequest(*Function* fn)](#apionrequestfunction-fn)
   - [request(*string* method, *string* url, *dynamic* body, *Object* headers)](#apirequeststring-method-string-url-dynamic-body-object-headers)
   - [server(*IncomingMessage* http_request, *ServerResponse* http_response)](#apiserverincomingmessage-http_request-serverresponse-http_response)
@@ -34,68 +33,33 @@ Roads is a framework for creating APIs in node.js. It requires generator support
 
 ## Roads.API
 
-The API is a container that holds a series of Resource objects. It exposes a [request](#apirequeststring-method-string-url-dynamic-body-object-headers) method which allows you to interact directly with resources.
+The API is a container that holds a hierarchy of [Resource](#roadsresource) objects. It exposes a [request](#apirequeststring-method-string-url-dynamic-body-object-headers) method which allows you to interact directly with the resources.
 
-To create all of your api endpoints, you start with the root_resource, and assign sub-[resources](#roadsresource).
+You must provide the root resource to the constructor. This resource will resolve any requests to the root (`/`) endpoint. Any additional routes will be referenced as sub-resources of the root endpoint.
 
 ### new API(*Resource* root_resource)
-**API Constructor**
+**Create an API object.**
 
  name          | type                       | required | description
  --------------|----------------------------|----------|-------------
  root_resource | [Resource](#roadsresource) | yes      | Used to generate the [response](#roadsresponse) for the root endpoint ( [protocol]://[host]/ ).
 
-Creates your API object, so you can use it directly or bind it to an [HTTP server](http://nodejs.org/api/http.html#http_http_createserver_requestlistener). 
+Creates your API object. You must provide a [Resource](#roadsresource) to the constructor. The provided resource becomes the root resource, and will be used for any API requests to `/`.
 
 ```node
 var roads = require('roads');
-var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at <link> for information about the Resource constructor.
+var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at [Resource](#roadsresource) for information about the Resource constructor.
 var api = new roads.API(root_resource);
 ```
-
-### API.onError(*Function* fn)
-**Assign an error handler to the API object**
-
- name | type                    | required | description
- -----|-------------------------|----------|-------------
- fn   | Function(*Error* error) | Yes      | A callback that will be executed any time an error is thrown from within a resource, or from the API object. The only parameter will be an `error` object.
-
-This callback can return a Response object, which will be rendered for the user if possible.
-
-Independent of any errors thrown by your resources, the API object can surface one of three errors.
-
-type                 | message                                                          | status | description
----------------------|------------------------------------------------------------------|--------|-----------------------------
-HttpError            | The request pathname                                             | 404    | If the endpoint could not be found                                  
-HttpError            | An array of HTTP methods that can be requested for this resource | 405    | If the endpoint was found, but the HTTP method was not supported
-Other (likely Error) | Dependant on the error                                           | 500    | If any other error is thrown
-
-
-```node
-var api = new roads.API(root_resource);
-api.onError(function (error) {
-    console.log(error);
-    switch (error.code) {
-        case 404:
-            return new roads.Response(notFoundRepresentation(error), 404); 
-        case 405:
-            return new roads.Response(notAllowedRepresentation(error), 405); 
-        case 500:
-        default:
-            return new roads.Response(unknownRepresentation(error), 500); 
-    }
-});
-```
-
 
 ### API.onRequest(*Function* fn)
-**Add a custom handler for every request.**
+**Add a custom function to be executed along with every request.**
 
  name | type                                                                  | required | description
  -----|-----------------------------------------------------------------------|----------|---------------
  fn   | Function(*string* method, *string* url,*object* body,*object* headers,*function* next) | yes      | Will be called any time a request is made on the API object.
  
- This will be called for every request, even for routes that do not exist. The callback will be provided four parameters
+ This will be called for every request, even for routes that do not exist. The callback will be executed with the following five parameters :
  
 #### onRequest Callback 
 **function (*string* method,*string* url, *Object* body, *Object* headers, *Function* next)**
@@ -106,44 +70,52 @@ name     | type                               | description
  url     | string                             | The url that was provided to the request
  body    | object                             | The body that was provided to the request, after it was properly parsed into an object
  headers | object                             | The headers that were provided to the request
- next    | function                           | The [resource method](#resource-method) that this request expected. You may optionally execute this method. If you provide a parameter, it will become the fourth parameter of the [resource method](#resource-method).
+ next    | function                           | The [resource method](#resource-method) that this request expected. If you want to execute the [resource method](#resource-method), you must execute this function. The method is not called for you.
 
-This callback must return a response object. You do not have to return the response from the `next` method, you can return an entirely different response object.
+If the callback does not return a [response](#roadsresponse) object, it will be wrapped in a [response](#roadsresponse) object with the default status code of 200.
 
     // Example of an onRequest handler
     api.onRequest(function* (url, body, headers, next) {
     	// kill trailing slash as long as we aren't at the root level
         if (url.path != '/' && url.path[url.path.length - 1] === '/') {
             return new roads.Response(null, 302, {
-            location : url.path.substring(0, url.path.length - 1)
-        });
-    }
+                location : url.path.substring(0, url.path.length - 1)
+            });
+        }
     
-    // This would also be a good place to identify the authenticated user, or api app and add it to the current request context
-    // eg: this.cur_user = user;
+        // This would also be a good place to identify the authenticated user, or api app and add it to the current request context
+        // eg: this.cur_user = user;
 
-    // execute the actual resource method, and return the response
-        return next();
+        // Catch any errors that are thrown by the resources
+        try {
+            // execute the actual resource method, and return the response
+            return next();
+        } catch (err) {
+            var response = null;
+
+            // Wwrap the errors in response objects. If they are [HttpErrors](#roadshttperror) we adjust the status code
+            switch (err.code) {
+                case 404:
+                    return new roads.Response(notFoundRepresentation(err), 404);
+                case 405:
+                    return new roads.Response(notAllowedRepresentation(err), 405);
+                case 500:
+                default:
+                    return new roads.Response(unknownRepresentation(err), 500);
+            }
+        }
     });
 
 ### API.request(*string* method, *string* url, *dynamic* body, *Object* headers)
 **Make a request to the API.**
 
 
-This function will locate the appropriate [resource method](#resource-method) for the provided parameters, execute it and return a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A).
-On success, you will receive a [Response](#roadsresponse) object
-On failure, you should receive an error. This error might be an [HttpError](#roadshttperror)
-
-**NOTE:** The response data will already be processed at this point through [`getData()`](#responsegetdata) and [`FieldsFilter`](#roadsfieldsfilter). You should reference `response.data` directly, and not use `getData()`.
+This function will locate the appropriate [resource method](#resource-method) for the provided HTTP Method and URL, execute it and return a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A). It will always return a [Response](#roadsresponse) object.
 
     var promise = api.request('GET', '/users/dashron');
     
     promise.then(function (response) {        
         console.log(response.data);
-    });
-    
-    promise.catch(function (err) {
-        console.log(err);
     });
 
 
@@ -160,7 +132,7 @@ Helper function so the api can be thrown directly into http.createServer.
 
 ## Roads.Resource
 
-Each resource represents a single endpoint. The definition provided to the constructor defines how the resource operates, and all methods exposed on a resource are intended to be used by other parts of the roads framework.
+Each resource represents a single endpoint. The definition provided to the constructor describes how it can be used by the API object.
 
 ### new Resource(*Object* definition)
 **Constructor**
@@ -240,16 +212,18 @@ For variable fields, you can retrieve the variable in the url parameter. The url
 
 #### Resource Method
 
-Each ```method : function``` pair of the methods field describes how the API server will respond to an HTTP request. The function is called a "resource method". Resource methods must return a promise.
+Each ```method : function``` pair of the methods field describes how the API server will respond to an HTTP request. The function is called a "resource method".
 
-If a method could not be located for the provided URL and method, the API will throw an HttpError. The error's message will contain all of the valid methods, and the status code will be 405.
+If a resource could not be located for the provided URL, the API will throw an [HttpError](#roadshttperror) with a 404 status code.
+If a resource was located for the provided URL, but the resource did not have the appropriate [resource method](#resource-method) for the requested HTTP method, the API will throw an [HttpError](#roadshttperror) with a 405 status code.
 
-Each resource method has access to the request context through ```this```. Each ```this``` will be unique to the request, and will persist from the requestHandler into the actual request. Feel free to add any methods you want to this context, one is already provided. The request method of API.request can be called directly from within your resource method by calling ```this.request```. This request will receive it's own unique context, because I have not spent the time to make it work otherwise. If you think it would be useful to persist a single context through sub-requests let me know!
+Each resource method has access to a request context through ```this```. Each ```this``` will be unique to the request, and will persist from the requestHandler into the actual request. The context is pre-loaded with a request method, which is an alias for [API.request](#apirequeststring-method-string-url-dynamic-body-object-headers). You may add any additional methods or properties to the context.
 
     var api = new API(new Resource({
         methods : {
             GET : function (url, body, headers) {
-                return this.request('GET', this.uri);
+                // true
+                console.log(this.uri === '/me');
             }
         }
     }));

@@ -14,19 +14,6 @@ var notFoundRepresentation = require('./representations/server/notFound');
 var notAllowedRepresentation = require('./representations/server/notAllowed');
 var unknownRepresentation = require('./representations/server/unknown');
 
-api.onError(function (error) {
-	console.log(error);
-	switch (error.code) {
-		case 404:
-			return new roads.Response(notFoundRepresentation(error), 404);
-		case 405:
-			return new roads.Response(notAllowedRepresentation(error), 405);
-		case 500:
-		default:
-			return new roads.Response(unknownRepresentation(error), 500);
-	}
-});
-
 api.onRequest(function (method, url, body, headers, next) {
 	// kill trailing slash as long as we aren't at the root level
 	if (url.path !== '/' && url.path[url.path.length - 1] === '/') {
@@ -40,7 +27,21 @@ api.onRequest(function (method, url, body, headers, next) {
 		this.cur_user = user;
 	}*/
 
-	return next();
+	try {
+		return next();
+	} catch (err) {
+		var response = null;
+
+		switch (err.code) {
+			case 404:
+				return new roads.Response(notFoundRepresentation(err), 404);
+			case 405:
+				return new roads.Response(notAllowedRepresentation(err), 405);
+			case 500:
+			default:
+				return new roads.Response(unknownRepresentation(err), 500);
+		}
+	}
 });//*/
 
 require('http').createServer(api.server.bind(api))
