@@ -6,8 +6,8 @@ Roads is a framework for creating APIs in node.js. It requires generator support
 
 1. It helps build an organized, resource oriented API through a nested routing structure.
 2. It can be required right from your code, or called over HTTP.
-3. It supports yield, for cleaner code.
-4. It supports delayed response execution. If your users don't want certain fields, the code associated will never be run
+3. It is built using generators and promises so that you never have to worry about callbacks.
+4. Can be used with roads-fieldsfilter to support lazy responses, only executing the code your users need.
 
 
 # Index
@@ -251,20 +251,6 @@ Create a response object.
 
     new Response({"uri" : "..."}, 200, {"last-modified":"2014-04-27 00:00:00"});
 
-### Response.getData()
-**Get the final data from the response, after all parsing**
-
-The result will always be a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A), no matter what data has been provided to the Response object.
-
-**NOTE:** The [request](#apirequeststring-method-string-url-dynamic-body-object-headers) method will have already called `getData()`. `getData()` is only useful if you have not yet called request, but need to expand a response object. If you call this, I highly recommend assigning the final value back into response.data, so that you do not have to process the response data multiple times. 
-
-    // Get the data, which will be a promise
-    return response.getData()
-        .then(function (data) {
-            console.log(data);
-            // NOTE: If any of your values are functions or promises, you must pass them through the field filter for them to be properly expanded.
-        });
-
 ### Response.writeToServer(*ServerResponse* http_response)
 **A helper function to write the response object to a server response**
 
@@ -273,7 +259,7 @@ This will apply the body, status code, and any applicable headers to the provide
     // execute the api logic and retrieve the appropriate response object
     api.request(http_request.method, http_request.url, body, http_request.headers)
         .then(function (response) {
-            // Get the data, which will be a promise
+            // Get the data
             response.writeToServer(http_response);
             http_response.end();
         });

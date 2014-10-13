@@ -3,7 +3,6 @@
 module.exports.Promise = require('bluebird');
 module.exports.Resource = require('./lib/resource');
 module.exports.Response = require('./lib/response');
-module.exports.FieldsFilter = require('./lib/fieldsfilter');
 module.exports.API = require('./lib/api');
 
 

@@ -50,7 +50,7 @@ exports.testPromiseGetData = function (test) {
 
 	var res = new Response(promise);
 
-	res.getData().then(function (data) {
+	res.data.then(function (data) {
 		test.equal(data, response_data);
 		test.done();
 	});
@@ -66,8 +66,6 @@ exports.testNonPromiseGetData = function (test) {
 
 	var res = new Response(response_data);
 
-	res.getData().then(function (data) {
-		test.equal(data, response_data);
-		test.done();
-	});
+	test.equal(res.data, response_data);
+	test.done();
 };
