@@ -1,8 +1,7 @@
 "use strict";
 
-var Response = require('../lib/response');
+var roads = require('../index');
 var url_module = require('url');
-var Promise = require('bluebird');
 
 /**
  * Test that getData with a promise is still the original promise
@@ -12,11 +11,11 @@ exports.testPromiseGetData = function (test) {
 		message : "hello"
 	};
 
-	var promise = new Promise(function (resolve, reject) {
+	var promise = new roads.Promise(function (resolve, reject) {
 		resolve(response_data);
 	});
 
-	var res = new Response(promise);
+	var res = new roads.Response(promise);
 
 	test.equal(promise, res.getData());
 	test.done();
@@ -30,7 +29,7 @@ exports.testPromiseGetData = function (test) {
 		message : "hello"
 	};
 
-	var res = new Response(response_data);
+	var res = new roads.Response(response_data);
 
 	test.true(response_data, res.getData());
 	test.done();
@@ -44,11 +43,11 @@ exports.testPromiseGetData = function (test) {
 		message : "hello"
 	};
 
-	var promise = new Promise(function (resolve, reject) {
+	var promise = new roads.Promise(function (resolve, reject) {
 		resolve(response_data);
 	});
 
-	var res = new Response(promise);
+	var res = new roads.Response(promise);
 
 	res.data.then(function (data) {
 		test.equal(data, response_data);
@@ -64,7 +63,7 @@ exports.testNonPromiseGetData = function (test) {
 		message : "hello"
 	};
 
-	var res = new Response(response_data);
+	var res = new roads.Response(response_data);
 
 	test.equal(res.data, response_data);
 	test.done();
