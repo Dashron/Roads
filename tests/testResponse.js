@@ -16,29 +16,28 @@ exports.testPromiseGetData = function (test) {
 	});
 
 	var res = new roads.Response(promise);
-
-	test.equal(promise, res.getData());
+	test.equal(promise, res.data);
 	test.done();
 };
 
 /**
  * Test that getData with a non promise is translated into a promise
  */
-exports.testPromiseGetData = function (test) {
+exports.testGetObjectData = function (test) {
 	var response_data = {
 		message : "hello"
 	};
 
 	var res = new roads.Response(response_data);
 
-	test.true(response_data, res.getData());
+	test.equal(response_data, res.data);
 	test.done();
 };
 
 /**
  * Test that a response built around a promise is thenable, and returns the original data
  */
-exports.testPromiseGetData = function (test) {
+exports.testGetDataIsThenable = function (test) {
 	var response_data = {
 		message : "hello"
 	};
