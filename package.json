@@ -13,7 +13,7 @@
   "keywords": ["api", "framework"],
   "homepage": "https://github.com/Dashron/roads",
   "scripts": {
-    "test": "node --harmony ./node_modules/nodeunit/bin/nodeunit ./tests"
+    "test": "node --harmony ./node_modules/nodeunit/bin/nodeunit ./tests/*"
   },
   "bugs": { 
     "url" : "http://github.com/Dashron/roads/issues", 

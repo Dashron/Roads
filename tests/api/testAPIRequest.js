@@ -147,6 +147,32 @@ exports.testMissingPathRequest = function (test) {
 };
 
 /**
+ * Ensure that route errors naturally bubble up through the promise catch
+ */
+exports.testMethodWithError = function (test) {
+	var resource = new roads.Resource({
+		methods : {
+			GET : function () {
+				throw new Error('huh');
+			}
+		}
+	});
+
+	var api = new roads.API(resource);
+
+	api.request('GET', '/', 'yeah', {
+		"one" : "two"
+	}).then(function (response) {
+		// this endpoint should error
+		test.ok(false);
+		test.done();
+	}).catch(function (e) {
+		test.equal(e.message, 'huh');
+		test.done();
+	});
+};
+
+/**
  * Ensure that we get proper errors for invalid HTTP methods
  */
 exports.testMissingMethodRequest = function (test) {
@@ -190,6 +216,36 @@ exports.testRequestWithHandlerCalled = function (test) {
 			}
 		});
 
+		test.done();
+	});
+};
+
+/**
+ * Ensure that an onRequest handler that executes, then calls the actual route returns as expected
+ */
+exports.testRequestErrorWithHandler = function (test) {
+	var resource = new roads.Resource({
+		methods : {
+			GET : function () {
+				throw new Error('huh');
+			}
+		}
+	});
+
+	var api = new roads.API(resource);
+
+	api.onRequest(function (method, url, body, headers, next) {
+		return next();
+	});//*/
+
+	api.request('GET', '/', 'yeah', {
+		"one" : "two"
+	}).then(function (response) {
+		// this endpoint should error
+		test.ok(false);
+		test.done();
+	}).catch(function (e) {
+		test.equal(e.message, 'huh');
 		test.done();
 	});
 };
