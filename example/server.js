@@ -27,21 +27,20 @@ api.onRequest(function (method, url, body, headers, next) {
 		this.cur_user = user;
 	}*/
 
-	try {
-		return next();
-	} catch (err) {
-		var response = null;
+	return next()
+		.catch(function (err) {
+			var response = null;
 
-		switch (err.code) {
-			case 404:
-				return new roads.Response(notFoundRepresentation(err), 404);
-			case 405:
-				return new roads.Response(notAllowedRepresentation(err), 405);
-			case 500:
-			default:
-				return new roads.Response(unknownRepresentation(err), 500);
-		}
-	}
+			switch (err.code) {
+				case 404:
+					return new roads.Response(notFoundRepresentation(err), 404);
+				case 405:
+					return new roads.Response(notAllowedRepresentation(err), 405);
+				case 500:
+				default:
+					return new roads.Response(unknownRepresentation(err), 500);
+			}
+		});
 });//*/
 
 require('http').createServer(api.server.bind(api))

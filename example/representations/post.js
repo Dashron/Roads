@@ -8,10 +8,7 @@ module.exports = function (post) {
 	representation.uri = '/posts/' + post.id;
 	representation.name = post.title;
 	representation.description = post.body;
-	// tofix: plural posts endpoint isn't properly populating this
-	representation.user = function () {
-		return userRepresentation(post.user);
-	};
+	representation.user = userRepresentation(post.user);
 
 	return representation;
 };
