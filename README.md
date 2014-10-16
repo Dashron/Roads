@@ -327,7 +327,7 @@ The response object contains all of the information you want to send to the clie
 
 name        | type                               | description
  -----------|------------------------------------|---------------
- data       | dynamic                            | A definition which describes how the resource should operate
+ data       | dynamic                            | The body of the response. If provided JSON, and no content-type header, the content-type header will be set to `application/json`
  status     | number                             | The HTTP Status code
  headers    | object                             | Key value pairs of http headers.
 
