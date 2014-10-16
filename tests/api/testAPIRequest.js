@@ -269,3 +269,32 @@ exports.testRequestWithHandlerNotCalled = function (test) {
 		test.done();
 	});
 };
+
+/**
+ * Ensure that you can handle errors properly from the onRequest handler
+ */
+exports.testRequestErrorWithHandlerThatCatchesErrors = function (test) {
+	var resource = new roads.Resource({
+		methods : {
+			GET : function () {
+				throw new Error('huh');
+			}
+		}
+	});
+
+	var api = new roads.API(resource);
+
+	api.onRequest(function (method, url, body, headers, next) {
+		return next()
+			.catch(function (error) {
+				return {"error" : error.message};
+			});
+	});//*/
+
+	api.request('GET', '/', 'yeah', {
+		"one" : "two"
+	}).then(function (response) {
+		test.deepEqual(response.data, {"error":"huh"});
+		test.done();
+	});
+};
