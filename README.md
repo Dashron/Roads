@@ -13,27 +13,33 @@ Roads is a framework for creating APIs in node.js. It requires generator support
 # Index
 
  - [Getting Started](#gettingstarted)
+
  - [Roads.API](#roadsapi)
   - [new API(*Resource* root_resource)](#new-apiresource-root_resource)
   - [onRequest(*Function* fn)](#apionrequestfunction-fn)
   - [request(*string* method, *string* url, *dynamic* body, *Object* headers)](#apirequeststring-method-string-url-dynamic-body-object-headers)
   - [server(*IncomingMessage* http_request, *ServerResponse* http_response)](#apiserverincomingmessage-http_request-serverresponse-http_response)
+
  - [Roads.Resource](#roadsresource)
   - [new Resource(*Object* definition)](#new-resourceobject-definition)
   - [URL Part (routing)](#url-part)
   - [Resource method](#resource-method)
+
  - [Roads.Response](#roadsresponse)
   - [new Response(*Object* data, *number* status, *Object* headers)](#new-responsedynamic-data-number-status-object-headers)
   - [writeTo(*ServerResponse* httpResponse)](#responsewritetoserverserverresponse-http_response)
+
  - [Roads.HttpError](#roadshttperror)
   - [new HttpError(*string* message, *number* code)](#new-httperrorstring-message-number-code)
+
+ - [Performance Improvements](#performance-improvements)
 
 ## Getting Started
 
 Building an API with roads follows a fairly simple workflow.
 
-1. Create a [Resource](#roadsresource) object for every endpoint (`/`, `/users`, `/posts`, '/users/#user_id')
-
+1. Create a [Resource](#roadsresource) object for every endpoint (`/`, `/users`, `/posts`, `/users/#user_id`)
+```
     // Create your resource.
     var resource = new roads.Resource({
         // Define sub-resources.
@@ -45,12 +51,13 @@ Building an API with roads follows a fairly simple workflow.
         // Incomplete. See step 2.
         methods : ...
     });
-
-    // Assign your resource to the root (`/`) endpoint.
+    
+    // Assign your resource to the root "/" endpoint.
     var api = new roads.API(resource);
+```
 
 2. Each [Resource](#roadsresource) from step #1 should contain one or more [resource methods](#resource-method). Each resource method is associated with an HTTP method.
-
+```
     var resource = new roads.Resource({
         // Incomplete. See step 1.
         resources : ...,
@@ -67,9 +74,10 @@ Building an API with roads follows a fairly simple workflow.
             }
         }
     });
+```
 
 3. Each [resource method](#resource-method) from step #2 should return a [response](#roadsresponse) object. 
-
+```
     var resource = new roads.Resource({
         // Incomplete. See step 1.
         resources : ...,
@@ -83,22 +91,28 @@ Building an API with roads follows a fairly simple workflow.
             }
         }
     });
+```
 
 4. Tie the API to an HTTP server
 
+```
     require('http').createServer(api.server.bind(api))
         .listen(8080, function () {
             console.log('server has started');
         });
-
+```
 
 Once all of these steps are complete, you should be able to access the API through your browser. Continue reading the docs below for more information on [error handling](#apionrequestfunction-fn), [URL parameters](#url-part) and more!
+
+
 
 ## Roads.API
 
 The API is a container that holds a hierarchy of [Resource](#roadsresource) objects. It exposes a [request](#apirequeststring-method-string-url-dynamic-body-object-headers) method which allows you to interact directly with the resources.
 
 You must provide the root resource to the constructor. This resource will resolve any requests to the root (`/`) endpoint. Any additional routes will be referenced as sub-resources of the root endpoint.
+
+
 
 ### new API(*Resource* root_resource)
 **Create an API object.**
@@ -114,6 +128,8 @@ var roads = require('roads');
 var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at [Resource](#roadsresource) for information about the Resource constructor.
 var api = new roads.API(root_resource);
 ```
+
+
 
 ### API.onRequest(*Function* fn)
 **Add a custom function to be executed along with every request.**
@@ -166,6 +182,8 @@ If the callback does not return a [response](#roadsresponse) object, it will be 
             });
     });
 
+
+
 ### API.request(*string* method, *string* url, *dynamic* body, *Object* headers)
 **Make a request to the API.**
 
@@ -183,6 +201,7 @@ This function will locate the appropriate [resource method](#resource-method) fo
     });
 
 
+
 ### API.server(*IncomingMessage* http_request, *ServerResponse* http_response)
 **An onRequest callback for http.createServer()**
 
@@ -194,9 +213,12 @@ Helper function so the api can be thrown directly into http.createServer.
         });
 
 
+
 ## Roads.Resource
 
 Each resource represents a single endpoint. The definition provided to the constructor describes how it can be used by the API object.
+
+
 
 ### new Resource(*Object* definition)
 **Constructor**
@@ -298,9 +320,12 @@ Each resource method has access to a request context through ```this```. Each ``
     });
 
 
+
 ## Roads.Response
 
 The response object contains all of the information you want to send to the client. This includes the body, status code and all applicable headers. 
+
+
 
 ### new Response(*dynamic* data, *number* status, *Object* headers)
 **Constructor**
@@ -314,6 +339,8 @@ name        | type                               | description
 Create a response object. 
 
     new Response({"uri" : "..."}, 200, {"last-modified":"2014-04-27 00:00:00"});
+
+
 
 ### Response.writeToServer(*ServerResponse* http_response)
 **A helper function to write the response object to a server response**
@@ -334,6 +361,8 @@ This will apply the body, status code, and any applicable headers to the provide
             http_response.end();
         });
 
+
+
 ## Roads.HttpError
 
 ### new HttpError(*string* message, *number* code)
@@ -350,4 +379,4 @@ name        | type                               | description
 
 ### Performance improvements
 
-It's possible to design your API responses to achieve significant performance gains. [Roads Fields Filter](https://github.com/Dashron/roads-fieldsfilter) helps facilitate that capability.
+It's possible to design your API responses to achieve significant performance gains. [Roads Fields Filter](https://github.com/Dashron/roads-fieldsfilter) helps facilitate that feature.
