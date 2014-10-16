@@ -19,19 +19,15 @@ Roads is a framework for creating APIs in node.js. It requires generator support
   - [onRequest(*Function* fn)](#apionrequestfunction-fn)
   - [request(*string* method, *string* url, *dynamic* body, *Object* headers)](#apirequeststring-method-string-url-dynamic-body-object-headers)
   - [server(*IncomingMessage* http_request, *ServerResponse* http_response)](#apiserverincomingmessage-http_request-serverresponse-http_response)
-
  - [Roads.Resource](#roadsresource)
   - [new Resource(*Object* definition)](#new-resourceobject-definition)
   - [URL Part (routing)](#url-part)
   - [Resource method](#resource-method)
-
  - [Roads.Response](#roadsresponse)
   - [new Response(*Object* data, *number* status, *Object* headers)](#new-responsedynamic-data-number-status-object-headers)
   - [writeTo(*ServerResponse* httpResponse)](#responsewritetoserverserverresponse-http_response)
-
  - [Roads.HttpError](#roadshttperror)
   - [new HttpError(*string* message, *number* code)](#new-httperrorstring-message-number-code)
-
  - [Performance Improvements](#performance-improvements)
 
 ## Getting Started
