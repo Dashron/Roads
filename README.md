@@ -12,6 +12,7 @@ Roads is a framework for creating APIs in node.js. It requires generator support
 
 # Index
 
+ - [Getting Started](#gettingstarted)
  - [Roads.API](#roadsapi)
   - [new API(*Resource* root_resource)](#new-apiresource-root_resource)
   - [onRequest(*Function* fn)](#apionrequestfunction-fn)
@@ -26,6 +27,72 @@ Roads is a framework for creating APIs in node.js. It requires generator support
   - [writeTo(*ServerResponse* httpResponse)](#responsewritetoserverserverresponse-http_response)
  - [Roads.HttpError](#roadshttperror)
   - [new HttpError(*string* message, *number* code)](#new-httperrorstring-message-number-code)
+
+## Getting Started
+
+Building an API with roads follows a fairly simple workflow.
+
+1. Create a [Resource](#roadsresource) object for every endpoint (`/`, `/users`, `/posts`, '/users/#user_id')
+
+    // Create your resource.
+    var resource = new roads.Resource({
+        // Define sub-resources.
+        resources : {
+            // This implies that the files "users.js" and "posts.js" contain resource objects.
+            "users" : require('./users'),
+            "posts" : require('./posts')
+        },
+        // Incomplete. See step 2.
+        methods : ...
+    });
+
+    // Assign your resource to the root (`/`) endpoint.
+    var api = new roads.API(resource);
+
+2. Each [Resource](#roadsresource) from step #1 should contain one or more [resource methods](#resource-method). Each resource method is associated with an HTTP method.
+
+    var resource = new roads.Resource({
+        // Incomplete. See step 1.
+        resources : ...,
+        methods : {
+            GET : function (url, body, headers) {
+                // URL querystring parameter.
+                url.query.page;
+
+                // JSON or querystring body, parsed depending on the content-type header.
+                body.name;
+
+                // Incomplete, see step 3.
+                return ...
+            }
+        }
+    });
+
+3. Each [resource method](#resource-method) from step #2 should return a [response](#roadsresponse) object. 
+
+    var resource = new roads.Resource({
+        // Incomplete. See step 1.
+        resources : ...,
+        methods : {
+            GET : function (url, body, headers) {
+                // Incomplete, see step 2.
+                ...
+
+                // Build a response object, with the body, status code and headers.
+                return new roads.Resource({ "name" : "aaron" }, 200, {"last-modified" : "Tue, 15 Nov 1994 12:45:26 GMT"});
+            }
+        }
+    });
+
+4. Tie the API to an HTTP server
+
+    require('http').createServer(api.server.bind(api))
+        .listen(8080, function () {
+            console.log('server has started');
+        });
+
+
+Once all of these steps are complete, you should be able to access the API through your browser. Continue reading the docs below for more information on [error handling](#apionrequestfunction-fn), [URL parameters](#url-part) and more!
 
 ## Roads.API
 
@@ -66,7 +133,7 @@ name     | type                               | description
  url     | string                             | The url that was provided to the request
  body    | object                             | The body that was provided to the request, after it was properly parsed into an object
  headers | object                             | The headers that were provided to the request
- next    | function                           | The [resource method](#resource-method) that this request expected. If you want to execute the [resource method](#resource-method), you must execute this function. The method is not called for you.
+ next    | function                           | The [resource method](#resource-method) that the router located. Execute this function to perform the standard API action for this HTTP method and URL. This method will always return a promise.
 
 If the callback does not return a [response](#roadsresponse) object, it will be wrapped in a [response](#roadsresponse) object with the default status code of 200.
 
@@ -82,24 +149,21 @@ If the callback does not return a [response](#roadsresponse) object, it will be 
         // This would also be a good place to identify the authenticated user, or api app and add it to the current request context
         // eg: this.cur_user = user;
 
-        // Catch any errors that are thrown by the resources
-        try {
-            // execute the actual resource method, and return the response
-            return next();
-        } catch (err) {
-            var response = null;
-
-            // Wwrap the errors in response objects. If they are [HttpErrors](#roadshttperror) we adjust the status code
-            switch (err.code) {
-                case 404:
-                    return new roads.Response(notFoundRepresentation(err), 404);
-                case 405:
-                    return new roads.Response(notAllowedRepresentation(err), 405);
-                case 500:
-                default:
-                    return new roads.Response(unknownRepresentation(err), 500);
-            }
-        }
+        // execute the actual resource method, and return the response
+        return next()
+            // Catch any errors that are thrown by the resources
+            .catch (function (err) {
+                // Wrap the errors in response objects. If they are [HttpErrors](#roadshttperror) we adjust the status code
+                switch (err.code) {
+                    case 404:
+                        return new roads.Response(notFoundRepresentation(err), 404);
+                    case 405:
+                        return new roads.Response(notAllowedRepresentation(err), 405);
+                    case 500:
+                    default:
+                        return new roads.Response(unknownRepresentation(err), 500);
+                }
+            });
     });
 
 ### API.request(*string* method, *string* url, *dynamic* body, *Object* headers)
@@ -281,3 +345,9 @@ name        | type                               | description
  code       | number                             | An official [http status code](#http://www.httpstatus.es)
 
     throw new Roads.HttpError('Page not found', 404);
+
+
+
+### Performance improvements
+
+It's possible to design your API responses to achieve significant performance gains. [Roads Fields Filter](https://github.com/Dashron/roads-fieldsfilter) helps facilitate that capability.
