@@ -375,3 +375,7 @@ name        | type                               | description
 ### Performance improvements
 
 It's possible to design your API responses to achieve significant performance gains. [Roads Fields Filter](https://github.com/Dashron/roads-fieldsfilter) helps facilitate that feature.
+
+### TODO
+
+Next step is to build roads-client, a single library that can be run in node, or browsers and can communicate with APIs built on roads. It will expose at least one method, which will have a call signature identical to [API.request](#apirequeststring-method-string-url-dynamic-body-object-headers)
