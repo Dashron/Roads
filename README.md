@@ -31,7 +31,7 @@ Roads is a framework for creating APIs in node.js. It requires generator support
 
 ## Getting Started
 
-Building an API with roads follows a fairly simple workflow.
+Building an API with roads follows a fairly simple work flow.
 
 1. Create a [Resource](#roadsresource) object for every endpoint (`/`, `/users`, `/posts`, `/users/#user_id`)
 ```
@@ -58,10 +58,10 @@ Building an API with roads follows a fairly simple workflow.
         resources : ...,
         methods : {
             GET : function (url, body, headers) {
-                // URL querystring parameter.
+                // URL query string parameter.
                 url.query.page;
 
-                // JSON or querystring body, parsed depending on the content-type header.
+                // JSON or query string body, parsed depending on the content-type header.
                 body.name;
 
                 // Incomplete, see step 3.
@@ -141,7 +141,7 @@ var api = new roads.API(root_resource);
 name     | type                               | description
  --------|------------------------------------|---------------
  method  | string                             | The HTTP method that was provided to the request
- url     | string                             | The url that was provided to the request
+ url     | string                             | The URL that was provided to the request
  body    | object                             | The body that was provided to the request, after it was properly parsed into an object
  headers | object                             | The headers that were provided to the request
  next    | function                           | The [resource method](#resource-method) that the router located. Execute this function to perform the standard API action for this HTTP method and URL. This method will always return a promise.
@@ -157,7 +157,7 @@ If the callback does not return a [response](#roadsresponse) object, it will be 
             });
         }
     
-        // This would also be a good place to identify the authenticated user, or api app and add it to the current request context
+        // This would also be a good place to identify the authenticated user, or API app and add it to the current request context
         // eg: this.cur_user = user;
 
         // execute the actual resource method, and return the response
@@ -200,7 +200,7 @@ This function will locate the appropriate [resource method](#resource-method) fo
 ### API.server(*IncomingMessage* http_request, *ServerResponse* http_response)
 **An onRequest callback for http.createServer()**
 
-Helper function so the api can be thrown directly into http.createServer.
+Helper function so the API can be thrown directly into http.createServer.
 
     require('http').createServer(api.server.bind(api))
         .listen(8081, function () {
@@ -226,7 +226,7 @@ The definition only looks for two fields.
 
 name        | type                               | description
  -----------|------------------------------------|---------------
- resources  | object                             | Each key is a [url part](#url-part), and each value is a sub-[resource](#roadsresource)
+ resources  | object                             | Each key is a [URL part](#url-part), and each value is a sub-[resource](#roadsresource)
  methods    | object                             | Each key is an HTTP method, and each value is a [resource method](#resource-method).
 
     module.exports.many = new Resource({
@@ -246,15 +246,15 @@ name        | type                               | description
 
 #### URL Part (routing)
 
-All URL routing happens through the resource definition, and through sub resources. The root resource represents a url without any path ([protocol]://[host]/). This root resource must define additional resources as sub resources, which will branch out after the root resource.
+All URL routing happens through the resource definition, and through sub resources. The root resource represents a URL without any path ([protocol]://[host]/). This root resource must define additional resources as sub resources, which will branch out after the root resource.
 
 Part       | Example   | Example values | Description
 -----------|-----------|----------------|--------------
-{literal}  | users     | users          | The provided value must explicitly match the [url part](#url-part)
+{literal}  | users     | users          | The provided value must explicitly match the [URL part](#url-part)
 #{key}     | #user_id  | 12445          | The provided value must be numeric
-${key}     | #username | dashron        | The provided value can be any series of non-forward slash, url valid characters
+${key}     | #username | dashron        | The provided value can be any series of non-forward slash, URL valid characters
 
-In the following example, the only valid urls are /, /users and /users/{number}
+In the following example, the only valid URLs are /, /users and /users/{number}
 
     var single = new Resource({
     });
@@ -271,7 +271,7 @@ In the following example, the only valid urls are /, /users and /users/{number}
         }
     });
 
-For variable fields, you can retrieve the variable in the url parameter. The url parameter will be an object, and will have an "args" parameter
+For variable fields, you can retrieve the variable in the URL parameter. The URL parameter will be an object, and will have an "args" parameter
 
     var single = new Resource({
         methods : function (url, body, headers) {
@@ -342,7 +342,7 @@ Create a response object.
 
 This will apply the body, status code, and any applicable headers to the provided http_response. It will not end the response, so you need to do that yourself.
 
-    // execute the api logic and retrieve the appropriate response object
+    // execute the API logic and retrieve the appropriate response object
     api.request(http_request.method, http_request.url, body, http_request.headers)
         .then(function (response) {
             // Get the data
