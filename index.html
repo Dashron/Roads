@@ -42,20 +42,20 @@
 <ol>
 <li>It helps build an organized, resource oriented API through a nested routing structure.</li>
 <li>It can be required right from your code, or called over HTTP.</li>
-<li>It supports yield, for cleaner code.</li>
-<li>It supports delayed response execution. If your users don't want certain fields, the code associated will never be run</li>
+<li>It is built using generators and promises so that you never have to worry about callbacks.</li>
+<li>Can be used with roads-fieldsfilter to support lazy responses, only executing the code your users need.</li>
 </ol>
 
 <h1>
 <a name="index" class="anchor" href="#index"><span class="octicon octicon-link"></span></a>Index</h1>
 
 <ul>
+<li><a href="#gettingstarted">Getting Started</a></li>
 <li>
 <a href="#roadsapi">Roads.API</a>
 
 <ul>
 <li><a href="#new-apiresource-root_resource">new API(<em>Resource</em> root_resource)</a></li>
-<li><a href="#apionerrorfunction-fn">onError(<em>Function</em> fn)</a></li>
 <li><a href="#apionrequestfunction-fn">onRequest(<em>Function</em> fn)</a></li>
 <li><a href="#apirequeststring-method-string-url-dynamic-body-object-headers">request(<em>string</em> method, <em>string</em> url, <em>dynamic</em> body, <em>Object</em> headers)</a></li>
 <li><a href="#apiserverincomingmessage-http_request-serverresponse-http_response">server(<em>IncomingMessage</em> http_request, <em>ServerResponse</em> http_response)</a></li>
@@ -75,16 +75,7 @@
 
 <ul>
 <li><a href="#new-responsedynamic-data-number-status-object-headers">new Response(<em>Object</em> data, <em>number</em> status, <em>Object</em> headers)</a></li>
-<li><a href="#responsegetdata">getData()</a></li>
 <li><a href="#responsewritetoserverserverresponse-http_response">writeTo(<em>ServerResponse</em> httpResponse)</a></li>
-</ul>
-</li>
-<li>
-<a href="#roadsfieldsfilter">Roads.FieldsFilter</a>
-
-<ul>
-<li><a href="#new-fieldsfilterdynamic-data">new FieldsFilter(<em>dynamic</em> data)</a></li>
-<li><a href="#filterarray-fields">filter(<em>Array</em> fields)</a></li>
 </ul>
 </li>
 <li>
@@ -94,19 +85,98 @@
 <li><a href="#new-httperrorstring-message-number-code">new HttpError(<em>string</em> message, <em>number</em> code)</a></li>
 </ul>
 </li>
+<li><a href="#performance-improvements">Performance Improvements</a></li>
 </ul>
+
+<h2>
+<a name="getting-started" class="anchor" href="#getting-started"><span class="octicon octicon-link"></span></a>Getting Started</h2>
+
+<p>Building an API with roads follows a fairly simple workflow.</p>
+
+<ol>
+<li>Create a <a href="#roadsresource">Resource</a> object for every endpoint (<code>/</code>, <code>/users</code>, <code>/posts</code>, <code>/users/#user_id</code>)</li>
+</ol>
+
+<pre><code>    // Create your resource.
+    var resource = new roads.Resource({
+        // Define sub-resources.
+        resources : {
+            // This implies that the files "users.js" and "posts.js" contain resource objects.
+            "users" : require('./users'),
+            "posts" : require('./posts')
+        },
+        // Incomplete. See step 2.
+        methods : ...
+    });
+
+    // Assign your resource to the root "/" endpoint.
+    var api = new roads.API(resource);
+</code></pre>
+
+<ol>
+<li>Each <a href="#roadsresource">Resource</a> from step #1 should contain one or more <a href="#resource-method">resource methods</a>. Each resource method is associated with an HTTP method.</li>
+</ol>
+
+<pre><code>    var resource = new roads.Resource({
+        // Incomplete. See step 1.
+        resources : ...,
+        methods : {
+            GET : function (url, body, headers) {
+                // URL query string parameter.
+                url.query.page;
+
+                // JSON or query string body, parsed depending on the content-type header.
+                body.name;
+
+                // Incomplete, see step 3.
+                return ...
+            }
+        }
+    });
+</code></pre>
+
+<ol>
+<li>Each <a href="#resource-method">resource method</a> from step #2 should return a <a href="#roadsresponse">response</a> object. </li>
+</ol>
+
+<pre><code>    var resource = new roads.Resource({
+        // Incomplete. See step 1.
+        resources : ...,
+        methods : {
+            GET : function (url, body, headers) {
+                // Incomplete, see step 2.
+                ...
+
+                // Build a response object, with the body, status code and headers.
+                return new roads.Resource({ "name" : "aaron" }, 200, {"last-modified" : "Tue, 15 Nov 1994 12:45:26 GMT"});
+            }
+        }
+    });
+</code></pre>
+
+<ol>
+<li>Tie the API to an HTTP server</li>
+</ol>
+
+<pre><code>    require('http').createServer(api.server.bind(api))
+        .listen(8080, function () {
+            console.log('server has started');
+        });
+</code></pre>
+
+<p>Once all of these steps are complete, you should be able to access the API through your browser. Continue reading the docs below for more information on <a href="#apionrequestfunction-fn">error handling</a>, <a href="#url-part">URL parameters</a> and more!</p>
 
 <h2>
 <a name="roadsapi" class="anchor" href="#roadsapi"><span class="octicon octicon-link"></span></a>Roads.API</h2>
 
-<p>The API is a container that holds a series of Resource objects. It exposes a <a href="#apirequeststring-method-string-url-dynamic-body-object-headers">request</a> method which allows you to interact directly with resources.</p>
+<p>The API is a container that holds a hierarchy of <a href="#roadsresource">Resource</a> objects. It exposes a <a href="#apirequeststring-method-string-url-dynamic-body-object-headers">request</a> method which allows you to interact directly with the resources.</p>
 
-<p>To create all of your api endpoints, you start with the root_resource, and assign sub-<a href="#roadsresource">resources</a>.</p>
+<p>You must provide the root resource to the constructor. This resource will resolve any requests to the root (<code>/</code>) endpoint. Any additional routes will be referenced as sub-resources of the root endpoint.</p>
 
 <h3>
 <a name="new-apiresource-root_resource" class="anchor" href="#new-apiresource-root_resource"><span class="octicon octicon-link"></span></a>new API(<em>Resource</em> root_resource)</h3>
 
-<p><strong>API Constructor</strong></p>
+<p><strong>Create an API object.</strong></p>
 
 <table>
 <thead>
@@ -127,91 +197,17 @@
 </tbody>
 </table>
 
-<p>Creates your API object, so you can use it directly or bind it to an <a href="http://nodejs.org/api/http.html#http_http_createserver_requestlistener">HTTP server</a>. </p>
+<p>Creates your API object. You must provide a <a href="#roadsresource">Resource</a> to the constructor. The provided resource becomes the root resource, and will be used for any API requests to <code>/</code>.</p>
 
 <pre lang="node"><code>var roads = require('roads');
-var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at &lt;link&gt; for information about the Resource constructor.
+var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at [Resource](#roadsresource) for information about the Resource constructor.
 var api = new roads.API(root_resource);
-</code></pre>
-
-<h3>
-<a name="apionerrorfunction-fn" class="anchor" href="#apionerrorfunction-fn"><span class="octicon octicon-link"></span></a>API.onError(<em>Function</em> fn)</h3>
-
-<p><strong>Assign an error handler to the API object</strong></p>
-
-<table>
-<thead>
-<tr>
-<th>name</th>
-<th>type</th>
-<th>required</th>
-<th>description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>fn</td>
-<td>Function(<em>Error</em> error)</td>
-<td>Yes</td>
-<td>A callback that will be executed any time an error is thrown from within a resource, or from the API object. The only parameter will be an <code>error</code> object.</td>
-</tr>
-</tbody>
-</table>
-
-<p>This callback can return a Response object, which will be rendered for the user if possible.</p>
-
-<p>Independent of any errors thrown by your resources, the API object can surface one of three errors.</p>
-
-<table>
-<thead>
-<tr>
-<th>type</th>
-<th>message</th>
-<th>status</th>
-<th>description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>HttpError</td>
-<td>The request pathname</td>
-<td>404</td>
-<td>If the endpoint could not be found</td>
-</tr>
-<tr>
-<td>HttpError</td>
-<td>An array of HTTP methods that can be requested for this resource</td>
-<td>405</td>
-<td>If the endpoint was found, but the HTTP method was not supported</td>
-</tr>
-<tr>
-<td>Other (likely Error)</td>
-<td>Dependant on the error</td>
-<td>500</td>
-<td>If any other error is thrown</td>
-</tr>
-</tbody>
-</table>
-
-<pre lang="node"><code>var api = new roads.API(root_resource);
-api.onError(function (error) {
-    console.log(error);
-    switch (error.code) {
-        case 404:
-            return new roads.Response(notFoundRepresentation(error), 404); 
-        case 405:
-            return new roads.Response(notAllowedRepresentation(error), 405); 
-        case 500:
-        default:
-            return new roads.Response(unknownRepresentation(error), 500); 
-    }
-});
 </code></pre>
 
 <h3>
 <a name="apionrequestfunction-fn" class="anchor" href="#apionrequestfunction-fn"><span class="octicon octicon-link"></span></a>API.onRequest(<em>Function</em> fn)</h3>
 
-<p><strong>Add a custom handler for every request.</strong></p>
+<p><strong>Add a custom function to be executed along with every request.</strong></p>
 
 <table>
 <thead>
@@ -232,7 +228,7 @@ api.onError(function (error) {
 </tbody>
 </table>
 
-<p>This will be called for every request, even for routes that do not exist. The callback will be provided four parameters</p>
+<p>This will be called for every request, even for routes that do not exist. The callback will be executed with the following five parameters :</p>
 
 <h4>
 <a name="onrequest-callback" class="anchor" href="#onrequest-callback"><span class="octicon octicon-link"></span></a>onRequest Callback</h4>
@@ -256,7 +252,7 @@ api.onError(function (error) {
 <tr>
 <td>url</td>
 <td>string</td>
-<td>The url that was provided to the request</td>
+<td>The URL that was provided to the request</td>
 </tr>
 <tr>
 <td>body</td>
@@ -271,27 +267,40 @@ api.onError(function (error) {
 <tr>
 <td>next</td>
 <td>function</td>
-<td>The <a href="#resource-method">resource method</a> that this request expected. You may optionally execute this method. If you provide a parameter, it will become the fourth parameter of the <a href="#resource-method">resource method</a>.</td>
+<td>The <a href="#resource-method">resource method</a> that the router located. Execute this function to perform the standard API action for this HTTP method and URL. This method will always return a promise.</td>
 </tr>
 </tbody>
 </table>
 
-<p>This callback must return a response object. You do not have to return the response from the <code>next</code> method, you can return an entirely different response object.</p>
+<p>If the callback does not return a <a href="#roadsresponse">response</a> object, it will be wrapped in a <a href="#roadsresponse">response</a> object with the default status code of 200.</p>
 
 <pre><code>// Example of an onRequest handler
 api.onRequest(function* (url, body, headers, next) {
     // kill trailing slash as long as we aren't at the root level
     if (url.path != '/' &amp;&amp; url.path[url.path.length - 1] === '/') {
         return new roads.Response(null, 302, {
-        location : url.path.substring(0, url.path.length - 1)
-    });
-}
+            location : url.path.substring(0, url.path.length - 1)
+        });
+    }
 
-// This would also be a good place to identify the authenticated user, or api app and add it to the current request context
-// eg: this.cur_user = user;
+    // This would also be a good place to identify the authenticated user, or API app and add it to the current request context
+    // eg: this.cur_user = user;
 
-// execute the actual resource method, and return the response
-    return next();
+    // execute the actual resource method, and return the response
+    return next()
+        // Catch any errors that are thrown by the resources
+        .catch (function (err) {
+            // Wrap the errors in response objects. If they are [HttpErrors](#roadshttperror) we adjust the status code
+            switch (err.code) {
+                case 404:
+                    return new roads.Response(notFoundRepresentation(err), 404);
+                case 405:
+                    return new roads.Response(notAllowedRepresentation(err), 405);
+                case 500:
+                default:
+                    return new roads.Response(unknownRepresentation(err), 500);
+            }
+        });
 });
 </code></pre>
 
@@ -300,11 +309,7 @@ api.onRequest(function* (url, body, headers, next) {
 
 <p><strong>Make a request to the API.</strong></p>
 
-<p>This function will locate the appropriate <a href="#resource-method">resource method</a> for the provided parameters, execute it and return a <a href="http://wiki.commonjs.org/wiki/Promises/A">thenable (Promises/A compatible promise)</a>.
-On success, you will receive a <a href="#roadsresponse">Response</a> object
-On failure, you should receive an error. This error might be an <a href="#roadshttperror">HttpError</a></p>
-
-<p><strong>NOTE:</strong> The response data will already be processed at this point through <a href="#responsegetdata"><code>getData()</code></a> and <a href="#roadsfieldsfilter"><code>FieldsFilter</code></a>. You should reference <code>response.data</code> directly, and not use <code>getData()</code>.</p>
+<p>This function will locate the appropriate <a href="#resource-method">resource method</a> for the provided HTTP Method and URL, execute it and return a <a href="http://wiki.commonjs.org/wiki/Promises/A">thenable (Promises/A compatible promise)</a>. It will always return a <a href="#roadsresponse">Response</a> object.</p>
 
 <pre><code>var promise = api.request('GET', '/users/dashron');
 
@@ -312,8 +317,8 @@ promise.then(function (response) {
     console.log(response.data);
 });
 
-promise.catch(function (err) {
-    console.log(err);
+promise.catch(function (error) {
+    console.log(error);
 });
 </code></pre>
 
@@ -322,7 +327,7 @@ promise.catch(function (err) {
 
 <p><strong>An onRequest callback for http.createServer()</strong></p>
 
-<p>Helper function so the api can be thrown directly into http.createServer.</p>
+<p>Helper function so the API can be thrown directly into http.createServer.</p>
 
 <pre><code>require('http').createServer(api.server.bind(api))
     .listen(8081, function () {
@@ -333,7 +338,7 @@ promise.catch(function (err) {
 <h2>
 <a name="roadsresource" class="anchor" href="#roadsresource"><span class="octicon octicon-link"></span></a>Roads.Resource</h2>
 
-<p>Each resource represents a single endpoint. The definition provided to the constructor defines how the resource operates, and all methods exposed on a resource are intended to be used by other parts of the roads framework.</p>
+<p>Each resource represents a single endpoint. The definition provided to the constructor describes how it can be used by the API object.</p>
 
 <h3>
 <a name="new-resourceobject-definition" class="anchor" href="#new-resourceobject-definition"><span class="octicon octicon-link"></span></a>new Resource(<em>Object</em> definition)</h3>
@@ -371,7 +376,7 @@ promise.catch(function (err) {
 <tr>
 <td>resources</td>
 <td>object</td>
-<td>Each key is a <a href="#url-part">url part</a>, and each value is a sub-<a href="#roadsresource">resource</a>
+<td>Each key is a <a href="#url-part">URL part</a>, and each value is a sub-<a href="#roadsresource">resource</a>
 </td>
 </tr>
 <tr>
@@ -401,7 +406,7 @@ promise.catch(function (err) {
 <h4>
 <a name="url-part-routing" class="anchor" href="#url-part-routing"><span class="octicon octicon-link"></span></a>URL Part (routing)</h4>
 
-<p>All URL routing happens through the resource definition, and through sub resources. The root resource represents a url without any path ([protocol]://[host]/). This root resource must define additional resources as sub resources, which will branch out after the root resource.</p>
+<p>All URL routing happens through the resource definition, and through sub resources. The root resource represents a URL without any path ([protocol]://[host]/). This root resource must define additional resources as sub resources, which will branch out after the root resource.</p>
 
 <table>
 <thead>
@@ -417,7 +422,7 @@ promise.catch(function (err) {
 <td>{literal}</td>
 <td>users</td>
 <td>users</td>
-<td>The provided value must explicitly match the <a href="#url-part">url part</a>
+<td>The provided value must explicitly match the <a href="#url-part">URL part</a>
 </td>
 </tr>
 <tr>
@@ -430,12 +435,12 @@ promise.catch(function (err) {
 <td>${key}</td>
 <td>#username</td>
 <td>dashron</td>
-<td>The provided value can be any series of non-forward slash, url valid characters</td>
+<td>The provided value can be any series of non-forward slash, URL valid characters</td>
 </tr>
 </tbody>
 </table>
 
-<p>In the following example, the only valid urls are /, /users and /users/{number}</p>
+<p>In the following example, the only valid URLs are /, /users and /users/{number}</p>
 
 <pre><code>var single = new Resource({
 });
@@ -453,7 +458,7 @@ var root = new Resource({
 });
 </code></pre>
 
-<p>For variable fields, you can retrieve the variable in the url parameter. The url parameter will be an object, and will have an "args" parameter</p>
+<p>For variable fields, you can retrieve the variable in the URL parameter. The URL parameter will be an object, and will have an "args" parameter</p>
 
 <pre><code>var single = new Resource({
     methods : function (url, body, headers) {
@@ -477,16 +482,18 @@ var root = new Resource({
 <h4>
 <a name="resource-method" class="anchor" href="#resource-method"><span class="octicon octicon-link"></span></a>Resource Method</h4>
 
-<p>Each <code>method : function</code> pair of the methods field describes how the API server will respond to an HTTP request. The function is called a "resource method". Resource methods must return a promise.</p>
+<p>Each <code>method : function</code> pair of the methods field describes how the API server will respond to an HTTP request. The function is called a "resource method".</p>
 
-<p>If a method could not be located for the provided URL and method, the API will throw an HttpError. The error's message will contain all of the valid methods, and the status code will be 405.</p>
+<p>If a resource could not be located for the provided URL, the API will throw an <a href="#roadshttperror">HttpError</a> with a 404 status code.
+If a resource was located for the provided URL, but the resource did not have the appropriate <a href="#resource-method">resource method</a> for the requested HTTP method, the API will throw an <a href="#roadshttperror">HttpError</a> with a 405 status code.</p>
 
-<p>Each resource method has access to the request context through <code>this</code>. Each <code>this</code> will be unique to the request, and will persist from the requestHandler into the actual request. Feel free to add any methods you want to this context, one is already provided. The request method of API.request can be called directly from within your resource method by calling <code>this.request</code>. This request will receive it's own unique context, because I have not spent the time to make it work otherwise. If you think it would be useful to persist a single context through sub-requests let me know!</p>
+<p>Each resource method has access to a request context through <code>this</code>. Each <code>this</code> will be unique to the request, and will persist from the requestHandler into the actual request. The context is pre-loaded with a request method, which is an alias for <a href="#apirequeststring-method-string-url-dynamic-body-object-headers">API.request</a>. You may add any additional methods or properties to the context.</p>
 
 <pre><code>var api = new API(new Resource({
     methods : {
         GET : function (url, body, headers) {
-            return this.request('GET', this.uri);
+            // true
+            console.log(this.uri === '/me');
         }
     }
 }));
@@ -519,7 +526,8 @@ api.onRequest(function* (method, url, body, headers, next) {
 <tr>
 <td>data</td>
 <td>dynamic</td>
-<td>A definition which describes how the resource should operate</td>
+<td>The body of the response. If provided a JavaScript object, and no content-type header, the response will be sent through JSON.stringify, and the content-type header will be set to <code>application/json</code>
+</td>
 </tr>
 <tr>
 <td>status</td>
@@ -540,176 +548,24 @@ api.onRequest(function* (method, url, body, headers, next) {
 </code></pre>
 
 <h3>
-<a name="responsegetdata" class="anchor" href="#responsegetdata"><span class="octicon octicon-link"></span></a>Response.getData()</h3>
-
-<p><strong>Get the final data from the response, after all parsing</strong></p>
-
-<p>The result will always be a <a href="http://wiki.commonjs.org/wiki/Promises/A">thenable (Promises/A compatible promise)</a>, no matter what data has been provided to the Response object.</p>
-
-<p><strong>NOTE:</strong> The <a href="#apirequeststring-method-string-url-dynamic-body-object-headers">request</a> method will have already called <code>getData()</code>. <code>getData()</code> is only useful if you have not yet called request, but need to expand a response object. If you call this, I highly recommend assigning the final value back into response.data, so that you do not have to process the response data multiple times. </p>
-
-<pre><code>// Get the data, which will be a promise
-return response.getData()
-    .then(function (data) {
-        console.log(data);
-        // NOTE: If any of your values are functions or promises, you must pass them through the field filter for them to be properly expanded.
-    });
-</code></pre>
-
-<h3>
 <a name="responsewritetoserverserverresponse-http_response" class="anchor" href="#responsewritetoserverserverresponse-http_response"><span class="octicon octicon-link"></span></a>Response.writeToServer(<em>ServerResponse</em> http_response)</h3>
 
 <p><strong>A helper function to write the response object to a server response</strong></p>
 
 <p>This will apply the body, status code, and any applicable headers to the provided http_response. It will not end the response, so you need to do that yourself.</p>
 
-<pre><code>// execute the api logic and retrieve the appropriate response object
+<pre><code>// execute the API logic and retrieve the appropriate response object
 api.request(http_request.method, http_request.url, body, http_request.headers)
     .then(function (response) {
-        // Get the data, which will be a promise
+        // Get the data
         response.writeToServer(http_response);
         http_response.end();
-    });
-</code></pre>
-
-<h2>
-<a name="roadsfieldsfilter" class="anchor" href="#roadsfieldsfilter"><span class="octicon octicon-link"></span></a>Roads.FieldsFilter</h2>
-
-<p>Many APIs benefit from allowing users to limit which fields they want. If a user is only trying to display title and description, there's no need to provide tons of unrelated stats and metadata. This is the first benefit of the fields filter. When provided the response data of a route, and an array of valid fields, The field filter will remove any unwanted fields.</p>
-
-<pre><code>var f = new FieldsFilter({
-    'test' : {
-        'one' : true,
-        'two' : true
-    },
-    'hello' : {
-        'one' : true,
-        'two' : true
-    }
-});
-
-// notice test.two was not requested, so it's ignored
-// notice hello was requested, so the entire child resource is provided
-f.filter(['test.one', 'hello'])
-    .then(function (response) {
-        console.log(response === {
-            'test' : {
-                'one' : true
-            },
-            'hello' : {
-                'one' : true,
-                'two' : true
-            }
-        });
-    });
-</code></pre>
-
-<p>The second benefit is that you can provide function or promise values and the filter will expand them ONLY if the user has explicitly requested them. This allows you to avoid heavy DB queries or cache hits by intelligently structuring your responses.</p>
-
-<pre><code>var f = new FieldsFilter({
-    'test' : {
-        'one' : function () {
-            return true;
-        },
-        'two' : function () {
-            console.log('this will never be reached!');
-            return true;
-        }
-    },
-    'hello' : {
-        'one' : true,
-        'two' : true
-    }
-});
-
-// notice test.two was not requested, so it's ignored and the function is never executed
-// notice test.one was requested, so the function is executed and the response is provided
-f.filter(['test.one', 'hello'])
-    .then(function (response) {
-        console.log(response === {
-            'test' : {
-                'one' : true
-            },
-            'hello' : {
-                'one' : true,
-                'two' : true
-            }
-        });
-    });
-</code></pre>
-
-<h3>
-<a name="new-fieldsfilterdynamic-data" class="anchor" href="#new-fieldsfilterdynamic-data"><span class="octicon octicon-link"></span></a>new FieldsFilter(<em>dynamic</em> data)</h3>
-
-<p><strong>Create an object to help filter down a set of data</strong></p>
-
-<table>
-<thead>
-<tr>
-<th>name</th>
-<th>type</th>
-<th>description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>data</td>
-<td>dynamic</td>
-<td>A piece of data that needs to be expanded and or filtered</td>
-</tr>
-</tbody>
-</table>
-
-<pre><code>var f = new FieldsFilter({"hello" : "goodbye"});
-</code></pre>
-
-<h3>
-<a name="filterarray-fields" class="anchor" href="#filterarray-fields"><span class="octicon octicon-link"></span></a>filter(<em>Array</em> fields)</h3>
-
-<p><strong>Filter down a set of data based on a whitelist of fields</strong></p>
-
-<table>
-<thead>
-<tr>
-<th>name</th>
-<th>type</th>
-<th>description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>fields</td>
-<td>dynamic</td>
-<td>An array of fields that should remain in the response. To represent a heirarchy use periods</td>
-</tr>
-</tbody>
-</table>
-
-<p>Reduce the data associated with this filter object to only contain the fields provided in the "fields" array
-If true is passed, the whole object will be expanded and all fields returned.</p>
-
-<pre><code>var f = new FieldsFilter({
-    'test' : {
-        'one' : true,
-        'two' : true
-    },
-    'hello' : {
-        'one' : true,
-        'two' : true
-    }
-});
-
-f.filter(['test.one', 'hello'])
-    .then(function (response) {
-        console.log(response === {
-            'test' : {
-                'one' : true
-            },
-            'hello' : {
-                'one' : true,
-                'two' : true
-            }
-        });
+    })
+    .catch(function (error) {
+        // be careful throwing an error in a response like this
+        // errors might expose sensitive data
+        (new roads.Response(error, 500)).writeToServer(http_response);
+        http_response.end();
     });
 </code></pre>
 
@@ -745,6 +601,16 @@ f.filter(['test.one', 'hello'])
 
 <pre><code>throw new Roads.HttpError('Page not found', 404);
 </code></pre>
+
+<h3>
+<a name="performance-improvements" class="anchor" href="#performance-improvements"><span class="octicon octicon-link"></span></a>Performance improvements</h3>
+
+<p>It's possible to design your API responses to achieve significant performance gains. <a href="https://github.com/Dashron/roads-fieldsfilter">Roads Fields Filter</a> helps facilitate that feature.</p>
+
+<h3>
+<a name="todo" class="anchor" href="#todo"><span class="octicon octicon-link"></span></a>TODO</h3>
+
+<p>Next step is to build roads-client, a single library that can be run in node, or browsers and can communicate with APIs built on roads. It will expose at least one method, which will have a call signature identical to <a href="#apirequeststring-method-string-url-dynamic-body-object-headers">API.request</a></p>
       </section>
     </div>
 
