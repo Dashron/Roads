@@ -31,7 +31,7 @@ Roads is a framework for creating APIs in node.js. It requires generator support
 
 ## Getting Started
 
-Building an API with roads follows a fairly simple work flow.
+Building an API with roads follows a fairly simple workflow.
 
 1. Create a [Resource](#roadsresource) object for every endpoint (`/`, `/users`, `/posts`, `/users/#user_id`)
 ```
