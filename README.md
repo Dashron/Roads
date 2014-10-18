@@ -5,7 +5,7 @@ Roads is a framework for creating APIs in node.js. It requires generator support
 # Why should I use Roads?
 
 1. It helps build an organized, resource oriented API through a nested routing structure.
-2. It can be required right from your code, or called over HTTP.
+2. Can be invoked over HTTP, or directly inside of javascript.
 3. It is built using generators and promises so that you never have to worry about callbacks.
 4. Can be used with roads-fieldsfilter to support lazy responses, only executing the code your users need.
 
