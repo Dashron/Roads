@@ -12,7 +12,7 @@ Roads is a framework for creating APIs in node.js. It requires generator support
 
 # Index
 
- - [Getting Started](#gettingstarted)
+ - [Getting Started](#getting-started)
  - [Roads.API](#roadsapi)
   - [new API(*Resource* root_resource)](#new-apiresource-root_resource)
   - [onRequest(*Function* fn)](#apionrequestfunction-fn)
