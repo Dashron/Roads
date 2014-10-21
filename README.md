@@ -24,6 +24,9 @@ Roads is a framework for creating APIs in node.js. It requires generator support
   - [Resource method](#resource-method)
  - [Roads.Response](#roadsresponse)
   - [new Response(*Object* data, *number* status, *Object* headers)](#new-responsedynamic-data-number-status-object-headers)
+  - [data](#data)
+  - [status](#status)
+  - [headers](#headers)
   - [writeTo(*ServerResponse* httpResponse)](#responsewritetoserverserverresponse-http_response)
  - [Roads.HttpError](#roadshttperror)
   - [new HttpError(*string* message, *number* code)](#new-httperrorstring-message-number-code)
@@ -88,9 +91,22 @@ Building an API with roads follows a fairly simple workflow.
     });
 ```
 
-4. Tie the API to an HTTP server
+4. Interact with the API directly, or bind it to an HTTP serber
 
 ```
+    // Call directly
+    api.request('GET', '/users', {page : 2})
+        .then(function (response) {
+            if (response.status >= 400) {
+                throw new Error(response.data, response.status);
+            }
+            
+            console.log(response.data);
+        });
+```
+
+```
+    // Bind to an HTTP server
     require('http').createServer(api.server.bind(api))
         .listen(8080, function () {
             console.log('server has started');
@@ -335,6 +351,26 @@ Create a response object.
 
     new Response({"uri" : "..."}, 200, {"last-modified":"2014-04-27 00:00:00"});
 
+### Data
+**The raw JavaScript object returned by the API request**
+
+```
+    console.log(response.data);
+```
+
+### Status
+**The HTTP status returned by the API request**
+
+```
+    console.log(response.status);
+```
+
+### Headers
+**A JavaScript object of all response headers**
+
+```
+    console.log(response.headers);
+```
 
 
 ### Response.writeToServer(*ServerResponse* http_response)
