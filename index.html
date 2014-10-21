@@ -41,7 +41,7 @@
 
 <ol>
 <li>It helps build an organized, resource oriented API through a nested routing structure.</li>
-<li>It can be required right from your code, or called over HTTP.</li>
+<li>Can be invoked over HTTP, or directly inside of javascript.</li>
 <li>It is built using generators and promises so that you never have to worry about callbacks.</li>
 <li>Can be used with roads-fieldsfilter to support lazy responses, only executing the code your users need.</li>
 </ol>
@@ -50,7 +50,7 @@
 <a name="index" class="anchor" href="#index"><span class="octicon octicon-link"></span></a>Index</h1>
 
 <ul>
-<li><a href="#gettingstarted">Getting Started</a></li>
+<li><a href="#getting-started">Getting Started</a></li>
 <li>
 <a href="#roadsapi">Roads.API</a>
 
@@ -75,6 +75,9 @@
 
 <ul>
 <li><a href="#new-responsedynamic-data-number-status-object-headers">new Response(<em>Object</em> data, <em>number</em> status, <em>Object</em> headers)</a></li>
+<li><a href="#data">data</a></li>
+<li><a href="#status">status</a></li>
+<li><a href="#headers">headers</a></li>
 <li><a href="#responsewritetoserverserverresponse-http_response">writeTo(<em>ServerResponse</em> httpResponse)</a></li>
 </ul>
 </li>
@@ -155,10 +158,22 @@
 </code></pre>
 
 <ol>
-<li>Tie the API to an HTTP server</li>
+<li>Interact with the API directly, or bind it to an HTTP serber</li>
 </ol>
 
-<pre><code>    require('http').createServer(api.server.bind(api))
+<pre><code>    // Call directly
+    api.request('GET', '/users', {page : 2})
+        .then(function (response) {
+            if (response.status &gt;= 400) {
+                throw new Error(response.data, response.status);
+            }
+
+            console.log(response.data);
+        });
+</code></pre>
+
+<pre><code>    // Bind to an HTTP server
+    require('http').createServer(api.server.bind(api))
         .listen(8080, function () {
             console.log('server has started');
         });
@@ -545,6 +560,30 @@ api.onRequest(function* (method, url, body, headers, next) {
 <p>Create a response object. </p>
 
 <pre><code>new Response({"uri" : "..."}, 200, {"last-modified":"2014-04-27 00:00:00"});
+</code></pre>
+
+<h3>
+<a name="data" class="anchor" href="#data"><span class="octicon octicon-link"></span></a>Data</h3>
+
+<p><strong>The raw JavaScript object returned by the API request</strong></p>
+
+<pre><code>    console.log(response.data);
+</code></pre>
+
+<h3>
+<a name="status" class="anchor" href="#status"><span class="octicon octicon-link"></span></a>Status</h3>
+
+<p><strong>The HTTP status returned by the API request</strong></p>
+
+<pre><code>    console.log(response.status);
+</code></pre>
+
+<h3>
+<a name="headers" class="anchor" href="#headers"><span class="octicon octicon-link"></span></a>Headers</h3>
+
+<p><strong>A JavaScript object of all response headers</strong></p>
+
+<pre><code>    console.log(response.headers);
 </code></pre>
 
 <h3>
