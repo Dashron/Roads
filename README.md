@@ -414,4 +414,4 @@ It's possible to design your API responses to achieve significant performance ga
 
 ### TODO
 
-Next step is to build roads-client, a single library that can be run in node, or browsers and can communicate with APIs built on roads. It will expose at least one method, which will have a call signature identical to [API.request](#apirequeststring-method-string-url-dynamic-body-object-headers)
+Next step is to continue to flesh out [roads-client](https://github.com/Dashron/roads-client), a single library that can be run in node, or browsers and can communicate with APIs built on roads. It will expose at least one method, which will have a call signature identical to [API.request](#apirequeststring-method-string-url-dynamic-body-object-headers). This should allow controller code to be shared between the client and the server, since the data store is consistent.
