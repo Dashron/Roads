@@ -41,6 +41,35 @@ exports.testAPIContextPersists = function (test) {
 		}
 	}));
 
+	api.onRequest(function (method, url, body, headers, next) {
+		this.confirmString = function () {
+			return response_string;
+		};
+
+		return next();
+	});
+
+	api.request('GET', '/')
+		.then(function (val) {
+			test.equal(val.data, response_string);
+			test.done();
+		});
+};
+
+/**
+ * Ensure that the request context is the context provided in the API constructor
+ */
+exports.testAPICoroutineContextPersists = function (test) {
+	var response_string = 'blahblahwhatwhatwhat';
+
+	var api = new roads.API(new roads.Resource({
+		methods : {
+			GET : function (url, body, headers) {
+				return this.confirmString();
+			}
+		}
+	}));
+
 	api.onRequest(function* (method, url, body, headers, next) {
 		this.confirmString = function () {
 			return response_string;

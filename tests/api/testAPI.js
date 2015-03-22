@@ -89,6 +89,18 @@ exports.testCreateFunctionCoroutine = function (test) {
 	test.done();
 };
 
+exports.testBuildRoute = function (test) {
+	test.done();
+};
+
+exports.testSuccessLocateResource = function (test) {
+	test.done();
+};
+
+exports.testFailedLocateResource = function (test) {
+	test.done();
+};
+
 /**
  * Ensure that success routes return promises
  */
@@ -107,7 +119,7 @@ exports.testSuccessLocateRoute = function (test) {
 	});
 
 	var api = new roads.API(resource);
-	var route = api._locateRoute(url_module.parse('/'), 'GET');
+	var route = api._locateRoute(resource, url_module.parse('/'), 'GET');
 
 	test.deepEqual({
 		path : '/',
@@ -126,7 +138,7 @@ exports.testSuccessLocateCoroutineRoute = function (test) {
 	var resource = createResource(['GET']);
 
 	var api = new roads.API(resource);
-	var route = api._locateRoute(url_module.parse('/'), 'GET');
+	var route = api._locateRoute(resource, url_module.parse('/'), 'GET');
 
 	route({path : '/'}, 'b', 'c')
 		.then(function (result) {
@@ -152,10 +164,11 @@ exports.testInvalidPathLocateRoute = function (test) {
 	var resource = createResource(['GET']);
 	var api = new roads.API(resource);
 
-	var route = api._locateRoute(url_module.parse('/stuff'), 'GET');
+	// no resource found
+	var route = api._locateRoute(null, url_module.parse('/stuff'), 'GET');
 
 	try {
-		route({path : 'a'}, 'b', 'c');
+		route();
 	} catch (e) {
 		test.equal(e.code, 404);
 		test.equal(e.message, '/stuff');
@@ -171,10 +184,10 @@ exports.testInvalidMethodLocateRoute = function (test) {
 	var resource = createResource(['GET']);
 	var api = new roads.API(resource);
 
-	var route = api._locateRoute(url_module.parse('/'), 'POST');
+	var route = api._locateRoute(resource, url_module.parse('/'), 'POST');
 
 	try {
-		route({path : 'a'}, 'b', 'c');
+		route();
 	} catch (e) {
 		test.equal(e.code, 405);
 		test.deepEqual(e.message, ['GET']);
