@@ -50,7 +50,7 @@ exports.testExecuteRoute = function (test) {
 
 	api._executeRoute(function () {
 		return result;
-	}, '', '', '', '').then(function (real_result) {
+	}).then(function (real_result) {
 		test.equals(result, real_result);
 		test.done();
 	}).catch(function (e) {
@@ -70,7 +70,7 @@ exports.testExecuteErrorRoute = function (test) {
 
 	api._executeRoute(function () {
 		throw err;
-	}, '', '', '', '').then(function (result) {
+	}).then(function (result) {
 		test.ok(false);
 		test.done();
 	}).catch(function (e) {
@@ -89,7 +89,7 @@ exports.testExecuteCoroutineRoute = function (test) {
 
 	api._executeRoute(roads.Promise.coroutine(function* () {
 		return result;
-	}), '', '', '', '').then(function (real_result) {
+	})).then(function (real_result) {
 		test.equals(result, real_result);
 		test.done();
 	}).catch(function (e) {
@@ -108,7 +108,7 @@ exports.testExecuteErrorCoroutineRoute = function (test) {
 
 	api._executeRoute(roads.Promise.coroutine(function* () {
 		throw err;
-	}), '', '', '', '').then(function (result) {
+	})).then(function (result) {
 		test.ok(false);
 		test.done();
 	}).catch(function (e) {

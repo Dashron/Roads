@@ -43,11 +43,22 @@ function createResource (methods, resources) {
 /**
  * Ensure that we can find the proper resource for a url
  */
-exports.testlocateResource = function (test) {
+exports.testSuccesslocateResource = function (test) {
 	var resource = createResource(['GET']);
 	var api = new roads.API(resource);
 
 	test.equal(resource, api._locateResource(url_module.parse('/')));
+	test.done();
+};
+
+/**
+ * If there is no proper route, locate resource should return null
+ */
+exports.testFailedlocateResource = function (test) {
+	var resource = createResource(['GET']);
+	var api = new roads.API(resource);
+
+	test.equal(null, api._locateResource(url_module.parse('/blah')));
 	test.done();
 };
 
@@ -89,18 +100,6 @@ exports.testCreateFunctionCoroutine = function (test) {
 	test.done();
 };
 
-exports.testBuildRoute = function (test) {
-	test.done();
-};
-
-exports.testSuccessLocateResource = function (test) {
-	test.done();
-};
-
-exports.testFailedLocateResource = function (test) {
-	test.done();
-};
-
 /**
  * Ensure that success routes return promises
  */
@@ -119,14 +118,14 @@ exports.testSuccessLocateRoute = function (test) {
 	});
 
 	var api = new roads.API(resource);
-	var route = api._locateRoute(resource, url_module.parse('/'), 'GET');
+	var route = api._locateRoute(resource, url_module.parse('/'), 'GET', {'a' : 'b'}, {'c' : 'd'});
 
 	test.deepEqual({
 		path : '/',
 		method : 'GET',
-		body : 'b',
-		headers : 'c'
-	}, route({path : '/'}, 'b', 'c'));
+		body : {'a' : 'b'},
+		headers : {'c' : 'd'}
+	}, route(url_module.parse('/'), {'a' : 'b'}, {'c' : 'd'}));
 
 	test.done();
 };
@@ -140,13 +139,13 @@ exports.testSuccessLocateCoroutineRoute = function (test) {
 	var api = new roads.API(resource);
 	var route = api._locateRoute(resource, url_module.parse('/'), 'GET');
 
-	route({path : '/'}, 'b', 'c')
+	route(url_module.parse('/'), {'a' : 'b'}, {'c' : 'd'})
 		.then(function (result) {
 			test.deepEqual({
 				path : '/',
 				method : 'GET',
-				body : 'b',
-				headers : 'c'
+				body : {'a' : 'b'},
+				headers : {'c' : 'd'}
 			}, result);
 
 			test.done();

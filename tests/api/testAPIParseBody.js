@@ -5,10 +5,6 @@ var url_module = require('url');
 
 /**
  * Create a mock resource
- * 
- * @param  {[type]} methods   [description]
- * @param  {[type]} resources [description]
- * @return {[type]}           [description]
  */
 function createResource (methods, resources) {
 	var endpoint = function (method) {
@@ -42,8 +38,6 @@ function createResource (methods, resources) {
 
 /**
  * Test that an object passed to parseBody returns immediately
- * @param  {[type]} test [description]
- * @return {[type]}      [description]
  */
 exports.testParseObjectBody = function (test) {
 	var api = new roads.API(createResource(['GET']));
@@ -54,8 +48,6 @@ exports.testParseObjectBody = function (test) {
 
 /**
  * Test that an array passed to parseBody returns immediately
- * @param  {[type]} test [description]
- * @return {[type]}      [description]
  */
 exports.testParseArrayBody = function (test) {
 	var api = new roads.API(createResource(['GET']));
@@ -66,8 +58,6 @@ exports.testParseArrayBody = function (test) {
 
 /**
  * Test that a string passed to parseBody returns immediately
- * @param  {[type]} test [description]
- * @return {[type]}      [description]
  */
 exports.testParseStringBody = function (test) {
 	var api = new roads.API(createResource(['GET']));
@@ -78,8 +68,6 @@ exports.testParseStringBody = function (test) {
 
 /**
  * Test that an form post body passed to parseBody returns correctly
- * @param  {[type]} test [description]
- * @return {[type]}      [description]
  */
 exports.testParseQuerystringBody = function (test) {
 	var api = new roads.API(createResource(['GET']));
@@ -92,8 +80,6 @@ exports.testParseQuerystringBody = function (test) {
 
 /**
  * Test that an object encoded as a json string passed to parseBody returns correctly
- * @param  {[type]} test [description]
- * @return {[type]}      [description]
  */
 exports.testParseJSONObjectBody = function (test) {
 	var api = new roads.API(createResource(['GET']));
@@ -106,8 +92,6 @@ exports.testParseJSONObjectBody = function (test) {
 
 /**
  * Test that an array encoded as a json string passed to parseBody returns correctly
- * @param  {[type]} test [description]
- * @return {[type]}      [description]
  */
 exports.testParseJSONArrayBody = function (test) {
 	var api = new roads.API(createResource(['GET']));
@@ -120,8 +104,6 @@ exports.testParseJSONArrayBody = function (test) {
 
 /**
  * Test that invalid json throws an exception
- * @param  {[type]} test [description]
- * @return {[type]}      [description]
  */
 exports.testParseInvalidJSONBody = function (test) {
 	var api = new roads.API(createResource(['GET']));
@@ -134,6 +116,9 @@ exports.testParseInvalidJSONBody = function (test) {
 	test.done();
 };
 
+/**
+ * Test that invalid json parsing fails as expected
+ */
 exports.testRequestWithInvalidJsonBody = function (test) {
 	var api = new roads.API(createResource(['GET']));
 	var body = '{stuff yeah';
