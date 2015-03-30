@@ -2,6 +2,7 @@
 
 var roads = require('../../index.js');
 var url_module = require('url');
+var Bluebird = require('bluebird');
 
 /**
  * Create a mock resource
@@ -45,10 +46,10 @@ function createResource (methods, resources) {
  */
 exports.testExecuteRoute = function (test) {
 	var resource = createResource(['GET']);
-	var api = new roads.API(resource);
+	var road = new roads.Road(resource);
 	var result = 'all the things';
 
-	api._executeRoute(function () {
+	road._executeRoute(function () {
 		return result;
 	}).then(function (real_result) {
 		test.equals(result, real_result);
@@ -65,10 +66,10 @@ exports.testExecuteRoute = function (test) {
  */
 exports.testExecuteErrorRoute = function (test) {
 	var resource = createResource(['GET']);
-	var api = new roads.API(resource);
+	var road = new roads.Road(resource);
 	var err = new Error();
 
-	api._executeRoute(function () {
+	road._executeRoute(function () {
 		throw err;
 	}).then(function (result) {
 		test.ok(false);
@@ -84,10 +85,11 @@ exports.testExecuteErrorRoute = function (test) {
  */
 exports.testExecuteCoroutineRoute = function (test) {
 	var resource = createResource(['GET']);
-	var api = new roads.API(resource);
+	var road = new roads.Road(resource);
 	var result = 'stuff stuff stuff';
 
-	api._executeRoute(roads.Promise.coroutine(function* () {
+	// todo: eventually switch to async functions
+	road._executeRoute(Bluebird.coroutine(function* () {
 		return result;
 	})).then(function (real_result) {
 		test.equals(result, real_result);
@@ -103,16 +105,22 @@ exports.testExecuteCoroutineRoute = function (test) {
  */
 exports.testExecuteErrorCoroutineRoute = function (test) {
 	var resource = createResource(['GET']);
-	var api = new roads.API(resource);
-	var err = new Error();
+	var road = new roads.Road(resource);
 
-	api._executeRoute(roads.Promise.coroutine(function* () {
-		throw err;
-	})).then(function (result) {
+	// todo: eventually switch to async functions
+	var coroutine = Bluebird.coroutine(function* () {
+		throw new Error('random messageeeeeeeeeee');
+		yield new roads.Promise(function (resolve) { resolve() });
+	});
+
+	var response = road._executeRoute(coroutine);
+	test.ok(response instanceof roads.Promise);
+
+	response.then(function (result) {
 		test.ok(false);
 		test.done();
-	}).catch(function (e) {
-		test.equal(err, e);
+	}, function (e) {
+		test.equal('random messageeeeeeeeeee', e.message);
 		test.done();
 	});
 };

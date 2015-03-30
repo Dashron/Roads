@@ -40,9 +40,9 @@ function createResource (methods, resources) {
  * Test that an object passed to parseBody returns immediately
  */
 exports.testParseObjectBody = function (test) {
-	var api = new roads.API(createResource(['GET']));
+	var road = new roads.Road(createResource(['GET']));
 	var body = {hi: "stuff"};
-	test.equal(body, api._parseBody(body));
+	test.equal(body, road._parseBody(body));
 	test.done();
 };
 
@@ -50,9 +50,9 @@ exports.testParseObjectBody = function (test) {
  * Test that an array passed to parseBody returns immediately
  */
 exports.testParseArrayBody = function (test) {
-	var api = new roads.API(createResource(['GET']));
+	var road = new roads.Road(createResource(['GET']));
 	var body = [{hi: "stuff"}];
-	test.equal(body, api._parseBody(body));
+	test.equal(body, road._parseBody(body));
 	test.done();
 };
 
@@ -60,9 +60,9 @@ exports.testParseArrayBody = function (test) {
  * Test that a string passed to parseBody returns immediately
  */
 exports.testParseStringBody = function (test) {
-	var api = new roads.API(createResource(['GET']));
+	var road = new roads.Road(createResource(['GET']));
 	var body = "stuff";
-	test.equal(body, api._parseBody(body));
+	test.equal(body, road._parseBody(body));
 	test.done();
 };
 
@@ -70,10 +70,10 @@ exports.testParseStringBody = function (test) {
  * Test that an form post body passed to parseBody returns correctly
  */
 exports.testParseQuerystringBody = function (test) {
-	var api = new roads.API(createResource(['GET']));
+	var road = new roads.Road(createResource(['GET']));
 	var body = "stuff=a&that=b";
 	
-	test.deepEqual({stuff:"a", that:"b"}, api._parseBody(body, "application/x-www-form-urlencoded"));
+	test.deepEqual({stuff:"a", that:"b"}, road._parseBody(body, "application/x-www-form-urlencoded"));
 
 	test.done();
 };
@@ -82,10 +82,10 @@ exports.testParseQuerystringBody = function (test) {
  * Test that an object encoded as a json string passed to parseBody returns correctly
  */
 exports.testParseJSONObjectBody = function (test) {
-	var api = new roads.API(createResource(['GET']));
+	var road = new roads.Road(createResource(['GET']));
 	var body = '{"stuff":"a", "that":"b"}';
 	
-	test.deepEqual({stuff:"a", that:"b"}, api._parseBody(body, "application/json"));
+	test.deepEqual({stuff:"a", that:"b"}, road._parseBody(body, "application/json"));
 
 	test.done();
 };
@@ -94,10 +94,10 @@ exports.testParseJSONObjectBody = function (test) {
  * Test that an array encoded as a json string passed to parseBody returns correctly
  */
 exports.testParseJSONArrayBody = function (test) {
-	var api = new roads.API(createResource(['GET']));
+	var road = new roads.Road(createResource(['GET']));
 	var body = '["stuff", "b"]';
 	
-	test.deepEqual(["stuff", "b"], api._parseBody(body, "application/json"));
+	test.deepEqual(["stuff", "b"], road._parseBody(body, "application/json"));
 
 	test.done();
 };
@@ -106,11 +106,11 @@ exports.testParseJSONArrayBody = function (test) {
  * Test that invalid json throws an exception
  */
 exports.testParseInvalidJSONBody = function (test) {
-	var api = new roads.API(createResource(['GET']));
+	var road = new roads.Road(createResource(['GET']));
 	var body = '{stuff yeah';
 
 	test.throws(function () {
-		api._parseBody(body, "application/json");
+		road._parseBody(body, "application/json");
 	}, 'SyntaxError: Unexpected token s');
 
 	test.done();
@@ -120,10 +120,10 @@ exports.testParseInvalidJSONBody = function (test) {
  * Test that invalid json parsing fails as expected
  */
 exports.testRequestWithInvalidJsonBody = function (test) {
-	var api = new roads.API(createResource(['GET']));
+	var road = new roads.Road(createResource(['GET']));
 	var body = '{stuff yeah';
 
-	api.request('', '', body, {
+	road.request('', '', body, {
 		'content-type' : "application/json"
 	}).then(function (response) {
 		// this should never happen
@@ -143,10 +143,10 @@ exports.testRequestWithInvalidJsonBody = function (test) {
  * This isn't really a valid workflow, but we should technically allow it.
  */
 exports.testParseEmptyStringBody = function (test) {
-	var api = new roads.API(createResource(['GET']));
+	var road = new roads.Road(createResource(['GET']));
 	var body = '';
 	
-	test.equal('', api._parseBody(body, "application/json"));
+	test.equal('', road._parseBody(body, "application/json"));
 
 	test.done();
 };

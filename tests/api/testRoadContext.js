@@ -4,12 +4,12 @@ var roads = require('../../index.js');
 var url_module = require('url');
 
 /**
- * Ensure that the request context is the context provided in the API constructor
+ * Ensure that the request context is the context provided in the Road constructor
  */
-exports.testAPIContextExists = function (test) {
+exports.testRoadContextExists = function (test) {
 	var response_string = 'blahblahwhatwhatwhat';
 
-	var api = new roads.API(new roads.Resource({
+	var road = new roads.Road(new roads.Resource({
 		methods : {
 			GET : function (url, body, headers) {
 				return this.request('POST', '/');
@@ -20,20 +20,24 @@ exports.testAPIContextExists = function (test) {
 		}
 	}));
 
-	api.request('GET', '/')
+	road.request('GET', '/')
 		.then(function (val) {
 			test.equal(val.data, response_string);
 			test.done();
+		})
+		.catch(function (e) {
+			console.log(e.stack);
+			console.log('err');
 		});
 };
 
 /**
- * Ensure that the request context is the context provided in the API constructor
+ * Ensure that the request context is the context provided in the Road constructor
  */
-exports.testAPIContextPersists = function (test) {
+exports.testRoadContextPersists = function (test) {
 	var response_string = 'blahblahwhatwhatwhat';
 
-	var api = new roads.API(new roads.Resource({
+	var road = new roads.Road(new roads.Resource({
 		methods : {
 			GET : function (url, body, headers) {
 				return this.confirmString();
@@ -41,7 +45,7 @@ exports.testAPIContextPersists = function (test) {
 		}
 	}));
 
-	api.onRequest(function (method, url, body, headers, next) {
+	road.onRequest(function (method, url, body, headers, next) {
 		this.confirmString = function () {
 			return response_string;
 		};
@@ -49,7 +53,7 @@ exports.testAPIContextPersists = function (test) {
 		return next();
 	});
 
-	api.request('GET', '/')
+	road.request('GET', '/')
 		.then(function (val) {
 			test.equal(val.data, response_string);
 			test.done();
@@ -57,12 +61,12 @@ exports.testAPIContextPersists = function (test) {
 };
 
 /**
- * Ensure that the request context is the context provided in the API constructor
+ * Ensure that the request context is the context provided in the Road constructor
  */
-exports.testAPICoroutineContextPersists = function (test) {
+exports.testRoadCoroutineContextPersists = function (test) {
 	var response_string = 'blahblahwhatwhatwhat';
 
-	var api = new roads.API(new roads.Resource({
+	var road = new roads.Road(new roads.Resource({
 		methods : {
 			GET : function (url, body, headers) {
 				return this.confirmString();
@@ -70,7 +74,7 @@ exports.testAPICoroutineContextPersists = function (test) {
 		}
 	}));
 
-	api.onRequest(function* (method, url, body, headers, next) {
+	road.onRequest(function* (method, url, body, headers, next) {
 		this.confirmString = function () {
 			return response_string;
 		};
@@ -78,7 +82,7 @@ exports.testAPICoroutineContextPersists = function (test) {
 		return yield next();
 	});
 
-	api.request('GET', '/')
+	road.request('GET', '/')
 		.then(function (val) {
 			test.equal(val.data, response_string);
 			test.done();
@@ -88,10 +92,10 @@ exports.testAPICoroutineContextPersists = function (test) {
 /**
  * Ensure that we can find the proper resource for a url
  */
-exports.testAPIContextUniqueness = function (test) {
+exports.testRoadContextUniqueness = function (test) {
 	var response_string = 'blahblahwhatwhatwhat';
 
-	var api = new roads.API(new roads.Resource({
+	var road = new roads.Road(new roads.Resource({
 		methods : {
 			GET : function (url, body, headers) {
 				return this.confirmString();
@@ -99,7 +103,7 @@ exports.testAPIContextUniqueness = function (test) {
 		}
 	}));
 
-	api.onRequest(function* (method, url, body, headers, next) {
+	road.onRequest(function* (method, url, body, headers, next) {
 		this.confirmString = function () {
 			return this.response_string;
 		};
@@ -109,7 +113,7 @@ exports.testAPIContextUniqueness = function (test) {
 		return yield next('data');
 	});
 
-	api.request('GET', '/')
+	road.request('GET', '/')
 		.then(function (val) {
 			test.equal(val.data, response_string);
 			test.done();

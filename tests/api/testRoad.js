@@ -45,9 +45,9 @@ function createResource (methods, resources) {
  */
 exports.testSuccesslocateResource = function (test) {
 	var resource = createResource(['GET']);
-	var api = new roads.API(resource);
+	var road = new roads.Road(resource);
 
-	test.equal(resource, api._locateResource(url_module.parse('/')));
+	test.equal(resource, road._locateResource(url_module.parse('/')));
 	test.done();
 };
 
@@ -56,9 +56,9 @@ exports.testSuccesslocateResource = function (test) {
  */
 exports.testFailedlocateResource = function (test) {
 	var resource = createResource(['GET']);
-	var api = new roads.API(resource);
+	var road = new roads.Road(resource);
 
-	test.equal(null, api._locateResource(url_module.parse('/blah')));
+	test.equal(null, road._locateResource(url_module.parse('/blah')));
 	test.done();
 };
 
@@ -67,10 +67,10 @@ exports.testFailedlocateResource = function (test) {
  */
 exports.testCreateValidCoroutine = function (test) {
 	var resource = createResource(['GET']);
-	var api = new roads.API(resource);
+	var road = new roads.Road(resource);
 	var return_val = "very specific string";
 
-	api._createCoroutine(function* () {
+	road._createCoroutine(function* () {
 		yield new Promise(function (resolve, reject) {
 			resolve();
 		});
@@ -91,12 +91,12 @@ exports.testCreateValidCoroutine = function (test) {
  */
 exports.testCreateFunctionCoroutine = function (test) {
 	var resource = createResource(['GET']);
-	var api = new roads.API(resource);
+	var road = new roads.Road(resource);
 	var fn = function () {
 		return true;
 	};
 
-	test.equals(api._createCoroutine(fn), fn);
+	test.equals(road._createCoroutine(fn), fn);
 	test.done();
 };
 
@@ -117,8 +117,8 @@ exports.testSuccessLocateRoute = function (test) {
 		}
 	});
 
-	var api = new roads.API(resource);
-	var route = api._locateRoute(resource, url_module.parse('/'), 'GET', {'a' : 'b'}, {'c' : 'd'});
+	var road = new roads.Road(resource);
+	var route = road._locateRoute(resource, url_module.parse('/'), 'GET', {'a' : 'b'}, {'c' : 'd'});
 
 	test.deepEqual({
 		path : '/',
@@ -136,8 +136,8 @@ exports.testSuccessLocateRoute = function (test) {
 exports.testSuccessLocateCoroutineRoute = function (test) {
 	var resource = createResource(['GET']);
 
-	var api = new roads.API(resource);
-	var route = api._locateRoute(resource, url_module.parse('/'), 'GET');
+	var road = new roads.Road(resource);
+	var route = road._locateRoute(resource, url_module.parse('/'), 'GET');
 
 	route(url_module.parse('/'), {'a' : 'b'}, {'c' : 'd'})
 		.then(function (result) {
@@ -161,10 +161,10 @@ exports.testSuccessLocateCoroutineRoute = function (test) {
  */
 exports.testInvalidPathLocateRoute = function (test) {
 	var resource = createResource(['GET']);
-	var api = new roads.API(resource);
+	var road = new roads.Road(resource);
 
 	// no resource found
-	var route = api._locateRoute(null, url_module.parse('/stuff'), 'GET');
+	var route = road._locateRoute(null, url_module.parse('/stuff'), 'GET');
 
 	try {
 		route();
@@ -181,9 +181,9 @@ exports.testInvalidPathLocateRoute = function (test) {
  */
 exports.testInvalidMethodLocateRoute = function (test) {
 	var resource = createResource(['GET']);
-	var api = new roads.API(resource);
+	var road = new roads.Road(resource);
 
-	var route = api._locateRoute(resource, url_module.parse('/'), 'POST');
+	var route = road._locateRoute(resource, url_module.parse('/'), 'POST');
 
 	try {
 		route();

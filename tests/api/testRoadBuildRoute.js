@@ -42,8 +42,8 @@ function createResource (methods, resources) {
  */
 exports.testBuildRouteHits = function (test) {
 	var resource = createResource(['GET']);
-	var api = new roads.API(resource);
-	var route = api._buildRoute(url_module.parse('/'), 'GET', {'another':'banana'}, {'test':'what'});
+	var road = new roads.Road(resource);
+	var route = road._buildRoute(url_module.parse('/'), 'GET', {'another':'banana'}, {'test':'what'});
 
 	route(url_module.parse('/'), 'GET', {'another':'banana'}, {'test':'what'})
 		.then(function (response) {
@@ -61,12 +61,12 @@ exports.testBuildRouteHits = function (test) {
 
 /**
  * Test buildRoute failures (specifically url not found) when a route does not have an onRequest handler
- * Errors will throw when the route is invoked (usually api.request)
+ * Errors will throw when the route is invoked (usually road.request)
  */
 exports.testBuildRouteMissesUrl = function (test) {
 	var resource = createResource(['GET']);
-	var api = new roads.API(resource);
-	var route = api._buildRoute(url_module.parse('/stuff'), 'GET', {'another':'banana'}, {'test':'what'});
+	var road = new roads.Road(resource);
+	var route = road._buildRoute(url_module.parse('/stuff'), 'GET', {'another':'banana'}, {'test':'what'});
 
 	test.throws(function () {
 		route();
@@ -76,12 +76,12 @@ exports.testBuildRouteMissesUrl = function (test) {
 
 /**
  * Test buildRoute failures (specifically method not allowed) when a route does not hves an onRequest handler
- * Errors will throw when the route is invoked (usually api.request)
+ * Errors will throw when the route is invoked (usually road.request)
  */
 exports.testBuildRouteMissesMethod = function (test) {
 	var resource = createResource(['GET']);
-	var api = new roads.API(resource);
-	var route = api._buildRoute(url_module.parse('/stuff'), 'POST', {'another':'banana'}, {'test':'what'});
+	var road = new roads.Road(resource);
+	var route = road._buildRoute(url_module.parse('/stuff'), 'POST', {'another':'banana'}, {'test':'what'});
 
 	test.throws(function () {
 		route();
@@ -94,14 +94,14 @@ exports.testBuildRouteMissesMethod = function (test) {
  */
 exports.testBuildRouteHitsWithOnRequest = function (test) {
 	var resource = createResource(['GET']);
-	var api = new roads.API(resource);
+	var road = new roads.Road(resource);
 
-	api.onRequest(function (method, path, body, headers, next) {
+	road.onRequest(function (method, path, body, headers, next) {
 		this.contextChanger = true;
 		return next();
 	});
 
-	var route = api._buildRoute(url_module.parse('/'), 'GET', {'another':'banana'}, {'test':'what'});
+	var route = road._buildRoute(url_module.parse('/'), 'GET', {'another':'banana'}, {'test':'what'});
 
 	test.equal(typeof(route), 'function');
 	route(url_module.parse('/'), 'GET', {'another':'banana'}, {'test':'what'})
@@ -121,13 +121,13 @@ exports.testBuildRouteHitsWithOnRequest = function (test) {
 
 /**
  * Test buildRoute failures (specifically url not found) when a route has an onRequest handler (which transfers
- * errors into invoking next instead of invoking api.request)
+ * errors into invoking next instead of invoking road.request)
  */
 exports.testBuildRouteMissesUrlWithOnRequest = function (test) {
 	var resource = createResource(['GET']);
-	var api = new roads.API(resource);
+	var road = new roads.Road(resource);
 	
-	api.onRequest(function (method, path, body, headers, next) {
+	road.onRequest(function (method, path, body, headers, next) {
 		this.contextChanger = true;
 		
 		next()
@@ -140,20 +140,20 @@ exports.testBuildRouteMissesUrlWithOnRequest = function (test) {
 		});
 	});
 
-	var route = api._buildRoute(url_module.parse('/stuff'), 'GET', {'another':'banana'}, {'test':'what'});
+	var route = road._buildRoute(url_module.parse('/stuff'), 'GET', {'another':'banana'}, {'test':'what'});
 	test.equal(typeof(route), 'function');
 	route();
 };
 
 /**
  * Test buildRoute failures (specifically method not allowed) when a route has an onRequest handler (which transfers
- * errors into invoking next instead of invoking api.request)
+ * errors into invoking next instead of invoking road.request)
  */
 exports.testBuildRouteMissesMethodWithOnRequest = function (test) {
 	var resource = createResource(['GET']);
-	var api = new roads.API(resource);
+	var road = new roads.Road(resource);
 	
-	api.onRequest(function (method, path, body, headers, next) {
+	road.onRequest(function (method, path, body, headers, next) {
 		this.contextChanger = true;
 
 		next()
@@ -166,7 +166,7 @@ exports.testBuildRouteMissesMethodWithOnRequest = function (test) {
 		});
 	});
 
-	var route = api._buildRoute(url_module.parse('/'), 'POST', {'another':'banana'}, {'test':'what'});
+	var route = road._buildRoute(url_module.parse('/'), 'POST', {'another':'banana'}, {'test':'what'});
 	test.equal(typeof(route), 'function');
 	route();
 };

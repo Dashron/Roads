@@ -47,9 +47,9 @@ function createResource (methods, resources) {
 exports.testRequest = function (test) {
 	var resource = createResource(['GET']);
 
-	var api = new roads.API(resource);
+	var road = new roads.Road(resource);
 
-	api.request('GET', '/', 'yeah', {
+	road.request('GET', '/', 'yeah', {
 		"one" : "two"
 	}).then(function (response) {
 		test.deepEqual(response.data, {
@@ -77,9 +77,9 @@ exports.testStringSubRequest = function (test) {
 		'$stuff' : sub_resource2
 	});
 
-	var api = new roads.API(resource);
+	var road = new roads.Road(resource);
 
-	api.request('GET', '/huh', 'yeah', {
+	road.request('GET', '/huh', 'yeah', {
 		"one" : "two"
 	}).then(function (response) {
 		test.deepEqual(response.data, {
@@ -107,9 +107,9 @@ exports.testNumberSubRequest = function (test) {
 		'$stuff' : sub_resource2
 	});
 
-	var api = new roads.API(resource);
+	var road = new roads.Road(resource);
 
-	api.request('GET', '/1234', 'yeah', {
+	road.request('GET', '/1234', 'yeah', {
 		"one" : "two"
 	}).then(function (response) {
 		test.deepEqual(response.data, {
@@ -131,9 +131,9 @@ exports.testNumberSubRequest = function (test) {
 exports.testMissingPathRequest = function (test) {
 	var resource = createResource(['GET']);
 
-	var api = new roads.API(resource);
+	var road = new roads.Road(resource);
 
-	api.request('GET', '/huh', 'yeah', {
+	road.request('GET', '/huh', 'yeah', {
 		"one" : "two"
 	}).then(function (response) {
 		// this endpoint should error
@@ -158,9 +158,9 @@ exports.testMethodWithError = function (test) {
 		}
 	});
 
-	var api = new roads.API(resource);
+	var road = new roads.Road(resource);
 
-	api.request('GET', '/', 'yeah', {
+	road.request('GET', '/', 'yeah', {
 		"one" : "two"
 	}).then(function (response) {
 		// this endpoint should error
@@ -178,9 +178,9 @@ exports.testMethodWithError = function (test) {
 exports.testMissingMethodRequest = function (test) {
 	var resource = createResource(['GET']);
 
-	var api = new roads.API(resource);
+	var road = new roads.Road(resource);
 
-	api.request('POST', '/', 'yeah', {
+	road.request('POST', '/', 'yeah', {
 		"one" : "two"
 	}).then(function (response) {
 		// this endpoint should error
@@ -199,12 +199,12 @@ exports.testMissingMethodRequest = function (test) {
 exports.testRequestWithHandlerCalled = function (test) {
 	var resource = createResource(['GET']);
 
-	var api = new roads.API(resource);
-	api.onRequest(function (method, url, body, headers, next) {
+	var road = new roads.Road(resource);
+	road.onRequest(function (method, url, body, headers, next) {
 		return next();
 	});//*/
 
-	api.request('GET', '/', 'yeah', {
+	road.request('GET', '/', 'yeah', {
 		"one" : "two"
 	}).then(function (response) {
 		test.deepEqual(response.data, {
@@ -232,13 +232,13 @@ exports.testRequestErrorWithHandler = function (test) {
 		}
 	});
 
-	var api = new roads.API(resource);
+	var road = new roads.Road(resource);
 
-	api.onRequest(function (method, url, body, headers, next) {
+	road.onRequest(function (method, url, body, headers, next) {
 		return next();
 	});//*/
 
-	api.request('GET', '/', 'yeah', {
+	road.request('GET', '/', 'yeah', {
 		"one" : "two"
 	}).then(function (response) {
 		// this endpoint should error
@@ -255,14 +255,14 @@ exports.testRequestErrorWithHandler = function (test) {
  */
 exports.testRequestWithHandlerNotCalled = function (test) {
 	var resource = createResource(['GET']);
-	var api = new roads.API(resource);
+	var road = new roads.Road(resource);
 	var response = {"stuff" : "what"};
 
-	api.onRequest(function (url, body, headers, next) {
+	road.onRequest(function (url, body, headers, next) {
 		return response;
 	});//*/
 
-	api.request('GET', '/', 'yeah', {
+	road.request('GET', '/', 'yeah', {
 		"one" : "two"
 	}).then(function (new_response) {
 		test.deepEqual(response, new_response.data);
@@ -282,16 +282,16 @@ exports.testRequestErrorWithHandlerThatCatchesErrors = function (test) {
 		}
 	});
 
-	var api = new roads.API(resource);
+	var road = new roads.Road(resource);
 
-	api.onRequest(function (method, url, body, headers, next) {
+	road.onRequest(function (method, url, body, headers, next) {
 		return next()
 			.catch(function (error) {
 				return {"error" : error.message};
 			});
 	});//*/
 
-	api.request('GET', '/', 'yeah', {
+	road.request('GET', '/', 'yeah', {
 		"one" : "two"
 	}).then(function (response) {
 		test.deepEqual(response.data, {"error":"huh"});

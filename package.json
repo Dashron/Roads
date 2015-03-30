@@ -24,9 +24,9 @@
      "url" : "git://github.com/Dashron/roads.git"
   },
   "dependencies": {
-    "bluebird": "2.9.6"
+    "bluebird": "2.9.21"
   },
   "devDependencies": {
-    "nodeunit": "0.9.0"
+    "nodeunit": "0.9.1"
   }
 }
