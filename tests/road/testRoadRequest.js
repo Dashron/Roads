@@ -52,7 +52,7 @@ exports.testRequest = function (test) {
 	road.request('GET', '/', 'yeah', {
 		"one" : "two"
 	}).then(function (response) {
-		test.deepEqual(response.data, {
+		test.deepEqual(response, {
 			path : '/',
 			method : 'GET',
 			body : 'yeah',
@@ -82,7 +82,7 @@ exports.testStringSubRequest = function (test) {
 	road.request('GET', '/huh', 'yeah', {
 		"one" : "two"
 	}).then(function (response) {
-		test.deepEqual(response.data, {
+		test.deepEqual(response, {
 			path : '/huh',
 			method : 'GET',
 			body : 'yeah',
@@ -112,7 +112,7 @@ exports.testNumberSubRequest = function (test) {
 	road.request('GET', '/1234', 'yeah', {
 		"one" : "two"
 	}).then(function (response) {
-		test.deepEqual(response.data, {
+		test.deepEqual(response, {
 			path : '/1234',
 			method : 'GET',
 			body : 'yeah',
@@ -194,20 +194,20 @@ exports.testMissingMethodRequest = function (test) {
 };
 
 /**
- * Ensure that an onRequest handler that executes, then calls the actual route returns as expected
+ * Ensure that a request handler that executes, then calls the actual route returns as expected
  */
 exports.testRequestWithHandlerCalled = function (test) {
 	var resource = createResource(['GET']);
 
 	var road = new roads.Road(resource);
-	road.onRequest(function (method, url, body, headers, next) {
+	road.use(function (method, url, body, headers, next) {
 		return next();
 	});//*/
 
 	road.request('GET', '/', 'yeah', {
 		"one" : "two"
 	}).then(function (response) {
-		test.deepEqual(response.data, {
+		test.deepEqual(response, {
 			path : '/',
 			method : 'GET',
 			body : 'yeah',
@@ -221,7 +221,7 @@ exports.testRequestWithHandlerCalled = function (test) {
 };
 
 /**
- * Ensure that an onRequest handler that executes, then calls the actual route returns as expected
+ * Ensure that a request handler that executes, then calls the actual route returns as expected
  */
 exports.testRequestErrorWithHandler = function (test) {
 	var resource = new roads.Resource({
@@ -234,7 +234,7 @@ exports.testRequestErrorWithHandler = function (test) {
 
 	var road = new roads.Road(resource);
 
-	road.onRequest(function (method, url, body, headers, next) {
+	road.use(function (method, url, body, headers, next) {
 		return next();
 	});//*/
 
@@ -251,27 +251,27 @@ exports.testRequestErrorWithHandler = function (test) {
 };
 
 /**
- * Ensure an onRequest handler that does not call the actual route returns as expected
+ * Ensure a request handler that does not call the actual route returns as expected
  */
 exports.testRequestWithHandlerNotCalled = function (test) {
 	var resource = createResource(['GET']);
 	var road = new roads.Road(resource);
 	var response = {"stuff" : "what"};
 
-	road.onRequest(function (url, body, headers, next) {
+	road.use(function (url, body, headers, next) {
 		return response;
 	});//*/
 
 	road.request('GET', '/', 'yeah', {
 		"one" : "two"
 	}).then(function (new_response) {
-		test.deepEqual(response, new_response.data);
+		test.deepEqual(response, new_response);
 		test.done();
 	});
 };
 
 /**
- * Ensure that you can handle errors properly from the onRequest handler
+ * Ensure that you can handle errors properly from the request handler
  */
 exports.testRequestErrorWithHandlerThatCatchesErrors = function (test) {
 	var resource = new roads.Resource({
@@ -284,7 +284,7 @@ exports.testRequestErrorWithHandlerThatCatchesErrors = function (test) {
 
 	var road = new roads.Road(resource);
 
-	road.onRequest(function (method, url, body, headers, next) {
+	road.use(function (method, url, body, headers, next) {
 		return next()
 			.catch(function (error) {
 				return {"error" : error.message};
@@ -294,7 +294,7 @@ exports.testRequestErrorWithHandlerThatCatchesErrors = function (test) {
 	road.request('GET', '/', 'yeah', {
 		"one" : "two"
 	}).then(function (response) {
-		test.deepEqual(response.data, {"error":"huh"});
+		test.deepEqual(response, {"error":"huh"});
 		test.done();
 	});
 };

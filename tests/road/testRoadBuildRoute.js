@@ -43,9 +43,9 @@ function createResource (methods, resources) {
 exports.testBuildRouteHits = function (test) {
 	var resource = createResource(['GET']);
 	var road = new roads.Road(resource);
-	var route = road._buildRoute(url_module.parse('/'), 'GET', {'another':'banana'}, {'test':'what'});
+	var route = road._buildRoute('GET', url_module.parse('/'), {'another':'banana'}, {'test':'what'});
 
-	route(url_module.parse('/'), 'GET', {'another':'banana'}, {'test':'what'})
+	route()
 		.then(function (response) {
 			test.equal(response.path, '/');
 			test.equal(response.method, 'GET');
@@ -66,7 +66,7 @@ exports.testBuildRouteHits = function (test) {
 exports.testBuildRouteMissesUrl = function (test) {
 	var resource = createResource(['GET']);
 	var road = new roads.Road(resource);
-	var route = road._buildRoute(url_module.parse('/stuff'), 'GET', {'another':'banana'}, {'test':'what'});
+	var route = road._buildRoute('GET', url_module.parse('/stuff'), {'another':'banana'}, {'test':'what'});
 
 	test.throws(function () {
 		route();
@@ -75,13 +75,13 @@ exports.testBuildRouteMissesUrl = function (test) {
 };
 
 /**
- * Test buildRoute failures (specifically method not allowed) when a route does not hves an onRequest handler
+ * Test buildRoute failures (specifically method not allowed) when a route does not have an onRequest handler
  * Errors will throw when the route is invoked (usually road.request)
  */
 exports.testBuildRouteMissesMethod = function (test) {
 	var resource = createResource(['GET']);
 	var road = new roads.Road(resource);
-	var route = road._buildRoute(url_module.parse('/stuff'), 'POST', {'another':'banana'}, {'test':'what'});
+	var route = road._buildRoute('POST', url_module.parse('/stuff'), {'another':'banana'}, {'test':'what'});
 
 	test.throws(function () {
 		route();
@@ -90,21 +90,21 @@ exports.testBuildRouteMissesMethod = function (test) {
 };
 
 /**
- * Test buildRoute success when a route has an onRequest handler
+ * Test buildRoute success when a route has a request handler
  */
 exports.testBuildRouteHitsWithOnRequest = function (test) {
 	var resource = createResource(['GET']);
 	var road = new roads.Road(resource);
 
-	road.onRequest(function (method, path, body, headers, next) {
+	road.use(function (method, path, body, headers, next) {
 		this.contextChanger = true;
 		return next();
 	});
 
-	var route = road._buildRoute(url_module.parse('/'), 'GET', {'another':'banana'}, {'test':'what'});
+	var route = road._buildRoute('GET', url_module.parse('/'), {'another':'banana'}, {'test':'what'});
 
 	test.equal(typeof(route), 'function');
-	route(url_module.parse('/'), 'GET', {'another':'banana'}, {'test':'what'})
+	route()
 		.then(function (response) {
 			test.equal(response.path, '/');
 			test.equal(response.method, 'GET');
@@ -116,20 +116,25 @@ exports.testBuildRouteHitsWithOnRequest = function (test) {
 			test.ok(response.context.contextChanger);
 			test.ok(Array.isArray(response.context.http_methods));
 			test.done();
+		})
+		.catch(function (err) {
+			console.log(err);
+			test.fail(err);
+			test.done();
 		});
 };
 
 /**
- * Test buildRoute failures (specifically url not found) when a route has an onRequest handler (which transfers
+ * Test buildRoute failures (specifically url not found) when a route has a request handler (which transfers
  * errors into invoking next instead of invoking road.request)
  */
 exports.testBuildRouteMissesUrlWithOnRequest = function (test) {
 	var resource = createResource(['GET']);
 	var road = new roads.Road(resource);
 	
-	road.onRequest(function (method, path, body, headers, next) {
+	road.use(function (method, url, body, headers, next) {
 		this.contextChanger = true;
-		
+
 		next()
 		.then(function (response) {
 			test.ok(false);
@@ -140,20 +145,20 @@ exports.testBuildRouteMissesUrlWithOnRequest = function (test) {
 		});
 	});
 
-	var route = road._buildRoute(url_module.parse('/stuff'), 'GET', {'another':'banana'}, {'test':'what'});
+	var route = road._buildRoute('GET', url_module.parse('/stuff'), {'another':'banana'}, {'test':'what'});
 	test.equal(typeof(route), 'function');
 	route();
 };
 
 /**
- * Test buildRoute failures (specifically method not allowed) when a route has an onRequest handler (which transfers
+ * Test buildRoute failures (specifically method not allowed) when a route has a request handler (which transfers
  * errors into invoking next instead of invoking road.request)
  */
 exports.testBuildRouteMissesMethodWithOnRequest = function (test) {
 	var resource = createResource(['GET']);
 	var road = new roads.Road(resource);
 	
-	road.onRequest(function (method, path, body, headers, next) {
+	road.use(function (method, path, body, headers, next) {
 		this.contextChanger = true;
 
 		next()
@@ -166,7 +171,7 @@ exports.testBuildRouteMissesMethodWithOnRequest = function (test) {
 		});
 	});
 
-	var route = road._buildRoute(url_module.parse('/'), 'POST', {'another':'banana'}, {'test':'what'});
+	var route = road._buildRoute('POST', url_module.parse('/'), {'another':'banana'}, {'test':'what'});
 	test.equal(typeof(route), 'function');
 	route();
 };

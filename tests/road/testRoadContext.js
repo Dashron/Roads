@@ -22,7 +22,7 @@ exports.testRoadContextExists = function (test) {
 
 	road.request('GET', '/')
 		.then(function (val) {
-			test.equal(val.data, response_string);
+			test.equal(val, response_string);
 			test.done();
 		})
 		.catch(function (e) {
@@ -45,7 +45,7 @@ exports.testRoadContextPersists = function (test) {
 		}
 	}));
 
-	road.onRequest(function (method, url, body, headers, next) {
+	road.use(function (method, url, body, headers, next) {
 		this.confirmString = function () {
 			return response_string;
 		};
@@ -55,7 +55,7 @@ exports.testRoadContextPersists = function (test) {
 
 	road.request('GET', '/')
 		.then(function (val) {
-			test.equal(val.data, response_string);
+			test.equal(val, response_string);
 			test.done();
 		});
 };
@@ -74,7 +74,7 @@ exports.testRoadCoroutineContextPersists = function (test) {
 		}
 	}));
 
-	road.onRequest(function* (method, url, body, headers, next) {
+	road.use(function* (method, url, body, headers, next) {
 		this.confirmString = function () {
 			return response_string;
 		};
@@ -84,7 +84,7 @@ exports.testRoadCoroutineContextPersists = function (test) {
 
 	road.request('GET', '/')
 		.then(function (val) {
-			test.equal(val.data, response_string);
+			test.equal(val, response_string);
 			test.done();
 		});
 };
@@ -103,7 +103,7 @@ exports.testRoadContextUniqueness = function (test) {
 		}
 	}));
 
-	road.onRequest(function* (method, url, body, headers, next) {
+	road.use(function* (method, url, body, headers, next) {
 		this.confirmString = function () {
 			return this.response_string;
 		};
@@ -115,7 +115,7 @@ exports.testRoadContextUniqueness = function (test) {
 
 	road.request('GET', '/')
 		.then(function (val) {
-			test.equal(val.data, response_string);
+			test.equal(val, response_string);
 			test.done();
 		});
 };
