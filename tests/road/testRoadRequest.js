@@ -223,6 +223,48 @@ exports.testRequestWithHandlerCalled = function (test) {
 /**
  * Ensure that a request handler that executes, then calls the actual route returns as expected
  */
+exports.testRequestWithMultipleHandlersCalled = function (test) {
+	var resource = createResource(['GET']);
+
+	var road = new roads.Road(resource);
+	road.use(function (method, url, body, headers, next) {
+		return next()
+			.then(function (response) {
+				response.step1 = true;
+				return response;
+			});
+	});//*/
+
+	road.use(function (method, url, body, headers, next) {
+		// TODO: prove that this worked via tests
+		return next()
+			.then(function (response) {
+				response.step2 = true;
+				return response;
+			});
+	});//*/
+
+	road.request('GET', '/', 'yeah', {
+		"one" : "two"
+	}).then(function (response) {
+		test.deepEqual(response, {
+			path : '/',
+			method : 'GET',
+			body : 'yeah',
+			headers : {
+				'one' : 'two'
+			},
+			step1 : true,
+			step2 : true
+		});
+
+		test.done();
+	});
+};
+
+/**
+ * Ensure that a request handler that executes, then calls the actual route returns as expected
+ */
 exports.testRequestErrorWithHandler = function (test) {
 	var resource = new roads.Resource({
 		methods : {
