@@ -1,6 +1,6 @@
 # The Roads.js API Framework
 
-Roads is a framework for creating APIs in node.js. It requires generator support, so you should be using node 0.11.13 or higher with the `--harmony` flag enabled.
+Roads is an abstraction around the HTTP request/response lifecycle. It's very similar to a standard MVC framework plus router.
 
 # Why should I use Roads?
 
@@ -430,6 +430,9 @@ name                       | type   | default | description
 
 It's possible to design your API responses to achieve significant performance gains. [Roads Fields Filter](https://github.com/Dashron/roads-fieldsfilter) helps facilitate that feature.
 
-### TODO
-
-Next step is to continue to flesh out [roads-client](https://github.com/Dashron/roads-client), a single library that can be run in node, or browsers and can communicate with APIs built on roads. It will expose at least one method, which will have a call signature identical to [API.request](#apirequeststring-method-string-url-dynamic-body-object-headers). This should allow controller code to be shared between the client and the server, since the data store is consistent.
+### Next Steps
+ - Finish testing the client side browserify build
+ - Merge in the 3.0-docs branch
+ - Verify the documentation is up to date
+ - Mention roads-client from this doc, and update it to retain api compatibility with 3.0
+ - Publish as 3.0
