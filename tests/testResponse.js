@@ -16,7 +16,7 @@ exports.testPromiseGetData = function (test) {
 	});
 
 	var res = new roads.Response(promise);
-	test.equal(promise, res.data);
+	test.equal(promise, res.body);
 	test.done();
 };
 
@@ -30,7 +30,7 @@ exports.testGetObjectData = function (test) {
 
 	var res = new roads.Response(response_data);
 
-	test.equal(response_data, res.data);
+	test.equal(response_data, res.body);
 	test.done();
 };
 
@@ -48,7 +48,7 @@ exports.testGetDataIsThenable = function (test) {
 
 	var res = new roads.Response(promise);
 
-	res.data.then(function (data) {
+	res.body.then(function (data) {
 		test.equal(data, response_data);
 		test.done();
 	});
@@ -64,7 +64,7 @@ exports.testNonPromiseGetData = function (test) {
 
 	var res = new roads.Response(response_data);
 
-	test.equal(res.data, response_data);
+	test.equal(res.body, response_data);
 	test.done();
 };
 
