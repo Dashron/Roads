@@ -30,6 +30,8 @@ Roads is a framework for creating APIs in node.js. It requires generator support
   - [writeTo(*ServerResponse* httpResponse)](#responsewritetoserverserverresponse-http_response)
  - [Roads.HttpError](#roadshttperror)
   - [new HttpError(*string* message, *number* code)](#new-httperrorstring-message-number-code)
+ - [Roads.middleware](#roadsmiddleware)
+  - [standard(*Object* options)](#standardobject-options)
  - [Performance Improvements](#performance-improvements)
 
 ## Getting Started
@@ -407,6 +409,22 @@ name        | type                               | description
     throw new Roads.HttpError('Page not found', 404);
 
 
+## Roads.middleware
+
+### standard(*Object* options)
+**Common middleware to ensure that all API requests return response objects**
+
+name        | type                               | description
+ -----------|------------------------------------|---------------
+ options    | object                             | A list of options to configure the middleware
+
+The options object will react to two properties
+
+name                       | type   | default | description
+ --------------------------|--------|---------|-------------------------------------------------
+ always_wrap_with_response | number | true    | If an API request returns a non-response object, it will automatically be wrapped in a response object with a 200 status code.
+ kill_trailing_slash       | string | true    | If true, any url that ends with a trailing slash will return a response object redirecting the client to the same url without the trailing slash (302 redirect with Location: <url_without_slash>)
+ 
 
 ### Performance improvements
 
