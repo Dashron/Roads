@@ -5,6 +5,7 @@ module.exports.Resource = require('./lib/resource');
 module.exports.Response = require('./lib/response');
 module.exports.Road = require('./lib/road');
 
+module.exports.middleware = require('./lib/middleware');
 
 module.exports.HttpError = function HttpError(message, code) {
 	this.message = message;
