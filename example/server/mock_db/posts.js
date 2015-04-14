@@ -1,7 +1,5 @@
 "use strict";
 
-var Promise = require('bluebird');
-
 var posts = [{
 	id : 1,
 	name : 'First post',

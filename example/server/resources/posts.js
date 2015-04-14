@@ -1,6 +1,6 @@
 "use strict";
 
-var roads = require('../../index');
+var roads = require(__dirname + '/../../../index');
 var Resource = roads.Resource;
 var Response = roads.Response;
 
@@ -47,11 +47,10 @@ module.exports.many = new Resource({
 
 			var users = [];
 
-			posts.forEach(function (post) {
-				users.push(Users.get('id=' + post.user_id));
-			});
-
-			users = yield users;
+			for (let i = 0; i < posts.length; i++) {
+				// This is lazy. If you add an array yieldHandler you could yield every users in parallel.
+				users.push(yield Users.get('id=' + posts[i].user_id));
+			}
 
 			// this is super lazy. don't try this at home
 			posts.forEach(function (post) {

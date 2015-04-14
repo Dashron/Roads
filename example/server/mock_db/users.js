@@ -1,7 +1,5 @@
 "use strict";
 
-var Promise = require('bluebird');
-
 var users = [{
 	id : 1,
 	name : 'aaron',

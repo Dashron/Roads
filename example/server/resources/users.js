@@ -1,6 +1,6 @@
 "use strict";
 
-var roads = require('../../index');
+var roads = require(__dirname + '/../../../index');
 var Resource = roads.Resource;
 var Response = roads.Response;
 
