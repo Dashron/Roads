@@ -325,7 +325,7 @@ Each ```method : function``` pair in the methods section of the resource definit
 name     | type                               | description
  --------|------------------------------------|---------------
  url     | string                             | The URL of the request. Is parsed with the standard url module.
- body    | object                             | The request body. If `application/json` it is parsed into an object.
+ body    | object                             | The request body. If the `Content-Type` header is `application/json` the body will be parsed into an object.
  headers | object                             | The request headers
 
 
@@ -339,7 +339,7 @@ var road = new Road(new Resource({
 }));
 ```
 
-If you provide a generator function as your resource method, we will turn it into a coroutine. Coroutines mimic ES7 async functions by letting you yield promises. It lets you drastically improve the readability of your code.
+If you provide a generator function as your resource method, we will turn it into a coroutine. Coroutines fake ES7 async functions by letting you yield promises. The pattern can dramatically improve the readability of your code.
 
 ```node
 var road = new Road(new Resource({
