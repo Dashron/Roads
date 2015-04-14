@@ -53,11 +53,15 @@ exports.testRequest = function (test) {
 		"one" : "two"
 	}).then(function (response) {
 		test.deepEqual(response, {
-			path : '/',
-			method : 'GET',
-			body : 'yeah',
-			headers : {
-				'one' : 'two'
+			status: 200,
+			headers : {},
+			body : {
+				path : '/',
+				method : 'GET',
+				body : 'yeah',
+				headers : {
+					'one' : 'two'
+				}
 			}
 		});
 
@@ -83,11 +87,15 @@ exports.testStringSubRequest = function (test) {
 		"one" : "two"
 	}).then(function (response) {
 		test.deepEqual(response, {
-			path : '/huh',
-			method : 'GET',
-			body : 'yeah',
-			headers : {
-				'one' : 'two'
+			status: 200,
+			headers : {},
+				body : {
+				path : '/huh',
+				method : 'GET',
+				body : 'yeah',
+				headers : {
+					'one' : 'two'
+				}
 			}
 		});
 
@@ -113,11 +121,15 @@ exports.testNumberSubRequest = function (test) {
 		"one" : "two"
 	}).then(function (response) {
 		test.deepEqual(response, {
-			path : '/1234',
-			method : 'GET',
-			body : 'yeah',
-			headers : {
-				'one' : 'two'
+			status: 200,
+			headers : {},
+			body : {
+				path : '/1234',
+				method : 'GET',
+				body : 'yeah',
+				headers : {
+					'one' : 'two'
+				}
 			}
 		});
 
@@ -208,11 +220,15 @@ exports.testRequestWithHandlerCalled = function (test) {
 		"one" : "two"
 	}).then(function (response) {
 		test.deepEqual(response, {
-			path : '/',
-			method : 'GET',
-			body : 'yeah',
-			headers : {
-				'one' : 'two'
+			status: 200,
+			headers : {},
+			body : {
+				path : '/',
+				method : 'GET',
+				body : 'yeah',
+				headers : {
+					'one' : 'two'
+				}
 			}
 		});
 
@@ -230,7 +246,9 @@ exports.testRequestWithMultipleHandlersCalled = function (test) {
 	road.use(function (method, url, body, headers, next) {
 		return next()
 			.then(function (response) {
-				response.step1 = true;
+				if (response.step1) {
+					response.step2 = true;
+				}
 				return response;
 			});
 	});//*/
@@ -239,7 +257,7 @@ exports.testRequestWithMultipleHandlersCalled = function (test) {
 		// TODO: prove that this worked via tests
 		return next()
 			.then(function (response) {
-				response.step2 = true;
+				response.step1 = true;
 				return response;
 			});
 	});//*/
@@ -248,14 +266,18 @@ exports.testRequestWithMultipleHandlersCalled = function (test) {
 		"one" : "two"
 	}).then(function (response) {
 		test.deepEqual(response, {
-			path : '/',
-			method : 'GET',
-			body : 'yeah',
-			headers : {
-				'one' : 'two'
-			},
-			step1 : true,
-			step2 : true
+			status: 200,
+			headers : {},
+			body : {
+				path : '/',
+				method : 'GET',
+				body : 'yeah',
+				headers : {
+					'one' : 'two'
+				},
+				step1 : true,
+				step2 : true
+			}
 		});
 
 		test.done();
@@ -307,7 +329,11 @@ exports.testRequestWithHandlerNotCalled = function (test) {
 	road.request('GET', '/', 'yeah', {
 		"one" : "two"
 	}).then(function (new_response) {
-		test.deepEqual(response, new_response);
+		test.deepEqual(new_response, {
+			status: 200,
+			headers : {},
+			body : response
+		});
 		test.done();
 	});
 };
@@ -336,7 +362,11 @@ exports.testRequestErrorWithHandlerThatCatchesErrors = function (test) {
 	road.request('GET', '/', 'yeah', {
 		"one" : "two"
 	}).then(function (response) {
-		test.deepEqual(response, {"error":"huh"});
+		test.deepEqual(response, {
+			status: 200,
+			headers : {},
+			body : {"error":"huh"}
+		});
 		test.done();
 	});
 };

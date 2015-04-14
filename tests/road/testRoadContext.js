@@ -22,7 +22,11 @@ exports.testRoadContextExists = function (test) {
 
 	road.request('GET', '/')
 		.then(function (val) {
-			test.equal(val, response_string);
+			test.deepEqual(val, {
+				status: 200,
+				body: response_string,
+				headers: {}
+			});
 			test.done();
 		})
 		.catch(function (e) {
@@ -55,7 +59,11 @@ exports.testRoadContextPersists = function (test) {
 
 	road.request('GET', '/')
 		.then(function (val) {
-			test.equal(val, response_string);
+			test.deepEqual(val, {
+				status: 200,
+				body: response_string,
+				headers: {}
+			});
 			test.done();
 		});
 };
@@ -84,7 +92,11 @@ exports.testRoadCoroutineContextPersists = function (test) {
 
 	road.request('GET', '/')
 		.then(function (val) {
-			test.equal(val, response_string);
+			test.deepEqual(val, {
+				status: 200,
+				body: response_string,
+				headers: {}
+			});
 			test.done();
 		});
 };
@@ -115,7 +127,11 @@ exports.testRoadContextUniqueness = function (test) {
 
 	road.request('GET', '/')
 		.then(function (val) {
-			test.equal(val, response_string);
+			test.deepEqual(val, {
+				status: 200,
+				body: response_string,
+				headers: {}
+			});
 			test.done();
 		});
 };

@@ -1,23 +1,22 @@
-# The Roads.js API Framework
+# The Roads.js HTTP abstraction
 
 Roads is an abstraction around the HTTP request/response lifecycle. It's very similar to a standard MVC framework plus router.
 
 # Why should I use Roads?
 
-1. It helps build an organized, resource oriented API through a nested routing structure.
-2. Can be invoked over HTTP, or directly inside of javascript.
-3. It is built using generators and promises so that you never have to worry about callbacks.
-4. Can be used with roads-fieldsfilter to support lazy responses, only executing the code your users need.
-
+1. It helps build an organized, resource oriented website or API through a nested routing structure.
+2. It can be bound to an HTTP server, or used like a standard javascript object.
+3. It can be used in the browser using [browserify ](http://browserify.org/) to build client side applications.
+4. It is built using promises and supports generator-based coroutines so that you never have to worry about callbacks.
 
 # Index
 
  - [Getting Started](#getting-started)
- - [Roads.API](#roadsapi)
-  - [new API(*Resource* root_resource)](#new-apiresource-root_resource)
-  - [onRequest(*Function* fn)](#apionrequestfunction-fn)
-  - [request(*string* method, *string* url, *dynamic* body, *Object* headers)](#apirequeststring-method-string-url-dynamic-body-object-headers)
-  - [server(*IncomingMessage* http_request, *ServerResponse* http_response)](#apiserverincomingmessage-http_request-serverresponse-http_response)
+ - [Roads.Road](#roadsroad)
+  - [new Road(*Resource* root_resource)](#new-roadresource-root_resource)
+  - [use(*Function* fn)](#roadusefunction-fn)
+  - [request(*string* method, *string* url, *dynamic* body, *Object* headers)](#roadrequeststring-method-string-url-dynamic-body-object-headers)
+  - [server(*IncomingMessage* http_request, *ServerResponse* http_response)](#roadserverincomingmessage-http_request-serverresponse-http_response)
  - [Roads.Resource](#roadsresource)
   - [new Resource(*Object* definition)](#new-resourceobject-definition)
   - [URL Part (routing)](#url-part)
@@ -36,7 +35,7 @@ Roads is an abstraction around the HTTP request/response lifecycle. It's very si
 
 ## Getting Started
 
-Building an API with roads follows a fairly simple workflow.
+Building a project with roads follows a fairly simple workflow.
 
 1. Create a [Resource](#roadsresource) object for every endpoint (`/`, `/users`, `/posts`, `/users/#user_id`)
 ```
@@ -44,8 +43,9 @@ Building an API with roads follows a fairly simple workflow.
     var resource = new roads.Resource({
         // Define sub-resources.
         resources : {
-            // This implies that the files "users.js" and "posts.js" contain resource objects.
+            // This attaches the resource at ./users to the url "/users"
             "users" : require('./users'),
+            // This attaches the resource at ./posts to the url "/posts"
             "posts" : require('./posts')
         },
         // Incomplete. See step 2.
@@ -53,7 +53,7 @@ Building an API with roads follows a fairly simple workflow.
     });
     
     // Assign your resource to the root "/" endpoint.
-    var api = new roads.API(resource);
+    var road = new roads.Road(resource);
 ```
 
 2. Each [Resource](#roadsresource) from step #1 should contain one or more [resource methods](#resource-method). Each resource method is associated with an HTTP method.
@@ -62,11 +62,12 @@ Building an API with roads follows a fairly simple workflow.
         // Incomplete. See step 1.
         resources : ...,
         methods : {
+            // Whenever a GET request is made to this resource, it will execute the following function
             GET : function (url, body, headers) {
-                // URL query string parameter.
+                // URL is parsed via the url module. The following code will access the querystring parameter "page"
                 url.query.page;
 
-                // JSON or query string body, parsed depending on the content-type header.
+                // JSON or query body, parsed depending on the content-type header.
                 body.name;
 
                 // Incomplete, see step 3.
@@ -87,73 +88,71 @@ Building an API with roads follows a fairly simple workflow.
                 ...
 
                 // Build a response object, with the body, status code and headers.
-                return new roads.Resource({ "name" : "aaron" }, 200, {"last-modified" : "Tue, 15 Nov 1994 12:45:26 GMT"});
+                return new this.Response({ "name" : "aaron" }, 200, {"last-modified" : "Tue, 15 Nov 1994 12:45:26 GMT"});
             }
         }
     });
 ```
 
-4. Interact with the API directly, or bind it to an HTTP serber
+4. Manually make a request. This will locate and execute the proper resource and resource method. You can also bind it to the standard HTTP server using the `server` method.
 
 ```
     // Call directly
-    api.request('GET', '/users', {page : 2})
+    road.request('GET', '/users', {page : 2})
         .then(function (response) {
-            if (response.status >= 400) {
-                throw new Error(response.data, response.status);
-            }
-            
-            console.log(response.data);
+            console.log(response);
         });
 ```
 
 ```
     // Bind to an HTTP server
-    require('http').createServer(api.server.bind(api))
+    require('http').createServer(road.server.bind(road))
         .listen(8080, function () {
             console.log('server has started');
         });
 ```
 
-Once all of these steps are complete, you should be able to access the API through your browser. Continue reading the docs below for more information on [error handling](#apionrequestfunction-fn), [URL parameters](#url-part) and more!
+Once all of these steps are complete, you should be able to access your roads through your script, or the bound http server. Continue reading the docs below for more information on [error handling](#roadusefunction-fn), [URL parameters](#url-part) and more!
 
 
 
-## Roads.API
+## Roads.Road
 
-The API is a container that holds a hierarchy of [Resource](#roadsresource) objects. It exposes a [request](#apirequeststring-method-string-url-dynamic-body-object-headers) method which allows you to interact directly with the resources.
+A Road is a container that holds a hierarchy of [Resource](#roadsresource) objects. It exposes a [request](#requeststring-method-string-url-dynamic-body-object-headers) method which allows you to interact directly with the resources.
 
 You must provide the root resource to the constructor. This resource will resolve any requests to the root (`/`) endpoint. Any additional routes will be referenced as sub-resources of the root endpoint.
 
 
 
-### new API(*Resource* root_resource)
-**Create an API object.**
+### new Road(*Resource* root_resource)
+**Create a Road.**
 
  name          | type                       | required | description
  --------------|----------------------------|----------|-------------
  root_resource | [Resource](#roadsresource) | yes      | Used to generate the [response](#roadsresponse) for the root endpoint ( [protocol]://[host]/ ).
 
-Creates your API object. You must provide a [Resource](#roadsresource) to the constructor. The provided resource becomes the root resource, and will be used for any API requests to `/`.
+Creates your Road object. You must provide a [Resource](#roadsresource) to the constructor. The provided resource becomes the root resource, and will be used for any requests to `/`.
 
 ```node
 var roads = require('roads');
 var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at [Resource](#roadsresource) for information about the Resource constructor.
-var api = new roads.API(root_resource);
+var road = new roads.Road(root_resource);
 ```
 
 
 
-### API.onRequest(*Function* fn)
-**Add a custom function to be executed along with every request.**
+### Road.use(*Function* fn)
+**Add one or many custom functions to be executed along with every request.**
+
+The functions added will be executed in the order they were added. Each handler must execute the "next" parameter if it wants to continue executing the chain.
 
  name | type                                                                  | required | description
  -----|-----------------------------------------------------------------------|----------|---------------
- fn   | Function(*string* method, *string* url,*object* body,*object* headers,*function* next) | yes      | Will be called any time a request is made on the API object.
+ fn   | Function(*string* method, *string* url,*object* body,*object* headers,*function* next) | yes      | Will be called any time a request is made on the object.
  
  This will be called for every request, even for routes that do not exist. The callback will be executed with the following five parameters :
  
-#### onRequest Callback 
+#### use Callback 
 **function (*string* method,*string* url, *Object* body, *Object* headers, *Function* next)**
 
 name     | type                               | description
@@ -162,22 +161,24 @@ name     | type                               | description
  url     | string                             | The URL that was provided to the request
  body    | object                             | The body that was provided to the request, after it was properly parsed into an object
  headers | object                             | The headers that were provided to the request
- next    | function                           | The [resource method](#resource-method) that the router located. Execute this function to perform the standard API action for this HTTP method and URL. This method will always return a promise.
+ next    | function                           | The next step of the handler chain. If there are no more custom handlers assigned, next will resolve to the [resource method](#resource-method) that the router located. This method will always return a promise.
 
 If the callback does not return a [response](#roadsresponse) object, it will be wrapped in a [response](#roadsresponse) object with the default status code of 200.
 
-    // Example of an onRequest handler
-    api.onRequest(function* (url, body, headers, next) {
+    // Example of a request handler that kills trailing slashes (This is provided for you in the middleware!)
+    road.use(function (method, url, body, headers, next) {
     	// kill trailing slash as long as we aren't at the root level
         if (url.path != '/' && url.path[url.path.length - 1] === '/') {
             return new roads.Response(null, 302, {
                 location : url.path.substring(0, url.path.length - 1)
             });
         }
-    
-        // This would also be a good place to identify the authenticated user, or API app and add it to the current request context
-        // eg: this.cur_user = user;
 
+        return next();
+    });
+
+    // Example of a request handler that catches errors and returns Response objects
+    road.use(function(method, url, body, headers, next) {
         // execute the actual resource method, and return the response
         return next()
             // Catch any errors that are thrown by the resources
@@ -197,16 +198,16 @@ If the callback does not return a [response](#roadsresponse) object, it will be 
 
 
 
-### API.request(*string* method, *string* url, *dynamic* body, *Object* headers)
-**Make a request to the API.**
+### Road.request(*string* method, *string* url, *dynamic* body, *Object* headers)
+**Execute the resource method associated with the request parameters.**
 
 
-This function will locate the appropriate [resource method](#resource-method) for the provided HTTP Method and URL, execute it and return a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A). It will always return a [Response](#roadsresponse) object.
+This function will locate the appropriate [resource method](#resource-method) for the provided HTTP Method and URL, execute it and return a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A). The thenable will always resolve to a [Response](#roadsresponse) object.
 
-    var promise = api.request('GET', '/users/dashron');
+    var promise = road.request('GET', '/users/dashron');
     
     promise.then(function (response) {        
-        console.log(response.data);
+        console.log(response);
     });
 
     promise.catch(function (error) {
@@ -215,12 +216,12 @@ This function will locate the appropriate [resource method](#resource-method) fo
 
 
 
-### API.server(*IncomingMessage* http_request, *ServerResponse* http_response)
-**An onRequest callback for http.createServer()**
+### Road.server(*IncomingMessage* http_request, *ServerResponse* http_response)
+**A function to facilitate binding the road to http.createServer()**
 
-Helper function so the API can be thrown directly into http.createServer.
+Helper function to attach your road directly into http.createServer.
 
-    require('http').createServer(api.server.bind(api))
+    require('http').createServer(road.server.bind(road))
         .listen(8081, function () {
             console.log('server has started');
         });
@@ -229,8 +230,7 @@ Helper function so the API can be thrown directly into http.createServer.
 
 ## Roads.Resource
 
-Each resource represents a single endpoint. The definition provided to the constructor describes how it can be used by the API object.
-
+Each resource represents a single endpoint. The object provided to the constructor describes how it can be used by the road.
 
 
 ### new Resource(*Object* definition)
@@ -264,7 +264,7 @@ name        | type                               | description
 
 #### URL Part (routing)
 
-All URL routing happens through the resource definition, and through sub resources. The root resource represents a URL without any path ([protocol]://[host]/). This root resource must define additional resources as sub resources, which will branch out after the root resource.
+All URL routing is defined through the resource definition, and through sub resources. The root resource represents a URL without any path ([protocol]://[host]/). This root resource must define additional resources as sub resources, which will branch out after the root resource.
 
 Part       | Example   | Example values | Description
 -----------|-----------|----------------|--------------
@@ -272,7 +272,7 @@ Part       | Example   | Example values | Description
 #{key}     | #user_id  | 12445          | The provided value must be numeric
 ${key}     | #username | dashron        | The provided value can be any series of non-forward slash, URL valid characters
 
-In the following example, the only valid URLs are /, /users and /users/{number}
+In the following example, the only valid URLs are `/`, `/users` and `/users/{number}`
 
     var single = new Resource({
     });
@@ -311,14 +311,15 @@ For variable fields, you can retrieve the variable in the URL parameter. The URL
 
 #### Resource Method
 
-Each ```method : function``` pair of the methods field describes how the API server will respond to an HTTP request. The function is called a "resource method".
+Each ```method : function``` pair in the methods section of the resource definition is called a "[resource method](#resource-method)". [Road.request](#roadrequeststring-method-string-url-dynamic-body-object-headers) will first locate the proper resource from the request path, and then the [resource method](#resource-method) from the request method.
 
-If a resource could not be located for the provided URL, the API will throw an [HttpError](#roadshttperror) with a 404 status code.
-If a resource was located for the provided URL, but the resource did not have the appropriate [resource method](#resource-method) for the requested HTTP method, the API will throw an [HttpError](#roadshttperror) with a 405 status code.
+If a resource could not be located for the provided request path, the request method will throw an [HttpError](#roadshttperror) with a 404 status code.
 
-Each resource method has access to a request context through ```this```. Each ```this``` will be unique to the request, and will persist from the requestHandler into the actual request. The context is pre-loaded with a request method, which is an alias for [API.request](#apirequeststring-method-string-url-dynamic-body-object-headers). You may add any additional methods or properties to the context.
+If a resource was located for the provided request path, but the resource did not have a matching [resource method](#resource-method), the request method will throw an [HttpError](#roadshttperror) with a 405 status code.
 
-    var api = new API(new Resource({
+Each resource method has access to a request context through ```this```. Each ```this``` will be unique to the request, and will persist from each request handler (assigned via `use`) into the actual request. The context is pre-loaded with a `request` method, which is an alias for [Road.request](#roadrequeststring-method-string-url-dynamic-body-object-headers). You may add any additional methods or properties to the context and use them in your routes. This is useful for determining the authenticated user or adding helper methods.
+
+    var road = new Road(new Resource({
         methods : {
             GET : function (url, body, headers) {
                 // true
@@ -327,7 +328,7 @@ Each resource method has access to a request context through ```this```. Each ``
         }
     }));
 
-    api.onRequest(function* (method, url, body, headers, next) {
+    road.use(function* (method, url, body, headers, next) {
         this.uri = '/me';
         return yield next();
     });
@@ -339,29 +340,28 @@ Each resource method has access to a request context through ```this```. Each ``
 The response object contains all of the information you want to send to the client. This includes the body, status code and all applicable headers. 
 
 
-
-### new Response(*dynamic* data, *number* status, *Object* headers)
+### new Response(*mixed* body, *number* status, *Object* headers)
 **Constructor**
 
 name        | type                               | description
  -----------|------------------------------------|---------------
- data       | dynamic                            | The body of the response. If provided a JavaScript object, and no content-type header, the response will be sent through JSON.stringify, and the content-type header will be set to `application/json`
- status     | number                             | The HTTP Status code
+ body       | mixed                              | The body of the response.
+ status     | number                             | The HTTP Status code.
  headers    | object                             | Key value pairs of http headers.
 
 Create a response object. 
 
     new Response({"uri" : "..."}, 200, {"last-modified":"2014-04-27 00:00:00"});
 
-### Data
-**The raw JavaScript object returned by the API request**
+### Body
+**The raw JavaScript object returned by the request**
 
 ```
-    console.log(response.data);
+    console.log(response.body);
 ```
 
 ### Status
-**The HTTP status returned by the API request**
+**The HTTP status returned by the request**
 
 ```
     console.log(response.status);
@@ -378,12 +378,15 @@ Create a response object.
 ### Response.writeToServer(*ServerResponse* http_response)
 **A helper function to write the response object to a server response**
 
-This will apply the body, status code, and any applicable headers to the provided http_response. It will not end the response, so you need to do that yourself.
+This will apply the body, status code, and any applicable headers to the provided http_response. It will not end the response, so you need to do that yourself. If the body is a JavaScript object, and no content-type header is set, the response will be sent through JSON.stringify, and the content-type header will be set to `application/json`.
 
-    // execute the API logic and retrieve the appropriate response object
-    api.request(http_request.method, http_request.url, body, http_request.headers)
+    // Use middleware to automatically apply a response wrapper
+    road.use(roads.middleware.standard());
+
+    // execute the route logic and retrieve the appropriate response object
+    road.request(http_request.method, http_request.url, body, http_request.headers)
         .then(function (response) {
-            // Get the data
+            // Write the response to the server
             response.writeToServer(http_response);
             http_response.end();
         })
@@ -411,28 +414,17 @@ name        | type                               | description
 
 ## Roads.middleware
 
-### standard(*Object* options)
-**Common middleware to ensure that all API requests return response objects**
+### killSlash()
+**Middleware to kill the trailing slash on http requests**
 
-name        | type                               | description
- -----------|------------------------------------|---------------
- options    | object                             | A list of options to configure the middleware
+If used, any url that ends with a trailing slash will return a response object redirecting the client to the same url without the trailing slash (302 redirect with Location: <url_without_slash>)
 
-The options object will react to two properties
-
-name                       | type   | default | description
- --------------------------|--------|---------|-------------------------------------------------
- always_wrap_with_response | number | true    | If an API request returns a non-response object, it will automatically be wrapped in a response object with a 200 status code.
- kill_trailing_slash       | string | true    | If true, any url that ends with a trailing slash will return a response object redirecting the client to the same url without the trailing slash (302 redirect with Location: <url_without_slash>)
+    road.use(roads.middleware.killSlash);
  
 
 ### Performance improvements
-
 It's possible to design your API responses to achieve significant performance gains. [Roads Fields Filter](https://github.com/Dashron/roads-fieldsfilter) helps facilitate that feature.
 
 ### Next Steps
  - Finish testing the client side browserify build
- - Merge in the 3.0-docs branch
- - Verify the documentation is up to date
  - Mention roads-client from this doc, and update it to retain api compatibility with 3.0
- - Publish as 3.0
