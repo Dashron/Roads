@@ -22,7 +22,7 @@ Roads is an abstraction around the HTTP request/response lifecycle. It's very si
   - [URL Part (routing)](#url-part-routing)
   - [Resource method](#resource-method)
  - [Roads.Response](#roadsresponse)
-  - [new Response(*Object* body, *number* status, *Object* headers)](#new-responsedynamic-body-number-status-object-headers)
+  - [new Response(*mixed* body, *number* status, *Object* headers)](#new-responsemixed-body-number-status-object-headers)
   - [body](#body)
   - [status](#status)
   - [headers](#headers)
