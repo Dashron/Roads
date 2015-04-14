@@ -320,7 +320,7 @@ var root = new Resource({
 
 #### Resource Method
 
-Each ```method : function``` pair in the methods section of the resource definition is called a "[resource method](#resource-method)". The resource method accepts three parameters.
+Each ```method : function``` pair in the methods section of the resource definition is called a "[resource method](#resource-method)". [Road.request](#roadrequeststring-method-string-url-dynamic-body-object-headers) will first locate the proper resource from the request path, and then the [resource method](#resource-method) from the request method. The resource method accepts three parameters.
 
 name     | type                               | description
  --------|------------------------------------|---------------
@@ -339,7 +339,9 @@ var road = new Road(new Resource({
 }));
 ```
 
-If you provide a generator function as your resource method, we will turn it into a coroutine. Coroutines fake ES7 async functions by letting you yield promises. The pattern can dramatically improve the readability of your code.
+##### Generators
+
+If you provide a generator function as your resource method, we will turn it into a coroutine. Coroutines mimic ES7 async functions by letting you yield promises. It lets you drastically improve the readability of your code.
 
 ```node
 var road = new Road(new Resource({
@@ -351,9 +353,7 @@ var road = new Road(new Resource({
 }));
 ```
 
-
-[Road.request](#roadrequeststring-method-string-url-dynamic-body-object-headers) will first locate the proper resource from the request path, and then the [resource method](#resource-method) from the request method. 
-
+##### Errors
 If a resource could not be located for the provided request path, the request method will throw an [HttpError](#roadshttperror) with a 404 status code.
 
 ```node
@@ -372,6 +372,7 @@ road.request('FAKE_METHOD', '/users')
     });
 ```
 
+##### Context
 Each resource method has access to a request context through ```this```. Each ```this``` will be unique to the request, and will persist from each request handler (assigned via `use`) into the actual request. The context is pre-loaded with a `request` method, which is an alias for [Road.request](#roadrequeststring-method-string-url-dynamic-body-object-headers). You may add any additional methods or properties to the context and use them in your routes. This is useful for determining the authenticated user or adding helper methods.
 
 ```node
@@ -477,7 +478,7 @@ throw new Roads.HttpError('Page not found', 404);
 ### killSlash()
 **Middleware to kill the trailing slash on http requests**
 
-If used, any url that ends with a trailing slash will return a response object redirecting the client to the same url without the trailing slash (302 redirect with Location: <url_without_slash>)
+If used, any url that ends with a trailing slash will return a response object redirecting the client to the same url without the trailing slash (302 redirect with Location: [url_without_slash])
 
 ```node
 road.use(roads.middleware.killSlash);
