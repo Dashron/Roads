@@ -38,7 +38,7 @@ Roads is an abstraction around the HTTP request/response lifecycle. It's very si
 Building a project with roads follows a fairly simple workflow.
 
 1. Create a [Resource](#roadsresource) object for every endpoint (`/`, `/users`, `/posts`, `/users/#user_id`)
-```
+```node
     // Create your resource.
     var resource = new roads.Resource({
         // Define sub-resources.
@@ -57,7 +57,7 @@ Building a project with roads follows a fairly simple workflow.
 ```
 
 2. Each [Resource](#roadsresource) from step #1 should contain one or more [resource methods](#resource-method). Each resource method is associated with an HTTP method.
-```
+```node
     var resource = new roads.Resource({
         // Incomplete. See step 1.
         resources : ...,
@@ -78,7 +78,7 @@ Building a project with roads follows a fairly simple workflow.
 ```
 
 3. Each [resource method](#resource-method) from step #2 should return a [response](#roadsresponse) object. 
-```
+```node
     var resource = new roads.Resource({
         // Incomplete. See step 1.
         resources : ...,
@@ -96,7 +96,7 @@ Building a project with roads follows a fairly simple workflow.
 
 4. Manually make a request. This will locate and execute the proper resource and resource method. You can also bind it to the standard HTTP server using the `server` method.
 
-```
+```node
     // Call directly
     road.request('GET', '/users', {page : 2})
         .then(function (response) {
@@ -104,7 +104,7 @@ Building a project with roads follows a fairly simple workflow.
         });
 ```
 
-```
+```node
     // Bind to an HTTP server
     require('http').createServer(road.server.bind(road))
         .listen(8080, function () {
@@ -165,6 +165,7 @@ name     | type                               | description
 
 If the callback does not return a [response](#roadsresponse) object, it will be wrapped in a [response](#roadsresponse) object with the default status code of 200.
 
+```node
     // Example of a request handler that kills trailing slashes (This is provided for you in the middleware!)
     road.use(function (method, url, body, headers, next) {
     	// kill trailing slash as long as we aren't at the root level
@@ -195,7 +196,7 @@ If the callback does not return a [response](#roadsresponse) object, it will be 
                 }
             });
     });
-
+```
 
 
 ### Road.request(*string* method, *string* url, *dynamic* body, *Object* headers)
@@ -204,6 +205,7 @@ If the callback does not return a [response](#roadsresponse) object, it will be 
 
 This function will locate the appropriate [resource method](#resource-method) for the provided HTTP Method and URL, execute it and return a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A). The thenable will always resolve to a [Response](#roadsresponse) object.
 
+```node
     var promise = road.request('GET', '/users/dashron');
     
     promise.then(function (response) {        
@@ -213,7 +215,7 @@ This function will locate the appropriate [resource method](#resource-method) fo
     promise.catch(function (error) {
         console.log(error);
     });
-
+```
 
 
 ### Road.server(*IncomingMessage* http_request, *ServerResponse* http_response)
@@ -221,11 +223,12 @@ This function will locate the appropriate [resource method](#resource-method) fo
 
 Helper function to attach your road directly into http.createServer.
 
+```node
     require('http').createServer(road.server.bind(road))
         .listen(8081, function () {
             console.log('server has started');
         });
-
+```
 
 
 ## Roads.Resource
@@ -247,6 +250,7 @@ name        | type                               | description
  resources  | object                             | Each key is a [URL part](#url-part), and each value is a sub-[resource](#roadsresource)
  methods    | object                             | Each key is an HTTP method, and each value is a [resource method](#resource-method).
 
+```node
     module.exports.many = new Resource({
         resources : {
             'users' : require('./users').many,
@@ -261,6 +265,7 @@ name        | type                               | description
             }
         }
     });
+```
 
 #### URL Part (routing)
 
@@ -274,6 +279,7 @@ ${key}     | #username | dashron        | The provided value can be any series o
 
 In the following example, the only valid URLs are `/`, `/users` and `/users/{number}`
 
+```node
     var single = new Resource({
     });
 
@@ -288,9 +294,11 @@ In the following example, the only valid URLs are `/`, `/users` and `/users/{num
             "users" : many
         }
     });
+```
 
 For variable fields, you can retrieve the variable in the URL parameter. The URL parameter will be an object, and will have an "args" parameter
 
+```node
     var single = new Resource({
         methods : function (url, body, headers) {
             console.log(url.args.user_id);
@@ -308,6 +316,7 @@ For variable fields, you can retrieve the variable in the URL parameter. The URL
             "users" : many
         }
     });
+```
 
 #### Resource Method
 
@@ -319,6 +328,7 @@ If a resource was located for the provided request path, but the resource did no
 
 Each resource method has access to a request context through ```this```. Each ```this``` will be unique to the request, and will persist from each request handler (assigned via `use`) into the actual request. The context is pre-loaded with a `request` method, which is an alias for [Road.request](#roadrequeststring-method-string-url-dynamic-body-object-headers). You may add any additional methods or properties to the context and use them in your routes. This is useful for determining the authenticated user or adding helper methods.
 
+```node
     var road = new Road(new Resource({
         methods : {
             GET : function (url, body, headers) {
@@ -332,7 +342,7 @@ Each resource method has access to a request context through ```this```. Each ``
         this.uri = '/me';
         return yield next();
     });
-
+```
 
 
 ## Roads.Response
@@ -351,26 +361,28 @@ name        | type                               | description
 
 Create a response object. 
 
+```node
     new Response({"uri" : "..."}, 200, {"last-modified":"2014-04-27 00:00:00"});
+```
 
 ### Body
 **The raw JavaScript object returned by the request**
 
-```
+```node
     console.log(response.body);
 ```
 
 ### Status
 **The HTTP status returned by the request**
 
-```
+```node
     console.log(response.status);
 ```
 
 ### Headers
 **A JavaScript object of all response headers**
 
-```
+```node
     console.log(response.headers);
 ```
 
@@ -380,6 +392,7 @@ Create a response object.
 
 This will apply the body, status code, and any applicable headers to the provided http_response. It will not end the response, so you need to do that yourself. If the body is a JavaScript object, and no content-type header is set, the response will be sent through JSON.stringify, and the content-type header will be set to `application/json`.
 
+```node
     // Use middleware to automatically apply a response wrapper
     road.use(roads.middleware.standard());
 
@@ -396,7 +409,7 @@ This will apply the body, status code, and any applicable headers to the provide
             (new roads.Response(error, 500)).writeToServer(http_response);
             http_response.end();
         });
-
+```
 
 
 ## Roads.HttpError
@@ -409,8 +422,9 @@ name        | type                               | description
  message    | string                             | A message describing the HTTP error
  code       | number                             | An official [http status code](#http://www.httpstatus.es)
 
+```node
     throw new Roads.HttpError('Page not found', 404);
-
+```
 
 ## Roads.middleware
 
@@ -419,12 +433,13 @@ name        | type                               | description
 
 If used, any url that ends with a trailing slash will return a response object redirecting the client to the same url without the trailing slash (302 redirect with Location: <url_without_slash>)
 
+```node
     road.use(roads.middleware.killSlash);
- 
+```
 
-### Performance improvements
+## Performance improvements
 It's possible to design your API responses to achieve significant performance gains. [Roads Fields Filter](https://github.com/Dashron/roads-fieldsfilter) helps facilitate that feature.
 
-### Next Steps
+## Next Steps
  - Finish testing the client side browserify build
  - Mention roads-client from this doc, and update it to retain api compatibility with 3.0
