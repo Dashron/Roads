@@ -320,11 +320,57 @@ var root = new Resource({
 
 #### Resource Method
 
-Each ```method : function``` pair in the methods section of the resource definition is called a "[resource method](#resource-method)". [Road.request](#roadrequeststring-method-string-url-dynamic-body-object-headers) will first locate the proper resource from the request path, and then the [resource method](#resource-method) from the request method.
+Each ```method : function``` pair in the methods section of the resource definition is called a "[resource method](#resource-method)". The resource method accepts three parameters.
+
+name     | type                               | description
+ --------|------------------------------------|---------------
+ url     | string                             | The URL of the request. Is parsed with the standard url module.
+ body    | object                             | The request body. If `application/json` it is parsed into an object.
+ headers | object                             | The request headers
+
+
+```node
+var road = new Road(new Resource({
+    methods : {
+        GET : function (url, body, headers) {
+            return 'Welcome!';
+        }
+    }
+}));
+```
+
+If you provide a generator function as your resource method, we will turn it into a coroutine. Coroutines mimic ES7 async functions by letting you yield promises. It lets you drastically improve the readability of your code.
+
+```node
+var road = new Road(new Resource({
+    methods : {
+        GET : function* (url, body, headers) {
+            var user = yield db.User(url.args.user_id);
+        }
+    }
+}));
+```
+
+
+[Road.request](#roadrequeststring-method-string-url-dynamic-body-object-headers) will first locate the proper resource from the request path, and then the [resource method](#resource-method) from the request method. 
 
 If a resource could not be located for the provided request path, the request method will throw an [HttpError](#roadshttperror) with a 404 status code.
 
+```node
+road.request('GET', '/invalidpath')
+    .catch(function (error) {
+        error.status === 404
+    });
+```
+
 If a resource was located for the provided request path, but the resource did not have a matching [resource method](#resource-method), the request method will throw an [HttpError](#roadshttperror) with a 405 status code.
+
+```node
+road.request('FAKE_METHOD', '/users')
+    .catch(function (error) {
+        error.status === 405
+    });
+```
 
 Each resource method has access to a request context through ```this```. Each ```this``` will be unique to the request, and will persist from each request handler (assigned via `use`) into the actual request. The context is pre-loaded with a `request` method, which is an alias for [Road.request](#roadrequeststring-method-string-url-dynamic-body-object-headers). You may add any additional methods or properties to the context and use them in your routes. This is useful for determining the authenticated user or adding helper methods.
 
@@ -338,9 +384,9 @@ var road = new Road(new Resource({
     }
 }));
 
-road.use(function* (method, url, body, headers, next) {
+road.use(function (method, url, body, headers, next) {
     this.uri = '/me';
-    return yield next();
+    return next();
 });
 ```
 
