@@ -98,5 +98,8 @@ module.exports.many = new Resource({
 
 			return new Response(userRepresentation(user), 201);
 		}
+	},
+	resource_context: {
+		cors_methods : ['GET']
 	}
 });

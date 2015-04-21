@@ -40,7 +40,10 @@ exports.testKillSlashOnlyTrailingSlashFixingARoute = function (test) {
 		});
 	};
 
-	roads.middleware.killSlash.call({}, method, url, body, headers, next)
+	roads.middleware.killSlash.call({
+		// the redirection needs the Response context
+		Response : roads.Response
+	}, method, url, body, headers, next)
 	.then(function (response) {
 		test.deepEqual(response, {
 			status : 302,
@@ -49,6 +52,11 @@ exports.testKillSlashOnlyTrailingSlashFixingARoute = function (test) {
 				'location' : '/users'
 			}
 		});
+		test.done();
+	})
+	.catch(function (err) {
+		console.log(err.stack);
+		test.fail(err);
 		test.done();
 	});
 };

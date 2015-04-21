@@ -8,6 +8,7 @@ var notAllowedRepresentation = require('./representations/server/notAllowed');
 var unknownRepresentation = require('./representations/server/unknown');
 
 api.use(roads.middleware.standard());
+api.use(roads.middleware.cors('localhost:8081'));
 
 api.use(function (method, url, body, headers, next) {
 	var context = this;

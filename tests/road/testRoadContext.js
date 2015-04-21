@@ -122,7 +122,7 @@ exports.testRoadContextUniqueness = function (test) {
 
 		this.response_string = (this.response_string ? this.response_string : '' )+ response_string;
 
-		return yield next('data');
+		return yield next();
 	});
 
 	road.request('GET', '/')
@@ -130,6 +130,31 @@ exports.testRoadContextUniqueness = function (test) {
 			test.deepEqual(val, {
 				status: 200,
 				body: response_string,
+				headers: {}
+			});
+			test.done();
+		});
+};
+
+exports.testRoadResourceContextExists = function (test) {
+	var road = new roads.Road(new roads.Resource({
+		methods : {
+			GET : function (url, body, headers) {
+				return this.resource_context;
+			}
+		},
+		context : {
+			'hello' : 'world'
+		}
+	}));
+
+	road.request('GET', '/')
+		.then(function (val) {
+			test.deepEqual(val, {
+				status: 200,
+				body: {
+					"hello" : "world"
+				},
 				headers: {}
 			});
 			test.done();
