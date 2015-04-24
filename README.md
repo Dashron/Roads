@@ -243,12 +243,13 @@ name        | type                               | description
  -----------|------------------------------------|---------------
  definition | object                             | A definition which describes how the resource should operate
 
-The definition only looks for two fields.
+The definition only looks for three fields.
 
 name        | type                               | description
  -----------|------------------------------------|---------------
  resources  | object                             | Each key is a [URL part](#url-part), and each value is a sub-[resource](#roadsresource)
  methods    | object                             | Each key is an HTTP method, and each value is a [resource method](#resource-method).
+ context    | mixed                              | The value of the Resource context will appear in the [context](#context) of every [resource method](#resource-method) with the key `resource_context`
 
 ```node
 module.exports.many = new Resource({
@@ -373,18 +374,41 @@ road.request('FAKE_METHOD', '/users')
 ```
 
 ##### Context
-Each resource method has access to a request context through ```this```. Each ```this``` will be unique to the request, and will persist from each request handler (assigned via `use`) into the actual request. The context is pre-loaded with a `request` method, which is an alias for [Road.request](#roadrequeststring-method-string-url-dynamic-body-object-headers). You may add any additional methods or properties to the context and use them in your routes. This is useful for determining the authenticated user or adding helper methods.
+Each resource method has access to a request context through ```this```. Each ```this``` will be unique to the request, and will persist from each request handler (assigned via `use`) into the actual request. The context is pre-loaded with four variables, listed below.
+
+name             | type     | description
+ ----------------|----------|---------------
+request          | function | An alias for [Road.request](#roadrequeststring-method-string-url-dynamic-body-object-headers). You may add any additional methods or properties to the context and use them in your routes. This is useful for determining the authenticated user or adding helper methods.
+http_methods     | array    | And array of valid http methods for the resource associated with this method (primarily used for OPTIONS requests and 405 errors)
+Response         | Response | The Response constructor, so you don't have to load the file each time
+resource_context | mixed    | The contents of the context variable passed into the Resource constructor
+
 
 ```node
 var road = new Road(new Resource({
     methods : {
         GET : function (url, body, headers) {
-            // true
+            // true because the middleware persists to this context
             console.log(this.uri === '/me');
+
+            // Access the resource context for additional useful information
+            if (this.resource_context.require_authentication) {
+                // Here you could ensure that authentication was provided to the server Here you could ensure that authentication was provided to the server 
+            }
+
+            // true. There's only one method, so the array only contains GET
+            console.log(this.http_methods === ['GET']);
+
+            // Easy access to the response object
+            return new this.Response('hello world', 200);
         }
+    },
+    context : {
+        require_authentication : true
     }
 }));
 
+// Modifying context will persist into the resource method
 road.use(function (method, url, body, headers, next) {
     this.uri = '/me';
     return next();
