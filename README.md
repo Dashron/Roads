@@ -35,82 +35,82 @@ Roads is an abstraction around the HTTP request/response lifecycle. It's very si
 
 ## Getting Started
 
-Building a project with roads follows a fairly simple workflow.
+Building a project with roads is very straightforward.
 
 1. Create a [Resource](#roadsresource) object for every endpoint (`/`, `/users`, `/posts`, `/users/#user_id`)
-```node
-// Create your resource.
-var resource = new roads.Resource({
-    // Define sub-resources.
-    resources : {
-        // This attaches the resource at ./users to the url "/users"
-        "users" : require('./users'),
-        // This attaches the resource at ./posts to the url "/posts"
-        "posts" : require('./posts')
-    },
-    // Incomplete. See step 2.
-    methods : ...
-});
-
-// Assign your resource to the root "/" endpoint.
-var road = new roads.Road(resource);
-```
+	```node
+	// Create your resource.
+	var resource = new roads.Resource({
+	    // Define sub-resources.
+	    resources : {
+	        // This attaches the resource at ./users to the url "/users"
+	        "users" : require('./users'),
+	        // This attaches the resource at ./posts to the url "/posts"
+	        "posts" : require('./posts')
+	    },
+	    // Incomplete. See step 2.
+	    methods : ...
+	});
+	
+	// Assign your resource to the root "/" endpoint.
+	var road = new roads.Road(resource);
+	```
 
 2. Each [Resource](#roadsresource) from step #1 should contain one or more [resource methods](#resource-method). Each resource method is associated with an HTTP method.
-```node
-var resource = new roads.Resource({
-    // Incomplete. See step 1.
-    resources : ...,
-    methods : {
-        // Whenever a GET request is made to this resource, it will execute the following function
-        GET : function (url, body, headers) {
-            // URL is parsed via the url module. The following code will access the querystring parameter "page"
-            url.query.page;
-
-            // JSON or query body, parsed depending on the content-type header.
-            body.name;
-
-            // Incomplete, see step 3.
-            return ...
-        }
-    }
-});
-```
+	```node
+	var resource = new roads.Resource({
+	    // Incomplete. See step 1.
+	    resources : ...,
+	    methods : {
+	        // Whenever a GET request is made to this resource, it will execute the following function
+	        GET : function (url, body, headers) {
+	            // URL is parsed via the url module. The following code will access the querystring parameter "page"
+	            url.query.page;
+	
+	            // JSON or query body, parsed depending on the content-type header.
+	            body.name;
+	
+	            // Incomplete, see step 3.
+	            return ...
+	        }
+	    }
+	});
+	```
 
 3. Each [resource method](#resource-method) from step #2 should return a [response](#roadsresponse) object. 
-```node
-var resource = new roads.Resource({
-    // Incomplete. See step 1.
-    resources : ...,
-    methods : {
-        GET : function (url, body, headers) {
-            // Incomplete, see step 2.
-            ...
-
-            // Build a response object, with the body, status code and headers.
-            return new this.Response({ "name" : "aaron" }, 200, {"last-modified" : "Tue, 15 Nov 1994 12:45:26 GMT"});
-        }
-    }
-});
-```
+	```node
+	var resource = new roads.Resource({
+	    // Incomplete. See step 1.
+	    resources : ...,
+	    methods : {
+	        GET : function (url, body, headers) {
+	            // Incomplete, see step 2.
+	            ...
+	
+	            // Build a response object, with the body, status code and headers.
+	            return new this.Response({ "name" : "aaron" }, 200, {"last-modified" : "Tue, 15 Nov 1994 12:45:26 GMT"});
+	        }
+	    }
+	});
+	```
 
 4. Manually make a request. This will locate and execute the proper resource and resource method. You can also bind it to the standard HTTP server using the `server` method.
 
-```node
-// Call directly
-road.request('GET', '/users', {page : 2})
-    .then(function (response) {
-        console.log(response);
-    });
-```
-
-```node
-// Bind to an HTTP server
-require('http').createServer(road.server.bind(road))
-    .listen(8080, function () {
-        console.log('server has started');
-    });
-```
+	```node
+	// Call directly
+	road.request('GET', '/users', {page : 2})
+	    .then(function (response) {
+	        console.log(response);
+	    });
+	```
+	
+	```node
+	// Bind to an HTTP server
+	require('http').createServer(road.server.bind(road))
+	    .listen(8080, function () {
+	        console.log('server has started');
+	    });
+	```
 
 Once all of these steps are complete, you should be able to access your roads through your script, or the bound http server. Continue reading the docs below for more information on [error handling](#roadusefunction-fn), [URL parameters](#url-part) and more!
 
