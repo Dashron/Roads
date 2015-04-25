@@ -31,6 +31,7 @@ Roads is an abstraction around the HTTP request/response lifecycle. It's very si
   - [new HttpError(*string* message, *number* code)](#new-httperrorstring-message-number-code)
  - [Roads.middleware](#roadsmiddleware)
   - [killSlash()](#killslash)
+  - [cors(*Array|string* allow_origins, *Array* allow_headers)](#corsarraystring-allow_origins-array-allow_headers)
  - [Performance Improvements](#performance-improvements)
 
 ## Getting Started
@@ -508,9 +509,22 @@ If used, any url that ends with a trailing slash will return a response object r
 road.use(roads.middleware.killSlash);
 ```
 
+### cors(*Array|string* allow_origins, *array* allow_headers)
+**Middleware to Apply proper cors headers**
+
+Sets up the proper preflight, and standard repsonse headers so that browsers can make proper CORS requests.
+
+name            | type                               | description
+ ---------------|------------------------------------|---------------
+ allow_origins  | Array|string                       | Either * to allow all origins, or an explicit list of valid origins.
+ allow_headers  | Array                              | (optional) A white list of headers that the client is allowed to send in their requests
+
+```node
+road.use(roads.middleware.cors(['http://localhost:8080'], ['authorization']));
+```
+
 ## Performance improvements
 It's possible to design your API responses to achieve significant performance gains. [Roads Fields Filter](https://github.com/Dashron/roads-fieldsfilter) helps facilitate that feature.
 
 ## Next Steps
- - Finish testing the client side browserify build
  - Mention roads-client from this doc, and update it to retain api compatibility with 3.0
