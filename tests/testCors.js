@@ -107,7 +107,7 @@ exports.testPreflightRequestWithCorsAndOriginAllowListMisses = function (test) {
 		test.done();
 	})
 	.catch(function (err) {
-		test.deepEqual(err, new roads.HttpError(allowed_methods, 405));
+		test.deepEqual(err, new roads.HttpError(origin.join(','), 403));
 		test.done();
 	});
 };
