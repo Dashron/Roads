@@ -1,6 +1,6 @@
 {
   "name": "roads",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "engines": {
     "node": ">=0.11.13"
   },
@@ -25,5 +25,8 @@
   },
   "devDependencies": {
     "nodeunit": "0.9.1"
+  },
+  "dependencies": {
+    "roads-coroutine": "1.0.0"
   }
 }
