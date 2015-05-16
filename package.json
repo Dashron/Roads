@@ -1,6 +1,6 @@
 {
   "name": "roads",
-  "version": "3.1.1",
+  "version": "3.2.0",
   "engines": {
     "node": ">=0.11.13"
   },
@@ -22,9 +22,6 @@
   "repository" : { 
     "type" : "git",
      "url" : "git://github.com/Dashron/roads.git"
-  },
-  "dependencies": {
-    "bluebird": "2.9.21"
   },
   "devDependencies": {
     "nodeunit": "0.9.1"

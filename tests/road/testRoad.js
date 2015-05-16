@@ -2,6 +2,7 @@
 
 var roads = require('../../index.js');
 var url_module = require('url');
+var coroutine = require('../../lib/coroutine');
 
 /**
  * Create a mock resource
@@ -63,44 +64,6 @@ exports.testFailedlocateResource = function (test) {
 };
 
 /**
- * Ensure that generators that are provided to createCoroutine become coroutines
- */
-exports.testCreateValidCoroutine = function (test) {
-	var resource = createResource(['GET']);
-	var road = new roads.Road(resource);
-	var return_val = "very specific string";
-
-	road._createCoroutine(function* () {
-		yield new Promise(function (resolve, reject) {
-			resolve();
-		});
-
-		return return_val;
-	})().then(function (val) {
-		test.equals(val, return_val);
-		test.done();
-	}).catch(function (e) {
-		// this shouldn't be reached
-		test.ok(false);
-		test.done();
-	});
-};
-
-/**
- * Ensure that non-generators that are provided to createCoroutine are passed through unchanged
- */
-exports.testCreateFunctionCoroutine = function (test) {
-	var resource = createResource(['GET']);
-	var road = new roads.Road(resource);
-	var fn = function () {
-		return true;
-	};
-
-	test.equals(road._createCoroutine(fn), fn);
-	test.done();
-};
-
-/**
  * Ensure that success routes return promises
  */
 exports.testSuccessLocateRoute = function (test) {
@@ -139,7 +102,7 @@ exports.testSuccessLocateCoroutineRoute = function (test) {
 	var road = new roads.Road(resource);
 	var route = road._locateRoute(resource, 'GET', url_module.parse('/'));
 
-	route(url_module.parse('/'), {'a' : 'b'}, {'c' : 'd'})
+	coroutine(route)(url_module.parse('/'), {'a' : 'b'}, {'c' : 'd'})
 		.then(function (result) {
 			test.deepEqual({
 				path : '/',
@@ -149,7 +112,8 @@ exports.testSuccessLocateCoroutineRoute = function (test) {
 			}, result);
 
 			test.done();
-		}).error(function (e) {
+		}).catch(function (e) {
+			console.log(e);
 			// this should never happen
 			test.ok(false);
 			test.done();

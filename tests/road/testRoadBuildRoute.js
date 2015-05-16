@@ -8,7 +8,7 @@ var url_module = require('url');
  */
 function createResource (methods, resources) {
 	var endpoint = function (method) {
-		return function* (url, body, headers) {
+		return function (url, body, headers) {
 			return {
 				path : url.path,
 				method : method,
@@ -43,20 +43,18 @@ function createResource (methods, resources) {
 exports.testBuildRouteHits = function (test) {
 	var resource = createResource(['GET']);
 	var road = new roads.Road(resource);
-	var route = road._buildRoute('GET', url_module.parse('/'), {'another':'banana'}, {'test':'what'});
+	road._buildRoute('GET', url_module.parse('/'), {'another':'banana'}, {'test':'what'})()
+	.then(function (response) {
+		test.equal(response.path, '/');
+		test.equal(response.method, 'GET');
+		test.deepEqual(response.body, {'another':'banana'});
+		test.deepEqual(response.headers, {'test':'what'});
 
-	route()
-		.then(function (response) {
-			test.equal(response.path, '/');
-			test.equal(response.method, 'GET');
-			test.deepEqual(response.body, {'another':'banana'});
-			test.deepEqual(response.headers, {'test':'what'});
-
-			// verify context. I wish this could be more accurate
-			test.equal(typeof(response.context.request), 'function');
-			test.ok(Array.isArray(response.context.http_methods));
-			test.done();
-		});
+		// verify context. I wish this could be more accurate
+		test.equal(typeof(response.context.request), 'function');
+		test.ok(Array.isArray(response.context.http_methods));
+		test.done();
+	})
 };
 
 /**
@@ -66,12 +64,13 @@ exports.testBuildRouteHits = function (test) {
 exports.testBuildRouteMissesUrl = function (test) {
 	var resource = createResource(['GET']);
 	var road = new roads.Road(resource);
-	var route = road._buildRoute('GET', url_module.parse('/stuff'), {'another':'banana'}, {'test':'what'});
 
-	test.throws(function () {
-		route();
-	}, Error, '/stuff');
-	test.done();
+	road._buildRoute('GET', url_module.parse('/stuff'), {'another':'banana'}, {'test':'what'})()
+	.catch(function (error) {
+		test.deepEqual('/stuff', error.message);
+		test.deepEqual(404, error.code);
+		test.done();
+	});
 };
 
 /**
@@ -81,12 +80,13 @@ exports.testBuildRouteMissesUrl = function (test) {
 exports.testBuildRouteMissesMethod = function (test) {
 	var resource = createResource(['GET']);
 	var road = new roads.Road(resource);
-	var route = road._buildRoute('POST', url_module.parse('/stuff'), {'another':'banana'}, {'test':'what'});
 
-	test.throws(function () {
-		route();
-	}, Error, ['GET']);
-	test.done();
+	road._buildRoute('POST', url_module.parse('/'), {'another':'banana'}, {'test':'what'})()
+	.catch(function (error) {
+		test.deepEqual(['GET'], error.message);
+		test.deepEqual(405, error.code);
+		test.done();
+	});
 };
 
 /**
@@ -101,27 +101,19 @@ exports.testBuildRouteHitsWithOnRequest = function (test) {
 		return next();
 	});
 
-	var route = road._buildRoute('GET', url_module.parse('/'), {'another':'banana'}, {'test':'what'});
+	road._buildRoute('GET', url_module.parse('/'), {'another':'banana'}, {'test':'what'})()
+	.then(function (response) {
+		test.equal(response.path, '/');
+		test.equal(response.method, 'GET');
+		test.deepEqual(response.body, {'another':'banana'});
+		test.deepEqual(response.headers, {'test':'what'});
 
-	test.equal(typeof(route), 'function');
-	route()
-		.then(function (response) {
-			test.equal(response.path, '/');
-			test.equal(response.method, 'GET');
-			test.deepEqual(response.body, {'another':'banana'});
-			test.deepEqual(response.headers, {'test':'what'});
-
-			// verify context. I wish this could be more accurate
-			test.equal(typeof(response.context.request), 'function');
-			test.ok(response.context.contextChanger);
-			test.ok(Array.isArray(response.context.http_methods));
-			test.done();
-		})
-		.catch(function (err) {
-			console.log(err);
-			test.fail(err);
-			test.done();
-		});
+		// verify context. I wish this could be more accurate
+		test.equal(typeof(response.context.request), 'function');
+		test.ok(response.context.contextChanger);
+		test.ok(Array.isArray(response.context.http_methods));
+		test.done();
+	})
 };
 
 /**
@@ -133,21 +125,18 @@ exports.testBuildRouteMissesUrlWithOnRequest = function (test) {
 	var road = new roads.Road(resource);
 	
 	road.use(function (method, url, body, headers, next) {
-		this.contextChanger = true;
-
-		next()
-		.then(function (response) {
-			test.ok(false);
-		})
+		return next()
 		.catch(function (e) {
 			test.equal(e.message, '/stuff');
-			test.done();
+			return 'boooo';
 		});
 	});
 
-	var route = road._buildRoute('GET', url_module.parse('/stuff'), {'another':'banana'}, {'test':'what'});
-	test.equal(typeof(route), 'function');
-	route();
+	road._buildRoute('GET', url_module.parse('/stuff'), {'another':'banana'}, {'test':'what'})()
+	.then(function (response) {
+		test.equals('boooo', response);
+		test.done();
+	});
 };
 
 /**
@@ -159,19 +148,17 @@ exports.testBuildRouteMissesMethodWithOnRequest = function (test) {
 	var road = new roads.Road(resource);
 	
 	road.use(function (method, path, body, headers, next) {
-		this.contextChanger = true;
-
-		next()
-		.then(function (response) {
-			test.ok(false);
-		})
+		var context = this;
+		return next()
 		.catch(function (e) {
 			test.deepEqual(e.message, ['GET']);
-			test.done();
+			return 'booooooo';
 		});
 	});
 
-	var route = road._buildRoute('POST', url_module.parse('/'), {'another':'banana'}, {'test':'what'});
-	test.equal(typeof(route), 'function');
-	route();
+	road._buildRoute('POST', url_module.parse('/'), {'another':'banana'}, {'test':'what'})()
+	.then(function (response) {
+		test.equals('booooooo', response);
+		test.done();
+	})
 };
