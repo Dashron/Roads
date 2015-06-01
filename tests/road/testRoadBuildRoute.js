@@ -54,7 +54,26 @@ exports.testBuildRouteHits = function (test) {
 		test.equal(typeof(response.context.request), 'function');
 		test.ok(Array.isArray(response.context.http_methods));
 		test.done();
-	})
+	});
+};
+
+/**
+ * Test buildRoute success when a route does not have an onRequest handler and is a generator
+ */
+exports.testBuildCoroutineRouteHits = function (test) {
+	var road = new roads.Road(new roads.Resource({
+		methods: {
+			GET: function* () {
+				return { 'happy': 'banana'};
+			}
+		}
+	}));
+
+	road._buildRoute('GET', url_module.parse('/'), {'another':'banana'}, {'test':'what'})()
+	.then(function (response) {
+		test.deepEqual(response, {'happy':'banana'});
+		test.done();
+	});
 };
 
 /**
@@ -113,7 +132,7 @@ exports.testBuildRouteHitsWithOnRequest = function (test) {
 		test.ok(response.context.contextChanger);
 		test.ok(Array.isArray(response.context.http_methods));
 		test.done();
-	})
+	});
 };
 
 /**
@@ -160,5 +179,27 @@ exports.testBuildRouteMissesMethodWithOnRequest = function (test) {
 	.then(function (response) {
 		test.equals('booooooo', response);
 		test.done();
-	})
+	});
+};
+
+/**
+ * Ensure that we can find the proper resource for a url
+ */
+exports.testSuccesslocateResource = function (test) {
+	var resource = createResource(['GET']);
+	var road = new roads.Road(resource);
+
+	test.equal(resource, road._locateResource(resource, url_module.parse('/')));
+	test.done();
+};
+
+/**
+ * If there is no proper route, locate resource should return null
+ */
+exports.testFailedlocateResource = function (test) {
+	var resource = createResource(['GET']);
+	var road = new roads.Road(resource);
+
+	test.equal(null, road._locateResource(resource, url_module.parse('/blah')));
+	test.done();
 };
