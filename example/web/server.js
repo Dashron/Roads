@@ -1,7 +1,7 @@
 "use strict";
 
 var roads = require(__dirname + '/../../index');
-var road = new roads.Road(require('./resources/root').many);
+var road = new roads.Road([require('./resources/root').root, require('./resources/private').root]);
 var fs = require('fs');
 
 road.use(roads.middleware.killSlash);

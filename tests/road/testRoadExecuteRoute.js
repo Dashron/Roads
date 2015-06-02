@@ -6,10 +6,6 @@ var coroutine = require('roads-coroutine');
 
 /**
  * Create a mock resource
- * 
- * @param  {[type]} methods   [description]
- * @param  {[type]} resources [description]
- * @return {[type]}           [description]
  */
 function createResource (methods, resources) {
 	var endpoint = function (method) {

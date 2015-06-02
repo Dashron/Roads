@@ -6,10 +6,6 @@ var url_module = require('url');
 
 /**
  * Create a mock resource
- * 
- * @param  {[type]} methods   [description]
- * @param  {[type]} resources [description]
- * @return {[type]}           [description]
  */
 function createResource (methods, resources) {
 	var endpoint = function (method) {
@@ -424,6 +420,131 @@ exports.testRequestErrorWithHandlerThatCatchesErrors = function (test) {
 			headers : {},
 			body : {"error":"huh"}
 		});
+		test.done();
+	});
+};
+
+
+module.exports.testDoubleRootResourceRequestWithNoOverlapSucceeds = function (test) {
+	var road = new roads.Road([new roads.Resource({
+		methods: {
+			GET: function () {
+				return 'yeah';
+			}
+		}
+	}), new roads.Resource({
+		methods: {
+			POST: function () {
+				return 'oh my';
+			}
+		}
+	})]);
+
+	road.request('GET', '/', '', {})
+	.then(function (response) {
+		test.equal(response.body, 'yeah');
+		return road.request('POST', '/', '', {});
+	})
+	.then(function (response) {
+		test.equal(response.body, 'oh my');
+		test.done();
+	});
+};
+
+module.exports.testDoubleResourceRequestWithNoOverlapSucceeds = function (test) {
+	var road = new roads.Road([new roads.Resource({
+		resources: {
+			'main': new roads.Resource({
+				methods: {
+					GET: function () {
+						return 'yeah';
+					}
+				}
+			})
+		}
+	}), new roads.Resource({
+		resources: {
+			'secondary': new roads.Resource({
+				methods: {
+					POST: function () {
+						return 'oh my';
+					}
+				}
+			})
+		}
+	})]);
+
+	road.request('GET', '/main')
+	.then(function (response) {
+		test.equal(response.body, 'yeah');
+		return road.request('POST', '/secondary');
+	})
+	.then(function (response) {
+		test.equal(response.body, 'oh my');
+		test.done();
+	});
+};
+
+module.exports.testDoubleResourceRequestWithResourceOverlapChoosesCorrectMethod = function (test) {
+	var road = new roads.Road([new roads.Resource({
+		resources: {
+			'main': new roads.Resource({
+				methods: {
+					GET: function () {
+						return 'yeah';
+					}
+				}
+			})
+		}
+	}), new roads.Resource({
+		resources: {
+			'main': new roads.Resource({
+				methods: {
+					POST: function () {
+						return 'oh my';
+					}
+				}
+			})
+		}
+	})]);
+
+	road.request('GET', '/main')
+	.then(function (response) {
+		test.equal(response.body, 'yeah');
+		return road.request('POST', '/main');
+	})
+	.then(function (response) {
+		test.equal(response.body, 'oh my');
+		test.done();
+	});
+};
+
+module.exports.testDoubleResourceRequestWithMethodOverlapChoosesFirst = function (test) {
+	var road = new roads.Road([new roads.Resource({
+		resources: {
+			'main': new roads.Resource({
+				methods: {
+					GET: function () {
+						return 'yeah';
+					}
+				}
+			})
+		}
+	}), new roads.Resource({
+		resources: {
+			'main': new roads.Resource({
+				methods: {
+					GET: function () {
+						return 'oh my';
+					}
+				}
+			})
+		}
+	})]);
+
+	road.request('GET', '/main')
+	.then(function (response) {
+		test.equal(response.body, 'yeah');
 		test.done();
 	});
 };

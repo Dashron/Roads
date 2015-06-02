@@ -13,7 +13,7 @@ Roads is an abstraction around the HTTP request/response lifecycle. It's very si
 
  - [Getting Started](#getting-started)
  - [Roads.Road](#roadsroad)
-  - [new Road(*Resource* root_resource)](#new-roadresource-root_resource)
+  - [new Road(*Resource|array* root_resource)](#new-roadresourcearray-root_resource)
   - [use(*Function* fn)](#roadusefunction-fn)
   - [request(*string* method, *string* url, *dynamic* body, *Object* headers)](#roadrequeststring-method-string-url-dynamic-body-object-headers)
   - [server(*IncomingMessage* http_request, *ServerResponse* http_response)](#roadserverincomingmessage-http_request-serverresponse-http_response)
@@ -78,7 +78,7 @@ Building a project with roads is very straightforward.
 	});
 	```
 
-3. Each [resource method](#resource-method) from step #2 should return a [response](#roadsresponse) object. 
+3. Each [resource method](#resource-method) from step #2 should return your response. If a promise, it will be evaluated. If not a [response](#roadsresponse) object, it will be automatically wrapped.
 	```node
 	var resource = new roads.Resource({
 	    // Incomplete. See step 1.
@@ -121,16 +121,15 @@ Once all of these steps are complete, you should be able to access your roads th
 
 A Road is a container that holds a hierarchy of [Resource](#roadsresource) objects. It exposes a [request](#requeststring-method-string-url-dynamic-body-object-headers) method which allows you to interact directly with the resources.
 
-You must provide the root resource to the constructor. This resource will resolve any requests to the root (`/`) endpoint. Any additional routes will be referenced as sub-resources of the root endpoint.
+You must provide at least one root resource to the constructor. The request method will check each resource in array order for a matching route. The root resources will handle all requests to the root (`/`) endpoint. Any additional routes will be referenced as sub-resources of the root endpoint.
 
 
-
-### new Road(*Resource* root_resource)
+### new Road(*Resource|array* root_resource)
 **Create a Road.**
 
- name          | type                       | required | description
- --------------|----------------------------|----------|-------------
- root_resource | [Resource](#roadsresource) | yes      | Used to generate the [response](#roadsresponse) for the root endpoint ( [protocol]://[host]/ ).
+ name          | type                                | required | description
+ --------------|-------------------------------------|----------|-------------
+ root_resource | [Resource](#roadsresource) or array | yes      | Used to generate the [response](#roadsresponse) for the root endpoint ( [protocol]://[host]/ ). Also determines the starting point for routing for the [request](#requeststring-method-string-url-dynamic-body-object-headers) method.
 
 Creates your Road object. You must provide a [Resource](#roadsresource) to the constructor. The provided resource becomes the root resource, and will be used for any requests to `/`.
 
