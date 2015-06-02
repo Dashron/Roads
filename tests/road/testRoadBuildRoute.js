@@ -54,6 +54,11 @@ exports.testBuildRouteHits = function (test) {
 		test.equal(typeof(response.context.request), 'function');
 		test.ok(Array.isArray(response.context.http_methods));
 		test.done();
+	})
+	.catch(function (e) {
+		console.log(e);
+		test.fail();
+		test.done();
 	});
 };
 

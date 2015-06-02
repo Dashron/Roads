@@ -11,17 +11,18 @@ function createResource (methods, resources) {
 	var endpoint = function (method) {
 		return function* (url, body, headers) {
 			return {
-				path : url.path,
-				method : method,
-				body : body,
-				headers : headers
+				path: url.path,
+				method: method,
+				body: body,
+				headers: headers
 			};
 		};
 	};
 
 	var definition = {
 		methods : {
-		}
+		},
+		context: 'I am a context'
 	};
 
 	if (methods) {
@@ -214,6 +215,32 @@ exports.testMissingMethodRequest = function (test) {
 	var resource = createResource(['GET']);
 
 	var road = new roads.Road(resource);
+
+	road.request('POST', '/', 'yeah', {
+		"one" : "two"
+	}).then(function (response) {
+		// this endpoint should error
+		test.ok(false);
+		test.done();
+	}).catch(function (e) {
+		test.equal(e.code, 405);
+		test.deepEqual(e.message, ['GET']);
+		test.done();
+	});
+};
+
+/**
+ * Ensure that we get proper errors for invalid HTTP methods, and the middleware properly includes the resource context
+ */
+exports.testMissingMethodRequestWithHandler = function (test) {
+	var resource = createResource(['GET']);
+
+	var road = new roads.Road(resource);
+
+	road.use(function (method, url, body, headers, next) {
+		test.equal("I am a context", this.resource_context);
+		return next();
+	});
 
 	road.request('POST', '/', 'yeah', {
 		"one" : "two"
@@ -545,6 +572,61 @@ module.exports.testDoubleResourceRequestWithMethodOverlapChoosesFirst = function
 	road.request('GET', '/main')
 	.then(function (response) {
 		test.equal(response.body, 'yeah');
+		test.done();
+	});
+};
+
+module.exports.testMultipleResourceRequestResourceHitThenMissWill405AndRetainContext = function (test) {
+	var road = new roads.Road([new roads.Resource({
+		resources: {
+			'main': new roads.Resource({
+				methods: {
+					POST: function () {
+						return 'yeah';
+					}
+				},
+				context: 'first resource context'
+			})
+		}
+	}), new roads.Resource({
+		resources: {
+			'main': new roads.Resource({
+				methods: {
+					DELETE: function () {
+						return 'oh my';
+					},
+					PUT: function () {
+						return 'oh my';
+					}
+				},
+				context: 'second resource context'
+			})
+		}
+	}), new roads.Resource({
+		resources: {
+			'test': new roads.Resource({
+				methods: {
+					GET: function () {
+						return 'oh my';
+					}
+				}
+			})
+		}
+	})]);
+
+	road.use(function (method, url, body, headers, next) {
+		test.equal('first resource context', this.resource_context);
+		return next();
+	});
+
+	road.request('GET', '/main')
+	.then(function (response) {
+		test.fail();
+		test.done();
+	})
+	.catch(function (err) {
+		test.equal(err.code, 405);
+		test.deepEqual(err.message, ['POST', 'PUT', "DELETE"]);
 		test.done();
 	});
 };

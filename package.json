@@ -1,9 +1,6 @@
 {
   "name": "roads",
-  "version": "3.2.3",
-  "engines": {
-    "node": ">=0.11.13"
-  },
+  "version": "3.3.0",
   "author": {
     "name": "Aaron Hedges",
     "email": "aaron@dashron.com",
