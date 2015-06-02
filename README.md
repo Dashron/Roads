@@ -131,7 +131,7 @@ You must provide at least one root resource to the constructor. The request meth
  --------------|-------------------------------------|----------|-------------
  root_resource | [Resource](#roadsresource) or array | yes      | Used to generate the [response](#roadsresponse) for the root endpoint ( [protocol]://[host]/ ). Also determines the starting point for routing for the [request](#requeststring-method-string-url-dynamic-body-object-headers) method.
 
-Creates your Road object. You must provide a [Resource](#roadsresource) to the constructor. The provided resource becomes the root resource, and will be used for any requests to `/`.
+Creates your Road object. You must provide a [Resource](#roadsresource) or array of resources to the constructor. The provided resource becomes the root resource, and will be used for any requests to `/`. If the route isn't found in the first method, we will continue to the second root resource.
 
 ```node
 var roads = require('roads');
