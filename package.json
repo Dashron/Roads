@@ -24,6 +24,6 @@
     "nodeunit": "0.9.1"
   },
   "dependencies": {
-    "roads-coroutine": "1.0.1"
+    "roads-coroutine": "1.1.0"
   }
 }
