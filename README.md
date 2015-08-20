@@ -9,6 +9,9 @@ Roads is an abstraction around the HTTP request/response lifecycle. It's very si
 3. It can be used in the browser using [browserify ](http://browserify.org/) to build client side applications.
 4. It is built using promises and supports generator-based coroutines so that you never have to worry about callbacks.
 
+# Build Status
+![Build status](https://travis-ci.org/Dashron/roads.svg?branch=master)
+
 # Index
 
  - [Getting Started](#getting-started)
