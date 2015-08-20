@@ -20,6 +20,7 @@ Roads is an abstraction around the HTTP request/response lifecycle. It's very si
   - [use(*Function* fn)](#roadusefunction-fn)
   - [request(*string* method, *string* url, *dynamic* body, *Object* headers)](#roadrequeststring-method-string-url-dynamic-body-object-headers)
   - [server(*IncomingMessage* http_request, *ServerResponse* http_response)](#roadserverincomingmessage-http_request-serverresponse-http_response)
+  - [addResource(*Resource* resource)](#roadaddresourceresource-resource)
  - [Roads.Resource](#roadsresource)
   - [new Resource(*Object* definition)](#new-resourceobject-definition)
   - [URL Part (routing)](#url-part-routing)
