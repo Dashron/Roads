@@ -230,6 +230,10 @@ require('http').createServer(road.server.bind(road))
     });
 ```
 
+### Road.addResource(*Resource* resource)
+**Add another resource for the router.**
+
+The provided resource will be added to the list of resources checked whenever a request is made on this road.
 
 ## Roads.Resource
 

@@ -58,3 +58,31 @@ module.exports.testDoubleResourceCanBeCreated = function (test) {
 
 	test.done();
 };
+
+module.exports.testResourcesCanBeAddedLater = function (test) {
+	var road = new roads.Road([new roads.Resource({
+		resources: {
+			'main': new roads.Resource({
+				methods: {
+					GET: function () {
+						return 'yeah';
+					}
+				}
+			})
+		}
+	})]);
+
+	road.addResource(new roads.Resource({
+		resources: {
+			'main': new roads.Resource({
+				methods: {
+					POST: function () {
+						return 'oh my';
+					}
+				}
+			})
+		}
+	}));
+
+	test.done();
+};
