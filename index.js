@@ -4,6 +4,7 @@ module.exports.Promise = Promise;
 module.exports.Resource = require('./lib/resource');
 module.exports.Response = require('./lib/response');
 module.exports.Road = require('./lib/road');
+module.exports.Server = require('./lib/httpServer.js');
 
 module.exports.middleware = require('./lib/middleware');
 

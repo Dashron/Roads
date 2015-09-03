@@ -10,30 +10,21 @@ var unknownRepresentation = require('./representations/server/unknown');
 api.use(roads.middleware.killSlash);
 api.use(roads.middleware.cors(['http://localhost:8081']));
 
-api.use(function (method, url, body, headers, next) {
-	var context = this;
-	// find authenticated user
-	/*if (user) {
-		this.cur_user = user;
-	}*/
+var server = new roads.Server(api, function (err) {
+	var response = null;
+	console.log(err.stack);
+	
+	switch (err.code) {
+		case 404:
+			return new roads.Response(notFoundRepresentation(err), 404);
+		case 405:
+			return new roads.Response(notAllowedRepresentation(err), 405);
+		case 500:
+		default:
+			return new roads.Response(unknownRepresentation(err), 500);
+	}
+});
 
-	return next()
-		.catch(function (err) {
-			var response = null;
-
-			switch (err.code) {
-				case 404:
-					return new context.Response(notFoundRepresentation(err), 404);
-				case 405:
-					return new context.Response(notAllowedRepresentation(err), 405);
-				case 500:
-				default:
-					return new context.Response(unknownRepresentation(err), 500);
-			}
-		});
-});//*/
-
-require('http').createServer(api.server.bind(api))
-	.listen(8081, function () {
-		console.log('server has started');
-	});
+server.listen(8081, function () {
+	console.log('server has started');
+});
