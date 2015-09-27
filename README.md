@@ -329,14 +329,57 @@ var root = new Resource({
 
 #### Resource Method
 
-Each ```method : function``` pair in the methods section of the resource definition is called a "[resource method](#resource-method)". [Road.request](#roadrequeststring-method-string-url-dynamic-body-object-headers) will first locate the proper resource from the request path, and then the [resource method](#resource-method) from the request method. The resource method accepts three parameters.
+The methods section of the resource definition should be an object which contains many key value pairs. The keys must be one of the HTTP methods (GET, POST, PUT, PATCH, DELETE, OPTIONS, etc). The value for these keys must be an object, a function, or a generator. These are called "[resource methods](#resource-method)". Resource methods are used by [Road.request](#roadrequeststring-method-string-url-dynamic-body-object-headers) when trying to run your program. First `request` finds the resource from the request path, and then the [resource method](#resource-method) from the request method.  
+
+##### Resource Method Objects
+
+This object will define the function executed for the request method under the `fn` key. This function will be provided three parameters. 
 
 name     | type                               | description
  --------|------------------------------------|---------------
  url     | string                             | The URL of the request. Is parsed with the standard url module.
  body    | object                             | The request body. If the `Content-Type` header is `application/json` the body will be parsed into an object.
  headers | object                             | The request headers
+ 
 
+```node
+var road = new Road(new Resource({
+    methods : {
+        GET : {
+		fn: function (url, body, headers) {
+	            return 'Welcome!';
+        	}
+	}
+    }
+}));
+```
+
+All additional information will available to the request context. You can find the context information through the `method_context` key.
+
+```js
+var road = new Road(new Resource({
+    methods: {
+        GET: {
+            fn: function (url, body, headers) {
+
+            },
+            require_scopes: ['public', 'private']
+        }
+    }
+}));
+
+road.use(function (method, url, body, headers, next) {
+    if (this.method_context.require_scopes) {
+        if (!this.token.hasScopes(this.method_context.require_scopes)) {
+            throw new HttpError('This access token does not have permission to use this action');
+        }
+    }
+
+    return next(); 
+});
+```
+##### Resource Method Functions
+If you provide a function, it's simply a shortcut to the `fn` property of the resource method object. This shortcut is provided for clarity, and less typing. Note that if you use this shortcut, the `method_context` will be `undefined`.
 
 ```node
 var road = new Road(new Resource({
@@ -346,9 +389,8 @@ var road = new Road(new Resource({
         }
     }
 }));
-```
 
-##### Generators
+##### Resource Method Generators
 
 If you provide a generator function as your resource method, we will turn it into a coroutine. Coroutines mimic ES7 async functions by letting you yield promises. It lets you drastically improve the readability of your code.
 

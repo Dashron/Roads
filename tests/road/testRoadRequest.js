@@ -233,12 +233,28 @@ exports.testMissingMethodRequest = function (test) {
  * Ensure that we get proper errors for invalid HTTP methods, and the middleware properly includes the resource context
  */
 exports.testMissingMethodRequestWithHandler = function (test) {
-	var resource = createResource(['GET']);
+	var resource = new roads.Resource({
+		methods : {
+			GET : {
+				fn: function () {
+
+				},
+				hello: "World"
+			}
+		},
+		context: 'I am a context'
+	});
 
 	var road = new roads.Road(resource);
 
 	road.use(function (method, url, body, headers, next) {
 		test.equal("I am a context", this.resource_context);
+		if (method === 'GET') {
+			test.equal("World", this.options.hello);
+		} else {
+			test.equal(undefined, this.options);
+		}
+
 		return next();
 	});
 

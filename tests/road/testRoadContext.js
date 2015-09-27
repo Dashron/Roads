@@ -160,3 +160,62 @@ exports.testRoadResourceContextExists = function (test) {
 			test.done();
 		});
 };
+
+exports.testRoadMethodContextExists = function (test) {
+	var road = new roads.Road(new roads.Resource({
+		methods : {
+			GET : {
+				fn: function (url, body, headers) {
+					return this.method_context.hello;
+				},
+				hello: "world"
+			}
+		}
+	}));
+
+	road.request('GET', '/')
+		.then(function (val) {
+			test.deepEqual(val, {
+				status: 200,
+				body: "world",
+				headers: {}
+			});
+			test.done();
+		});
+};
+
+exports.testDifferentRoadMethodContextUndefined = function (test) {
+	var road = new roads.Road(new roads.Resource({
+		methods : {
+			GET : {
+				fn: function (url, body, headers) {
+					return this.method_context.hello;
+				},
+				hello: "world"
+			},
+			POST : function (url, body, headers) {
+				return "Goodbye";
+			}
+		}
+	}));
+
+	road.use(function (method, url, body, headers, next) {
+		if (method === 'GET') {
+			test.equal("world", this.method_context.hello);
+		} else {
+			test.equal(undefined, this.method_context);
+		}
+
+		return next();
+	});
+
+	road.request('POST', '/')
+		.then(function (val) {
+			test.deepEqual(val, {
+				status: 200,
+				body: "Goodbye",
+				headers: {}
+			});
+			test.done();
+		});
+};

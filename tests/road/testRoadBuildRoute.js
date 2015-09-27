@@ -208,3 +208,21 @@ exports.testFailedlocateResource = function (test) {
 	test.equal(null, road._locateResource(resource, url_module.parse('/blah')));
 	test.done();
 };
+
+/**
+ * [testInvalidRouteThrowsError description]
+ * @param  {[type]} test [description]
+ * @return {[type]}      [description]
+ */
+exports.testInvalidRouteThrowsError = function (test) {
+	var road = new roads.Road(new roads.Resource({
+		methods: {
+			GET: "fail fail fail!"
+		}
+	}));
+
+	test.throws(function () {
+		road._buildRoute('GET', url_module.parse('/'), {'another':'banana'}, {'test':'what'});
+	}, "");
+	test.done();
+};
