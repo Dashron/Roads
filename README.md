@@ -349,7 +349,7 @@ var road = new Road(new Resource({
 		fn: function (url, body, headers) {
 	            return 'Welcome!';
         	}
-	}
+        }
     }
 }));
 ```
