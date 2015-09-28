@@ -82,7 +82,8 @@ Building a project with roads is very straightforward.
 	});
 	```
 
-3. Each [resource method](#resource-method) from step #2 should return your response. If a promise, it will be evaluated. If not a [response](#roadsresponse) object, it will be automatically wrapped.
+3. Each [resource method](#resource-method) from step #2 should return your response. If you return a promise, it will be resolved, and the response/errors will be handled appropriately. If you do not return (or your promise does not resolve) a [response](#roadsresponse) object it will be automatically wrapped in a response object.
+
 	```node
 	var resource = new roads.Resource({
 	    // Incomplete. See step 1.
