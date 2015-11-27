@@ -149,7 +149,7 @@ var road = new roads.Road(root_resource);
 ### Road.use(*Function* fn)
 **Add one or many custom functions to be executed along with every request.**
 
-The functions added will be executed in the order they were added. Each handler must execute the "next" parameter if it wants to continue executing the chain.
+The functions added will be executed in the order they were added. Each handler must execute the "next" parameter if it wants to continue executing the chain. `use` will return `this`, so you can chain use calls together.
 
  name | type                                                                  | required | description
  -----|-----------------------------------------------------------------------|----------|---------------

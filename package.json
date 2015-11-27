@@ -1,6 +1,6 @@
 {
   "name": "roads",
-  "version": "3.5.0",
+  "version": "3.6.0",
   "author": {
     "name": "Aaron Hedges",
     "email": "aaron@dashron.com",
@@ -25,5 +25,6 @@
   },
   "dependencies": {
     "roads-coroutine": "1.1.0"
-  }
+  },
+  "license": "MIT"
 }
