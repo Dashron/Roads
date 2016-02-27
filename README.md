@@ -1,13 +1,15 @@
 # The Roads.js HTTP abstraction
 
-Roads is an abstraction around the HTTP request/response lifecycle. It's very similar to a standard MVC framework plus router.
+Roads is a web framework build on Generators. It's similar to Koa.js, but early design decisions allow Roads to be used isomorphicly in the browser, and in the server. 
 
 # Why should I use Roads?
 
-1. It helps build an organized, resource oriented website or API through a nested routing structure.
-2. It can be bound to an HTTP server, or used like a standard javascript object.
+1. It helps build an organized, resource oriented website or API thanks to a clean routing structure.
+2. It works with the built in node HTTP server, or can be used with common webservers like Koa.js and Express.js
 3. It can be used in the browser using [browserify ](http://browserify.org/) to build client side applications.
 4. It is built using promises and supports generator-based coroutines so that you never have to worry about callbacks.
+5. It exposes the entire system via a simple, api library-like interface, allowing you to interact with it outside of the web environment. This is great for writing tests, working with web sockets, or writing API first websites. 
+
 
 # Build Status
 ![Build status](https://travis-ci.org/Dashron/roads.svg?branch=master)
@@ -19,7 +21,6 @@ Roads is an abstraction around the HTTP request/response lifecycle. It's very si
   - [new Road(*Resource|array* root_resource)](#new-roadresourcearray-root_resource)
   - [use(*Function* fn)](#roadusefunction-fn)
   - [request(*string* method, *string* url, *dynamic* body, *Object* headers)](#roadrequeststring-method-string-url-dynamic-body-object-headers)
-  - [server(*IncomingMessage* http_request, *ServerResponse* http_response)](#roadserverincomingmessage-http_request-serverresponse-http_response)
   - [addResource(*Resource* resource)](#roadaddresourceresource-resource)
  - [Roads.Resource](#roadsresource)
   - [new Resource(*Object* definition)](#new-resourceobject-definition)
@@ -48,9 +49,9 @@ Building a project with roads is very straightforward.
 	var resource = new roads.Resource({
 	    // Define sub-resources.
 	    resources : {
-	        // This attaches the resource at ./users to the url "/users"
+	        // This assumes the file located at `./users` exposes another `Resource` object. That resource will be bound to the route `/users`.
 	        "users" : require('./users'),
-	        // This attaches the resource at ./posts to the url "/posts"
+	        // This assumes the file located at `./posts` exposes another `Resource` object. That resource will be bound to the route `/posts`.
 	        "posts" : require('./posts')
 	    },
 	    // Incomplete. See step 2.
@@ -81,8 +82,9 @@ Building a project with roads is very straightforward.
 	    }
 	});
 	```
+**note:** Resource methods are not required. If you exclude the methods list, the router will still search through all sub-resources.
 
-3. Each [resource method](#resource-method) from step #2 should return your response. If you return a promise, it will be resolved, and the response/errors will be handled appropriately. If you do not return (or your promise does not resolve) a [response](#roadsresponse) object it will be automatically wrapped in a response object.
+3. Each [resource method](#resource-method) from step #2 should return your response. If you return a promise it will be resolved and the response/errors will be handled appropriately. If you do not return (or your promise does not resolve) a [response](#roadsresponse) object it will be automatically wrapped in a response object.
 
 	```node
 	var resource = new roads.Resource({
@@ -100,7 +102,22 @@ Building a project with roads is very straightforward.
 	});
 	```
 
-4. Manually make a request. This will locate and execute the proper resource and resource method. You can also bind it to the standard HTTP server using the `server` method.
+4. Now you want to run your code. There are two options in this library, and [Roads-Intersection](https://github.com/dashron/Roads-Intersection) provides more (such as Koa.js support).
+
+ - You can tie the road to node's standard HTTP Server. This will automatically route any HTTP requests into your road.
+        ```node
+        // Tie to node's HTTP server
+        var roads = require('roads');
+
+        var road = ...; // See code above for road construction
+        var server = new roads.Server(road, function (error) {
+            console.log('roads encountered an error', error);
+        });
+
+        server.listen(8080, 'localhost');
+        ```
+
+ - You can Manually execute a resource method. This will dig into the resources assigned to the road, and execute the proper resource method.
 
 	```node
 	// Call directly
@@ -109,25 +126,15 @@ Building a project with roads is very straightforward.
 	        console.log(response);
 	    });
 	```
-	
-	```node
-	// Bind to an HTTP server
-	require('http').createServer(road.server.bind(road))
-	    .listen(8080, function () {
-	        console.log('server has started');
-	    });
-	```
 
-Once all of these steps are complete, you should be able to access your roads through your script, or the bound http server. Continue reading the docs below for more information on [error handling](#roadusefunction-fn), [URL parameters](#url-part) and more!
+
+Now that you can use your roads server, continue reading the docs below for more information on [error handling](#roadusefunction-fn), [URL parameters](#url-part) and more!
 
 
 
 ## Roads.Road
 
 A Road is a container that holds a hierarchy of [Resource](#roadsresource) objects. It exposes a [request](#requeststring-method-string-url-dynamic-body-object-headers) method which allows you to interact directly with the resources.
-
-You must provide at least one root resource to the constructor. The request method will check each resource in array order for a matching route. The root resources will handle all requests to the root (`/`) endpoint. Any additional routes will be referenced as sub-resources of the root endpoint.
-
 
 ### new Road(*Resource|array* root_resource)
 **Create a Road.**
@@ -136,20 +143,28 @@ You must provide at least one root resource to the constructor. The request meth
  --------------|-------------------------------------|----------|-------------
  root_resource | [Resource](#roadsresource) or array | yes      | Used to generate the [response](#roadsresponse) for the root endpoint ( [protocol]://[host]/ ). Also determines the starting point for routing for the [request](#requeststring-method-string-url-dynamic-body-object-headers) method.
 
-Creates your Road object. You must provide a [Resource](#roadsresource) or array of resources to the constructor. The provided resource becomes the root resource, and will be used for any requests to `/`. If the route isn't found in the first method, we will continue to the second root resource.
+Creates your Road object. You must provide at least one root [Resource](#roadsresource) to the constructor. These [resources](#roadsresource) will be mounted to the root (`/`) endpoint. The [request](#requeststring-method-string-url-dynamic-body-object-headers) method will search these [resources](#roadsresource) for a matching route. If you provide an array of [resources](#roadsresource) is, it will search through them in array order. 
+
 
 ```node
 var roads = require('roads');
 var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at [Resource](#roadsresource) for information about the Resource constructor.
+// Create a road with a single resource
 var road = new roads.Road(root_resource);
 ```
 
-
+```node
+var roads = require('roads');
+var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at [Resource](#roadsresource) for information about the Resource constructor.
+var root_resource2 = new roads.Resource(...); 
+// Create a road with multiple resources. If the route is found in root_resource, request will never search root_resource2
+var road = new roads.Road([root_resource, root_resource2]);
+```
 
 ### Road.use(*Function* fn)
-**Add one or many custom functions to be executed along with every request.**
+**Add a custom function that will be executed before every request.**
 
-The functions added will be executed in the order they were added. Each handler must execute the "next" parameter if it wants to continue executing the chain. `use` will return `this`, so you can chain use calls together.
+This function can be called one or more times. Each time it is called, the provided function will be added to a queue that is executed before every request. The execution order will match the order the middleware functions were added to the road. Each middleware function can choose whether or not it wants to progress to the following middleware function, and ultimately the final [resource method](#resource-method).
 
  name | type                                                                  | required | description
  -----|-----------------------------------------------------------------------|----------|---------------
@@ -168,10 +183,11 @@ name     | type                               | description
  headers | object                             | The headers that were provided to the request
  next    | function                           | The next step of the handler chain. If there are no more custom handlers assigned, next will resolve to the [resource method](#resource-method) that the router located. This method will always return a promise.
 
-If the callback does not return a [response](#roadsresponse) object, it will be wrapped in a [response](#roadsresponse) object with the default status code of 200.
+If the callback does not return a [response](#roadsresponse) object, the return value will become the body of a new [response](#roadsresponse) object with the default status code of 200.
 
 ```node
 // Example of a request handler that kills trailing slashes (This is provided for you in the middleware!)
+// The main logic of this function will be executed before the resource method, because it all happens before the middleware calls next()
 road.use(function (method, url, body, headers, next) {
 	// kill trailing slash as long as we aren't at the root level
     if (url.path != '/' && url.path[url.path.length - 1] === '/') {
@@ -184,6 +200,7 @@ road.use(function (method, url, body, headers, next) {
 });
 
 // Example of a request handler that catches errors and returns Response objects
+// The main logic of this function will execute after the resource method,  because it all happens after the middleware calls next()
 road.use(function(method, url, body, headers, next) {
     // execute the actual resource method, and return the response
     return next()
@@ -205,10 +222,17 @@ road.use(function(method, url, body, headers, next) {
 
 
 ### Road.request(*string* method, *string* url, *dynamic* body, *Object* headers)
-**Execute the resource method associated with the request parameters.**
+**Locate and execute the resource method associated with the request parameters.**
 
 
 This function will locate the appropriate [resource method](#resource-method) for the provided HTTP Method and URL, execute it and return a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A). The thenable will always resolve to a [Response](#roadsresponse) object.
+
+If no [resource](#resource) is found for the requested url, the [thenable](http://wiki.commonjs.org/wiki/Promises/A) will surface an [HttpError](#roadshttperror) with a 404 status code.
+
+If a [resource](#resource) is found for the requested url, but no [resource method](#resource-method), the [thenable](http://wiki.commonjs.org/wiki/Promises/A) will surface an [HttpError](#roadshttperror) with a 405 status code.
+
+If the system encounters an unexpected error, it will try to throw an [HttpError](#roadshttperror) with a 500 status code, but it's always worth checking the error type just in case.
+
 
 ```node
 var promise = road.request('GET', '/users/dashron');
@@ -222,27 +246,14 @@ promise.catch(function (error) {
 });
 ```
 
-
-### Road.server(*IncomingMessage* http_request, *ServerResponse* http_response)
-**A function to facilitate binding the road to http.createServer()**
-
-Helper function to attach your road directly into http.createServer.
-
-```node
-require('http').createServer(road.server.bind(road))
-    .listen(8081, function () {
-        console.log('server has started');
-    });
-```
-
 ### Road.addResource(*Resource* resource)
 **Add another resource for the router.**
 
-The provided resource will be added to the list of resources checked whenever a request is made on this road.
+This resource will be added to the end of the array of resources passed in through the [constructor](#new-roadresourcearray-root_resource). Read up on more details in the [constructor's docs](#new-roadresourcearray-root_resource).
 
 ## Roads.Resource
 
-Each resource represents a single endpoint. The object provided to the constructor describes how it can be used by the road.
+Each resource represents a single endpoint. It can contain a list of sub-resources (to help build a structured url path), or [resource methods](#resource-method) (to handle each HTTP method for this endpoint).
 
 
 ### new Resource(*Object* definition)
@@ -279,7 +290,7 @@ module.exports.many = new Resource({
 
 #### URL Part (routing)
 
-All URL routing is defined through the resource definition, and through sub resources. The root resource represents a URL without any path ([protocol]://[host]/). This root resource must define additional resources as sub resources, which will branch out after the root resource.
+All URL routing is defined through the resource definition, and through sub-resources. The root resource represents a URL without any path ([protocol]://[host]/). This root resource must define additional resources as sub-resources, which will branch out after the root resource.
 
 Part       | Example   | Example values | Description
 -----------|-----------|----------------|--------------
@@ -548,6 +559,24 @@ name        | type                               | description
 throw new Roads.HttpError('Page not found', 404);
 ```
 
+### Constants
+
+These constants make it easier to keep track of some common error status codes. For more information on what they mean, check out (httpstatus.es)[http://httpstatus.es]
+
+```
+HttpError.invalid_request = 400;
+HttpError.unauthorized = 401;
+HttpError.forbidden = 403;
+HttpError.not_found = 404;
+HttpError.method_not_allowed = 405;
+HttpError.not_acceptable = 406;
+HttpError.conflict = 409;
+HttpError.gone = 410;
+HttpError.unprocessable_entity = 422;
+HttpError.too_many_requests = 429;
+HttpError.internal_server_error = 500;
+```
+
 ## Roads.middleware
 
 ### killSlash()
@@ -577,4 +606,4 @@ road.use(roads.middleware.cors(['http://localhost:8080'], ['authorization']));
 It's possible to design your API responses to achieve significant performance gains. [Roads Fields Filter](https://github.com/Dashron/roads-fieldsfilter) helps facilitate that feature.
 
 ## Next Steps
- - Mention roads-client from this doc, and update it to retain api compatibility with 3.0
+ - Mention roads-client from this doc
