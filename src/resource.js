@@ -1,10 +1,10 @@
 "use strict";
-
 /**
 * resource.js
 * Copyright(c) 2016 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
  */
+
 const VALID_METHODS = ['GET','HEAD','POST','PUT','DELETE','OPTIONS', 'PATCH'];
 
 /**

@@ -1,4 +1,9 @@
 "use strict";
+/**
+* client.js
+* Copyright(c) 2016 Aaron Hedges <aaron@dashron.com>
+* MIT Licensed
+ */
 
 var roads = require('../../index');
 var road = new roads.Road(require('./resources/root').root);

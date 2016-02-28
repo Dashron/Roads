@@ -1,7 +1,7 @@
 "use strict";
 
-var roads = require('../index.js');
-var url_module = require('url');
+const roads = require('../../index.js');
+const url_module = require('url');
 
 /**
  * Test that a request with slash fixing on a request without a trailing slash passes through unmodified

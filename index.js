@@ -1,37 +1,29 @@
 "use strict";
+/**
+* index.js
+* Copyright(c) 2016 Aaron Hedges <aaron@dashron.com>
+* MIT Licensed
+ */
 
 module.exports.Promise = Promise;
-module.exports.Resource = require('./lib/resource');
-module.exports.Response = require('./lib/response');
-module.exports.Road = require('./lib/road');
-module.exports.Server = require('./lib/httpServer.js');
+module.exports.Resource = require('./src/resource.js');
+module.exports.Response = require('./src/response.js');
+module.exports.Road = require('./src/road.js');
+module.exports.Server = require('./src/httpServer.js');
 
-module.exports.middleware = require('./lib/middleware');
-
-module.exports.HttpError = class HttpError extends Error {
-	constructor(message, code) {
-		super();
-		this.message = message;
-		this.code = code;
-
-		if (Error.captureStackTrace) {
-			Error.captureStackTrace(this, HttpError);
-		} else {
-			// FF doesn't support captureStackTrace
-			this.stack = (new Error()).stack;
-		}
-	}
+// Expose all integration helpers
+module.exports.integrations = {
+	koa: require('./src/integrations/koa.js')
 }
 
-module.exports.HttpError.invalid_request = 400;
-module.exports.HttpError.unauthorized = 401;
-module.exports.HttpError.forbidden = 403;
-module.exports.HttpError.not_found = 404;
-module.exports.HttpError.method_not_allowed = 405;
-module.exports.HttpError.not_acceptable = 406;
-module.exports.HttpError.conflict = 409;
-module.exports.HttpError.gone = 410;
-module.exports.HttpError.unprocessable_entity = 422;
-module.exports.HttpError.too_many_requests = 429;
+// Expose all middleware functions
+module.exports.middleware = {
+	applyToContext: require('./src/middleware/applyToContext.js'),
+	cors: require('./src/middleware/cors.js'),
+	cookie: require('./src/middleware/cookie.js'),
+	killSlash: require('./src/middleware/killSlash.js'),
+	reroute: require('./src/middleware/reroute.js')
+};
 
-module.exports.HttpError.internal_server_error = 500;
+// Expose a useful http error class
+module.exports.HttpError = require('./src/httperror.js');

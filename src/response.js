@@ -1,5 +1,4 @@
 "use strict";
-
 /**
 * response.js
 * Copyright(c) 2016 Aaron Hedges <aaron@dashron.com>

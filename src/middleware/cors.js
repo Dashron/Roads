@@ -1,29 +1,10 @@
 "use strict";
-const roads = require('../index.js');
-
 /**
-* middleware.js
+* cors.js
 * Copyright(c) 2016 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
  */
-
-/**
- * Any requests with trailing slashes will immediately return a Response object redirecting to a non-trailing-slash path
- */
-module.exports.killSlash = function (method, url, body, headers, next) {
-	var _self = this;
-
-	// kill trailing slash as long as we aren't at the root level
-	if (url.path !== '/' && url.path[url.path.length - 1] === '/') {
-		return new Promise((resolve) => {
-			resolve (new _self.Response(null, 302, {
-				location : url.path.substring(0, url.path.length - 1)
-			}));
-		});
-	}
-
-	return next();
-};
+const roads = require('../../index.js');
 
 /**
  * Helper function used internally to manage the origin headers
@@ -50,7 +31,7 @@ function locateOrigin(origin, allowed_origins) {
  * @param  Array allow_headers (optional) A white list of headers that the client is allowed to send in their requests
  * @return Function The middleware to bind to your road
  */
-module.exports.cors = function (allow_origins, allow_headers) {
+module.exports = function (allow_origins, allow_headers) {
 	if (!allow_origins || (allow_origins !== '*' && !Array.isArray(allow_origins))) {
 		throw new Error('You must define the origins allowed by these cors requests as "*" or an array of valid origins');
 	}
