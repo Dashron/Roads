@@ -1,4 +1,9 @@
 "use strict";
+/**
+* users.js
+* Copyright(c) 2016 Aaron Hedges <aaron@dashron.com>
+* MIT Licensed
+ */
 
 var users = [{
 	id : 1,

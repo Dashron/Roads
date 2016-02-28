@@ -1,4 +1,9 @@
 "use strict";
+/**
+* server.js
+* Copyright(c) 2016 Aaron Hedges <aaron@dashron.com>
+* MIT Licensed
+ */
 
 var roads = require(__dirname + '/../../index');
 var api = new roads.Road(require('./resources/root').many);

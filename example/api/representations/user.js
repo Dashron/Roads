@@ -1,4 +1,9 @@
 "use strict";
+/**
+* user.js
+* Copyright(c) 2016 Aaron Hedges <aaron@dashron.com>
+* MIT Licensed
+ */
 
 module.exports = function (user) {
 	var representation = {};
