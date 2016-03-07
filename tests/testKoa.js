@@ -244,20 +244,3 @@ exports.testRoadsCookiesAreAppliedToKoa = function (test) {
 		test.done();
 	});
 };
-
-
-// Test that a response with cookies has cookies set to the koa context
-
-/*
-// Extract the cookies from the response object (getCookies is applied in the cookie.roads middleware)
-if (response.getCookies) {
-	let cookies = response.getCookies();
-
-	// Pass all the cookies from the response object up to koa
-	if (cookies) {
-		for (let i = 0; i < cookies.length; i++) {
-			this.cookies.set.apply(this.cookies, cookies[i]);
-		}
-	}
-}
-*/
