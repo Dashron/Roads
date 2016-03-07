@@ -29,14 +29,14 @@ module.exports = function (road) {
 		// Execute the route
 		var response = yield road.request(this.method, this.originalUrl, this.request.body, this.headers);			
 
-		// Extract the cookies from the response object (getCookies is applied in the cookie.roads middleware)
+		// Extract the cookies from the response object (getCookies is applied in the cookie middleware)
 		if (response.getCookies) {
 			let cookies = response.getCookies();
 
 			// Pass all the cookies from the response object up to koa
 			if (cookies) {
-				for (let i = 0; i < cookies.length; i++) {
-					this.cookies.set.apply(this.cookies, cookies[i]);
+				for (let name in cookies) {
+					this.cookies.set(name, cookies[name]['value'], cookies[name]);
 				}
 			}
 		}

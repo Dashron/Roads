@@ -45,20 +45,16 @@ module.exports = function () {
 			}
 
 			this._cookie_values[name] = {
-				value: value,
-				options: options
+				value: value
 			};
+
+			if (options) {
+				this._cookie_values[name].options = options;
+			}
 		};
 
-		// Get all the cookies set to the response object
-		this.Response.prototype.getCookieHeader = function () {
-			var header = '';
-
-			for (let i in this._cookie_values) {
-				header += cookie.serialize(i, this._cookie_values[i]['value'], this._cookie_values[i]['options']) + ';';
-			}
-
-			return header;
+		this.Response.prototype.getCookies = function () {
+			return this._cookie_values;
 		};
 
 		return next();

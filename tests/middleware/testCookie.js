@@ -50,8 +50,15 @@ exports.testCookieMiddlewareCanManipulateResponseCookies = function (test) {
 	resp.setCookie('foo', 'bar');
 	resp.setCookie('abc', 'def');
 
-	test.equal(typeof(resp.getCookieHeader), 'function');
-	test.equal(resp.getCookieHeader(), 'foo=bar;abc=def;');
+	test.equal(typeof(resp.getCookies), 'function');
+	test.deepEqual(resp.getCookies(), {
+		foo: {
+			'value': 'bar'
+		},
+		abc: {
+			'value': 'def'
+		}
+	});
 
 	test.done();
 };
