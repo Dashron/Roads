@@ -209,7 +209,8 @@ exports.testRoadsCookiesAreAppliedToKoa = function (test) {
 	var ctx = {
 		Response: Response
 	};
-	
+	let app = koa();	
+
 	// apply cookie middleware to context
 	cookie().call(ctx, 'get', '/', '', {}, function () {});
 
@@ -224,10 +225,7 @@ exports.testRoadsCookiesAreAppliedToKoa = function (test) {
 		});
 	}, ctx);
 
-	let app = koa();
-
 	app.use(koaIntegration(road));
-
 	let server = app.listen(KOA_PORT);
 
 	GET('/').then(function (response) {
@@ -236,6 +234,58 @@ exports.testRoadsCookiesAreAppliedToKoa = function (test) {
 			'cookie2=success2; path=/; httponly'
 		]);
 
+		server.close();
+		test.done();
+	} , function (err) {
+		server.close();
+		test.fail(err);
+		test.done();
+	});
+};
+
+/**
+ * Ensure that when roads fails via error, koa throws a 500
+ */
+exports.testRoadsErrorFailKoa = function (test) {
+	let app = koa();
+	let road = buildMockRoad(function () {
+		return new Promise((accept, reject) => {
+			reject(res);
+		});
+	});
+
+	
+	app.use(koaIntegration(road));
+	let server = app.listen(KOA_PORT);
+
+	GET('/').then(function (response) {
+		test.equal(response.status, 500);
+		server.close();
+		test.done();
+	} , function (err) {
+		server.close();
+		test.fail(err);
+		test.done();
+	});
+};
+
+/**
+ * Ensure that when roads fails via rejection, koa throws a 500
+ */
+exports.testRoadsPromiseRejectionsFailKoa = function (test) {
+	let app = koa();
+	let road = buildMockRoad(function () {
+		return new Promise((accept, reject) => {
+			reject(res);
+		});
+	});
+
+	
+	app.use(koaIntegration(road));
+	let server = app.listen(KOA_PORT);
+
+	GET('/').then(function (response) {
+		test.equal(response.status, 500);
 		server.close();
 		test.done();
 	} , function (err) {
