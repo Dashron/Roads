@@ -5,7 +5,7 @@ Roads is a web framework build on Generators. It's similar to Koa.js, but early 
 # Why should I use Roads?
 
 1. It helps build an organized, resource oriented website or API thanks to a clean routing structure.
-2. It works with the built in node HTTP server, or can be used with common webservers like Koa.js and Express.js
+2. It works with the built in node HTTP server, or can be used as a router for common webservers like Koa.js and Express.js
 3. It can be used in the browser using [browserify ](http://browserify.org/) to build client side applications.
 4. It is built using promises and supports generator-based coroutines so that you never have to worry about callbacks.
 5. It exposes the entire system via a simple, api library-like interface, allowing you to interact with it outside of the web environment. This is great for writing tests, working with web sockets, or writing API first websites. 
@@ -117,7 +117,7 @@ Building a project with roads is very straightforward.
         server.listen(8080);
         ```
 
- - You can use the road as your Koa.js server's router, using the provided middleware.
+ - You can use the road as a router for your Koa.js server.
         ```node
         // Tie to node's HTTP server
         const roads = require('roads');

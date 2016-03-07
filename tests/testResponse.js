@@ -1,7 +1,6 @@
 "use strict";
 
 var roads = require('../index');
-var url_module = require('url');
 
 /**
  * Test that getData with a promise is still the original promise

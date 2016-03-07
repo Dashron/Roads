@@ -36,7 +36,9 @@ module.exports = function (road) {
 			// Pass all the cookies from the response object up to koa
 			if (cookies) {
 				for (let name in cookies) {
-					this.cookies.set(name, cookies[name]['value'], cookies[name]);
+					if (cookies.hasOwnProperty(name)) {
+						this.cookies.set(name, cookies[name].value, cookies[name]);
+					}
 				}
 			}
 		}

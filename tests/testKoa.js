@@ -95,7 +95,7 @@ exports.testKoaUpdateToBodyWontRoute = function (test) {
 		test.fail(err);
 		test.done();
 	});
-}
+};
 
 /**
  * Ensure that if koa is already planning on sending a response status (besides 404), roads won't intercept it.
@@ -121,7 +121,7 @@ exports.testKoaUpdateToStatusCodeWontRoute = function (test) {
 		test.fail(err);
 		test.done();
 	});
-}
+};
 
 /**
  * Ensure that status codes sent out of roads are properly applied to the koa response
