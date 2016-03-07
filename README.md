@@ -102,19 +102,32 @@ Building a project with roads is very straightforward.
 	});
 	```
 
-4. Now you want to run your code. There are two options in this library, and [Roads-Intersection](https://github.com/dashron/Roads-Intersection) provides more (such as Koa.js support).
+4. Now you want to run your code. There are three options in this library.
 
  - You can tie the road to node's standard HTTP Server. This will automatically route any HTTP requests into your road.
         ```node
         // Tie to node's HTTP server
-        var roads = require('roads');
+        const roads = require('roads');
 
         var road = ...; // See code above for road construction
         var server = new roads.Server(road, function (error) {
             console.log('roads encountered an error', error);
         });
 
-        server.listen(8080, 'localhost');
+        server.listen(8080);
+        ```
+
+ - You can use the road as your Koa.js server's router, using the provided middleware.
+        ```node
+        // Tie to node's HTTP server
+        const roads = require('roads');
+        const koa = require('koa');
+
+        var road = ...; // See code above for road construction
+        var app = koa();
+        app.use(roads.integrations.koa(road));
+        app.listen(8080);
+        
         ```
 
  - You can Manually execute a resource method. This will dig into the resources assigned to the road, and execute the proper resource method.
@@ -147,14 +160,14 @@ Creates your Road object. You must provide at least one root [Resource](#roadsre
 
 
 ```node
-var roads = require('roads');
+const roads = require('roads');
 var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at [Resource](#roadsresource) for information about the Resource constructor.
 // Create a road with a single resource
 var road = new roads.Road(root_resource);
 ```
 
 ```node
-var roads = require('roads');
+const roads = require('roads');
 var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at [Resource](#roadsresource) for information about the Resource constructor.
 var root_resource2 = new roads.Resource(...); 
 // Create a road with multiple resources. If the route is found in root_resource, request will never search root_resource2
