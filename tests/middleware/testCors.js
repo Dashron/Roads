@@ -3,7 +3,7 @@
 const roads = require('../../index.js');
 const url_module = require('url');
 
-function makeCorsCall (allowed_origins, method, allowed_methods, allowed_headers, provide_origin) {
+function makeCorsCall (allowed_origins, method, allowed_methods, allowed_headers, provide_origin, throw_error) {
 	var url = url_module.parse('/');
 	var body = {};
 	var contents = {headers: {}};
@@ -11,6 +11,7 @@ function makeCorsCall (allowed_origins, method, allowed_methods, allowed_headers
 		origin : 'localhost:8080',
 		'access-control-request-method' : method === 'OPTIONS' ? 'GET' : method
 	};
+	var next = null;
 
 	if (!provide_origin) {
 		delete headers.origin;
@@ -21,11 +22,19 @@ function makeCorsCall (allowed_origins, method, allowed_methods, allowed_headers
 		Response : roads.Response
 	};
 
-	var next = function () {
-		return new Promise(function (accept, reject) {
-			accept(contents);
-		});
-	};
+	if (throw_error) {
+		next = function () {
+			return new Promise(function (accept, reject) {
+				reject(new roads.HttpError('Forbidden', roads.HttpError.forbidden));
+			});
+		};
+	} else {
+		next = function () {
+			return new Promise(function (accept, reject) {
+				accept(contents);
+			});
+		};
+	}
 
 	return roads.middleware.cors(allowed_origins, allowed_headers).call(context, method, url, body, headers, next);
 };
@@ -197,6 +206,34 @@ exports.testStandardWithoutOriginIsntCors = function (test) {
 	.catch(function (err) {
 		console.log(err.stack);
 		test.fail();
+		test.done();
+	});
+};
+
+
+/**
+ * Ensure a normal request works
+ */
+exports.testStandardRequestWithErrorThrownStillSendsCorsHeaders = function (test) {
+	var origin = '*';
+	var method = 'GET';
+	var allowed_methods = ['GET'];
+	var allowed_headers = [];
+
+	makeCorsCall(origin, method, allowed_methods, allowed_headers, true, true)
+	.then(function (response) {
+		console.log(response);
+		test.fail();
+		test.done();
+	})
+	.catch(function (err) {
+		test.deepEqual(err.headers, {
+			'Access-Control-Allow-Credentials' : true,
+			'Access-Control-Allow-Origin' : '*'
+		});
+
+		test.equal(err.code, 403);
+		test.equal(err.message, 'Forbidden');
 		test.done();
 	});
 };

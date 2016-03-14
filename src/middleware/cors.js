@@ -77,7 +77,6 @@ module.exports = function (allow_origins, allow_headers) {
 					}
 
 					// todo: find a good way to properly validate 'access-control-request-headers'
-
 					return new Promise((resolve) => {
 						resolve(new _self.Response(null, 200, {
 							'Access-Control-Allow-Methods' : _self.http_methods.join(', '),
@@ -91,6 +90,7 @@ module.exports = function (allow_origins, allow_headers) {
 		}
 
 		return next()
+		// All responses need to include some sort of header
 		.then((response) => {
 			if (!headers.origin) {
 				return response;
@@ -103,6 +103,24 @@ module.exports = function (allow_origins, allow_headers) {
 			response.headers['Access-Control-Allow-Origin'] = locateOrigin(headers.origin, allow_origins, cors_methods);
 			response.headers['Access-Control-Allow-Credentials'] = true;
 			return response;
+		})
+		// Errors should surface the headers too
+		.catch((error) => {
+			if (!headers.origin) {
+				throw error;
+			}
+
+			if (!error.headers) {
+				error.headers = {};
+			}
+
+			if (cors_headers.length) {
+				error.headers['Access-Control-Expose-Headers'] = cors_headers.join(', ');
+			}
+
+			error.headers['Access-Control-Allow-Origin'] = locateOrigin(headers.origin, allow_origins, cors_methods);
+			error.headers['Access-Control-Allow-Credentials'] = true;
+			throw error;
 		});
 	};
 };

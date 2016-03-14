@@ -6,10 +6,11 @@
  */
 
 module.exports = class HttpError extends Error {
-	constructor(message, code) {
+	constructor(body, status, headers) {
 		super();
-		this.message = message;
-		this.code = code;
+		this.message = body;
+		this.code = status ? status : module.exports.internal_server_error;
+		this.headers = headers ? headers : {};
 
 		if (Error.captureStackTrace) {
 			Error.captureStackTrace(this, HttpError);
