@@ -114,11 +114,19 @@ module.exports = function (allow_origins, allow_headers) {
 				error.headers = {};
 			}
 
+			var allowed_origin = locateOrigin(headers.origin, allow_origins, cors_methods);
+			// if the requested origin is not an allowed cors origin, fail
+			if (!allowed_origin) {
+				return new Promise((resolve, reject) => {
+					reject(new roads.HttpError(allow_origins.join(','), 403));
+				});
+			}
+
 			if (cors_headers.length) {
 				error.headers['Access-Control-Expose-Headers'] = cors_headers.join(', ');
 			}
 
-			error.headers['Access-Control-Allow-Origin'] = locateOrigin(headers.origin, allow_origins, cors_methods);
+			error.headers['Access-Control-Allow-Origin'] = allowed_origin;
 			error.headers['Access-Control-Allow-Credentials'] = true;
 			throw error;
 		});

@@ -71,7 +71,7 @@ module.exports = class Server {
 		}
 
 		if (error instanceof roads.HttpError) {
-			this._writeToResponse(http_response, new roads.Response({"error": error.message}, error.code));
+			this._writeToResponse(http_response, new roads.Response({"error": error.message}, error.code, error.headers));
 		} else {
 			this._writeToResponse(http_response, new roads.Response({"error" : "An unknown error has occured"}, 500));
 		}
