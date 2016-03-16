@@ -43,7 +43,7 @@ module.exports.get = function (key, callback) {
 	});
 };
 
-module.exports.insert = function (object) {
+module.exports.insert = function (key, object) {
 	return new Promise(function (resolve, reject) {
 		resolve(insert(key));
 	});

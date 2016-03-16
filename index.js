@@ -14,7 +14,7 @@ module.exports.Server = require('./src/httpServer.js');
 // Expose all integration helpers
 module.exports.integrations = {
 	koa: require('./src/integrations/koa.js')
-}
+};
 
 // Expose all middleware functions
 module.exports.middleware = {

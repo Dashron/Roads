@@ -7,12 +7,19 @@
 
 var roads = require('../../../index');
 var Resource = roads.Resource;
+var loadFile = require('./loadFile');
 
 /**
  * [one description]
  * @type {Resource}
  */
 module.exports.root = new Resource({
+	resources: {
+		// Ideally you would use static roads, koa or express middleware to handle these so you don't keep
+		// having to add more
+		'client.brws.js': loadFile,
+		'client.map.json': loadFile
+	},
 	methods : {
 		GET : function (url, body, headers) {
 			// In the real world the body of the response should be created from a template engine.

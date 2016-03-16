@@ -5,8 +5,8 @@
 * MIT Licensed
  */
 
-var roads = require('../../index');
-var road = new roads.Road(require('./resources/root').root);
+var roads = require('../../../index.js');
+var road = new roads.Road(require('../resources/root').root);
 
 road.request('GET', '/')
 	.then(function (response) {
@@ -18,5 +18,6 @@ road.request('GET', '/test')
 		console.log(response);
 	})
 	.catch(function (err) {
-		console.log(err);
+		console.log('[' + err.code + ']' + err.message);
+		console.log(err.stack);
 	});

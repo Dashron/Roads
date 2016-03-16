@@ -10,7 +10,6 @@ var Resource = roads.Resource;
 var Response = roads.Response;
 
 var Posts = require('../../mock_db/posts');
-var userRepresentation = require('../../representations/user');
 var postRepresentation = require('../../representations/post');
 var collectionRepresentation = require('../../representations/collection');
 
