@@ -37,7 +37,7 @@ module.exports = function (road) {
 			if (cookies) {
 				for (let name in cookies) {
 					if (cookies.hasOwnProperty(name)) {
-						this.cookies.set(name, cookies[name].value, cookies[name]);
+						this.cookies.set(name, cookies[name].value, cookies[name].options);
 					}
 				}
 			}

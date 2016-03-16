@@ -218,8 +218,8 @@ exports.testRoadsCookiesAreAppliedToKoa = function (test) {
 		return new Promise((accept, reject) => {
 			let res = new this.Response('hello, 200');
 
-			res.setCookie('cookie1', 'success');
-			res.setCookie('cookie2', 'success2');
+			res.setCookie('cookie1', 'success', {domain: 'foo.bar'});
+			res.setCookie('cookie2', 'success2', {domain: 'foo2.bar'});
 
 			accept(res);
 		});
@@ -230,8 +230,8 @@ exports.testRoadsCookiesAreAppliedToKoa = function (test) {
 
 	GET('/').then(function (response) {
 		test.deepEqual(response.headers['set-cookie'], [
-			'cookie1=success; path=/; httponly',
-			'cookie2=success2; path=/; httponly'
+			'cookie1=success; path=/; domain=foo.bar; httponly',
+			'cookie2=success2; path=/; domain=foo2.bar; httponly'
 		]);
 
 		server.close();
@@ -250,7 +250,7 @@ exports.testRoadsErrorFailKoa = function (test) {
 	let app = koa();
 	let road = buildMockRoad(function () {
 		return new Promise((accept, reject) => {
-			reject(res);
+			reject();
 		});
 	});
 
