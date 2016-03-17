@@ -1,12 +1,19 @@
 "use strict";
 
 const koaIntegration = require('../index.js').integrations.koa;
-const koa = require('koa');
-const cr = require('roads-coroutine');
+const koa_module = require('koa');
 const http = require('http');
 const KOA_PORT = 3456;
 const Response = require('../index.js').Response;
 const cookie = require('../index.js').middleware.cookie;
+
+function koa() {
+	var k = koa_module();
+	k.on('error', function () {
+		// do not log
+	});
+	return k;
+}
 
 function buildMockRoad(route, ctx) {
 	if (!route) {
@@ -250,7 +257,7 @@ exports.testRoadsErrorFailKoa = function (test) {
 	let app = koa();
 	let road = buildMockRoad(function () {
 		return new Promise((accept, reject) => {
-			reject();
+			reject(new Error('rejection'));
 		});
 	});
 
@@ -276,7 +283,7 @@ exports.testRoadsPromiseRejectionsFailKoa = function (test) {
 	let app = koa();
 	let road = buildMockRoad(function () {
 		return new Promise((accept, reject) => {
-			reject(res);
+			reject(new Error('rejection'));
 		});
 	});
 
