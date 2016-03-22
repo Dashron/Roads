@@ -1,14 +1,13 @@
-# The Roads.js HTTP abstraction
+# The Roads.js isomophic web framework
 
 Roads is a web framework build on Generators. It's similar to Koa.js, but early design decisions allow Roads to be used isomorphicly in the browser, and in the server. 
 
 # Why should I use Roads?
 
-1. It helps build an organized, resource oriented website or API thanks to a clean routing structure.
-2. It works with the built in node HTTP server, or can be used as a router for common webservers like Koa.js and Express.js
-3. It can be used in the browser using [browserify ](http://browserify.org/) to build client side applications.
-4. It is built using promises and supports generator-based coroutines so that you never have to worry about callbacks.
-5. It exposes the entire system via a simple, api library-like interface, allowing you to interact with it outside of the web environment. This is great for writing tests, working with web sockets, or writing API first websites. 
+1. Roads can be attached to any node HTTP server, including Koa.js, Express.js, and the built in node HTTP server.
+2. Roads can be used for client side applications and single page applications thanks to [browserify](http://browserify.org/).
+3. Roads lets you work without callbacks. It's built on top of promises and generator-based coroutines.
+4. Roads can be run without ever attaching it to an HTTP server. This is great for writing tests, working with web sockets, or writing API first websites. 
 
 
 # Build Status
@@ -620,3 +619,4 @@ It's possible to design your API responses to achieve significant performance ga
 
 ## Next Steps
  - Mention roads-client from this doc
+ - Separate the opinionated router into middleware
