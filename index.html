@@ -1,43 +1,31 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en-us">
   <head>
-    <meta charset='utf-8'>
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="description" content="Roads : A node.js web framework">
-
-    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
-
-    <title>Roads</title>
+    <meta charset="UTF-8">
+    <title>Roads by Dashron</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
   </head>
-
   <body>
+    <section class="page-header">
+      <h1 class="project-name">Roads</h1>
+      <h2 class="project-tagline">A node.js web framework</h2>
+      <a href="https://github.com/Dashron/roads" class="btn">View on GitHub</a>
+      <a href="https://github.com/Dashron/roads/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/Dashron/roads/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
 
-    <!-- HEADER -->
-    <div id="header_wrap" class="outer">
-        <header class="inner">
-          <a id="forkme_banner" href="https://github.com/Dashron/roads">View on GitHub</a>
-
-          <h1 id="project_title">Roads</h1>
-          <h2 id="project_tagline">A node.js web framework</h2>
-
-            <section id="downloads">
-              <a class="zip_download_link" href="https://github.com/Dashron/roads/zipball/master">Download this project as a .zip file</a>
-              <a class="tar_download_link" href="https://github.com/Dashron/roads/tarball/master">Download this project as a tar.gz file</a>
-            </section>
-        </header>
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
-        <h1>
-<a name="the-roadsjs-api-framework" class="anchor" href="#the-roadsjs-api-framework"><span class="octicon octicon-link"></span></a>The Roads.js API Framework</h1>
+    <section class="main-content">
+      <h1>
+<a id="the-roadsjs-api-framework" class="anchor" href="#the-roadsjs-api-framework" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>The Roads.js API Framework</h1>
 
 <p>Roads is a framework for creating APIs in node.js. It requires generator support, so you should be using node 0.11.13 or higher with the <code>--harmony</code> flag enabled.</p>
 
 <h1>
-<a name="why-should-i-use-roads" class="anchor" href="#why-should-i-use-roads"><span class="octicon octicon-link"></span></a>Why should I use Roads?</h1>
+<a id="why-should-i-use-roads" class="anchor" href="#why-should-i-use-roads" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Why should I use Roads?</h1>
 
 <ol>
 <li>It helps build an organized, resource oriented API through a nested routing structure.</li>
@@ -47,7 +35,7 @@
 </ol>
 
 <h1>
-<a name="index" class="anchor" href="#index"><span class="octicon octicon-link"></span></a>Index</h1>
+<a id="index" class="anchor" href="#index" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Index</h1>
 
 <ul>
 <li><a href="#getting-started">Getting Started</a></li>
@@ -92,7 +80,7 @@
 </ul>
 
 <h2>
-<a name="getting-started" class="anchor" href="#getting-started"><span class="octicon octicon-link"></span></a>Getting Started</h2>
+<a id="getting-started" class="anchor" href="#getting-started" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Getting Started</h2>
 
 <p>Building an API with roads follows a fairly simple workflow.</p>
 
@@ -182,14 +170,14 @@
 <p>Once all of these steps are complete, you should be able to access the API through your browser. Continue reading the docs below for more information on <a href="#apionrequestfunction-fn">error handling</a>, <a href="#url-part">URL parameters</a> and more!</p>
 
 <h2>
-<a name="roadsapi" class="anchor" href="#roadsapi"><span class="octicon octicon-link"></span></a>Roads.API</h2>
+<a id="roadsapi" class="anchor" href="#roadsapi" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Roads.API</h2>
 
 <p>The API is a container that holds a hierarchy of <a href="#roadsresource">Resource</a> objects. It exposes a <a href="#apirequeststring-method-string-url-dynamic-body-object-headers">request</a> method which allows you to interact directly with the resources.</p>
 
 <p>You must provide the root resource to the constructor. This resource will resolve any requests to the root (<code>/</code>) endpoint. Any additional routes will be referenced as sub-resources of the root endpoint.</p>
 
 <h3>
-<a name="new-apiresource-root_resource" class="anchor" href="#new-apiresource-root_resource"><span class="octicon octicon-link"></span></a>new API(<em>Resource</em> root_resource)</h3>
+<a id="new-apiresource-root_resource" class="anchor" href="#new-apiresource-root_resource" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>new API(<em>Resource</em> root_resource)</h3>
 
 <p><strong>Create an API object.</strong></p>
 
@@ -214,13 +202,12 @@
 
 <p>Creates your API object. You must provide a <a href="#roadsresource">Resource</a> to the constructor. The provided resource becomes the root resource, and will be used for any API requests to <code>/</code>.</p>
 
-<pre lang="node"><code>var roads = require('roads');
-var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at [Resource](#roadsresource) for information about the Resource constructor.
-var api = new roads.API(root_resource);
-</code></pre>
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> roads <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>roads<span class="pl-pds">'</span></span>);
+<span class="pl-k">var</span> root_resource <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">roads.Resource</span>(<span class="pl-k">...</span>); <span class="pl-c">// The resource definition has not been set here, because it's out of the scope of this example. Take a look at [Resource](#roadsresource) for information about the Resource constructor.</span>
+<span class="pl-k">var</span> api <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">roads.API</span>(root_resource);</pre></div>
 
 <h3>
-<a name="apionrequestfunction-fn" class="anchor" href="#apionrequestfunction-fn"><span class="octicon octicon-link"></span></a>API.onRequest(<em>Function</em> fn)</h3>
+<a id="apionrequestfunction-fn" class="anchor" href="#apionrequestfunction-fn" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>API.onRequest(<em>Function</em> fn)</h3>
 
 <p><strong>Add a custom function to be executed along with every request.</strong></p>
 
@@ -246,7 +233,7 @@ var api = new roads.API(root_resource);
 <p>This will be called for every request, even for routes that do not exist. The callback will be executed with the following five parameters :</p>
 
 <h4>
-<a name="onrequest-callback" class="anchor" href="#onrequest-callback"><span class="octicon octicon-link"></span></a>onRequest Callback</h4>
+<a id="onrequest-callback" class="anchor" href="#onrequest-callback" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>onRequest Callback</h4>
 
 <p><strong>function (<em>string</em> method,<em>string</em> url, <em>Object</em> body, <em>Object</em> headers, <em>Function</em> next)</strong></p>
 
@@ -320,7 +307,7 @@ api.onRequest(function* (url, body, headers, next) {
 </code></pre>
 
 <h3>
-<a name="apirequeststring-method-string-url-dynamic-body-object-headers" class="anchor" href="#apirequeststring-method-string-url-dynamic-body-object-headers"><span class="octicon octicon-link"></span></a>API.request(<em>string</em> method, <em>string</em> url, <em>dynamic</em> body, <em>Object</em> headers)</h3>
+<a id="apirequeststring-method-string-url-dynamic-body-object-headers" class="anchor" href="#apirequeststring-method-string-url-dynamic-body-object-headers" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>API.request(<em>string</em> method, <em>string</em> url, <em>dynamic</em> body, <em>Object</em> headers)</h3>
 
 <p><strong>Make a request to the API.</strong></p>
 
@@ -338,7 +325,7 @@ promise.catch(function (error) {
 </code></pre>
 
 <h3>
-<a name="apiserverincomingmessage-http_request-serverresponse-http_response" class="anchor" href="#apiserverincomingmessage-http_request-serverresponse-http_response"><span class="octicon octicon-link"></span></a>API.server(<em>IncomingMessage</em> http_request, <em>ServerResponse</em> http_response)</h3>
+<a id="apiserverincomingmessage-http_request-serverresponse-http_response" class="anchor" href="#apiserverincomingmessage-http_request-serverresponse-http_response" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>API.server(<em>IncomingMessage</em> http_request, <em>ServerResponse</em> http_response)</h3>
 
 <p><strong>An onRequest callback for http.createServer()</strong></p>
 
@@ -351,12 +338,12 @@ promise.catch(function (error) {
 </code></pre>
 
 <h2>
-<a name="roadsresource" class="anchor" href="#roadsresource"><span class="octicon octicon-link"></span></a>Roads.Resource</h2>
+<a id="roadsresource" class="anchor" href="#roadsresource" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Roads.Resource</h2>
 
 <p>Each resource represents a single endpoint. The definition provided to the constructor describes how it can be used by the API object.</p>
 
 <h3>
-<a name="new-resourceobject-definition" class="anchor" href="#new-resourceobject-definition"><span class="octicon octicon-link"></span></a>new Resource(<em>Object</em> definition)</h3>
+<a id="new-resourceobject-definition" class="anchor" href="#new-resourceobject-definition" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>new Resource(<em>Object</em> definition)</h3>
 
 <p><strong>Constructor</strong></p>
 
@@ -419,7 +406,7 @@ promise.catch(function (error) {
 </code></pre>
 
 <h4>
-<a name="url-part-routing" class="anchor" href="#url-part-routing"><span class="octicon octicon-link"></span></a>URL Part (routing)</h4>
+<a id="url-part-routing" class="anchor" href="#url-part-routing" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>URL Part (routing)</h4>
 
 <p>All URL routing happens through the resource definition, and through sub resources. The root resource represents a URL without any path ([protocol]://[host]/). This root resource must define additional resources as sub resources, which will branch out after the root resource.</p>
 
@@ -495,7 +482,7 @@ var root = new Resource({
 </code></pre>
 
 <h4>
-<a name="resource-method" class="anchor" href="#resource-method"><span class="octicon octicon-link"></span></a>Resource Method</h4>
+<a id="resource-method" class="anchor" href="#resource-method" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Resource Method</h4>
 
 <p>Each <code>method : function</code> pair of the methods field describes how the API server will respond to an HTTP request. The function is called a "resource method".</p>
 
@@ -520,12 +507,12 @@ api.onRequest(function* (method, url, body, headers, next) {
 </code></pre>
 
 <h2>
-<a name="roadsresponse" class="anchor" href="#roadsresponse"><span class="octicon octicon-link"></span></a>Roads.Response</h2>
+<a id="roadsresponse" class="anchor" href="#roadsresponse" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Roads.Response</h2>
 
 <p>The response object contains all of the information you want to send to the client. This includes the body, status code and all applicable headers. </p>
 
 <h3>
-<a name="new-responsedynamic-data-number-status-object-headers" class="anchor" href="#new-responsedynamic-data-number-status-object-headers"><span class="octicon octicon-link"></span></a>new Response(<em>dynamic</em> data, <em>number</em> status, <em>Object</em> headers)</h3>
+<a id="new-responsedynamic-data-number-status-object-headers" class="anchor" href="#new-responsedynamic-data-number-status-object-headers" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>new Response(<em>dynamic</em> data, <em>number</em> status, <em>Object</em> headers)</h3>
 
 <p><strong>Constructor</strong></p>
 
@@ -563,7 +550,7 @@ api.onRequest(function* (method, url, body, headers, next) {
 </code></pre>
 
 <h3>
-<a name="data" class="anchor" href="#data"><span class="octicon octicon-link"></span></a>Data</h3>
+<a id="data" class="anchor" href="#data" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Data</h3>
 
 <p><strong>The raw JavaScript object returned by the API request</strong></p>
 
@@ -571,7 +558,7 @@ api.onRequest(function* (method, url, body, headers, next) {
 </code></pre>
 
 <h3>
-<a name="status" class="anchor" href="#status"><span class="octicon octicon-link"></span></a>Status</h3>
+<a id="status" class="anchor" href="#status" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Status</h3>
 
 <p><strong>The HTTP status returned by the API request</strong></p>
 
@@ -579,7 +566,7 @@ api.onRequest(function* (method, url, body, headers, next) {
 </code></pre>
 
 <h3>
-<a name="headers" class="anchor" href="#headers"><span class="octicon octicon-link"></span></a>Headers</h3>
+<a id="headers" class="anchor" href="#headers" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Headers</h3>
 
 <p><strong>A JavaScript object of all response headers</strong></p>
 
@@ -587,7 +574,7 @@ api.onRequest(function* (method, url, body, headers, next) {
 </code></pre>
 
 <h3>
-<a name="responsewritetoserverserverresponse-http_response" class="anchor" href="#responsewritetoserverserverresponse-http_response"><span class="octicon octicon-link"></span></a>Response.writeToServer(<em>ServerResponse</em> http_response)</h3>
+<a id="responsewritetoserverserverresponse-http_response" class="anchor" href="#responsewritetoserverserverresponse-http_response" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Response.writeToServer(<em>ServerResponse</em> http_response)</h3>
 
 <p><strong>A helper function to write the response object to a server response</strong></p>
 
@@ -609,10 +596,10 @@ api.request(http_request.method, http_request.url, body, http_request.headers)
 </code></pre>
 
 <h2>
-<a name="roadshttperror" class="anchor" href="#roadshttperror"><span class="octicon octicon-link"></span></a>Roads.HttpError</h2>
+<a id="roadshttperror" class="anchor" href="#roadshttperror" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Roads.HttpError</h2>
 
 <h3>
-<a name="new-httperrorstring-message-number-code" class="anchor" href="#new-httperrorstring-message-number-code"><span class="octicon octicon-link"></span></a>new HttpError(<em>string</em> message, <em>number</em> code)</h3>
+<a id="new-httperrorstring-message-number-code" class="anchor" href="#new-httperrorstring-message-number-code" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>new HttpError(<em>string</em> message, <em>number</em> code)</h3>
 
 <p><strong>A helper error, that contains information relevant to common HTTP errors</strong></p>
 
@@ -642,26 +629,24 @@ api.request(http_request.method, http_request.url, body, http_request.headers)
 </code></pre>
 
 <h3>
-<a name="performance-improvements" class="anchor" href="#performance-improvements"><span class="octicon octicon-link"></span></a>Performance improvements</h3>
+<a id="performance-improvements" class="anchor" href="#performance-improvements" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Performance improvements</h3>
 
 <p>It's possible to design your API responses to achieve significant performance gains. <a href="https://github.com/Dashron/roads-fieldsfilter">Roads Fields Filter</a> helps facilitate that feature.</p>
 
 <h3>
-<a name="todo" class="anchor" href="#todo"><span class="octicon octicon-link"></span></a>TODO</h3>
+<a id="todo" class="anchor" href="#todo" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>TODO</h3>
 
 <p>Next step is to build roads-client, a single library that can be run in node, or browsers and can communicate with APIs built on roads. It will expose at least one method, which will have a call signature identical to <a href="#apirequeststring-method-string-url-dynamic-body-object-headers">API.request</a></p>
-      </section>
-    </div>
 
-    <!-- FOOTER  -->
-    <div id="footer_wrap" class="outer">
-      <footer class="inner">
-        <p class="copyright">Roads maintained by <a href="https://github.com/Dashron">Dashron</a></p>
-        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/Dashron/roads">Roads</a> is maintained by <a href="https://github.com/Dashron">Dashron</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
       </footer>
-    </div>
 
-              <script type="text/javascript">
+    </section>
+
+            <script type="text/javascript">
             var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
             document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
           </script>
@@ -671,7 +656,6 @@ api.request(http_request.method, http_request.url, body, http_request.headers)
             pageTracker._trackPageview();
             } catch(err) {}
           </script>
-
 
   </body>
 </html>
