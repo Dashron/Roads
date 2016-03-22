@@ -616,7 +616,3 @@ road.use(roads.middleware.cors(['http://localhost:8080'], ['authorization']));
 
 ## Performance improvements
 It's possible to design your API responses to achieve significant performance gains. [Roads Fields Filter](https://github.com/Dashron/roads-fieldsfilter) helps facilitate that feature.
-
-## Next Steps
- - Mention roads-client from this doc
- - Separate the opinionated router into middleware
