@@ -8,7 +8,10 @@
 var roads = require('../../../index.js');
 var road = new roads.Road(require('../resources/root').root);
 
-road.request('GET', '/')
+var pjax = new roads.PJAX(road, document.getElementById('container'));
+pjax.register();
+
+/*road.request('GET', '/')
 	.then(function (response) {
 		console.log(response);
 	});
@@ -20,4 +23,4 @@ road.request('GET', '/test')
 	.catch(function (err) {
 		console.log('[' + err.code + ']' + err.message);
 		console.log(err.stack);
-	});
+	});*/

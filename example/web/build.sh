@@ -1,1 +1,0 @@
-browserify ./static/client.js --debug > ./static/client.brws.js
