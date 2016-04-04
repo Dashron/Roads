@@ -1,5 +1,6 @@
-2. Add tests for the HttpServer
-3. Add koa and middleware examples
-4. Add code coverage
-5. Separate the opinionated router into middleware
-6. Document the isomorphic use case better, by talking about the build script, roads-client, and showing some examples (such as roads-starter)
+1. Fix PJAX back button
+2. Add PJAX unit tests
+3. Add HttpServer unit tests
+4. Add koa and middleware examples
+5. Add code coverage
+6. Separate the opinionated router into middleware
