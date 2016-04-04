@@ -8,8 +8,9 @@
 var roads = require('../../../index.js');
 var road = new roads.Road(require('../resources/root').root);
 
-var pjax = new roads.PJAX(road, document.getElementById('container'));
-pjax.register();
+var pjax = new roads.PJAX(road);
+pjax.addTitleMiddleware();
+pjax.register(window, document.getElementById('container'));
 
 /*road.request('GET', '/')
 	.then(function (response) {
