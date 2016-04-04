@@ -22,14 +22,14 @@
       <h1>
 <a id="the-roadsjs-isomophic-web-framework" class="anchor" href="#the-roadsjs-isomophic-web-framework" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>The Roads.js isomophic web framework</h1>
 
-<p>Roads is a web framework build on Generators. It's similar to Koa.js, but early design decisions allow Roads to be used isomorphicly in the browser, and in the server. </p>
+<p>Roads is a web framework built on Generators. It's similar to Koa.js, but can be used both in the browser, and on the server.</p>
 
 <h1>
 <a id="why-should-i-use-roads" class="anchor" href="#why-should-i-use-roads" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Why should I use Roads?</h1>
 
 <ol>
 <li>Roads can be attached to any node HTTP server, including Koa.js, Express.js, and the built in node HTTP server.</li>
-<li>Roads can be used for client side applications and single page applications thanks to <a href="http://browserify.org/">browserify</a>.</li>
+<li>Roads is isomorphic, meaning you can generate html on the server or in the browser with the same code.</li>
 <li>Roads lets you work without callbacks. It's built on top of promises and generator-based coroutines.</li>
 <li>Roads can be run without ever attaching it to an HTTP server. This is great for writing tests, working with web sockets, or writing API first websites. </li>
 </ol>
@@ -99,33 +99,25 @@
 
 <ol>
 <li>
-<p>Create a <a href="#roadsresource">Resource</a> object for every endpoint (<code>/</code>, <code>/users</code>, <code>/posts</code>, <code>/users/#user_id</code>)</p>
+<p>Create your root <a href="#roadsresource">Resource</a>. This resource will be used for any request to the root (<code>/</code>) endpoint. Other endpoints will be defined in step 4.</p>
 
 <div class="highlight highlight-source-js"><pre><span class="pl-c">// Create your resource.</span>
 <span class="pl-k">var</span> resource <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">roads.Resource</span>({
-    <span class="pl-c">// Define sub-resources.</span>
-    resources <span class="pl-k">:</span> {
-        <span class="pl-c">// This assumes the file located at `./users` exposes another `Resource` object. That resource will be bound to the route `/users`.</span>
-        <span class="pl-s"><span class="pl-pds">"</span>users<span class="pl-pds">"</span></span> <span class="pl-k">:</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>./users<span class="pl-pds">'</span></span>),
-        <span class="pl-c">// This assumes the file located at `./posts` exposes another `Resource` object. That resource will be bound to the route `/posts`.</span>
-        <span class="pl-s"><span class="pl-pds">"</span>posts<span class="pl-pds">"</span></span> <span class="pl-k">:</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>./posts<span class="pl-pds">'</span></span>)
-    },
-    <span class="pl-c">// Incomplete. See step 2.</span>
-    methods <span class="pl-k">:</span> <span class="pl-k">...</span>
+    <span class="pl-c">// Define the supported HTTP methods. See step 2 for more details</span>
+    methods<span class="pl-k">:</span> <span class="pl-k">...</span>
 });
 
-<span class="pl-c">// Assign your resource to the root "/" endpoint.</span>
+<span class="pl-c">// Assign your root resource to the Road.</span>
 <span class="pl-k">var</span> road <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">roads.Road</span>(resource);</pre></div>
 </li>
 <li>
 <p>Each <a href="#roadsresource">Resource</a> from step #1 should contain one or more <a href="#resource-method">resource methods</a>. Each resource method is associated with an HTTP method.</p>
 
 <div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> resource <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">roads.Resource</span>({
-    <span class="pl-c">// Incomplete. See step 1.</span>
-    resources <span class="pl-k">:</span> <span class="pl-k">...</span>,
-    methods <span class="pl-k">:</span> {
+    <span class="pl-c">// Define the supported HTTP methods.</span>
+    methods<span class="pl-k">:</span> {
         <span class="pl-c">// Whenever a GET request is made to this resource, it will execute the following function</span>
-        <span class="pl-en">GET</span> <span class="pl-k">:</span> <span class="pl-k">function</span> (<span class="pl-smi">url</span>, <span class="pl-smi">body</span>, <span class="pl-smi">headers</span>) {
+        <span class="pl-en">GET</span><span class="pl-k">:</span> <span class="pl-k">function</span> (<span class="pl-smi">url</span>, <span class="pl-smi">body</span>, <span class="pl-smi">headers</span>) {
             <span class="pl-c">// URL is parsed via the url module. The following code will access the querystring parameter "page"</span>
             <span class="pl-smi">url</span>.<span class="pl-smi">query</span>.<span class="pl-smi">page</span>;
 
@@ -138,23 +130,37 @@
     }
 });</pre></div>
 
-<p><strong>note:</strong> Resource methods are not required. If you exclude the methods list, the router will still search through all sub-resources.</p>
+<p><strong>note:</strong> Resource methods are not required. If you do not include any resource methods, roads will still search through all sub-resources.</p>
 </li>
 <li>
-<p>Each <a href="#resource-method">resource method</a> from step #2 should return your response. If you return a promise it will be resolved and the response/errors will be handled appropriately. If you do not return (or your promise does not resolve) a <a href="#roadsresponse">response</a> object it will be automatically wrapped in a response object.</p>
+<p>Each <a href="#resource-method">resource method</a> from step #2 should return your response. If you return a promise which will be resolved and the response/errors will be handled appropriately. If you do not return (or your promise does not resolve) a <a href="#roadsresponse">response</a> object it will be automatically wrapped in a response object.</p>
 
 <div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> resource <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">roads.Resource</span>({
-    <span class="pl-c">// Incomplete. See step 1.</span>
-    resources <span class="pl-k">:</span> <span class="pl-k">...</span>,
-    methods <span class="pl-k">:</span> {
-        <span class="pl-en">GET</span> <span class="pl-k">:</span> <span class="pl-k">function</span> (<span class="pl-smi">url</span>, <span class="pl-smi">body</span>, <span class="pl-smi">headers</span>) {
-            <span class="pl-c">// Incomplete, see step 2.</span>
+    <span class="pl-c">// Define the supported HTTP methods.</span>
+    methods<span class="pl-k">:</span> {
+        <span class="pl-en">GET</span><span class="pl-k">:</span> <span class="pl-k">function</span> (<span class="pl-smi">url</span>, <span class="pl-smi">body</span>, <span class="pl-smi">headers</span>) {
+            <span class="pl-c">// Perform your route logic, see step 2.</span>
             <span class="pl-k">...</span>
 
             <span class="pl-c">// Build a response object, with the body, status code and headers.</span>
-            <span class="pl-k">return</span> <span class="pl-k">new</span> <span class="pl-en">this.Response</span>({ <span class="pl-s"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span> <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>aaron<span class="pl-pds">"</span></span> }, <span class="pl-c1">200</span>, {<span class="pl-s"><span class="pl-pds">"</span>last-modified<span class="pl-pds">"</span></span> <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>Tue, 15 Nov 1994 12:45:26 GMT<span class="pl-pds">"</span></span>});
+            <span class="pl-k">return</span> <span class="pl-k">new</span> <span class="pl-en">this.Response</span>({ <span class="pl-s"><span class="pl-pds">"</span>name<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>aaron<span class="pl-pds">"</span></span> }, <span class="pl-c1">200</span>, {<span class="pl-s"><span class="pl-pds">"</span>last-modified<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>Tue, 15 Nov 1994 12:45:26 GMT<span class="pl-pds">"</span></span>});
         }
     }
+});</pre></div>
+</li>
+<li>
+<p>Assign sub-resources to the root resource. These will be attached to endpoints under this resource (e.g. <code>/</code> contains <code>/users</code>. <code>/users</code> will contain <code>/users/#user_id</code>) All subresources are resources objects like the root resource defined in step 1, so you can continue to follow steps 1-4 to build out your sub resources.</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> resource <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">roads.Resource</span>({
+    <span class="pl-c">// Define the supported HTTP methods. See steps 2 and 3.</span>
+    methods<span class="pl-k">:</span> <span class="pl-k">...</span> ,
+    <span class="pl-c">// Define sub-resources. </span>
+    resources<span class="pl-k">:</span>         {
+        <span class="pl-c">// This assumes the file located at `./users` exposes another `Resource` object. That resource will be bound to the route `/users`.</span>
+        <span class="pl-s"><span class="pl-pds">"</span>users<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>./users<span class="pl-pds">'</span></span>),
+        <span class="pl-c">// This assumes the file located at `./posts` exposes another `Resource` object. That resource will be bound to the route `/posts`.</span>
+        <span class="pl-s"><span class="pl-pds">"</span>posts<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>./posts<span class="pl-pds">'</span></span>)
+    },
 });</pre></div>
 </li>
 <li>
@@ -162,12 +168,12 @@
 
 <ul>
 <li>
-<p>You can tie the road to node's standard HTTP Server. This will automatically route any HTTP requests into your road.</p>
+<p>You can tie the road to node's standard HTTP Server. This will automatically route any HTTP requests to that server into your road.</p>
 
 <div class="highlight highlight-source-js"><pre>  <span class="pl-c">// Tie to node's HTTP server</span>
   <span class="pl-k">const</span> <span class="pl-c1">roads</span> <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>roads<span class="pl-pds">'</span></span>);
 
-  <span class="pl-k">var</span> road <span class="pl-k">=</span> <span class="pl-k">...</span>; <span class="pl-c">// See code above for road construction</span>
+  <span class="pl-k">var</span> road <span class="pl-k">=</span> <span class="pl-k">...</span>; <span class="pl-c">// See steps 1-4 for road construction</span>
   <span class="pl-k">var</span> server <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">roads.Server</span>(road, <span class="pl-k">function</span> (<span class="pl-smi">error</span>) {
       <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">'</span>roads encountered an error<span class="pl-pds">'</span></span>, error);
   });
@@ -181,20 +187,25 @@
   <span class="pl-k">const</span> <span class="pl-c1">roads</span> <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>roads<span class="pl-pds">'</span></span>);
   <span class="pl-k">const</span> <span class="pl-c1">koa</span> <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>koa<span class="pl-pds">'</span></span>);
 
-  <span class="pl-k">var</span> road <span class="pl-k">=</span> <span class="pl-k">...</span>; <span class="pl-c">// See code above for road construction</span>
+  <span class="pl-k">var</span> road <span class="pl-k">=</span> <span class="pl-k">...</span>; <span class="pl-c">// See steps 1-4 for road construction</span>
   <span class="pl-k">var</span> app <span class="pl-k">=</span> <span class="pl-en">koa</span>();
   <span class="pl-smi">app</span>.<span class="pl-en">use</span>(<span class="pl-smi">roads</span>.<span class="pl-smi">integrations</span>.<span class="pl-en">koa</span>(road));
   <span class="pl-smi">app</span>.<span class="pl-en">listen</span>(<span class="pl-c1">8080</span>);
 </pre></div>
 </li>
 <li>
-<p>You can Manually execute a resource method. This will dig into the resources assigned to the road, and execute the proper resource method.</p>
+<p>You can Manually execute a resource method. This will behave just like a web request without having to use HTTP.</p>
 
-<div class="highlight highlight-source-js"><pre><span class="pl-c">// Call directly</span>
-<span class="pl-smi">road</span>.<span class="pl-en">request</span>(<span class="pl-s"><span class="pl-pds">'</span>GET<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>/users<span class="pl-pds">'</span></span>, {page <span class="pl-k">:</span> <span class="pl-c1">2</span>})
-    .<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">response</span>) {
-        <span class="pl-en">console</span>.<span class="pl-c1">log</span>(response);
-    });</pre></div>
+<div class="highlight highlight-source-js"><pre>    <span class="pl-c">// Tie to node's HTTP server</span>
+    <span class="pl-k">const</span> <span class="pl-c1">roads</span> <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>roads<span class="pl-pds">'</span></span>);
+
+    <span class="pl-k">var</span> road <span class="pl-k">=</span> <span class="pl-k">...</span>; <span class="pl-c">// See steps 1-4 for road construction</span>
+
+    <span class="pl-c">// Call directly</span>
+    <span class="pl-smi">road</span>.<span class="pl-en">request</span>(<span class="pl-s"><span class="pl-pds">'</span>GET<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>/users<span class="pl-pds">'</span></span>, {page<span class="pl-k">:</span> <span class="pl-c1">2</span>})
+        .<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">response</span>) {
+            <span class="pl-en">console</span>.<span class="pl-c1">log</span>(response);
+        });</pre></div>
 </li>
 </ul>
 </li>
@@ -271,7 +282,7 @@
 </tbody>
 </table>
 
-<p>This will be called for every request, even for routes that do not exist. The callback will be executed with the following five parameters :</p>
+<p>This will be called for every request, even for routes that do not exist. The callback will be executed with the following five parameters:</p>
 
 <h4>
 <a id="use-callback" class="anchor" href="#use-callback" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>use Callback</h4>
@@ -323,7 +334,7 @@
     <span class="pl-c">// kill trailing slash as long as we aren't at the root level</span>
     <span class="pl-k">if</span> (<span class="pl-smi">url</span>.<span class="pl-smi">path</span> <span class="pl-k">!=</span> <span class="pl-s"><span class="pl-pds">'</span>/<span class="pl-pds">'</span></span> <span class="pl-k">&amp;&amp;</span> <span class="pl-smi">url</span>.<span class="pl-smi">path</span>[<span class="pl-smi">url</span>.<span class="pl-smi">path</span>.<span class="pl-c1">length</span> <span class="pl-k">-</span> <span class="pl-c1">1</span>] <span class="pl-k">===</span> <span class="pl-s"><span class="pl-pds">'</span>/<span class="pl-pds">'</span></span>) {
         <span class="pl-k">return</span> <span class="pl-k">new</span> <span class="pl-en">roads.Response</span>(<span class="pl-c1">null</span>, <span class="pl-c1">302</span>, {
-            location <span class="pl-k">:</span> <span class="pl-smi">url</span>.<span class="pl-smi">path</span>.<span class="pl-c1">substring</span>(<span class="pl-c1">0</span>, <span class="pl-smi">url</span>.<span class="pl-smi">path</span>.<span class="pl-c1">length</span> <span class="pl-k">-</span> <span class="pl-c1">1</span>)
+            location<span class="pl-k">:</span> <span class="pl-smi">url</span>.<span class="pl-smi">path</span>.<span class="pl-c1">substring</span>(<span class="pl-c1">0</span>, <span class="pl-smi">url</span>.<span class="pl-smi">path</span>.<span class="pl-c1">length</span> <span class="pl-k">-</span> <span class="pl-c1">1</span>)
         });
     }
 
@@ -439,15 +450,15 @@
 </table>
 
 <div class="highlight highlight-source-js"><pre><span class="pl-c1">module</span>.<span class="pl-smi">exports</span>.<span class="pl-smi">many</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Resource</span>({
-    resources <span class="pl-k">:</span> {
-        <span class="pl-s"><span class="pl-pds">'</span>users<span class="pl-pds">'</span></span> <span class="pl-k">:</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>./users<span class="pl-pds">'</span></span>).<span class="pl-smi">many</span>,
-        <span class="pl-s"><span class="pl-pds">'</span>posts<span class="pl-pds">'</span></span> <span class="pl-k">:</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>./posts<span class="pl-pds">'</span></span>).<span class="pl-smi">many</span>
+    resources<span class="pl-k">:</span> {
+        <span class="pl-s"><span class="pl-pds">'</span>users<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>./users<span class="pl-pds">'</span></span>).<span class="pl-smi">many</span>,
+        <span class="pl-s"><span class="pl-pds">'</span>posts<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>./posts<span class="pl-pds">'</span></span>).<span class="pl-smi">many</span>
     },
-    methods <span class="pl-k">:</span> {
-        <span class="pl-en">GET</span> <span class="pl-k">:</span> <span class="pl-k">function</span><span class="pl-k">*</span> (<span class="pl-smi">url</span>, <span class="pl-smi">body</span>, <span class="pl-smi">headers</span>) {
+    methods<span class="pl-k">:</span> {
+        <span class="pl-en">GET</span><span class="pl-k">:</span> <span class="pl-k">function</span><span class="pl-k">*</span> (<span class="pl-smi">url</span>, <span class="pl-smi">body</span>, <span class="pl-smi">headers</span>) {
             <span class="pl-k">return</span> <span class="pl-k">new</span> <span class="pl-en">Response</span>({
-                <span class="pl-s"><span class="pl-pds">"</span>users<span class="pl-pds">"</span></span> <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>/users<span class="pl-pds">"</span></span>,
-                <span class="pl-s"><span class="pl-pds">"</span>posts<span class="pl-pds">"</span></span> <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>/posts<span class="pl-pds">"</span></span>
+                <span class="pl-s"><span class="pl-pds">"</span>users<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>/users<span class="pl-pds">"</span></span>,
+                <span class="pl-s"><span class="pl-pds">"</span>posts<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>/posts<span class="pl-pds">"</span></span>
             });
         }
     }
@@ -496,34 +507,34 @@
 });
 
 <span class="pl-k">var</span> many <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Resource</span>({
-    resources <span class="pl-k">:</span> {
-        <span class="pl-s"><span class="pl-pds">"</span>#user_id<span class="pl-pds">"</span></span> <span class="pl-k">:</span> single
+    resources<span class="pl-k">:</span> {
+        <span class="pl-s"><span class="pl-pds">"</span>#user_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> single
     }
 });
 
 <span class="pl-k">var</span> root <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Resource</span>({
-    resources <span class="pl-k">:</span> {
-        <span class="pl-s"><span class="pl-pds">"</span>users<span class="pl-pds">"</span></span> <span class="pl-k">:</span> many
+    resources<span class="pl-k">:</span> {
+        <span class="pl-s"><span class="pl-pds">"</span>users<span class="pl-pds">"</span></span><span class="pl-k">:</span> many
     }
 });</pre></div>
 
 <p>For variable fields, you can retrieve the variable in the URL parameter. The URL parameter will be an object, and will have an "args" parameter</p>
 
 <div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> single <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Resource</span>({
-    <span class="pl-en">methods</span> <span class="pl-k">:</span> <span class="pl-k">function</span> (<span class="pl-smi">url</span>, <span class="pl-smi">body</span>, <span class="pl-smi">headers</span>) {
+    <span class="pl-en">methods</span><span class="pl-k">:</span> <span class="pl-k">function</span> (<span class="pl-smi">url</span>, <span class="pl-smi">body</span>, <span class="pl-smi">headers</span>) {
         <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-smi">url</span>.<span class="pl-smi">args</span>.<span class="pl-smi">user_id</span>);
     }
 });
 
 <span class="pl-k">var</span> many <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Resource</span>({
-    resources <span class="pl-k">:</span> {
-        <span class="pl-s"><span class="pl-pds">"</span>#user_id<span class="pl-pds">"</span></span> <span class="pl-k">:</span> single
+    resources<span class="pl-k">:</span> {
+        <span class="pl-s"><span class="pl-pds">"</span>#user_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> single
     }
 });
 
 <span class="pl-k">var</span> root <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Resource</span>({
-    resources <span class="pl-k">:</span> {
-        <span class="pl-s"><span class="pl-pds">"</span>users<span class="pl-pds">"</span></span> <span class="pl-k">:</span> many
+    resources<span class="pl-k">:</span> {
+        <span class="pl-s"><span class="pl-pds">"</span>users<span class="pl-pds">"</span></span><span class="pl-k">:</span> many
     }
 });</pre></div>
 
@@ -533,9 +544,9 @@
 <p>The methods section of the resource definition should be an object which contains many key value pairs. The keys must be one of the HTTP methods (GET, POST, PUT, PATCH, DELETE, OPTIONS, etc). The value for these keys must be an object, a function, or a generator. These are called "<a href="#resource-method">resource methods</a>". Resource methods are used by <a href="#roadrequeststring-method-string-url-dynamic-body-object-headers">Road.request</a> when trying to run your program. First <code>request</code> finds the resource from the request path, and then the <a href="#resource-method">resource method</a> from the request method.  </p>
 
 <h5>
-<a id="resource-method-objects" class="anchor" href="#resource-method-objects" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Resource Method Objects</h5>
+<a id="resource-method-functions" class="anchor" href="#resource-method-functions" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Resource Method Functions</h5>
 
-<p>This object will define the function executed for the request method under the <code>fn</code> key. This function will be provided three parameters. </p>
+<p>If you provide a function, this function will be executed any time the corresponding HTTP method is run. This function will be passed three parameters.</p>
 
 <table>
 <thead>
@@ -565,46 +576,8 @@
 </table>
 
 <div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> road <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Road</span>(<span class="pl-k">new</span> <span class="pl-en">Resource</span>({
-    methods <span class="pl-k">:</span> {
-        GET <span class="pl-k">:</span> {
-        <span class="pl-en">fn</span><span class="pl-k">:</span> <span class="pl-k">function</span> (<span class="pl-smi">url</span>, <span class="pl-smi">body</span>, <span class="pl-smi">headers</span>) {
-                <span class="pl-k">return</span> <span class="pl-s"><span class="pl-pds">'</span>Welcome!<span class="pl-pds">'</span></span>;
-            }
-        }
-    }
-}));</pre></div>
-
-<p>All additional information will available to the request context. You can find the context information through the <code>method_context</code> key.</p>
-
-<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> road <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Road</span>(<span class="pl-k">new</span> <span class="pl-en">Resource</span>({
     methods<span class="pl-k">:</span> {
-        GET<span class="pl-k">:</span> {
-            <span class="pl-en">fn</span><span class="pl-k">:</span> <span class="pl-k">function</span> (<span class="pl-smi">url</span>, <span class="pl-smi">body</span>, <span class="pl-smi">headers</span>) {
-
-            },
-            require_scopes<span class="pl-k">:</span> [<span class="pl-s"><span class="pl-pds">'</span>public<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>private<span class="pl-pds">'</span></span>]
-        }
-    }
-}));
-
-<span class="pl-smi">road</span>.<span class="pl-en">use</span>(<span class="pl-k">function</span> (<span class="pl-smi">method</span>, <span class="pl-smi">url</span>, <span class="pl-smi">body</span>, <span class="pl-smi">headers</span>, <span class="pl-smi">next</span>) {
-    <span class="pl-k">if</span> (<span class="pl-v">this</span>.<span class="pl-smi">method_context</span>.<span class="pl-smi">require_scopes</span>) {
-        <span class="pl-k">if</span> (<span class="pl-k">!</span><span class="pl-v">this</span>.<span class="pl-smi">token</span>.<span class="pl-en">hasScopes</span>(<span class="pl-v">this</span>.<span class="pl-smi">method_context</span>.<span class="pl-smi">require_scopes</span>)) {
-            <span class="pl-k">throw</span> <span class="pl-k">new</span> <span class="pl-en">HttpError</span>(<span class="pl-s"><span class="pl-pds">'</span>This access token does not have permission to use this action<span class="pl-pds">'</span></span>);
-        }
-    }
-
-    <span class="pl-k">return</span> <span class="pl-en">next</span>(); 
-});</pre></div>
-
-<h5>
-<a id="resource-method-functions" class="anchor" href="#resource-method-functions" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Resource Method Functions</h5>
-
-<p>If you provide a function, it's simply a shortcut to the <code>fn</code> property of the resource method object. This shortcut is provided for clarity, and less typing. Note that if you use this shortcut, the <code>method_context</code> will be <code>undefined</code>.</p>
-
-<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> road <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Road</span>(<span class="pl-k">new</span> <span class="pl-en">Resource</span>({
-    methods <span class="pl-k">:</span> {
-        <span class="pl-en">GET</span> <span class="pl-k">:</span> <span class="pl-k">function</span> (<span class="pl-smi">url</span>, <span class="pl-smi">body</span>, <span class="pl-smi">headers</span>) {
+        <span class="pl-en">GET</span><span class="pl-k">:</span> <span class="pl-k">function</span> (<span class="pl-smi">url</span>, <span class="pl-smi">body</span>, <span class="pl-smi">headers</span>) {
             <span class="pl-k">return</span> <span class="pl-s"><span class="pl-pds">'</span>Welcome!<span class="pl-pds">'</span></span>;
         }
     }
@@ -612,16 +585,46 @@
 
 ##### Resource Method Generators
 
-If you provide a generator <span class="pl-k">function</span> as your resource method, we will turn it into a coroutine. Coroutines mimic ES7 async functions by letting you yield promises. It lets you drastically improve the readability of your code.
+If you provide a generator <span class="pl-k">function</span> as your resource method, we will turn it into a coroutine. Coroutines mimic ES7 async functions by letting you yield promises. It lets you drastically improve the readability of your code. If you would like to read more about coroutines, check out my blog post here: 
 
 ```node
 var road = new <span class="pl-en">Road</span>(<span class="pl-k">new</span> <span class="pl-en">Resource</span>({
-    methods <span class="pl-k">:</span> {
-        <span class="pl-en">GET</span> <span class="pl-k">:</span> <span class="pl-k">function</span><span class="pl-k">*</span> (<span class="pl-smi">url</span>, <span class="pl-smi">body</span>, <span class="pl-smi">headers</span>) {
-            <span class="pl-k">var</span> user <span class="pl-k">=</span> <span class="pl-k">yield</span> <span class="pl-smi">db</span>.<span class="pl-en">User</span>(<span class="pl-smi">url</span>.<span class="pl-smi">args</span>.<span class="pl-smi">user_id</span>);
+    methods<span class="pl-k">:</span> {
+        <span class="pl-en">GET</span><span class="pl-k">:</span> <span class="pl-k">function</span><span class="pl-k">*</span> (<span class="pl-smi">url</span>, <span class="pl-smi">body</span>, <span class="pl-smi">headers</span>) {
+            <span class="pl-k">try</span> {
+                <span class="pl-k">var</span> user <span class="pl-k">=</span> <span class="pl-k">yield</span> <span class="pl-smi">db</span>.<span class="pl-en">User</span>(<span class="pl-smi">url</span>.<span class="pl-smi">args</span>.<span class="pl-smi">user_id</span>);
+            } <span class="pl-k">catch</span> (e) {
+                <span class="pl-en">console</span>.<span class="pl-c1">log</span>(e);
+            }
         }
     }
 }));</pre></div>
+
+<h5>
+<a id="resource-method-objects" class="anchor" href="#resource-method-objects" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Resource Method Objects</h5>
+
+<p>If you provide an object instead of a function or a generator, this allows you to define the resource method's function along with additional contextual data that will exist in the request context. The resource method must be provided as the value to the key <code>fn</code>. Within the context of fn, you can find the entire resource method object on the key "method_context".</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> road <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Road</span>(<span class="pl-k">new</span> <span class="pl-en">Resource</span>({
+    methods<span class="pl-k">:</span> {
+        GET<span class="pl-k">:</span> {
+            <span class="pl-en">fn</span><span class="pl-k">:</span> <span class="pl-k">function</span> (<span class="pl-smi">url</span>, <span class="pl-smi">body</span>, <span class="pl-smi">headers</span>) {
+                <span class="pl-k">return</span> <span class="pl-s"><span class="pl-pds">'</span>Welcome to <span class="pl-pds">'</span></span> <span class="pl-k">+</span> <span class="pl-v">this</span>.<span class="pl-smi">method_context</span>.<span class="pl-smi">route_name</span> <span class="pl-k">+</span> <span class="pl-s"><span class="pl-pds">"</span>!<span class="pl-pds">"</span></span>;
+            },
+            route_name<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>here<span class="pl-pds">"</span></span>
+        }
+    }
+}));</pre></div>
+
+<p>As always, this context information will also be available to all middleware</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">road</span>.<span class="pl-en">use</span>(<span class="pl-k">function</span> (<span class="pl-smi">method</span>, <span class="pl-smi">url</span>, <span class="pl-smi">body</span>, <span class="pl-smi">headers</span>, <span class="pl-smi">next</span>) {
+    <span class="pl-k">if</span> (<span class="pl-v">this</span>.<span class="pl-smi">method_context</span>.<span class="pl-smi">route_name</span>) {
+        <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-v">this</span>.<span class="pl-smi">method_context</span>.<span class="pl-smi">route_name</span>);
+    }
+
+    <span class="pl-k">return</span> <span class="pl-en">next</span>(); 
+});</pre></div>
 
 <h5>
 <a id="errors" class="anchor" href="#errors" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Errors</h5>
@@ -678,8 +681,8 @@ var road = new <span class="pl-en">Road</span>(<span class="pl-k">new</span> <sp
 </table>
 
 <div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> road <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Road</span>(<span class="pl-k">new</span> <span class="pl-en">Resource</span>({
-    methods <span class="pl-k">:</span> {
-        <span class="pl-en">GET</span> <span class="pl-k">:</span> <span class="pl-k">function</span> (<span class="pl-smi">url</span>, <span class="pl-smi">body</span>, <span class="pl-smi">headers</span>) {
+    methods<span class="pl-k">:</span> {
+        <span class="pl-en">GET</span><span class="pl-k">:</span> <span class="pl-k">function</span> (<span class="pl-smi">url</span>, <span class="pl-smi">body</span>, <span class="pl-smi">headers</span>) {
             <span class="pl-c">// true because the middleware persists to this context</span>
             <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-v">this</span>.<span class="pl-smi">uri</span> <span class="pl-k">===</span> <span class="pl-s"><span class="pl-pds">'</span>/me<span class="pl-pds">'</span></span>);
 
@@ -695,8 +698,8 @@ var road = new <span class="pl-en">Road</span>(<span class="pl-k">new</span> <sp
             <span class="pl-k">return</span> <span class="pl-k">new</span> <span class="pl-en">this.Response</span>(<span class="pl-s"><span class="pl-pds">'</span>hello world<span class="pl-pds">'</span></span>, <span class="pl-c1">200</span>);
         }
     },
-    context <span class="pl-k">:</span> {
-        require_authentication <span class="pl-k">:</span> <span class="pl-c1">true</span>
+    context<span class="pl-k">:</span> {
+        require_authentication<span class="pl-k">:</span> <span class="pl-c1">true</span>
     }
 }));
 
@@ -745,7 +748,7 @@ var road = new <span class="pl-en">Road</span>(<span class="pl-k">new</span> <sp
 
 <p>Create a response object. </p>
 
-<div class="highlight highlight-source-js"><pre><span class="pl-k">new</span> <span class="pl-en">Response</span>({<span class="pl-s"><span class="pl-pds">"</span>uri<span class="pl-pds">"</span></span> <span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>...<span class="pl-pds">"</span></span>}, <span class="pl-c1">200</span>, {<span class="pl-s"><span class="pl-pds">"</span>last-modified<span class="pl-pds">"</span></span><span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>2014-04-27 00:00:00<span class="pl-pds">"</span></span>});</pre></div>
+<div class="highlight highlight-source-js"><pre><span class="pl-k">new</span> <span class="pl-en">Response</span>({<span class="pl-s"><span class="pl-pds">"</span>uri<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>...<span class="pl-pds">"</span></span>}, <span class="pl-c1">200</span>, {<span class="pl-s"><span class="pl-pds">"</span>last-modified<span class="pl-pds">"</span></span><span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>2014-04-27 00:00:00<span class="pl-pds">"</span></span>});</pre></div>
 
 <h3>
 <a id="body" class="anchor" href="#body" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Body</h3>
