@@ -1,6 +1,6 @@
 # The Roads.js isomophic web framework
 
-Roads is a web framework built on Generators. It's similar to Koa.js, but can be used both in the browser, and on the server.
+Roads is a web framework built on Generators. It's similar to Koa.js, but can be used both in the browser and on the server.
 
 # Why should I use Roads?
 
@@ -36,7 +36,12 @@ Roads is a web framework built on Generators. It's similar to Koa.js, but can be
  - [Roads.middleware](#roadsmiddleware)
   - [killSlash()](#killslash)
   - [cors(*Array|string* allow_origins, *Array* allow_headers)](#corsarraystring-allow_origins-array-allow_headers)
- - [Performance Improvements](#performance-improvements)
+ - [Roads.build](#roadsbuildstring-input_file-string-output_file-object-options)
+ - [Roads.PJAX](#roadspjax)
+  - [register(window, *DomElement* container_element)](#registerwindow-domelement-container_element)
+  - [PJAX Link Format](pjax-link-format)
+  - [PJAX Page titles](pjax-page-titles)
+  - [Isomorphic PJAX tips](isomorphic-pjax-tips)
 
 ## Getting Started
 
@@ -108,7 +113,7 @@ Building a project with roads is very straightforward.
     });
     ```
 
-5. Now you want to run your code. There are three options in this library.
+5. Now you want to run your code. There are four options in this library.
 
  - You can tie the road to node's standard HTTP Server. This will automatically route any HTTP requests to that server into your road.
         ```node
@@ -150,6 +155,30 @@ Building a project with roads is very straightforward.
     	        console.log(response);
     	    });
 	```
+ - You can use browserify to compile everything for use in the browser.
+    
+    **client_index.js**
+    ```node
+        const roads = require('roads');
+        var road = ...; // See steps 1-4 for road construction
+
+        // Make a client side request. See the PJAX section of the docs for more client side options
+        road.request('GET', '/users', {page: 2})
+            .then(function (response) {
+                console.log(response);
+            });
+
+    ```
+
+    **build.js**
+    ```node
+        require('roads').build('client_index.js', '/build/client.js', {
+            roads: {
+                output_file: './build/roads.js',
+            }
+        });
+
+    ```
 
 
 Now that you can use your roads server, continue reading the docs below for more information on [error handling](#roadusefunction-fn), [URL parameters](#url-part) and more!
@@ -620,5 +649,87 @@ name            | type                               | description
 road.use(roads.middleware.cors(['http://localhost:8080'], ['authorization']));
 ```
 
-## Performance improvements
-It's possible to design your API responses to achieve significant performance gains. [Roads Fields Filter](https://github.com/Dashron/roads-fieldsfilter) helps facilitate that feature.
+## Roads.build(*string* input_file, *string* output_file, *object* options)
+**Browserify function to convert your script to run in the browser**
+
+name                    | type                               | description
+ -----------------------|------------------------------------|---------------
+ input_file             | string                             | The source file that will be converted to use in the browser
+ output_file            | string                             | The output file that will be accessible by your browser
+ options                | object                             | A set of options that can influence the build process. See all fields below
+ options.babelify       | object                             | An object containing parameters to pass to the babelify transform
+ options.envify         | object                             | An object to pass to envify. This allows you to change values between your server and client scripts.
+ options.exclude        | array                              | An array of files that should not be included in the build process.
+ options.external       | array                              | An array of dependencies that should be included from exernal resources instead of built into the project
+ options.use_sourcemaps | boolean                            | Whether or not the build process should include source maps.
+
+
+```
+require('roads')
+    .build(__dirname + '/static/client.js', __dirname + '/static/client.brws.js', {
+        use_sourcemaps: true,
+        roads: {
+            output_file: './static/roads.brws.js',
+        },
+        external: ['react'],
+        babelify: {presets: ['react']}
+    });
+```
+
+## Roads.PJAX(road)
+**A helper object to easily enable PJAX on your website using roads**
+
+PJAX stands for pushState + AJAX. PJAX a technique for speeding up webpages by replacing certain links on the page with AJAX calls. To enable PJAX, you must register the PJAX handler via JavaScript and add attributes to some of your html links.
+
+### PJAX.register(window, *DomElement* container_element)
+
+On page load, you will need to construct and register your PJAX handler. Registration takes two parameters, the window object an a DomElement. When you click certain links in your html (as defined by the link format below), PJAX will intercept the action and instead use roads to generate the new page content. Once the new html is ready, it will replace the innerHTML of the container_element.
+
+This allows for clean, quick page refreshes via JavaScript, with a safe, JavaScript free fallback (the links will still work as normal without JavaScript!).
+
+```
+var road = ...; // Incomplete. See the getting started section for more information about creating a road
+var pjax = new require('roads').PJAX(road);
+pjax.register(window, document.getElementById('container'));
+```
+
+### PJAX Link Format
+
+If you would like a link to run via PJAX instead of a new page load, simply add the following data attribute
+
+`data-roads="link"`
+
+e.g.
+
+`<a href="/home" data-roads="link">Home</a>`
+
+### PJAX Page titles
+
+To handle page titles you will need to add matching middleware to your server, and your client road. Roads already includes a simple form of this via the setTitle middleware, and the PJAX function addTitleMiddleware.
+
+Your server should include the following:
+
+```node
+var roads = require('roads');
+var road = ...; // Incomplete. See the getting started section for more information about creating a road
+road.use(roads.middleware.setTitle);
+```
+
+```node
+
+var roads = require('roads');
+var road = ...; // Incomplete. See the getting started section for more information about creating a road
+
+var pjax = new roads.PJAX(road);
+pjax.addTitleMiddleware();
+pjax.register(window, document.getElementById('container'));
+```
+
+### Isomorphic PJAX tips
+
+There's a very easy pattern to follow to ensure sharing client and server code works successfully via PJAX.
+
+1. Your layout (everything wrapping the PJAX container) should be added via middleware. This middleware should not be used when built in the client.
+2. You should have one road that contains all of your public controllers, and one road that contains all of your private controllers
+2a. Your public controller should only contain public data, and interact with the rest of your system via HTTP. e.g. instead of making DB calls, these controllers would make HTTP requests to a separate API. This pattern is GREAT, and worthy of another entire article.
+2b. Private controllers aren't absolutely necessary, but may come into play if you need authentication or filesystem access for certain pages.
