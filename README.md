@@ -181,7 +181,7 @@ Building a project with roads is very straightforward.
     ```
 
 
-Now that you can use your roads server, continue reading the docs below for more information on [error handling](#roadusefunction-fn), [URL parameters](#url-part) and more!
+Now that you can use your road, continue reading the docs below for more information on [error handling](#roadusefunction-fn), [URL parameters](#url-part), [PJAX support](#roadspjaxobject-road) and more!
 
 
 
@@ -731,5 +731,5 @@ There's a very easy pattern to follow to ensure sharing client and server code w
 
 1. Your layout (everything wrapping the PJAX container) should be added via middleware. This middleware should not be used when built in the client.
 2. You should have one road that contains all of your public controllers, and one road that contains all of your private controllers
-2a. Your public controller should only contain public data, and interact with the rest of your system via HTTP. e.g. instead of making DB calls, these controllers would make HTTP requests to a separate API. This pattern is GREAT, and worthy of another entire article.
-2b. Private controllers aren't absolutely necessary, but may come into play if you need authentication or filesystem access for certain pages.
+3. Your public controller should only contain public data, and interact with the rest of your system via HTTP. e.g. instead of making DB calls, these controllers would make HTTP requests to a separate API. This pattern is GREAT, and worthy of another entire article.
+4. Private controllers aren't absolutely necessary, but may come into play if you need authentication or filesystem access for certain pages.
