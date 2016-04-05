@@ -37,11 +37,11 @@ Roads is a web framework built on Generators. It's similar to Koa.js, but can be
   - [killSlash()](#killslash)
   - [cors(*Array|string* allow_origins, *Array* allow_headers)](#corsarraystring-allow_origins-array-allow_headers)
  - [Roads.build](#roadsbuildstring-input_file-string-output_file-object-options)
- - [Roads.PJAX](#roadspjax)
-  - [register(window, *DomElement* container_element)](#registerwindow-domelement-container_element)
-  - [PJAX Link Format](pjax-link-format)
-  - [PJAX Page titles](pjax-page-titles)
-  - [Isomorphic PJAX tips](isomorphic-pjax-tips)
+ - [Roads.PJAX(*Object* road)](#roadspjaxobject-road)
+  - [register(*Object* window, *DomElement* container_element)](#pjaxregisterobject-window-domelement-container_element)
+  - [PJAX Link Format](#pjax-link-format)
+  - [PJAX Page titles](#pjax-page-titles)
+  - [Isomorphic PJAX tips](#isomorphic-pjax-tips)
 
 ## Getting Started
 
@@ -676,12 +676,12 @@ require('roads')
     });
 ```
 
-## Roads.PJAX(road)
+## Roads.PJAX(*Object* road)
 **A helper object to easily enable PJAX on your website using roads**
 
 PJAX stands for pushState + AJAX. PJAX a technique for speeding up webpages by replacing certain links on the page with AJAX calls. To enable PJAX, you must register the PJAX handler via JavaScript and add attributes to some of your html links.
 
-### PJAX.register(window, *DomElement* container_element)
+### PJAX.register(*Object* window, *DomElement* container_element)
 
 On page load, you will need to construct and register your PJAX handler. Registration takes two parameters, the window object an a DomElement. When you click certain links in your html (as defined by the link format below), PJAX will intercept the action and instead use roads to generate the new page content. Once the new html is ready, it will replace the innerHTML of the container_element.
 
