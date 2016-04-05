@@ -22,7 +22,7 @@
       <h1>
 <a id="the-roadsjs-isomophic-web-framework" class="anchor" href="#the-roadsjs-isomophic-web-framework" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>The Roads.js isomophic web framework</h1>
 
-<p>Roads is a web framework built on Generators. It's similar to Koa.js, but can be used both in the browser, and on the server.</p>
+<p>Roads is a web framework built on Generators. It's similar to Koa.js, but can be used both in the browser and on the server.</p>
 
 <h1>
 <a id="why-should-i-use-roads" class="anchor" href="#why-should-i-use-roads" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Why should I use Roads?</h1>
@@ -89,7 +89,17 @@
 <li><a href="#corsarraystring-allow_origins-array-allow_headers">cors(<em>Array|string</em> allow_origins, <em>Array</em> allow_headers)</a></li>
 </ul>
 </li>
-<li><a href="#performance-improvements">Performance Improvements</a></li>
+<li><a href="#roadsbuildstring-input_file-string-output_file-object-options">Roads.build</a></li>
+<li>
+<a href="#roadspjaxobject-road">Roads.PJAX(<em>Object</em> road)</a>
+
+<ul>
+<li><a href="#pjaxregisterobject-window-domelement-container_element">register(<em>Object</em> window, <em>DomElement</em> container_element)</a></li>
+<li><a href="#pjax-link-format">PJAX Link Format</a></li>
+<li><a href="#pjax-page-titles">PJAX Page titles</a></li>
+<li><a href="#isomorphic-pjax-tips">Isomorphic PJAX tips</a></li>
+</ul>
+</li>
 </ul>
 
 <h2>
@@ -164,7 +174,7 @@
 });</pre></div>
 </li>
 <li>
-<p>Now you want to run your code. There are three options in this library.</p>
+<p>Now you want to run your code. There are four options in this library.</p>
 
 <ul>
 <li>
@@ -206,6 +216,30 @@
         .<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">response</span>) {
             <span class="pl-en">console</span>.<span class="pl-c1">log</span>(response);
         });</pre></div>
+</li>
+<li>
+<p>You can use browserify to compile everything for use in the browser.</p>
+
+<p><strong>client_index.js</strong></p>
+
+<div class="highlight highlight-source-js"><pre>    <span class="pl-k">const</span> <span class="pl-c1">roads</span> <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>roads<span class="pl-pds">'</span></span>);
+    <span class="pl-k">var</span> road <span class="pl-k">=</span> <span class="pl-k">...</span>; <span class="pl-c">// See steps 1-4 for road construction</span>
+
+    <span class="pl-c">// Make a client side request. See the PJAX section of the docs for more client side options</span>
+    <span class="pl-smi">road</span>.<span class="pl-en">request</span>(<span class="pl-s"><span class="pl-pds">'</span>GET<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>/users<span class="pl-pds">'</span></span>, {page<span class="pl-k">:</span> <span class="pl-c1">2</span>})
+        .<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">response</span>) {
+            <span class="pl-en">console</span>.<span class="pl-c1">log</span>(response);
+        });
+</pre></div>
+
+<p><strong>build.js</strong></p>
+
+<div class="highlight highlight-source-js"><pre>    <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>roads<span class="pl-pds">'</span></span>).<span class="pl-en">build</span>(<span class="pl-s"><span class="pl-pds">'</span>client_index.js<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>/build/client.js<span class="pl-pds">'</span></span>, {
+        roads<span class="pl-k">:</span> {
+            output_file<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>./build/roads.js<span class="pl-pds">'</span></span>,
+        }
+    });
+</pre></div>
 </li>
 </ul>
 </li>
@@ -889,9 +923,133 @@ HttpError.internal_server_error = 500;
 <div class="highlight highlight-source-js"><pre><span class="pl-smi">road</span>.<span class="pl-en">use</span>(<span class="pl-smi">roads</span>.<span class="pl-smi">middleware</span>.<span class="pl-en">cors</span>([<span class="pl-s"><span class="pl-pds">'</span>http://localhost:8080<span class="pl-pds">'</span></span>], [<span class="pl-s"><span class="pl-pds">'</span>authorization<span class="pl-pds">'</span></span>]));</pre></div>
 
 <h2>
-<a id="performance-improvements" class="anchor" href="#performance-improvements" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Performance improvements</h2>
+<a id="roadsbuildstring-input_file-string-output_file-object-options" class="anchor" href="#roadsbuildstring-input_file-string-output_file-object-options" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Roads.build(<em>string</em> input_file, <em>string</em> output_file, <em>object</em> options)</h2>
 
-<p>It's possible to design your API responses to achieve significant performance gains. <a href="https://github.com/Dashron/roads-fieldsfilter">Roads Fields Filter</a> helps facilitate that feature.</p>
+<p><strong>Browserify function to convert your script to run in the browser</strong></p>
+
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>type</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>input_file</td>
+<td>string</td>
+<td>The source file that will be converted to use in the browser</td>
+</tr>
+<tr>
+<td>output_file</td>
+<td>string</td>
+<td>The output file that will be accessible by your browser</td>
+</tr>
+<tr>
+<td>options</td>
+<td>object</td>
+<td>A set of options that can influence the build process. See all fields below</td>
+</tr>
+<tr>
+<td>options.babelify</td>
+<td>object</td>
+<td>An object containing parameters to pass to the babelify transform</td>
+</tr>
+<tr>
+<td>options.envify</td>
+<td>object</td>
+<td>An object to pass to envify. This allows you to change values between your server and client scripts.</td>
+</tr>
+<tr>
+<td>options.exclude</td>
+<td>array</td>
+<td>An array of files that should not be included in the build process.</td>
+</tr>
+<tr>
+<td>options.external</td>
+<td>array</td>
+<td>An array of dependencies that should be included from exernal resources instead of built into the project</td>
+</tr>
+<tr>
+<td>options.use_sourcemaps</td>
+<td>boolean</td>
+<td>Whether or not the build process should include source maps.</td>
+</tr>
+</tbody>
+</table>
+
+<pre><code>require('roads')
+    .build(__dirname + '/static/client.js', __dirname + '/static/client.brws.js', {
+        use_sourcemaps: true,
+        roads: {
+            output_file: './static/roads.brws.js',
+        },
+        external: ['react'],
+        babelify: {presets: ['react']}
+    });
+</code></pre>
+
+<h2>
+<a id="roadspjaxobject-road" class="anchor" href="#roadspjaxobject-road" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Roads.PJAX(<em>Object</em> road)</h2>
+
+<p><strong>A helper object to easily enable PJAX on your website using roads</strong></p>
+
+<p>PJAX stands for pushState + AJAX. PJAX a technique for speeding up webpages by replacing certain links on the page with AJAX calls. To enable PJAX, you must register the PJAX handler via JavaScript and add attributes to some of your html links.</p>
+
+<h3>
+<a id="pjaxregisterobject-window-domelement-container_element" class="anchor" href="#pjaxregisterobject-window-domelement-container_element" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PJAX.register(<em>Object</em> window, <em>DomElement</em> container_element)</h3>
+
+<p>On page load, you will need to construct and register your PJAX handler. Registration takes two parameters, the window object an a DomElement. When you click certain links in your html (as defined by the link format below), PJAX will intercept the action and instead use roads to generate the new page content. Once the new html is ready, it will replace the innerHTML of the container_element.</p>
+
+<p>This allows for clean, quick page refreshes via JavaScript, with a safe, JavaScript free fallback (the links will still work as normal without JavaScript!).</p>
+
+<pre><code>var road = ...; // Incomplete. See the getting started section for more information about creating a road
+var pjax = new require('roads').PJAX(road);
+pjax.register(window, document.getElementById('container'));
+</code></pre>
+
+<h3>
+<a id="pjax-link-format" class="anchor" href="#pjax-link-format" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PJAX Link Format</h3>
+
+<p>If you would like a link to run via PJAX instead of a new page load, simply add the following data attribute</p>
+
+<p><code>data-roads="link"</code></p>
+
+<p>e.g.</p>
+
+<p><code>&lt;a href="/home" data-roads="link"&gt;Home&lt;/a&gt;</code></p>
+
+<h3>
+<a id="pjax-page-titles" class="anchor" href="#pjax-page-titles" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PJAX Page titles</h3>
+
+<p>To handle page titles you will need to add matching middleware to your server, and your client road. Roads already includes a simple form of this via the setTitle middleware, and the PJAX function addTitleMiddleware.</p>
+
+<p>Your server should include the following:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> roads <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>roads<span class="pl-pds">'</span></span>);
+<span class="pl-k">var</span> road <span class="pl-k">=</span> <span class="pl-k">...</span>; <span class="pl-c">// Incomplete. See the getting started section for more information about creating a road</span>
+<span class="pl-smi">road</span>.<span class="pl-en">use</span>(<span class="pl-smi">roads</span>.<span class="pl-smi">middleware</span>.<span class="pl-smi">setTitle</span>);</pre></div>
+
+<div class="highlight highlight-source-js"><pre>
+<span class="pl-k">var</span> roads <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>roads<span class="pl-pds">'</span></span>);
+<span class="pl-k">var</span> road <span class="pl-k">=</span> <span class="pl-k">...</span>; <span class="pl-c">// Incomplete. See the getting started section for more information about creating a road</span>
+
+<span class="pl-k">var</span> pjax <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">roads.PJAX</span>(road);
+<span class="pl-smi">pjax</span>.<span class="pl-en">addTitleMiddleware</span>();
+<span class="pl-smi">pjax</span>.<span class="pl-en">register</span>(<span class="pl-c1">window</span>, <span class="pl-c1">document</span>.<span class="pl-c1">getElementById</span>(<span class="pl-s"><span class="pl-pds">'</span>container<span class="pl-pds">'</span></span>));</pre></div>
+
+<h3>
+<a id="isomorphic-pjax-tips" class="anchor" href="#isomorphic-pjax-tips" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Isomorphic PJAX tips</h3>
+
+<p>There's a very easy pattern to follow to ensure sharing client and server code works successfully via PJAX.</p>
+
+<ol>
+<li>Your layout (everything wrapping the PJAX container) should be added via middleware. This middleware should not be used when built in the client.</li>
+<li>You should have one road that contains all of your public controllers, and one road that contains all of your private controllers
+2a. Your public controller should only contain public data, and interact with the rest of your system via HTTP. e.g. instead of making DB calls, these controllers would make HTTP requests to a separate API. This pattern is GREAT, and worthy of another entire article.
+2b. Private controllers aren't absolutely necessary, but may come into play if you need authentication or filesystem access for certain pages.</li>
+</ol>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/Dashron/roads">Roads</a> is maintained by <a href="https://github.com/Dashron">Dashron</a>.</span>
