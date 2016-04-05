@@ -245,7 +245,7 @@
 </li>
 </ol>
 
-<p>Now that you can use your roads server, continue reading the docs below for more information on <a href="#roadusefunction-fn">error handling</a>, <a href="#url-part">URL parameters</a> and more!</p>
+<p>Now that you can use your road, continue reading the docs below for more information on <a href="#roadusefunction-fn">error handling</a>, <a href="#url-part">URL parameters</a>, <a href="#roadspjaxobject-road">PJAX support</a> and more!</p>
 
 <h2>
 <a id="roadsroad" class="anchor" href="#roadsroad" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Roads.Road</h2>
@@ -1046,9 +1046,9 @@ pjax.register(window, document.getElementById('container'));
 
 <ol>
 <li>Your layout (everything wrapping the PJAX container) should be added via middleware. This middleware should not be used when built in the client.</li>
-<li>You should have one road that contains all of your public controllers, and one road that contains all of your private controllers
-2a. Your public controller should only contain public data, and interact with the rest of your system via HTTP. e.g. instead of making DB calls, these controllers would make HTTP requests to a separate API. This pattern is GREAT, and worthy of another entire article.
-2b. Private controllers aren't absolutely necessary, but may come into play if you need authentication or filesystem access for certain pages.</li>
+<li>You should have one road that contains all of your public controllers, and one road that contains all of your private controllers</li>
+<li>Your public controller should only contain public data, and interact with the rest of your system via HTTP. e.g. instead of making DB calls, these controllers would make HTTP requests to a separate API. This pattern is GREAT, and worthy of another entire article.</li>
+<li>Private controllers aren't absolutely necessary, but may come into play if you need authentication or filesystem access for certain pages.</li>
 </ol>
 
       <footer class="site-footer">
