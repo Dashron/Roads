@@ -14,7 +14,9 @@ module.exports.test = new Resource({
 		GET: function () {
 			this.setTitle('Private Resource');
 			var response = new this.Response('This is a private resource. It\'s available to the server, but is not build in the client! The landing page can be rendered via the client though, so try going back <a href="/" data-roads="link">home</a>!<br />');
-			response.setCookie('private_cookie', 'foo');
+			response.setCookie('private_cookie', 'foo', {
+				httpOnly: true
+			});
 			response.setCookie('public_cookie', 'bar', {
 				httpOnly: false
 			});
