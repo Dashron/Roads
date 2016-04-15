@@ -35,6 +35,8 @@ module.exports = function (road) {
 
 			// Pass all the cookies from the response object up to koa
 			if (cookies) {
+				// Kill the cookies set by the response object and rely on the koa cookie management
+				delete response.headers['Set-Cookie'];
 				for (let name in cookies) {
 					if (cookies.hasOwnProperty(name)) {
 						this.cookies.set(name, cookies[name].value, cookies[name].options);

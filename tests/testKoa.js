@@ -225,6 +225,7 @@ exports.testRoadsCookiesAreAppliedToKoa = function (test) {
 		return new Promise((accept, reject) => {
 			let res = new this.Response('hello, 200');
 
+			// Note: Koa defaults to httponly but the cookie library included with roads does not.
 			res.setCookie('cookie1', 'success', {domain: 'foo.bar'});
 			res.setCookie('cookie2', 'success2', {domain: 'foo2.bar'});
 
