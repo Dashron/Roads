@@ -668,10 +668,14 @@ name                    | type                               | description
 require('roads')
     .build(__dirname + '/static/client.js', __dirname + '/static/client.brws.js', {
         use_sourcemaps: true,
-        roads: {
-            output_file: './static/roads.brws.js',
+        external: {
+            roads: {
+                output_file: __dirname + '/static/roads.brws.js',
+            }, 
+            react: {
+                output_file: __dirname + '/static/react.brws.js',
+            }
         },
-        external: ['react'],
         babelify: {presets: ['react']}
     });
 ```

@@ -10,6 +10,7 @@ var road = new roads.Road(require('../resources/root').root);
 
 var pjax = new roads.PJAX(road);
 pjax.addTitleMiddleware();
+pjax.addCookieMiddleware(document);
 pjax.register(window, document.getElementById('container'));
 
 /*road.request('GET', '/')

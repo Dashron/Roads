@@ -9,6 +9,7 @@ var roads = require(__dirname + '/../../index');
 var road = new roads.Road([require('./resources/root').root, require('./resources/private').root]);
 
 road.use(roads.middleware.killSlash);
+road.use(roads.middleware.cookie());
 road.use(require('./middleware/addLayout.js'));
 road.use(roads.middleware.setTitle);
 

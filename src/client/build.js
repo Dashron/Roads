@@ -11,11 +11,10 @@ const envify = require('envify/custom');
 const fs = require('fs');
 
 function fixExternal (external) {
-	if (!Array.isArray(external)) {
-		external = [];
+	if (!external) {
+		external = {};
 	}
 
-	external.push('roads');
 	return external;
 }
 
@@ -30,14 +29,6 @@ function fixBabelify (babel_options) {
 
 	babel_options.presets.push('es2015');
 	return babel_options;
-}
-
-function fixBuild (build_list) {
-	if (!build_list) {
-		build_list = {};
-	}
-
-	return build_list;
 }
 
 function fixExclude(exclude_list) {
@@ -61,22 +52,7 @@ function fixOptions (options) {
 	options.babelify = fixBabelify(options.babelify);
 	options.external = fixExternal(options.external);
 	options.exclude = fixExclude(options.exclude);
-	options.build = fixBuild(options.build);
 	return options;
-}
-
-function buildRoads (output_file, options) {
-	if (!options) {
-		options = {};
-	}
-
-	browserify(null, {
-		debug: options.use_sourcemaps
-	})
-	.transform("babelify", options.babelify)
-	.require('roads')
-	.bundle()
-	.pipe(fs.createWriteStream(output_file));
 }
 
 /**
@@ -92,6 +68,7 @@ function buildRoads (output_file, options) {
  * @param  {Object} options.babelify An object containing parameters to pass to the babelify transform
  */
 module.exports = function (input_file, output_file, options) {
+	var externals = {};
 	options = fixOptions(options);
 
 	var builder = browserify(input_file, {
@@ -99,8 +76,11 @@ module.exports = function (input_file, output_file, options) {
 	})
 	.transform("babelify", options.babelify);
 
-	for (let i = 0; i < options.external.length; i++) {
-		builder.external(options.external[i]);
+	for (let key in options.external) {
+		if (options.external.hasOwnProperty(key)) {
+			builder.external(key);
+			externals[key] = options.external[key];
+		}
 	}
 	
 	for (let i = 0; i < options.exclude.length; i++) {
@@ -112,8 +92,16 @@ module.exports = function (input_file, output_file, options) {
 		.bundle()
 		.pipe(fs.createWriteStream(output_file));
 
-	if (options.build.roads) {
-		buildRoads(options.build.roads.output_file, options);
+	for (let key in externals) {
+		if (externals.hasOwnProperty(key)) {
+			browserify(null, {	
+				debug: options.use_sourcemaps
+			})
+			.transform("babelify", options.babelify)
+			.require(key)
+			.bundle()
+			.pipe(fs.createWriteStream(externals[key].output_file));
+		}
 	}
 };
 

@@ -51,6 +51,12 @@ module.exports = function () {
 			if (options) {
 				this._cookie_values[name].options = options;
 			}
+
+			if (!this.headers['Set-Cookie']) {
+				this.headers['Set-Cookie'] = [];
+			}
+
+			this.headers['Set-Cookie'].push(cookie.serialize(name,value, options));
 		};
 
 		this.Response.prototype.getCookies = function () {

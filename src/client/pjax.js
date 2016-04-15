@@ -36,6 +36,23 @@ module.exports = class RoadsPjax {
 	}
 
 	/**
+	 * [addCookieMiddleware description]
+	 */
+	addCookieMiddleware (document) {
+		var cookie = require('cookie');
+
+		this._road.use(function (method, url, body, headers, next) {
+			if (document.cookie) {
+				this.cookies = cookie.parse(document.cookie);
+			} else {
+				this.cookies = {};
+			}
+
+			return next();
+		});
+	}
+
+	/**
 	 * Registers the PJAX workflow to the provided window and container element. The container element will receive the contents
 	 * of the rendered HTML, and the window will be the source for all all history, redirection and dom interactions
 	 * 
@@ -44,12 +61,6 @@ module.exports = class RoadsPjax {
 	 */
 	register (window, container_element) {
 		var _self = this;
-
-		if (window.document.cookie) {
-			this.cookies = cookie.parse(window.document.cookie);
-		} else {
-			this.cookies = {};
-		}
 
 		// Handle navigation changes besides pushState. TODO: don' blow out existing onpopstate's
 		window.onpopstate = function(event) {
