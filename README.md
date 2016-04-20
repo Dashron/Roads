@@ -1,4 +1,4 @@
-# The Roads.js isomophic web framework
+# The Roads.js isomorphic web framework
 
 Roads is a web framework built on Generators. It's similar to Koa.js, but can be used both in the browser and on the server.
 
