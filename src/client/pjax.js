@@ -13,9 +13,11 @@ module.exports = class RoadsPjax {
 	 * 
 	 * @param  {Road} road
 	 */
-	constructor(road) {
+	constructor(road, container_element, window) {
 		this._road = road;
 		this._page_title = null;
+		this._window = window;
+		this._container_element = container_element;
 	}
 
 	/**
@@ -59,34 +61,34 @@ module.exports = class RoadsPjax {
 	 * @param  {Object} window
 	 * @param  {DomElement} container_element
 	 */
-	register (window, container_element) {
+	register () {
 		var _self = this;
 
 		// Handle navigation changes besides pushState. TODO: don' blow out existing onpopstate's
-		window.onpopstate = function(event) {
+		_self._window.onpopstate = function(event) {
 			if (event.state.pjax) {
 				// if the popped state was generated  via pjax, execute the appropriate route
-				_self._handleRoute(window.location.pathname, function (err, response) {
+				_self._handleRoute(_self._window.location.pathname, function (err, response) {
 					if (err) {
 						console.log('road err');
 						console.log(err);
 						return;
 					}
 
-					container_element.innerHTML = response.body;
-					window.document.title = _self._page_title;
+					_self._container_element.innerHTML = response.body;
+					_self._window.document.title = _self._page_title;
 				});
 			} else {
 				// reload the page if the popped state wasn't generated via an pjax call
-				window.location.pathname = window.location.pathname;
+				_self._window.location.pathname = _self._window.location.pathname;
 			}
 		};
 
 		// Trigger the pjax on any click event for roads links
-		container_element.addEventListener('click', _self._roadsLinkEvent.bind(_self, window, container_element));
+		_self._container_element.addEventListener('click', _self._roadsLinkEvent.bind(_self));
 
 		// initial state
-		window.history.replaceState({page_title: window.document.title, pjax: false}, this._page_title);
+		_self._window.history.replaceState({page_title: _self._window.document.title, pjax: false}, this._page_title);
 	}
 
 	/**
@@ -105,13 +107,21 @@ module.exports = class RoadsPjax {
 	}
 
 	/**
+	 * [render description]
+	 * @param  {[type]} response_object [description]
+	 * @return {[type]}                 [description]
+	 */
+	render (response_object) {
+		this._container_element.innerHTML = response_object.body;
+	}
+
+	/**
 	 * Handles the link click event. If the link has the right data attribute we will execute and render the appropriate controller
 	 * 
-	 * @param  {Object} window            [description]
 	 * @param  {DomElement} container_element [description]
 	 * @param  {Object} event             [description]
 	 */
-	_roadsLinkEvent (window, container_element, event) {
+	_roadsLinkEvent (event) {
 		if (event.target.tagName === 'A' && event.target.dataset.roads === "link" && !event.ctrlKey) {
 			var _self = this;
 
@@ -123,9 +133,9 @@ module.exports = class RoadsPjax {
 					return;
 				}
 
-				window.history.pushState({page_title: _self._page_title, pjax: true}, _self._page_title, event.target.href);
-				container_element.innerHTML = response.body;
-				window.document.title = _self._page_title;
+				_self._window.history.pushState({page_title: _self._page_title, pjax: true}, _self._page_title, event.target.href);
+				_self.render(response);
+				_self._window.document.title = _self._page_title;
 			});
 		}
 	}

@@ -37,8 +37,8 @@ Roads is a web framework built on Generators. It's similar to Koa.js, but can be
   - [killSlash()](#killslash)
   - [cors(*Array|string* allow_origins, *Array* allow_headers)](#corsarraystring-allow_origins-array-allow_headers)
  - [Roads.build](#roadsbuildstring-input_file-string-output_file-object-options)
- - [Roads.PJAX(*Object* road)](#roadspjaxobject-road)
-  - [register(*Object* window, *DomElement* container_element)](#pjaxregisterobject-window-domelement-container_element)
+ - [Roads.PJAX(*Object* road, *DomElement* container_element, *Object* window)](#roadspjaxobject-road-domelement-container_element-object-window)
+  - [register()](#pjaxregister)
   - [PJAX Link Format](#pjax-link-format)
   - [PJAX Page titles](#pjax-page-titles)
   - [Isomorphic PJAX tips](#isomorphic-pjax-tips)
@@ -680,21 +680,21 @@ require('roads')
     });
 ```
 
-## Roads.PJAX(*Object* road)
+## Roads.PJAX(*Object* road, *DomElement* container_element, *Object* window)
 **A helper object to easily enable PJAX on your website using roads**
 
-PJAX stands for pushState + AJAX. PJAX a technique for speeding up webpages by replacing certain links on the page with AJAX calls. To enable PJAX, you must register the PJAX handler via JavaScript and add attributes to some of your html links.
+PJAX stands for pushState + AJAX. PJAX a technique for speeding up webpages by replacing certain links on the page with AJAX calls. To enable PJAX, you must create a PJAX object and call the register method. Until you call register, PJAX links will not be handled properly.
 
-### PJAX.register(*Object* window, *DomElement* container_element)
+### PJAX.register()
 
-On page load, you will need to construct and register your PJAX handler. Registration takes two parameters, the window object an a DomElement. When you click certain links in your html (as defined by the link format below), PJAX will intercept the action and instead use roads to generate the new page content. Once the new html is ready, it will replace the innerHTML of the container_element.
+On page load, you will need to construct and register your PJAX handler. When you click certain links in the container element, PJAX will intercept the action and instead use roads to generate the new page content. Once the new html is ready, it will replace the innerHTML of the container_element.
 
 This allows for clean, quick page refreshes via JavaScript, with a safe, JavaScript free fallback (the links will still work as normal without JavaScript!).
 
 ```
 var road = ...; // Incomplete. See the getting started section for more information about creating a road
-var pjax = new require('roads').PJAX(road);
-pjax.register(window, document.getElementById('container'));
+var pjax = new require('roads').PJAX(road, document.getElementById('container'), window);
+pjax.register();
 ```
 
 ### PJAX Link Format
