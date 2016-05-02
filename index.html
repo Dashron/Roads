@@ -91,10 +91,10 @@
 </li>
 <li><a href="#roadsbuildstring-input_file-string-output_file-object-options">Roads.build</a></li>
 <li>
-<a href="#roadspjaxobject-road">Roads.PJAX(<em>Object</em> road)</a>
+<a href="#roadspjaxobject-road-domelement-container_element-object-window">Roads.PJAX(<em>Object</em> road, <em>DomElement</em> container_element, <em>Object</em> window)</a>
 
 <ul>
-<li><a href="#pjaxregisterobject-window-domelement-container_element">register(<em>Object</em> window, <em>DomElement</em> container_element)</a></li>
+<li><a href="#pjaxregister">register()</a></li>
 <li><a href="#pjax-link-format">PJAX Link Format</a></li>
 <li><a href="#pjax-page-titles">PJAX Page titles</a></li>
 <li><a href="#isomorphic-pjax-tips">Isomorphic PJAX tips</a></li>
@@ -982,31 +982,35 @@ HttpError.internal_server_error = 500;
 <pre><code>require('roads')
     .build(__dirname + '/static/client.js', __dirname + '/static/client.brws.js', {
         use_sourcemaps: true,
-        roads: {
-            output_file: './static/roads.brws.js',
+        external: {
+            roads: {
+                output_file: __dirname + '/static/roads.brws.js',
+            }, 
+            react: {
+                output_file: __dirname + '/static/react.brws.js',
+            }
         },
-        external: ['react'],
         babelify: {presets: ['react']}
     });
 </code></pre>
 
 <h2>
-<a id="roadspjaxobject-road" class="anchor" href="#roadspjaxobject-road" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Roads.PJAX(<em>Object</em> road)</h2>
+<a id="roadspjaxobject-road-domelement-container_element-object-window" class="anchor" href="#roadspjaxobject-road-domelement-container_element-object-window" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Roads.PJAX(<em>Object</em> road, <em>DomElement</em> container_element, <em>Object</em> window)</h2>
 
 <p><strong>A helper object to easily enable PJAX on your website using roads</strong></p>
 
-<p>PJAX stands for pushState + AJAX. PJAX a technique for speeding up webpages by replacing certain links on the page with AJAX calls. To enable PJAX, you must register the PJAX handler via JavaScript and add attributes to some of your html links.</p>
+<p>PJAX stands for pushState + AJAX. PJAX a technique for speeding up webpages by replacing certain links on the page with AJAX calls. To enable PJAX, you must create a PJAX object and call the register method. Until you call register, PJAX links will not be handled properly.</p>
 
 <h3>
-<a id="pjaxregisterobject-window-domelement-container_element" class="anchor" href="#pjaxregisterobject-window-domelement-container_element" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PJAX.register(<em>Object</em> window, <em>DomElement</em> container_element)</h3>
+<a id="pjaxregister" class="anchor" href="#pjaxregister" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PJAX.register()</h3>
 
-<p>On page load, you will need to construct and register your PJAX handler. Registration takes two parameters, the window object an a DomElement. When you click certain links in your html (as defined by the link format below), PJAX will intercept the action and instead use roads to generate the new page content. Once the new html is ready, it will replace the innerHTML of the container_element.</p>
+<p>On page load, you will need to construct and register your PJAX handler. When you click certain links in the container element, PJAX will intercept the action and instead use roads to generate the new page content. Once the new html is ready, it will replace the innerHTML of the container_element.</p>
 
 <p>This allows for clean, quick page refreshes via JavaScript, with a safe, JavaScript free fallback (the links will still work as normal without JavaScript!).</p>
 
 <pre><code>var road = ...; // Incomplete. See the getting started section for more information about creating a road
-var pjax = new require('roads').PJAX(road);
-pjax.register(window, document.getElementById('container'));
+var pjax = new require('roads').PJAX(road, document.getElementById('container'), window);
+pjax.register();
 </code></pre>
 
 <h3>
