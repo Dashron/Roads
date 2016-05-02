@@ -75,7 +75,7 @@ module.exports = class RoadsPjax {
 						return;
 					}
 
-					_self._container_element.innerHTML = response.body;
+					_self.render(response);
 					_self._window.document.title = _self._page_title;
 				});
 			} else {
