@@ -9,7 +9,7 @@
  * Any requests with trailing slashes will immediately return a Response object redirecting to a non-trailing-slash path
  */
 module.exports = function (method, url, body, headers, next) {
-	var _self = this;
+	let _self = this;
 
 	// kill trailing slash as long as we aren't at the root level
 	if (url.path !== '/' && url.path[url.path.length - 1] === '/') {

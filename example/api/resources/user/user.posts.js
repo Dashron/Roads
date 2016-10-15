@@ -21,17 +21,17 @@ module.exports.one = new Resource({
 	methods : {
 		GET : function* (url, body, headers) {
 			if (!url.args.user_id) {
-				throw new roads.HttpError('user', 404);
+				throw new roads.HttpError('user', roads.HttpError.not_found);
 			}
 
 			if (!url.args.post_id) {
-				throw new roads.HttpError('post', 404);
+				throw new roads.HttpError('post', roads.HttpError.not_found);
 			}
 
 			var post = yield Posts.get('id=' + url.args.post_id);
 
 			if (!post || post.user_id !== url.args.user_id) {
-				throw new roads.HttpError('post', 404);
+				throw new roads.HttpError('post', roads.HttpError.not_found);
 			}
 
 			return new Response(postRepresentation(post));
@@ -50,7 +50,7 @@ module.exports.many = new Resource({
 	methods : {
 		GET : function* (url, body, headers) {
 			if (!url.args.user_id) {
-				throw new roads.HttpError('user', 404);
+				throw new roads.HttpError('user', roads.HttpError.not_found);
 			}
 
 			return new Response(collectionRepresentation(yield Posts.get('user_id=' + url.args.user_id), postRepresentation));

@@ -98,11 +98,11 @@ module.exports = class Server {
 
 	 */
 	_onRequest (http_request, http_response) {
-		var body = '';
-		var _self = this;
+		let body = '';
+		let _self = this;
 
-		var error_handler = _self._error_handler.bind(_self, http_response);
-		var success_handler = _self._writeToResponse.bind(_self, http_response);
+		let error_handler = _self._error_handler.bind(_self, http_response);
+		let success_handler = _self._writeToResponse.bind(_self, http_response);
 
 		http_request.on('readable', () => {
 	  		let chunk = null;

@@ -6,19 +6,19 @@ var url_module = require('url');
 /**
  * Ensure that the request context is the context provided in the Road constructor
  */
-exports.testRoadContextExists = function (test) {
+exports.testRoadContextContainsRequestMethod = function (test) {
 	var response_string = 'blahblahwhatwhatwhat';
 
-	var road = new roads.Road(new roads.Resource({
-		methods : {
-			GET : function (url, body, headers) {
+	var road = new roads.Road();
+
+	road.use(function (method, url, body, headers) {
+		switch (method) {
+			case "GET": 
 				return this.request('POST', '/');
-			},
-			POST : function (url, body, headers) {
+			case "POST":
 				return response_string;
-			}
 		}
-	}));
+	});
 
 	road.request('GET', '/')
 		.then(function (val) {
@@ -41,13 +41,7 @@ exports.testRoadContextExists = function (test) {
 exports.testRoadContextPersists = function (test) {
 	var response_string = 'blahblahwhatwhatwhat';
 
-	var road = new roads.Road(new roads.Resource({
-		methods : {
-			GET : function (url, body, headers) {
-				return this.confirmString();
-			}
-		}
-	}));
+	var road = new roads.Road();
 
 	road.use(function (method, url, body, headers, next) {
 		this.confirmString = function () {
@@ -55,6 +49,10 @@ exports.testRoadContextPersists = function (test) {
 		};
 
 		return next();
+	});
+
+	road.use(function (method, url, body, headers, next) {
+		return this.confirmString();
 	});
 
 	road.request('GET', '/')
@@ -74,13 +72,7 @@ exports.testRoadContextPersists = function (test) {
 exports.testRoadCoroutineContextPersists = function (test) {
 	var response_string = 'blahblahwhatwhatwhat';
 
-	var road = new roads.Road(new roads.Resource({
-		methods : {
-			GET : function (url, body, headers) {
-				return this.confirmString();
-			}
-		}
-	}));
+	var road = new roads.Road();
 
 	road.use(function* (method, url, body, headers, next) {
 		this.confirmString = function () {
@@ -88,6 +80,10 @@ exports.testRoadCoroutineContextPersists = function (test) {
 		};
 
 		return yield next();
+	});
+	
+	road.use(function (method, url, body, headers, next) {
+		return this.confirmString();
 	});
 
 	road.request('GET', '/')
@@ -102,120 +98,15 @@ exports.testRoadCoroutineContextPersists = function (test) {
 };
 
 /**
- * Ensure that we can find the proper resource for a url
+ * Ensure that contexts are only added once to a resource.
  */
 exports.testRoadContextUniqueness = function (test) {
-	var response_string = 'blahblahwhatwhatwhat';
-
-	var road = new roads.Road(new roads.Resource({
-		methods : {
-			GET : function (url, body, headers) {
-				return this.confirmString();
-			}
-		}
-	}));
+	var road = new roads.Road();
 
 	road.use(function* (method, url, body, headers, next) {
-		this.confirmString = function () {
-			return this.response_string;
-		};
-
-		this.response_string = (this.response_string ? this.response_string : '' )+ response_string;
-
 		return yield next();
 	});
 
-	road.request('GET', '/')
-		.then(function (val) {
-			test.deepEqual(val, {
-				status: 200,
-				body: response_string,
-				headers: {}
-			});
-			test.done();
-		});
-};
-
-exports.testRoadResourceContextExists = function (test) {
-	var road = new roads.Road(new roads.Resource({
-		methods : {
-			GET : function (url, body, headers) {
-				return this.resource_context;
-			}
-		},
-		context : {
-			'hello' : 'world'
-		}
-	}));
-
-	road.request('GET', '/')
-		.then(function (val) {
-			test.deepEqual(val, {
-				status: 200,
-				body: {
-					"hello" : "world"
-				},
-				headers: {}
-			});
-			test.done();
-		});
-};
-
-exports.testRoadMethodContextExists = function (test) {
-	var road = new roads.Road(new roads.Resource({
-		methods : {
-			GET : {
-				fn: function (url, body, headers) {
-					return this.method_context.hello;
-				},
-				hello: "world"
-			}
-		}
-	}));
-
-	road.request('GET', '/')
-		.then(function (val) {
-			test.deepEqual(val, {
-				status: 200,
-				body: "world",
-				headers: {}
-			});
-			test.done();
-		});
-};
-
-exports.testDifferentRoadMethodContextUndefined = function (test) {
-	var road = new roads.Road(new roads.Resource({
-		methods : {
-			GET : {
-				fn: function (url, body, headers) {
-					return this.method_context.hello;
-				},
-				hello: "world"
-			},
-			POST : function (url, body, headers) {
-				return "Goodbye";
-			}
-		}
-	}));
-
-	road.use(function (method, url, body, headers, next) {
-		if (method === 'GET') {
-			test.equal("world", this.method_context.hello);
-		} else {
-			test.equal(undefined, this.method_context);
-		}
-
-		return next();
-	});
-
-	road.request('POST', '/')
-		.then(function (val) {
-			test.deepEqual(val, {
-				status: 200,
-				body: "Goodbye",
-				headers: {}
-			});
-			test.done();
-		});
+	test.equal(1, road._request_chain.length);
+	test.done();
 };

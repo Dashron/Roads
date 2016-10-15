@@ -1,6 +1,6 @@
 "use strict";
 
-var roads = require('../index.js');
+var Resource = require('../../src/resourceRouter/resource.js');
 
 /**
  * Create a mock resource
@@ -33,7 +33,7 @@ function createResource (methods, resources) {
 		definition.resources = resources;
 	}
 
-	return new roads.Resource(definition);
+	return new Resource(definition);
 }
 
 /**

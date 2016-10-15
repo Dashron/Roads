@@ -68,10 +68,10 @@ function fixOptions (options) {
  * @param  {Object} options.babelify An object containing parameters to pass to the babelify transform
  */
 module.exports = function (input_file, output_file, options) {
-	var externals = {};
+	let externals = {};
 	options = fixOptions(options);
 
-	var builder = browserify(input_file, {
+	let builder = browserify(input_file, {
 		debug: options.use_sourcemaps
 	})
 	.transform("babelify", options.babelify);

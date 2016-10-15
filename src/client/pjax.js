@@ -65,6 +65,7 @@ module.exports = class RoadsPjax {
 		var _self = this;
 
 		// Handle navigation changes besides pushState. TODO: don' blow out existing onpopstate's
+		// TODO: If a request is in process during the popstate, we should kill it and use the new url
 		_self._window.onpopstate = function(event) {
 			if (event.state.pjax) {
 				// if the popped state was generated  via pjax, execute the appropriate route

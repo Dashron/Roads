@@ -24,26 +24,26 @@ module.exports.one = new Resource({
 	methods : {
 		GET : function* (url, body, headers) {
 			if (!url.args.user_id) {
-				throw new roads.HttpError('User not found', 404);
+				throw new roads.HttpError('User not found', roads.HttpError.not_found);
 			}
 
 			var user = yield Users.get('id=' + url.args.user_id);
 
 			if (!user) {
-				throw new roads.HttpError('User not found', 404);
+				throw new roads.HttpError('User not found', roads.HttpError.not_found);
 			}
 
 			return new Response(userRepresentation(user));
 		},
 		PATCH : function* (url, body, headers) {
 			if (!url.args.user_id) {
-				throw new roads.HttpError('User not found', 404);
+				throw new roads.HttpError('User not found', roads.HttpError.not_found);
 			}
 
 			var user = yield Users.get('id=' + url.args.user_id);
 
 			if (!user) {
-				throw new roads.HttpError('User not found', 404);
+				throw new roads.HttpError('User not found', roads.HttpError.not_found);
 			}
 
 			if (body.name) {
@@ -58,13 +58,13 @@ module.exports.one = new Resource({
 		},
 		DELETE : function* (url, body, headers) {
 			if (!url.args.user_id) {
-				throw new roads.HttpError('User not found', 404);
+				throw new roads.HttpError('User not found', roads.HttpError.not_found);
 			}
 
 			var user = yield Users.get('id=' + url.args.user_id);
 
 			if (!user) {
-				throw new roads.HttpError('User not found', 404);
+				throw new roads.HttpError('User not found', roads.HttpError.not_found);
 			}
 
 			yield user.delete();
@@ -86,19 +86,19 @@ module.exports.many = new Resource({
 		GET : function* (url, body, headers) {
 			return new Response(collectionRepresentation(yield Users.get('all'), userRepresentation));
 		},
-		POST : function* (url, body, headers) {
+		POST : function (url, body, headers) {
 			var user = {};
 
 			if (body.name) {
 				user.name = body.name;
 			} else {
-				throw new roads.HttpError('You must provide a user name when creating users', 400);
+				throw new roads.HttpError('You must provide a user name when creating users', roads.HttpError.invalid_request);
 			}
 
 			if (body.email) {
 				user.email = body.email;
 			} else {
-				throw new roads.HttpError('You must provide a user email when creating users', 400);
+				throw new roads.HttpError('You must provide a user email when creating users', roads.HttpError.invalid_request);
 			}
 
 			return new Response(userRepresentation(user), 201);

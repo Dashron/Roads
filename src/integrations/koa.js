@@ -27,7 +27,7 @@ module.exports = function (road) {
 		}
 
 		// Execute the route
-		var response = yield road.request(this.method, this.originalUrl, this.request.body, this.headers);			
+		let response = yield road.request(this.method, this.originalUrl, this.request.body, this.headers);			
 
 		// Extract the cookies from the response object (getCookies is applied in the cookie middleware)
 		if (response.getCookies) {

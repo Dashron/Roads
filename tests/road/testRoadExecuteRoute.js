@@ -5,44 +5,10 @@ var url_module = require('url');
 var coroutine = require('roads-coroutine');
 
 /**
- * Create a mock resource
- */
-function createResource (methods, resources) {
-	var endpoint = function (method) {
-		return function* (url, body, headers) {
-			return {
-				path : url.path,
-				method : method,
-				body : body,
-				headers : headers
-			};
-		};
-	};
-
-	var definition = {
-		methods : {
-		}
-	};
-
-	if (methods) {
-		methods.forEach(function (method) {
-			definition.methods[method] = endpoint(method);
-		});
-	}
-
-	if (resources) {
-		definition.resources = resources;
-	}
-
-	return new roads.Resource(definition);
-}
-
-/**
  * Test that route execution of a normal function becomes a proper promise
  */
 exports.testExecuteRoute = function (test) {
-	var resource = createResource(['GET']);
-	var road = new roads.Road(resource);
+	var road = new roads.Road();
 	var result = 'all the things';
 
 	road._executeRoute(function () {
@@ -61,8 +27,7 @@ exports.testExecuteRoute = function (test) {
  * Test that route execution of a normal function, which throws an exception, becomes a proper promise
  */
 exports.testExecuteErrorRoute = function (test) {
-	var resource = createResource(['GET']);
-	var road = new roads.Road(resource);
+	var road = new roads.Road();
 	var err = new Error();
 
 	road._executeRoute(function () {
@@ -80,8 +45,7 @@ exports.testExecuteErrorRoute = function (test) {
  * Test that route execution of a coroutine becomes a proper promise
  */
 exports.testExecuteCoroutineRoute = function (test) {
-	var resource = createResource(['GET']);
-	var road = new roads.Road(resource);
+	var road = new roads.Road();
 	var result = 'stuff stuff stuff';
 
 	// todo: eventually switch to async functions
@@ -100,8 +64,7 @@ exports.testExecuteCoroutineRoute = function (test) {
  * Test that route execution of a coroutine, which throws an exception, becomes a proper promise
  */
 exports.testExecuteErrorCoroutineRoute = function (test) {
-	var resource = createResource(['GET']);
-	var road = new roads.Road(resource);
+	var road = new roads.Road();
 
 	// todo: eventually switch to async functions
 	var cr = coroutine(function* () {

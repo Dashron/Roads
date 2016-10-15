@@ -6,8 +6,8 @@
  */
 
 module.exports.Promise = Promise;
-module.exports.Resource = require('./src/resource.js');
-module.exports.Response = require('./src/response.js');
+module.exports.response_lib = require('./src/response.js');
+module.exports.Response = module.exports.response_lib.Response;
 module.exports.Road = require('./src/road.js');
 module.exports.Server = require('./src/httpServer.js');
 module.exports.PJAX = require('./src/client/pjax');

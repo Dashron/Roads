@@ -21,13 +21,13 @@ module.exports.one = new Resource({
 	methods : {
 		GET : function* (url, body, headers) {
 			if (!url.args.post_id) {
-				throw new roads.HttpError('post', 404);
+				throw new roads.HttpError('post', roads.HttpError.not_found);
 			}
 
 			var post = yield Posts.get('id=' + url.args.post_id);
 
 			if (!post) {
-				throw new roads.HttpError('post', 404);
+				throw new roads.HttpError('post', roads.HttpError.not_found);
 			}
 
 			post.user = yield Users.get('id=' + post.user_id);

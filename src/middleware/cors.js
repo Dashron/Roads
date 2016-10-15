@@ -42,9 +42,9 @@ module.exports = function (allow_origins, allow_headers) {
 	 * This function has some rebind trickery down the line, and should not be an arrow function
 	 */
 	return function (method, uri, body, headers, next) {
-		var _self = this;
-		var cors_methods = this.http_methods;
-		var cors_headers = allow_headers;
+		let _self = this;
+		let cors_methods = this.http_methods;
+		let cors_headers = allow_headers;
 
 		if (this.resource_context && this.resource_context.cors) {
 			if (this.resource_context.cors.methods) {
@@ -61,7 +61,7 @@ module.exports = function (allow_origins, allow_headers) {
 			if (method === 'OPTIONS') {
 				if (headers.origin && headers['access-control-request-method']) {
 					
-					var allowed_origin = locateOrigin(headers.origin, allow_origins, cors_methods);
+					let allowed_origin = locateOrigin(headers.origin, allow_origins, cors_methods);
 					// if the requested origin is not an allowed cors origin, fail
 					if (!allowed_origin) {
 						return new Promise((resolve, reject) => {
@@ -114,7 +114,7 @@ module.exports = function (allow_origins, allow_headers) {
 				error.headers = {};
 			}
 
-			var allowed_origin = locateOrigin(headers.origin, allow_origins, cors_methods);
+			let allowed_origin = locateOrigin(headers.origin, allow_origins, cors_methods);
 			// if the requested origin is not an allowed cors origin, fail
 			if (!allowed_origin) {
 				return new Promise((resolve, reject) => {
