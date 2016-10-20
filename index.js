@@ -59,7 +59,8 @@ module.exports.middleware = {
 	cookie: require('./src/middleware/cookie.js'),
 	killSlash: require('./src/middleware/killSlash.js'),
 	reroute: require('./src/middleware/reroute.js'),
-	setTitle: require('./src/middleware/setTitle.js')
+	setTitle: require('./src/middleware/setTitle.js'),
+	simpleRouter: require('./src/middleware/simpleRouter.js')
 };
 
 // Expose a useful http error class

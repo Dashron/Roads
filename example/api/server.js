@@ -6,7 +6,7 @@
  */
 
 var roads = require(__dirname + '/../../index');
-var api = new roads.Road(require('./resources/root').many);
+var api = new roads.Road();
 
 var notFoundRepresentation = require('./representations/server/notFound');
 var notAllowedRepresentation = require('./representations/server/notAllowed');
@@ -14,6 +14,9 @@ var unknownRepresentation = require('./representations/server/unknown');
 
 api.use(roads.middleware.killSlash);
 api.use(roads.middleware.cors(['http://localhost:8081']));
+api.use(roads.middleware.simpleRouter(api));
+require('./applyRoutes.js')(api);
+
 
 var server = new roads.Server(api, function (err) {
 	var response = null;
