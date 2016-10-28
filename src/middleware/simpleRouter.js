@@ -1,40 +1,71 @@
 "use strict";
+
 /**
 * simpleRouter.js
 * Copyright(c) 2016 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
  */
+module.exports = class SimpleRouter {
+	constructor () {
+		this.routes = [];
+	}
 
-var routes = [];
+	/**
+	 * [applyMiddleware description]
+	 * @param  {[type]} road [description]
+	 * @return {[type]}      [description]
+	 */
+	applyMiddleware (road) {
+		var _self = this;
+		road.addRoute = this.addRoute.bind(this);
 
-/**
- * Note: This doesn't handle 405's. One possible solution is to record all similar paths
- */
-module.exports = function (road) {
-	road.addRoute = function (path, method, fn) {
-		routes.push({
+		road.use(function (request_method, request_url, request_body, request_headers, next) {
+			return _self.middleware(_self.routes, request_method, request_url, request_body, request_headers, next);
+		});
+	}
+
+	/**
+	 * [addRoute description]
+	 * @param {[type]}   path   [description]
+	 * @param {[type]}   method [description]
+	 * @param {Function} fn     [description]
+	 */
+	addRoute (path, method, fn) {
+		this.routes.push({
 			path: path,
 			method: method,
 			fn: fn
 		});
-	};
+	}
 
-	return function (request_method, request_url, request_body, request_headers, next) {
-		var context = this;
-		var response = null;
+	/**
+	 * [middleware description]
+	 * @param  {[type]}   routes          [description]
+	 * @param  {[type]}   request_method  [description]
+	 * @param  {[type]}   request_url     [description]
+	 * @param  {[type]}   request_body    [description]
+	 * @param  {[type]}   request_headers [description]
+	 * @param  {Function} next            [description]
+	 * @return {[type]}                   [description]
+	 */
+	middleware (routes, request_method, request_url, request_body, request_headers, next) {
+		let context = this;
+		let response = null;
+		let hit = false;
 
-		for (let i = 0; i < routes.length; i++) {
-			let route = routes[i];
+		for (let i = 0; i < this.routes.length; i++) {
+			let route = this.routes[i];
 			if (route.path === request_url.path && route.method === request_method) {
 				response = (route.fn).call(context, request_method, request_url, request_body, request_headers, next);
+				hit = true;
 				break;
 			}
 		}
 
-		if (response) {
+		if (hit) {
 			return response;
 		}
 
 		return next();
-	};
+	}
 };
