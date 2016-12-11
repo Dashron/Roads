@@ -37,12 +37,12 @@ function makeCorsCall (allowed_origins, method, allowed_methods, allowed_headers
 	}
 
 	return roads.middleware.cors(allowed_origins, allowed_headers).call(context, method, url, body, headers, next);
-};
+}
 
 /**
  * Ensure a basic valid preflight check works
  */
-exports.testPreflightRequestWithCorsAndNoSettings = function (test) {
+exports['test preflight request with cors and no settings'] = function (test) {
 	var origin = '*';
 	var method = 'OPTIONS';
 	var allowed_methods = ['GET', 'POST'];
@@ -73,7 +73,7 @@ exports.testPreflightRequestWithCorsAndNoSettings = function (test) {
 /**
  * Ensure a basic valid preflight check works
  */
-exports.testPreflightRequestWithCorsAndOriginAllowListHits = function (test) {
+exports['test preflight request with cors and origin allow list hits'] = function (test) {
 	var origin = ['localhost:8080', 'dashron.com'];
 	var method = 'OPTIONS';
 	var allowed_methods = ['GET', 'POST'];
@@ -103,7 +103,7 @@ exports.testPreflightRequestWithCorsAndOriginAllowListHits = function (test) {
 /**
  * Ensure a basic valid preflight check works
  */
-exports.testPreflightRequestWithCorsAndOriginAllowListMisses = function (test) {
+exports['test preflight request with cors and origin allow list misses'] = function (test) {
 	var origin = ['dashron.com'];
 	var method = 'OPTIONS';
 	var allowed_methods = ['GET', 'POST'];
@@ -125,7 +125,7 @@ exports.testPreflightRequestWithCorsAndOriginAllowListMisses = function (test) {
 /**
  * Ensure a non-cors options request still works
  */
-exports.testOptionsWithoutOriginIsntCors = function (test) {
+exports['test options without origin isn\'t cors'] = function (test) {
 	var origin = '*';
 	var method = 'OPTIONS';
 	var allowed_methods = ['GET'];
@@ -146,7 +146,7 @@ exports.testOptionsWithoutOriginIsntCors = function (test) {
 /**
  * Ensure a preflight check with a http method miss fails
  */
-exports.testPreflightMethodMissWithCorsAndNoSettings = function (test) {
+exports['test preflight method miss with cors and no settings'] = function (test) {
 	var origin = '*';
 	var method = 'OPTIONS';
 	var allowed_methods = ['POST'];
@@ -166,7 +166,7 @@ exports.testPreflightMethodMissWithCorsAndNoSettings = function (test) {
 /**
  * Ensure a normal request works
  */
-exports.testStandardRequestWithCorsAndNoSettings = function (test) {
+exports['test standard request with cors and no settings'] = function (test) {
 	var origin = '*';
 	var method = 'GET';
 	var allowed_methods = ['GET'];
@@ -192,7 +192,7 @@ exports.testStandardRequestWithCorsAndNoSettings = function (test) {
 /**
  * Ensure a non-cors request still works
  */
-exports.testStandardWithoutOriginIsntCors = function (test) {
+exports['test standard without origin isn\'t cors'] = function (test) {
 	var origin = '*';
 	var method = 'GET';
 	var allowed_methods = ['GET'];
@@ -214,7 +214,7 @@ exports.testStandardWithoutOriginIsntCors = function (test) {
 /**
  * Ensure a normal request works
  */
-exports.testStandardRequestWithErrorThrownStillSendsCorsHeaders = function (test) {
+exports['test standard request with error thrown still sends cors headers'] = function (test) {
 	var origin = '*';
 	var method = 'GET';
 	var allowed_methods = ['GET'];

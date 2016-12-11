@@ -20,17 +20,17 @@ module.exports = class SimpleRouter {
 		road.addRoute = this.addRoute.bind(this);
 
 		road.use(function (request_method, request_url, request_body, request_headers, next) {
-			return _self.middleware(_self.routes, request_method, request_url, request_body, request_headers, next);
+			return _self.middleware.call(this, _self.routes, request_method, request_url, request_body, request_headers, next);
 		});
 	}
 
 	/**
 	 * [addRoute description]
-	 * @param {[type]}   path   [description]
 	 * @param {[type]}   method [description]
+	 * @param {[type]}   path   [description]
 	 * @param {Function} fn     [description]
 	 */
-	addRoute (path, method, fn) {
+	addRoute (method, path, fn) {
 		this.routes.push({
 			path: path,
 			method: method,

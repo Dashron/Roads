@@ -7,7 +7,7 @@ var Response = require('../../index.js').Response;
  * Tests that the provided road's request method is bound to the 
  * original road's context under the provided key
  */
-exports.testRequestMethodIsBoundToContextKey = function (test) {
+exports['test request method is bound to context key'] = function (test) {
 	var mockRoad = {
 		request: function (method, path, body, headers) {
 			return 'banana';

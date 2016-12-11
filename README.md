@@ -17,14 +17,9 @@ Roads is a web framework built on Generators. It's similar to Koa.js, but can be
 
  - [Getting Started](#getting-started)
  - [Roads.Road](#roadsroad)
-  - [new Road(*Resource|array* root_resource)](#new-roadresourcearray-root_resource)
+  - [new Road()](#new-road)
   - [use(*Function* fn)](#roadusefunction-fn)
   - [request(*string* method, *string* url, *dynamic* body, *Object* headers)](#roadrequeststring-method-string-url-dynamic-body-object-headers)
-  - [addResource(*Resource* resource)](#roadaddresourceresource-resource)
- - [Roads.Resource](#roadsresource)
-  - [new Resource(*Object* definition)](#new-resourceobject-definition)
-  - [URL Part (routing)](#url-part-routing)
-  - [Resource method](#resource-method)
  - [Roads.Response](#roadsresponse)
   - [new Response(*mixed* body, *number* status, *Object* headers)](#new-responsemixed-body-number-status-object-headers)
   - [body](#body)
@@ -36,6 +31,9 @@ Roads is a web framework built on Generators. It's similar to Koa.js, but can be
  - [Roads.middleware](#roadsmiddleware)
   - [killSlash()](#killslash)
   - [cors(*Array|string* allow_origins, *Array* allow_headers)](#corsarraystring-allow_origins-array-allow_headers)
+  - [SimpleRouter](#simplerouter)
+   - [SimpleRouter.applyMiddleware(road)](#simplerouterapplymiddlewareroad)
+   - [Road.addRoute(path, method, fn)](#roadaddroutepath-method-fn)
  - [Roads.build](#roadsbuildstring-input_file-string-output_file-object-options)
  - [Roads.PJAX(*Object* road, *DomElement* container_element, *Object* window)](#roadspjaxobject-road-domelement-container_element-object-window)
   - [register()](#pjaxregister)
@@ -47,69 +45,18 @@ Roads is a web framework built on Generators. It's similar to Koa.js, but can be
 
 Building a project with roads is very straightforward.
 
-1. Create your root [Resource](#roadsresource). This resource will be used for any request to the root (`/`) endpoint. Other endpoints will be defined in step 4.
-	```node
-	// Create your resource.
-	var resource = new roads.Resource({
-	    // Define the supported HTTP methods. See step 2 for more details
-	    methods: ...
-	});
-
-	// Assign your root resource to the Road.
-	var road = new roads.Road(resource);
+1. Create your Road object
+    ```
+    const roads = require('roads');
+    var road = new Road();
 	```
 
-2. Each [Resource](#roadsresource) from step #1 should contain one or more [resource methods](#resource-method). Each resource method is associated with an HTTP method.
-	```node
-	var resource = new roads.Resource({
-        // Define the supported HTTP methods.
-	    methods: {
-	        // Whenever a GET request is made to this resource, it will execute the following function
-	        GET: function (url, body, headers) {
-	            // URL is parsed via the url module. The following code will access the querystring parameter "page"
-	            url.query.page;
-	
-	            // JSON or query body, parsed depending on the content-type header.
-	            body.name;
-	
-	            // Incomplete, see step 3.
-	            return ...
-	        }
-	    }
-	});
-	```
-**note:** Resource methods are not required. If you do not include any resource methods, roads will still search through all sub-resources.
-
-3. Each [resource method](#resource-method) from step #2 should return your response. If you return a promise which will be resolved and the response/errors will be handled appropriately. If you do not return (or your promise does not resolve) a [response](#roadsresponse) object it will be automatically wrapped in a response object.
-
-	```node
-	var resource = new roads.Resource({
-        // Define the supported HTTP methods.
-	    methods: {
-	        GET: function (url, body, headers) {
-	            // Perform your route logic, see step 2.
-	            ...
-	
-	            // Build a response object, with the body, status code and headers.
-	            return new this.Response({ "name": "aaron" }, 200, {"last-modified": "Tue, 15 Nov 1994 12:45:26 GMT"});
-	        }
-	    }
-	});
-	```
-
-4. Assign sub-resources to the root resource. These will be attached to endpoints under this resource (e.g. `/` contains `/users`. `/users` will contain `/users/#user_id`) All subresources are resources objects like the root resource defined in step 1, so you can continue to follow steps 1-4 to build out your sub resources.
-
-    ```node
-    var resource = new roads.Resource({
-        // Define the supported HTTP methods. See steps 2 and 3.
-        methods: ... ,
-        // Define sub-resources. 
-        resources:         {
-            // This assumes the file located at `./users` exposes another `Resource` object. That resource will be bound to the route `/users`.
-            "users": require('./users'),
-            // This assumes the file located at `./posts` exposes another `Resource` object. That resource will be bound to the route `/posts`.
-            "posts": require('./posts')
-        },
+2. Add code to the road
+    ```
+    const roads = require('roads');
+    var road = new Road();
+    road.use(function (method, path, body, headers) {
+        console.log('A ' + method + ' request was made to ' + path);
     });
     ```
 
@@ -117,10 +64,9 @@ Building a project with roads is very straightforward.
 
  - You can tie the road to node's standard HTTP Server. This will automatically route any HTTP requests to that server into your road.
         ```node
-        // Tie to node's HTTP server
         const roads = require('roads');
 
-        var road = ...; // See steps 1-4 for road construction
+        var road = ...; // See steps 1 and 2 for road construction
         var server = new roads.Server(road, function (error) {
             console.log('roads encountered an error', error);
         });
@@ -134,7 +80,7 @@ Building a project with roads is very straightforward.
         const roads = require('roads');
         const koa = require('koa');
 
-        var road = ...; // See steps 1-4 for road construction
+        var road = ...; // See steps 1 and 2 for road construction
         var app = koa();
         app.use(roads.integrations.koa(road));
         app.listen(8080);
@@ -147,7 +93,7 @@ Building a project with roads is very straightforward.
         // Tie to node's HTTP server
         const roads = require('roads');
 
-        var road = ...; // See steps 1-4 for road construction
+        var road = ...; // See steps 1 and 2 for road construction
 
     	// Call directly
     	road.request('GET', '/users', {page: 2})
@@ -160,7 +106,7 @@ Building a project with roads is very straightforward.
     **client_index.js**
     ```node
         const roads = require('roads');
-        var road = ...; // See steps 1-4 for road construction
+        var road = ...; // See steps 1 and 2 for road construction
 
         // Make a client side request. See the PJAX section of the docs for more client side options
         road.request('GET', '/users', {page: 2})
@@ -181,43 +127,29 @@ Building a project with roads is very straightforward.
     ```
 
 
-Now that you can use your road, continue reading the docs below for more information on [error handling](#roadusefunction-fn), [URL parameters](#url-part), [PJAX support](#roadspjaxobject-road) and more!
+Now that you can use your road, continue reading the docs below for more information on [routers](#simplerouter), [error handling](#roadusefunction-fn), [PJAX support](#roadspjaxobject-road) and more!
 
 
 
 ## Roads.Road
 
-A Road is a container that holds a hierarchy of [Resource](#roadsresource) objects. It exposes a [request](#requeststring-method-string-url-dynamic-body-object-headers) method which allows you to interact directly with the resources.
+A Road is a container that holds an array of functions. It exposes a [request](#requeststring-method-string-url-dynamic-body-object-headers) method which allows you to execute the functions and provide consistent parameters..
 
-### new Road(*Resource|array* root_resource)
+### new Road()
 **Create a Road.**
 
- name          | type                                | required | description
- --------------|-------------------------------------|----------|-------------
- root_resource | [Resource](#roadsresource) or array | yes      | Used to generate the [response](#roadsresponse) for the root endpoint ( [protocol]://[host]/ ). Also determines the starting point for routing for the [request](#requeststring-method-string-url-dynamic-body-object-headers) method.
-
-Creates your Road object. You must provide at least one root [Resource](#roadsresource) to the constructor. These [resources](#roadsresource) will be mounted to the root (`/`) endpoint. The [request](#requeststring-method-string-url-dynamic-body-object-headers) method will search these [resources](#roadsresource) for a matching route. If you provide an array of [resources](#roadsresource) is, it will search through them in array order. 
-
+Creates your Road object. 
 
 ```node
 const roads = require('roads');
-var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at [Resource](#roadsresource) for information about the Resource constructor.
-// Create a road with a single resource
-var road = new roads.Road(root_resource);
+var road = new roads.Road();
 ```
 
-```node
-const roads = require('roads');
-var root_resource = new roads.Resource(...); // The resource definition has not been set here, because it's out of the scope of this example. Take a look at [Resource](#roadsresource) for information about the Resource constructor.
-var root_resource2 = new roads.Resource(...); 
-// Create a road with multiple resources. If the route is found in root_resource, request will never search root_resource2
-var road = new roads.Road([root_resource, root_resource2]);
-```
 
 ### Road.use(*Function* fn)
 **Add a custom function that will be executed before every request.**
 
-This function can be called one or more times. Each time it is called, the provided function will be added to a queue that is executed before every request. The execution order will match the order the middleware functions were added to the road. Each middleware function can choose whether or not it wants to progress to the following middleware function, and ultimately the final [resource method](#resource-method).
+This function can be called one or more times. Each time it is called, the provided function will be added to a queue that is executed when you call the [request](#roadrequeststring-method-string-url-dynamic-body-object-headers) method. The execution order will match the order the functions were added to the road. Each function can choose whether or not it wants to progress to the following middleware function by calling or ignoring the `next` method.
 
  name | type                                                                  | required | description
  -----|-----------------------------------------------------------------------|----------|---------------
@@ -278,13 +210,9 @@ road.use(function(method, url, body, headers, next) {
 **Locate and execute the resource method associated with the request parameters.**
 
 
-This function will locate the appropriate [resource method](#resource-method) for the provided HTTP Method and URL, execute it and return a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A). The thenable will always resolve to a [Response](#roadsresponse) object.
+This function will execute all of the functions assigned via [use](#roadusefunction-fn) in the order they were assigned and return a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A). The thenable will always resolve to a [Response](#roadsresponse) object.
 
-If no [resource](#resource) is found for the requested url, the [thenable](http://wiki.commonjs.org/wiki/Promises/A) will surface an [HttpError](#roadshttperror) with a 404 status code.
-
-If a [resource](#resource) is found for the requested url, but no [resource method](#resource-method), the [thenable](http://wiki.commonjs.org/wiki/Promises/A) will surface an [HttpError](#roadshttperror) with a 405 status code.
-
-If the system encounters an unexpected error, it will try to throw an [HttpError](#roadshttperror) with a 500 status code, but it's always worth checking the error type just in case.
+If the system encounters an unexpected error, it will try to throw an [HttpError](#roadshttperror) with a 500 status code. There may be circumstances where we were unable to wrap the exception with an HttpError, so be sure to check whether or not your exceptions are `instance of HttpError`.
 
 
 ```node
@@ -299,230 +227,39 @@ promise.catch(function (error) {
 });
 ```
 
-### Road.addResource(*Resource* resource)
-**Add another resource for the router.**
-
-This resource will be added to the end of the array of resources passed in through the [constructor](#new-roadresourcearray-root_resource). Read up on more details in the [constructor's docs](#new-roadresourcearray-root_resource).
-
-## Roads.Resource
-
-Each resource represents a single endpoint. It can contain a list of sub-resources (to help build a structured url path), or [resource methods](#resource-method) (to handle each HTTP method for this endpoint).
-
-
-### new Resource(*Object* definition)
-**Constructor**
-
-name        | type                               | description
- -----------|------------------------------------|---------------
- definition | object                             | A definition which describes how the resource should operate
-
-The definition only looks for three fields.
-
-name        | type                               | description
- -----------|------------------------------------|---------------
- resources  | object                             | Each key is a [URL part](#url-part), and each value is a sub-[resource](#roadsresource)
- methods    | object                             | Each key is an HTTP method, and each value is a [resource method](#resource-method).
- context    | mixed                              | The value of the Resource context will appear in the [context](#context) of every [resource method](#resource-method) with the key `resource_context`
-
-```node
-module.exports.many = new Resource({
-    resources: {
-        'users': require('./users').many,
-        'posts': require('./posts').many
-    },
-    methods: {
-        GET: function* (url, body, headers) {
-            return new Response({
-                "users": "/users",
-                "posts": "/posts"
-            });
-        }
-    }
-});
-```
-
-#### URL Part (routing)
-
-All URL routing is defined through the resource definition, and through sub-resources. The root resource represents a URL without any path ([protocol]://[host]/). This root resource must define additional resources as sub-resources, which will branch out after the root resource.
-
-Part       | Example   | Example values | Description
------------|-----------|----------------|--------------
-{literal}  | users     | users          | The provided value must explicitly match the [URL part](#url-part)
-#{key}     | #user_id  | 12445          | The provided value must be numeric
-${key}     | #username | dashron        | The provided value can be any series of non-forward slash, URL valid characters
-
-In the following example, the only valid URLs are `/`, `/users` and `/users/{number}`
-
-```node
-var single = new Resource({
-});
-
-var many = new Resource({
-    resources: {
-        "#user_id": single
-    }
-});
-
-var root = new Resource({
-    resources: {
-        "users": many
-    }
-});
-```
-
-For variable fields, you can retrieve the variable in the URL parameter. The URL parameter will be an object, and will have an "args" parameter
-
-```node
-var single = new Resource({
-    methods: function (url, body, headers) {
-        console.log(url.args.user_id);
-    }
-});
-
-var many = new Resource({
-    resources: {
-        "#user_id": single
-    }
-});
-
-var root = new Resource({
-    resources: {
-        "users": many
-    }
-});
-```
-
-#### Resource Method
-
-The methods section of the resource definition should be an object which contains many key value pairs. The keys must be one of the HTTP methods (GET, POST, PUT, PATCH, DELETE, OPTIONS, etc). The value for these keys must be an object, a function, or a generator. These are called "[resource methods](#resource-method)". Resource methods are used by [Road.request](#roadrequeststring-method-string-url-dynamic-body-object-headers) when trying to run your program. First `request` finds the resource from the request path, and then the [resource method](#resource-method) from the request method.  
-
-##### Resource Method Functions
-
-If you provide a function, this function will be executed any time the corresponding HTTP method is run. This function will be passed three parameters.
-
-name     | type                               | description
- --------|------------------------------------|---------------
- url     | string                             | The URL of the request. Is parsed with the standard url module.
- body    | object                             | The request body. If the `Content-Type` header is `application/json` the body will be parsed into an object.
- headers | object                             | The request headers
-
-
-```node
-var road = new Road(new Resource({
-    methods: {
-        GET: function (url, body, headers) {
-            return 'Welcome!';
-        }
-    }
-}));
-
-##### Resource Method Generators
-
-If you provide a generator function as your resource method, we will turn it into a coroutine. Coroutines mimic ES7 async functions by letting you yield promises. It lets you drastically improve the readability of your code. If you would like to read more about coroutines, check out my blog post here: 
-
-```node
-var road = new Road(new Resource({
-    methods: {
-        GET: function* (url, body, headers) {
-            try {
-                var user = yield db.User(url.args.user_id);
-            } catch (e) {
-                console.log(e);
-            }
-        }
-    }
-}));
-```
-
-##### Resource Method Objects
-
-If you provide an object instead of a function or a generator, this allows you to define the resource method's function along with additional contextual data that will exist in the request context. The resource method must be provided as the value to the key `fn`. Within the context of fn, you can find the entire resource method object on the key "method_context".
-
-```node
-var road = new Road(new Resource({
-    methods: {
-        GET: {
-            fn: function (url, body, headers) {
-	            return 'Welcome to ' + this.method_context.route_name + "!";
-        	},
-            route_name: "here"
-        }
-    }
-}));
-```
-
-As always, this context information will also be available to all middleware
-
-```js
-road.use(function (method, url, body, headers, next) {
-    if (this.method_context.route_name) {
-        console.log(this.method_context.route_name);
-    }
-
-    return next(); 
-});
-```
-
-##### Errors
-If a resource could not be located for the provided request path, the request method will throw an [HttpError](#roadshttperror) with a 404 status code.
-
-```node
-road.request('GET', '/invalidpath')
-    .catch(function (error) {
-        error.status === 404
-    });
-```
-
-If a resource was located for the provided request path, but the resource did not have a matching [resource method](#resource-method), the request method will throw an [HttpError](#roadshttperror) with a 405 status code.
-
-```node
-road.request('FAKE_METHOD', '/users')
-    .catch(function (error) {
-        error.status === 405
-    });
-```
-
 ##### Context
-Each resource method has access to a request context through ```this```. Each ```this``` will be unique to the request, and will persist from each request handler (assigned via `use`) into the actual request. The context is pre-loaded with four variables, listed below.
+Each middleware function has access to a request context through ```this```. Each ```this``` will be unique to the request, and will persist from each request handler (assigned via `use`) into the actual request. The context is pre-loaded with two variables, listed below.
 
 name             | type     | description
  ----------------|----------|---------------
-request          | function | An alias for [Road.request](#roadrequeststring-method-string-url-dynamic-body-object-headers). You may add any additional methods or properties to the context and use them in your routes. This is useful for determining the authenticated user or adding helper methods.
-http_methods     | array    | And array of valid http methods for the resource associated with this method (primarily used for OPTIONS requests and 405 errors)
-Response         | Response | The Response constructor, so you don't have to load the file each time
-resource_context | mixed    | The contents of the context variable passed into the Resource constructor
+request          | function | An alias for [Road.request](#roadrequeststring-method-string-url-dynamic-body-object-headers). If you need to make a request from within middleware, it is recommended to use this instead of `Road.request`.
+Response         | Response | The Response constructor. Every request *should* return a `Response`, so this is provided to simplify the process. If you are constructing a `Response` from within middleware it is recommended that you use this instead of `Roads.Response`.
 
 
 ```node
-var road = new Road(new Resource({
-    methods: {
-        GET: function (url, body, headers) {
-            // true because the middleware persists to this context
-            console.log(this.uri === '/me');
+var road = new Road();
+road.use(function (method, url, body, headers) {
+    // true because the middleware persists to this context
+    console.log(this.uri === '/me');
 
-            // Access the resource context for additional useful information
-            if (this.resource_context.require_authentication) {
-                // Here you could ensure that authentication was provided to the server Here you could ensure that authentication was provided to the server 
-            }
 
-            // true. There's only one method, so the array only contains GET
-            console.log(this.http_methods === ['GET']);
+    // Easy access to the response object
+    return new this.Response('hello world', 200);
+});
 
-            // Easy access to the response object
-            return new this.Response('hello world', 200);
-        }
-    },
-    context: {
-        require_authentication: true
-    }
-}));
-
-// Modifying context will persist into the resource method
-road.use(function (method, url, body, headers, next) {
-    this.uri = '/me';
-    return next();
+road.request('GET', '/me').then(function (response) {
+    console.log(response);
 });
 ```
+
+Middleware is encouraged to add variables to this context to simplify development. Make sure to namespace your variables to ensure there are no conflicts with other librares.
+
+eg:
+```node
+var road = new Road();
+road.use(function (method, url, body, headers) {
+    this.context.my_project.require_authentication = true;
+});
 
 
 ## Roads.Response
@@ -649,6 +386,15 @@ name            | type                               | description
 road.use(roads.middleware.cors(['http://localhost:8080'], ['authorization']));
 ```
 
+### SimpleRouter()
+
+**TODO:** Docs. See the testSimpleRouter.js file in the meanwhile.
+
+#### SimpleRouter.applyMiddleware(road)
+
+#### Road.addRoute(*string* method, *string* path, *function* fn)
+
+
 ## Roads.build(*string* input_file, *string* output_file, *object* options)
 **Browserify function to convert your script to run in the browser**
 
@@ -737,3 +483,15 @@ There's a very easy pattern to follow to ensure sharing client and server code w
 2. You should have one road that contains all of your public controllers, and one road that contains all of your private controllers
 3. Your public controller should only contain public data, and interact with the rest of your system via HTTP. e.g. instead of making DB calls, these controllers would make HTTP requests to a separate API. This pattern is GREAT, and worthy of another entire article.
 4. Private controllers aren't absolutely necessary, but may come into play if you need authentication or filesystem access for certain pages.
+
+
+### TODO:
+
+- Now that the opinionated router has been split out, it needs to be rebuilt into middleware, matching simplerouter as closely as possible.
+- Improved PJAX test coverage
+- Unit tests for HTTPServer class
+- Examples of koa and other middleware
+- Revise documentation to more clearly describe new middleware-only system
+- Add code coverage libraries
+- Directly reference the field-filter system from this library (or just build that new representation class)
+- Should roads-client be in this library?

@@ -10,6 +10,7 @@ const buildMockRoad = function buildMockRoad() {
 	return {
 		addRouteArgs: [],
 		useArgs: [],
+		contextValues: {},
 		use: function () {
 			this.useArgs.push(arguments);
 		},
@@ -41,7 +42,7 @@ exports['test addRoute adds values to the list of routes in the right format'] =
 	let method = 'GET';
 	let fn = () => {};
 
-	router.addRoute(path, method, fn);
+	router.addRoute(method, path, fn);
 	test.deepEqual({
 		path: path,
 		method: method,
@@ -75,7 +76,7 @@ exports['test middleware function routes successfully to successful routes'] = f
 		route_hit = true;
 	};
 
-	router.addRoute(path, method, fn);
+	router.addRoute(method, path, fn);
 	router.middleware(router.routes, method, url_module.parse(path), {}, {}, () => {});
 
 	test.equal(true, route_hit);
@@ -98,8 +99,8 @@ exports['test middleware function routes successfully to successful routes only 
 		route_hit = false;
 	};
 
-	router.addRoute(path, method, fn);
-	router.addRoute(path, method, fn2);
+	router.addRoute(method, path, fn);
+	router.addRoute(method, path, fn2);
 	router.middleware(router.routes, method, url_module.parse(path), {}, {}, () => {});
 
 	test.equal(true, route_hit);
@@ -162,7 +163,7 @@ exports['test route function gets the proper context and arguments'] = function 
 	let body = {harvey: 'birdman'};
 	let headers = {bojack: 'horseman'};
 
-	router.addRoute(path, method, (request_method, request_url, request_body, request_headers) => {
+	router.addRoute(method, path, (request_method, request_url, request_body, request_headers) => {
 		test.equal(method, request_method);
 		test.deepEqual(url_module.parse(path), request_url);
 		test.equal(body, request_body);
@@ -180,13 +181,12 @@ exports['test route that throws an exception is handled properly'] = function (t
 	let router = buildRouter();
 	let path = '/';
 	let method = 'GET';
-	let route_hit = false;
 	let error_message = "blah blah blah";
 	let fn = () => {
 		throw new Error(error_message);
 	};
 
-	router.addRoute(path, method, fn);
+	router.addRoute(method, path, fn);
 	try {
 		router.middleware(router.routes, method, url_module.parse(path), {}, {}, () => {});
 	} catch (error) {
@@ -208,7 +208,7 @@ exports['test route successfully returns value out of the middleware'] = functio
 		return 'route';
 	};
 
-	router.addRoute(path, method, fn);
+	router.addRoute(method, path, fn);
 	route_hit = router.middleware(router.routes, method, url_module.parse(path), {}, {}, () => {});
 
 	test.equal('route', route_hit);

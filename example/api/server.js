@@ -14,7 +14,9 @@ var unknownRepresentation = require('./representations/server/unknown');
 
 api.use(roads.middleware.killSlash);
 api.use(roads.middleware.cors(['http://localhost:8081']));
-api.use(roads.middleware.simpleRouter(api));
+var router = new roads.middleware.SimpleRouter();
+router.applyMiddleware(api);
+
 require('./applyRoutes.js')(api);
 
 

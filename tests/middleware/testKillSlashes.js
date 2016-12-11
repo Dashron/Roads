@@ -6,7 +6,7 @@ const url_module = require('url');
 /**
  * Test that a request with slash fixing on a request without a trailing slash passes through unmodified
  */
-exports.testKillSlashDoesntBreakNormal = function (test) {
+exports['test kill slash doesn\'t break normal'] = function (test) {
 	var method = 'GET';
 	var url = url_module.parse('/users');
 	var body = {};
@@ -28,7 +28,7 @@ exports.testKillSlashDoesntBreakNormal = function (test) {
 /**
  * Test that a request with slash fixing, on a request with a trailing slash is turned into a redirect response
  */
-exports.testKillSlashOnlyTrailingSlashFixingARoute = function (test) {
+exports['test kill slash only trailing slash fixing a route'] = function (test) {
 	var method = 'GET';
 	var url = url_module.parse('/users/');
 	var body = {};
@@ -66,7 +66,7 @@ exports.testKillSlashOnlyTrailingSlashFixingARoute = function (test) {
  * Test that a request with slash fixing on a request to the root endpoint isn't messed up. 
  * Technically it's a trailing slash, so I added this test to test the edge case
  */
-exports.testKillSlashNotBreakingOnRoot = function (test) {
+exports['test kill slash not breaking on root'] = function (test) {
 	var method = 'GET';
 	var url = url_module.parse('/');
 	var body = {};

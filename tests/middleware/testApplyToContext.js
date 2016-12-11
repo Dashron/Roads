@@ -5,7 +5,7 @@ const applyToContext = require('../../index.js').middleware.applyToContext;
 /**
  * Test that applyToContext actually applies the value properly
  */
-exports.testApplyToContextAppliesContext = function (test) {
+exports['test apply to context applies context'] = function (test) {
 	var key = 'foo';
 	var val = 'bar';
 	var context = {};
@@ -22,7 +22,7 @@ exports.testApplyToContextAppliesContext = function (test) {
 /**
  * Test that applyToContext will execute the next method and continue to the next function
  */
-exports.testApplyToContextCallsNext = function (test) {
+exports['test apply to context calls next'] = function (test) {
 	var key = 'foo';
 	var val = 'bar';
 	var context = {};
