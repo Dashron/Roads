@@ -33,7 +33,7 @@ Roads is a web framework built on Generators. It's similar to Koa.js, but can be
   - [cors(*Array|string* allow_origins, *Array* allow_headers)](#corsarraystring-allow_origins-array-allow_headers)
   - [SimpleRouter](#simplerouter)
    - [SimpleRouter.applyMiddleware(road)](#simplerouterapplymiddlewareroad)
-   - [Road.addRoute(path, method, fn)](#roadaddroutepath-method-fn)
+   - [Road.addRoute(*string* method, *string* path,*function* fn)](#roadaddroutestring-method-string-path-function-fn)
  - [Roads.build](#roadsbuildstring-input_file-string-output_file-object-options)
  - [Roads.PJAX(*Object* road, *DomElement* container_element, *Object* window)](#roadspjaxobject-road-domelement-container_element-object-window)
   - [register()](#pjaxregister)
@@ -260,7 +260,7 @@ var road = new Road();
 road.use(function (method, url, body, headers) {
     this.context.my_project.require_authentication = true;
 });
-
+```
 
 ## Roads.Response
 
