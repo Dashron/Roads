@@ -60,7 +60,7 @@ Building a project with roads is very straightforward.
     });
     ```
 
-5. Now you want to run your code. There are four options in this library.
+5. Run your code.
 
  - You can tie the road to node's standard HTTP Server. This will automatically route any HTTP requests to that server into your road.
         ```node
