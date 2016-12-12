@@ -53,8 +53,8 @@ module.exports = class SimpleRouter {
 		let response = null;
 		let hit = false;
 
-		for (let i = 0; i < this.routes.length; i++) {
-			let route = this.routes[i];
+		for (let i = 0; i < routes.length; i++) {
+			let route = routes[i];
 			if (route.path === request_url.path && route.method === request_method) {
 				response = (route.fn).call(context, request_method, request_url, request_body, request_headers, next);
 				hit = true;

@@ -12,10 +12,10 @@ const buildMockRoad = function buildMockRoad() {
 		useArgs: [],
 		contextValues: {},
 		use: function () {
-			this.useArgs.push(arguments);
+			this.useArgs.push(Array.prototype.slice.call(arguments)[0]);
 		},
 		request: function (index) {
-			this.useArgs[index].call(this, arguments);
+			this.useArgs[index].apply(this, Array.prototype.slice.call(arguments, 1));
 		}
 	};
 };
@@ -233,5 +233,27 @@ exports['test next successfully returns value out of the middleware'] = function
 	});
 
 	test.equal('next', route_hit);
+	test.done();
+};
+
+/**
+ * 
+ */
+exports['test applyMiddleware can call the middleware properly'] = function (test) {
+	let mockRoad = buildMockRoad();
+	let router = buildRouter();
+	router.applyMiddleware(mockRoad);
+
+	let path = '/';
+	let method = 'GET';
+	let route_hit = false;
+	let fn = () => {
+		route_hit = 'route';
+	};
+
+	router.addRoute(method, path, fn);
+	mockRoad.request(0, method, url_module.parse(path), {}, {}, () => {});
+
+	test.equal('route', route_hit);
 	test.done();
 };
