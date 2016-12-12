@@ -17,7 +17,6 @@ module.exports = class SimpleRouter {
 	 */
 	applyMiddleware (road) {
 		var _self = this;
-		road.addRoute = this.addRoute.bind(this);
 
 		road.use(function (request_method, request_url, request_body, request_headers, next) {
 			return _self.middleware.call(this, _self.routes, request_method, request_url, request_body, request_headers, next);

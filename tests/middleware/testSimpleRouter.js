@@ -23,19 +23,6 @@ const buildMockRoad = function buildMockRoad() {
 /**
  * 
  */
-exports['test apply middleware adds addRoute function'] = function (test) {
-	let mockRoad = buildMockRoad();
-	let router = buildRouter();
-	router.applyMiddleware(mockRoad);
-
-	test.equal("function", typeof(mockRoad.addRoute));
-	test.done();
-};
-
-
-/**
- * 
- */
 exports['test addRoute adds values to the list of routes in the right format'] = function (test) {
 	let router = buildRouter();
 	let path = '/';
