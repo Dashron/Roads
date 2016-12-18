@@ -244,3 +244,25 @@ exports['test applyMiddleware can call the middleware properly'] = function (tes
 	test.equal('route', route_hit);
 	test.done();
 };
+
+/**
+ * 
+ */
+exports['test routes with query params route properly'] = function (test) {
+	let mockRoad = buildMockRoad();
+	let router = buildRouter();
+	router.applyMiddleware(mockRoad);
+
+	let path = '/';
+	let method = 'GET';
+	let route_hit = false;
+	let fn = () => {
+		route_hit = 'route';
+	};
+
+	router.addRoute(method, path, fn);
+	mockRoad.request(0, method, url_module.parse(path + '?foo=bar'), {}, {}, () => {});
+
+	test.equal('route', route_hit);
+	test.done();
+};

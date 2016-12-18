@@ -36,9 +36,12 @@ module.exports.Response = class Response {
 
 		http_response.writeHead(this.status, this.headers);
 		
-		if (typeof(this.body) === "object") {
+		if (this.body === null) {
+			return;
+		}	
+		else if (typeof(this.body) === "object") {
 			http_response.write(JSON.stringify(this.body));
-		} else {
+		} else if (this.body !== undefined) {
 			http_response.write(this.body);
 		}
 	}

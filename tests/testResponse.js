@@ -126,35 +126,92 @@ exports.testWriteString = function (test) {
  */
 exports.testWriteObject = function (test) {
 	var res = new roads.Response({"hello" : 1}, 1234);
+	let _contents = false;
+	let response = {};
+
 	res.writeToServer({
 		writeHead : function (status, headers) {
-			this.status = status;
-			this.headers = headers;
+			response.status = status;
+			response.headers = headers;
 		},
 		write : function (contents) {
-			test.deepEqual(contents, '{"hello":1}');
-			test.equal(this.status, 1234);
-			test.deepEqual(this.headers, {"content-type" : "application/json"});
-			test.done();
+			_contents = contents;
 		}
 	});
+
+
+	test.deepEqual(_contents, '{"hello":1}');
+	test.equal(response.status, 1234);
+	test.deepEqual(response.headers, {"content-type" : "application/json"});
+	test.done();
 };
 
 /**
  * Ensure that existing content-type headers are not overriden by writeToServer
  */
-exports.testWriteObject = function (test) {
+exports.testWriteObjectWithContentTypeOverride = function (test) {
 	var res = new roads.Response({"hello" : 1}, 1234, {"content-type" : "text/html"});
+	let _contents = false;
+	let response = {};
+
 	res.writeToServer({
 		writeHead : function (status, headers) {
-			this.status = status;
-			this.headers = headers;
+			response.status = status;
+			response.headers = headers;
 		},
 		write : function (contents) {
-			test.deepEqual(contents, '{"hello":1}');
-			test.equal(this.status, 1234);
-			test.deepEqual(this.headers, {"content-type" : "text/html"});
-			test.done();
+			_contents = contents;
 		}
 	});
+
+	test.deepEqual(_contents, '{"hello":1}');
+	test.equal(response.status, 1234);
+	test.deepEqual(response.headers, {"content-type" : "text/html"});
+	test.done();
+};
+
+/**
+ * Ensure that if you provide undefined, nothing is written to the output.
+ */
+exports.testWriteNull = function (test) {
+	var res = new roads.Response(undefined, 1234, {"content-type" : "text/html"});
+	let writeRun = false;
+	let response = {};
+
+	res.writeToServer({
+		writeHead : function (status, headers) {
+			response.status = status;
+			response.headers = headers;
+		},
+		write: function (contents) {
+			writeRun = true;
+		}
+	});
+
+	test.ok(!writeRun);
+	test.done();
+};
+
+/**
+ * Ensure that if you provide null, nothing is written to the output.
+ */
+exports.testWriteNull = function (test) {
+	var res = new roads.Response(null, 1234, {"content-type" : "text/html"});
+	let writeRun = false;
+	let response = {};
+
+	res.writeToServer({
+		writeHead : function (status, headers) {
+			response.status = status;
+			response.headers = headers;
+		},
+		write: function (contents) {
+			console.log('contents', contents);
+			writeRun = true;
+		}
+	});
+
+	console.log(writeRun);
+	test.ok(!writeRun);
+	test.done();
 };
