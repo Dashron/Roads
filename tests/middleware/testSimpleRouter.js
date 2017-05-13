@@ -150,8 +150,7 @@ exports['test route function gets the proper context and arguments'] = function 
 	let body = {harvey: 'birdman'};
 	let headers = {bojack: 'horseman'};
 
-	router.addRoute(method, path, (request_method, request_url, request_body, request_headers) => {
-		test.equal(method, request_method);
+	router.addRoute(method, path, (request_url, request_body, request_headers) => {
 		test.deepEqual(url_module.parse(path), request_url);
 		test.equal(body, request_body);
 		test.equal(headers, request_headers);
