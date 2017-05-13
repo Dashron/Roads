@@ -62,7 +62,7 @@ Building a project with roads is very straightforward.
 
 5. Run your code.
 
- - You can tie the road to node's standard HTTP Server. This will automatically route any HTTP requests to that server into your road.
+ - Roads comes with it's own server object to help you attach your road to the node HTTP server.
         ```node
         const roads = require('roads');
 
@@ -87,7 +87,7 @@ Building a project with roads is very straightforward.
         
         ```
 
- - You can Manually execute a resource method. This will behave just like a web request without having to use HTTP.
+ - You can Manually execute a resource method.
 
 	```node
         // Tie to node's HTTP server
@@ -116,7 +116,7 @@ Building a project with roads is very straightforward.
 
     ```
 
-    **build.js**
+    **build.js** - Run this to compile your code to be run in the browser.
     ```node
         require('roads').build('client_index.js', '/build/client.js', {
             roads: {
