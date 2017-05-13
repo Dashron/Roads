@@ -1,26 +1,25 @@
 "use strict";
 /**
 * applyRoutes.js
-* Copyright(c) 2016 Aaron Hedges <aaron@dashron.com>
+* Copyright(c) 2017 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
  */
 
-/*var roads = require('../../index.js');
-var Users = require('./mock_db/users');
-var userRepresentation = require('./representations/user');
-var collectionRepresentation = require('./representations/collection');*/
+var Users = require('../mock_db/users');
+var userRepresentation = require('../representations/user');
+var collectionRepresentation = require('../representations/collection');
 
 module.exports = function (api) {
-	api.addRoute('/', 'GET', function (url, body, headers) {
+	api.addRoute('GET', '/', function (url, body, headers) {
 		return new this.Response('Hello!');
 	});
 
-	/*api.addRoute('/users/{#user_id}', 'GET', function* (url, body, headers) {
+	api.addRoute('GET', '/users/#user_id', async function (url, body, headers) {
 		if (!url.args.user_id) {
 			throw new roads.HttpError('User not found', roads.HttpError.not_found);
 		}
 
-		var user = yield Users.get('id=' + url.args.user_id);
+		var user = await Users.get('id=' + url.args.user_id);
 
 		if (!user) {
 			throw new roads.HttpError('User not found', roads.HttpError.not_found);
@@ -29,12 +28,12 @@ module.exports = function (api) {
 		return new this.Response(userRepresentation(user));
 	});
 
-	api.addRoute('/users/{#user_id}', 'PATCH', function* (url, body, headers) {
+	api.addRoute('PATCH', '/users/#user_id', async function (url, body, headers) {
 		if (!url.args.user_id) {
 			throw new roads.HttpError('User not found', roads.HttpError.not_found);
 		}
 
-		var user = yield Users.get('id=' + url.args.user_id);
+		var user = await Users.get('id=' + url.args.user_id);
 
 		if (!user) {
 			throw new roads.HttpError('User not found', roads.HttpError.not_found);
@@ -51,25 +50,26 @@ module.exports = function (api) {
 		return new this.Response(userRepresentation(user), 201);
 	});
 
-	api.addRoute('/users/{#user_id}', 'DELETE', function* (url, body, headers) {
+	api.addRoute('DELETE', '/users/#user_id', async function (url, body, headers) {
 		if (!url.args.user_id) {
 			throw new roads.HttpError('User not found', roads.HttpError.not_found);
 		}
 
-		var user = yield Users.get('id=' + url.args.user_id);
+		var user = await Users.get('id=' + url.args.user_id);
 
 		if (!user) {
 			throw new roads.HttpError('User not found', roads.HttpError.not_found);
 		}
 
-		yield user.delete();
+		await user.delete();
 
 		return new this.Response(null, 204);
-	});*/
+	});
 
 
-	/*api.addRoute('/users', 'GET', function* (url, body, headers) {
-		return new this.Response(collectionRepresentation(yield Users.get('all'), userRepresentation));
+	/**
+	api.addRoute('/users', 'GET', async function (url, body, headers) {
+		return new this.Response(collectionRepresentation(await Users.get('all'), userRepresentation));
 	});
 
 	api.addRoute('/users', 'POST', function (url, body, headers) {

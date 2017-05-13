@@ -1,7 +1,7 @@
 "use strict";
 /**
 * posts.js
-* Copyright(c) 2016 Aaron Hedges <aaron@dashron.com>
+* Copyright(c) 2017 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
  */
 
@@ -19,18 +19,18 @@ var collectionRepresentation = require('../representations/collection');
  */
 module.exports.one = new Resource({
 	methods : {
-		GET : function* (url, body, headers) {
+		GET : async function (url, body, headers) {
 			if (!url.args.post_id) {
 				throw new roads.HttpError('post', roads.HttpError.not_found);
 			}
 
-			var post = yield Posts.get('id=' + url.args.post_id);
+			var post = await Posts.get('id=' + url.args.post_id);
 
 			if (!post) {
 				throw new roads.HttpError('post', roads.HttpError.not_found);
 			}
 
-			post.user = yield Users.get('id=' + post.user_id);
+			post.user = await Users.get('id=' + post.user_id);
 
 			return new Response(postRepresentation(post));
 		}
@@ -46,14 +46,14 @@ module.exports.many = new Resource({
 		'#post_id' : module.exports.one
 	},
 	methods : {
-		GET : function* (url, body, headers) {
-			var posts = yield Posts.get('all');
+		GET : async function (url, body, headers) {
+			var posts = await Posts.get('all');
 
 			var users = [];
 
 			for (let i = 0; i < posts.length; i++) {
-				// This is lazy. If you add an array yieldHandler you could yield every users in parallel.
-				users.push(yield Users.get('id=' + posts[i].user_id));
+				// This is lazy. If you add an array awaitHandler you could await every users in parallel.
+				users.push(await Users.get('id=' + posts[i].user_id));
 			}
 
 			// this is super lazy. don't try this at home

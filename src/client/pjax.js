@@ -4,7 +4,7 @@ var cookie = require('cookie');
 
 /**
  * pjax.js
- * Copyright(c) 2016 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2017 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  */
 module.exports = class RoadsPjax {

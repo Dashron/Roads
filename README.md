@@ -1,12 +1,12 @@
 # The Roads.js isomorphic web framework
 
-Roads is a web framework built on Generators. It's similar to Koa.js, but can be used both in the browser and on the server.
+Roads is a web framework built for use with async functions. It's similar to Koa.js, but can be used both in the browser and on the server.
 
 # Why should I use Roads?
 
 1. Roads can be attached to any node HTTP server, including Koa.js, Express.js, and the built in node HTTP server.
 2. Roads is isomorphic, meaning you can generate html on the server or in the browser with the same code.
-3. Roads lets you work without callbacks. It's built on top of promises and generator-based coroutines.
+3. Roads lets you work without callbacks. It's built on top of promises and async functions.
 4. Roads can be run without ever attaching it to an HTTP server. This is great for writing tests, working with web sockets, or writing API first websites. 
 
 
@@ -149,13 +149,13 @@ var road = new roads.Road();
 ### Road.use(*Function* fn)
 **Add a custom function that will be executed before every request.**
 
-This function can be called one or more times. Each time it is called, the provided function will be added to a queue that is executed when you call the [request](#roadrequeststring-method-string-url-dynamic-body-object-headers) method. The execution order will match the order the functions were added to the road. Each function can choose whether or not it wants to progress to the following middleware function by calling or ignoring the `next` method.
+This function can be called one or more times. Each time it is called, the function provided via the `fn` parameter will be added to a queue that is executed when you call the [request](#roadrequeststring-method-string-url-dynamic-body-object-headers) method. The execution order will match the order the functions were added to the road.
 
  name | type                                                                  | required | description
  -----|-----------------------------------------------------------------------|----------|---------------
  fn   | Function(*string* method, *string* url,*object* body,*object* headers,*function* next) | yes      | Will be called any time a request is made on the object.
  
- This will be called for every request, even for routes that do not exist. The callback will be executed with the following five parameters:
+ Each function can choose whether or not it wants to progress to the following middleware function by calling or ignoring the `next` parameter. The `next` parameter is defined below, along with all other parameters that will be passed to your middleware when the route is executed.
  
 #### use Callback 
 **function (*string* method,*string* url, *Object* body, *Object* headers, *Function* next)**
@@ -171,6 +171,25 @@ name     | type                               | description
 If the callback does not return a [response](#roadsresponse) object, the return value will become the body of a new [response](#roadsresponse) object with the default status code of 200.
 
 ```node
+// Simple example that sends a JSON response
+road.use(function (method, url, body, headers, next) {
+    return JSON.stringify({
+        method: method,
+        url: url,
+        body: body,
+        headers: headers,
+        next: next
+    });
+});
+
+// Simple async example that sends a JSON response
+road.use(async function (method, url, body, headers, next) {
+    let db_record = await myPromiseReturningDBCall();
+
+    return JSON.stringify(db_record);
+})
+
+
 // Example of a request handler that kills trailing slashes (This is provided for you in the middleware!)
 // The main logic of this function will be executed before the resource method, because it all happens before the middleware calls next()
 road.use(function (method, url, body, headers, next) {

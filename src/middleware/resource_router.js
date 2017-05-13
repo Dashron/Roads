@@ -1,7 +1,7 @@
 "use strict";
 /**
 * resource_router.js
-* Copyright(c) 2016 Aaron Hedges <aaron@dashron.com>
+* Copyright(c) 2017 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
  */
 const ResourceRouter = require('../resource_router/resource_router.js');

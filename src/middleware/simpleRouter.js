@@ -1,13 +1,18 @@
 "use strict";
 
+var uriTemplate = require('uri-templates');
+
 /**
 * simpleRouter.js
-* Copyright(c) 2016 Aaron Hedges <aaron@dashron.com>
+* Copyright(c) 2017 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
  */
 module.exports = class SimpleRouter {
-	constructor () {
+	constructor (road) {
 		this.routes = [];
+		if (road) {
+			this.applyMiddleware(road);
+		}
 	}
 
 	/**
@@ -54,8 +59,9 @@ module.exports = class SimpleRouter {
 
 		for (let i = 0; i < routes.length; i++) {
 			let route = routes[i];
-			if (route.path === request_url.pathname && route.method === request_method) {
-				response = (route.fn).call(context, request_method, request_url, request_body, request_headers, next);
+
+			if (compareRouteAndApplyArgs(route, request_url, request_method)) {
+				response = (route.fn).call(context, request_url, request_body, request_headers, next);
 				hit = true;
 				break;
 			}
@@ -68,3 +74,60 @@ module.exports = class SimpleRouter {
 		return next();
 	}
 };
+
+function compareRouteAndApplyArgs (route, request_url, request_method) {
+	if (route.method != request_method) {
+		return false;
+	}
+
+	let template = route.path.split('/').slice(1); // Slice kills the emptystring before the leading slash
+	let actual = request_url.pathname.split('/').slice(1); // Slice kills the emptystring before the leading slash
+
+	if (template.length != actual.length) {
+		return false;
+	}
+
+	for (let i = 0; i < template.length; i++) {
+		let actual_part = actual[i];
+		let template_part = template[i];
+		
+		// Process variables first
+		if (template_part[0] === '#') {
+			// # templates only accept numbers
+			if (isNaN(Number(actual_part))) {
+				return false;
+			}
+
+			applyArg(request_url, template_part.substring(1), Number(actual_part));
+			continue;
+		}
+
+		if (template_part[0] === '$') {
+			// $ templates accept any non-slash alphanumeric character
+			applyArg(request_url, template_part.substring(1), String(actual_part));
+			// Continue so that 
+			continue;
+		}
+
+		// Process exact matches second
+		if (actual_part === template_part) {
+			continue;
+		}
+
+		return false;
+	}
+
+	return true;
+}
+
+function applyArg(request_url, template_part, actual_part) {
+	if (request_url.args == undefined) {
+		request_url.args = {}
+	}
+
+	if (typeof request_url.args != "object") {
+		throw new Error("The request url's args have already been defined as a " + typeof request_url.args + " and we expected an object. For safety we are throwing this error instead of overwriting your existing data. Please use a different field name in your code");
+	}
+
+	request_url.args[template_part] = actual_part;
+}

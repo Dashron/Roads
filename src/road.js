@@ -1,13 +1,12 @@
 "use strict";
 /**
 * road.js
-* Copyright(c) 2016 Aaron Hedges <aaron@dashron.com>
+* Copyright(c) 2017 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
  */
 
 const url_module = require('url');
 const roads = require('../index');
-const coroutine = require('roads-coroutine');
 const http_util = require('./util/httpUtil');
 const response_lib = roads.response_lib;
 
@@ -59,7 +58,7 @@ module.exports = class Road {
 		}
 		
 		// Currently we pass everything through the coroutine wrapper to be save. Let that library decide what does and does not actually need to be wrapped
-		this._request_chain.push(coroutine(fn));
+		this._request_chain.push(fn);
 
 		return this;
 	}

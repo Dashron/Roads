@@ -46,10 +46,10 @@ exports.testMethodWithError = function (test) {
 /**
  * Ensure that route errors naturally bubble up through the promise catch
  */
-exports.testCoroutineMethodWithError = function (test) {
+exports.testAsyncMethodWithError = function (test) {
 	var road = new roads.Road();
 
-	road.use(function* () {
+	road.use(async function () {
 		throw new Error('huh');
 	});
 
@@ -120,14 +120,14 @@ exports.testRequestErrorWithHandler = function (test) {
 /**
  * Ensure that a request handler that executes, then calls the actual route returns as expected
  */
-exports.testCoroutineRequestErrorWithHandler = function (test) {
+exports.testAsyncRequestErrorWithHandler = function (test) {
 	var road = new roads.Road();
 
 	road.use(function (method, url, body, headers, next) {
 		return next();
 	});//*/
 
-	road.use(function* () {
+	road.use(async function () {
 		throw new Error('huh');
 	});
 
@@ -182,7 +182,7 @@ exports.testRequestWithInvalidJsonBody = function (test) {
 		test.ok(false);
 	})
 	.catch(function (e) {
-		test.equal('Unexpected token s', e.message);
+		test.equal('Unexpected token s in JSON at position 1', e.message);
 	});
 
 	test.done();

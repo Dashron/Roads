@@ -2,7 +2,6 @@
 
 var roads = require('../../index.js');
 var url_module = require('url');
-var coroutine = require('roads-coroutine');
 
 /**
  * Test that route execution of a normal function becomes a proper promise
@@ -42,16 +41,16 @@ exports.testExecuteErrorRoute = function (test) {
 };
 
 /**
- * Test that route execution of a coroutine becomes a proper promise
+ * Test that route execution of an async function becomes a proper promise
  */
-exports.testExecuteCoroutineRoute = function (test) {
+exports.testExecuteAsyncRoute = function (test) {
 	var road = new roads.Road();
 	var result = 'stuff stuff stuff';
 
 	// todo: eventually switch to async functions
-	road._executeRoute(coroutine(function* () {
+	road._executeRoute(async function () {
 		return result;
-	})).then(function (real_result) {
+	}).then(function (real_result) {
 		test.equals(result, real_result);
 		test.done();
 	}).catch(function (e) {
@@ -61,16 +60,16 @@ exports.testExecuteCoroutineRoute = function (test) {
 };
 
 /**
- * Test that route execution of a coroutine, which throws an exception, becomes a proper promise
+ * Test that route execution of an async function, which throws an exception, becomes a proper promise
  */
-exports.testExecuteErrorCoroutineRoute = function (test) {
+exports.testExecuteErrorAsyncRoute = function (test) {
 	var road = new roads.Road();
 
 	// todo: eventually switch to async functions
-	var cr = coroutine(function* () {
+	var cr = async function () {
 		throw new Error('random messageeeeeeeeeee');
-		yield new roads.Promise(function (resolve) { resolve() });
-	});
+		await new roads.Promise(function (resolve) { resolve() });
+	};
 
 	var response = road._executeRoute(cr);
 	test.ok(response instanceof roads.Promise);

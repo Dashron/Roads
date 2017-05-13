@@ -211,7 +211,6 @@ exports.testWriteNull = function (test) {
 		}
 	});
 
-	console.log(writeRun);
 	test.ok(!writeRun);
 	test.done();
 };

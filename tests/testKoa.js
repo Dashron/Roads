@@ -1,14 +1,14 @@
 "use strict";
 
 const koaIntegration = require('../index.js').integrations.koa;
-const koa_module = require('koa');
+const KoaModule = require('koa');
 const http = require('http');
 const KOA_PORT = 3456;
 const Response = require('../index.js').Response;
 const cookie = require('../index.js').middleware.cookie;
 
 function koa() {
-	var k = koa_module();
+	var k = new KoaModule();
 	k.on('error', function () {
 		// do not log
 	});
@@ -86,8 +86,8 @@ exports.testMiddlewareIsAcceptedByKoa = function (test) {
 exports.testKoaUpdateToBodyWontRoute = function (test) {
 	let road = buildMockRoad();
 	let app = koa();
-	app.use(function* () {
-		this.body = 'blah blah';
+	app.use(async function (ctx) {
+		ctx.body = 'blah blah';
 	});
 
 	app.use(koaIntegration(road));
@@ -112,8 +112,8 @@ exports.testKoaUpdateToBodyWontRoute = function (test) {
 exports.testKoaUpdateToStatusCodeWontRoute = function (test) {
 	let road = buildMockRoad();
 	let app = koa();
-	app.use(function* () {
-		this.status = 400;
+	app.use(async function (ctx) {
+		ctx.status = 400;
 	});
 
 	app.use(koaIntegration(road));

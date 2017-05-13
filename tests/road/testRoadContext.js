@@ -69,17 +69,17 @@ exports.testRoadContextPersists = function (test) {
 /**
  * Ensure that the request context is the context provided in the Road constructor
  */
-exports.testRoadCoroutineContextPersists = function (test) {
+exports.testRoadAsyncContextPersists = function (test) {
 	var response_string = 'blahblahwhatwhatwhat';
 
 	var road = new roads.Road();
 
-	road.use(function* (method, url, body, headers, next) {
+	road.use(async function (method, url, body, headers, next) {
 		this.confirmString = function () {
 			return response_string;
 		};
 
-		return yield next();
+		return await next();
 	});
 	
 	road.use(function (method, url, body, headers, next) {
@@ -100,11 +100,11 @@ exports.testRoadCoroutineContextPersists = function (test) {
 /**
  * Ensure that contexts are only added once to a resource.
  */
-exports.testRoadContextUniqueness = function (test) {
+exports.testRoadAsyncUniqueness = function (test) {
 	var road = new roads.Road();
 
-	road.use(function* (method, url, body, headers, next) {
-		return yield next();
+	road.use(async function (method, url, body, headers, next) {
+		return await next();
 	});
 
 	test.equal(1, road._request_chain.length);

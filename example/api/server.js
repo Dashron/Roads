@@ -1,7 +1,7 @@
 "use strict";
 /**
 * server.js
-* Copyright(c) 2016 Aaron Hedges <aaron@dashron.com>
+* Copyright(c) 2017 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
  */
 
@@ -14,10 +14,7 @@ var unknownRepresentation = require('./representations/server/unknown');
 
 api.use(roads.middleware.killSlash);
 api.use(roads.middleware.cors(['http://localhost:8081']));
-var router = new roads.middleware.SimpleRouter();
-router.applyMiddleware(api);
-
-require('./applyRoutes.js')(api);
+require('./routes/applyRoutes.js')(new roads.middleware.SimpleRouter(api));
 
 
 var server = new roads.Server(api, function (err) {

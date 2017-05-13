@@ -1,7 +1,7 @@
 "use strict";
 /**
 * user.posts.js
-* Copyright(c) 2016 Aaron Hedges <aaron@dashron.com>
+* Copyright(c) 2017 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
  */
 
@@ -19,7 +19,7 @@ var collectionRepresentation = require('../../representations/collection');
  */
 module.exports.one = new Resource({
 	methods : {
-		GET : function* (url, body, headers) {
+		GET : async function (url, body, headers) {
 			if (!url.args.user_id) {
 				throw new roads.HttpError('user', roads.HttpError.not_found);
 			}
@@ -28,7 +28,7 @@ module.exports.one = new Resource({
 				throw new roads.HttpError('post', roads.HttpError.not_found);
 			}
 
-			var post = yield Posts.get('id=' + url.args.post_id);
+			var post = await Posts.get('id=' + url.args.post_id);
 
 			if (!post || post.user_id !== url.args.user_id) {
 				throw new roads.HttpError('post', roads.HttpError.not_found);
@@ -48,12 +48,12 @@ module.exports.many = new Resource({
 		'#post_id' : module.exports.one
 	},
 	methods : {
-		GET : function* (url, body, headers) {
+		GET : async function (url, body, headers) {
 			if (!url.args.user_id) {
 				throw new roads.HttpError('user', roads.HttpError.not_found);
 			}
 
-			return new Response(collectionRepresentation(yield Posts.get('user_id=' + url.args.user_id), postRepresentation));
+			return new Response(collectionRepresentation(await Posts.get('user_id=' + url.args.user_id), postRepresentation));
 		}
 	}
 });

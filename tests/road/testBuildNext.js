@@ -23,12 +23,12 @@ exports.testbuildNextHits = function (test) {
 };
 
 /**
- * Test buildNext success when a route does not have an onRequest handler and is a generator
+ * Test buildNext success when a route does not have an onRequest handler and is async
  
-exports.testBuildCoroutineRouteHits = function (test) {
+exports.testBuildAsyncouteHits = function (test) {
 	var road = new roads.Road(new roads.Resource({
 		methods: {
-			GET: function* () {
+			GET: async function () {
 				return { 'happy': 'banana'};
 			}
 		}
