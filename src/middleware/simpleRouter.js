@@ -1,7 +1,5 @@
 "use strict";
 
-var uriTemplate = require('uri-templates');
-
 /**
 * simpleRouter.js
 * Copyright(c) 2017 Aaron Hedges <aaron@dashron.com>
