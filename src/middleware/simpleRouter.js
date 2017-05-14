@@ -78,8 +78,15 @@ function compareRouteAndApplyArgs (route, request_url, request_method) {
 		return false;
 	}
 
-	let template = route.path.split('/').slice(1); // Slice kills the emptystring before the leading slash
-	let actual = request_url.pathname.split('/').slice(1); // Slice kills the emptystring before the leading slash
+	let template = route.path.split('/');
+	if (template[0] === '') {
+		template = template.slice(1); // Slice kills the emptystring before the leading slash
+	}
+
+	let actual = request_url.pathname.split('/');
+	if (actual[0] === '') {
+		actual = actual.slice(1); // Slice kills the emptystring before the leading slash
+	}
 
 	if (template.length != actual.length) {
 		return false;

@@ -27,7 +27,7 @@ module.exports = function (method, url, body, headers, next) {
 	
 	return next()
 		.then(function (response) {
-			response.body = wrapLayout(response.body, _self._page_title ? _self._page_title : '', _self.method_context ? _self.method_context.ignore_layout : false);
+			response.body = wrapLayout(response.body, _self._page_title ? _self._page_title : '', _self.ignore_layout ? true : false);
 			return response;
 		});
 };

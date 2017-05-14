@@ -6,7 +6,6 @@
  */
 
 var roads = require('../../../index');
-var public_route = require('./public.js');
 var fs = require('fs');
 
 /**
@@ -22,6 +21,7 @@ Try the <a href="/private">private test link</a>. It\'s available to the server,
 	});
 
 	router.addRoute('GET', 'client.brws.js', function (url, body, headers) {
+		this.ignore_layout = true;
 		// In the real world the body of the response should be created from a template engine.
 		return new this.Response(fs.readFileSync(__dirname + '/../static/client.brws.js').toString('utf-8'), 200, {
 			'Content-Type': 'application/json; charset=UTF-8'

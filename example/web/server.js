@@ -12,7 +12,9 @@ road.use(roads.middleware.killSlash);
 road.use(roads.middleware.cookie());
 road.use(require('./middleware/addLayout.js'));
 road.use(roads.middleware.setTitle);
-require('./routes/applyPublicRoutes.js')(new roads.middleware.SimpleRouter(road));
+let router = new roads.middleware.SimpleRouter(road)
+require('./routes/applyPublicRoutes.js')(router);
+require('./routes/applyPrivateRoutes.js')(router);
 
 var server = new roads.Server(road, function (err) {
 	console.log(err.stack);

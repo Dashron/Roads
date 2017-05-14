@@ -6,12 +6,14 @@
  */
 
 var roads = require('../../../index.js');
-var road = new roads.Road(require('../resources/root').root);
+var road = new roads.Road();
 
 var pjax = new roads.PJAX(road, document.getElementById('container'), window);
 pjax.addTitleMiddleware();
 pjax.addCookieMiddleware(document);
 pjax.register();
+let router = new roads.middleware.SimpleRouter(road);
+require('../routes/applyPublicRoutes.js')(router);
 
 /*road.request('GET', '/')
 	.then(function (response) {
