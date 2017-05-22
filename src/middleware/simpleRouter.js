@@ -32,11 +32,18 @@ module.exports = class SimpleRouter {
 	 * @param {[type]}   path   [description]
 	 * @param {Function} fn     [description]
 	 */
-	addRoute (method, path, fn) {
-		this.routes.push({
-			path: path,
-			method: method,
-			fn: fn
+	addRoute (method, paths, fn) {
+		var context = this;
+		if (!Array.isArray(paths)) {
+			paths = [paths];
+		}
+
+		paths.forEach((path) => {
+			context.routes.push({
+				path: path,
+				method: method,
+				fn: fn
+			});
 		});
 	}
 
