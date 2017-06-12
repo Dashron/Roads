@@ -1,7 +1,7 @@
 "use strict";
 
-const reroute = require('../../index.js').middleware.reroute;
-var Response = require('../../index.js').Response;
+const reroute = require('../../../index.js').middleware.reroute;
+var Response = require('../../../index.js').Response;
 
 /**
  * Tests that the provided road's request method is bound to the 

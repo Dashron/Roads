@@ -1,10 +1,12 @@
 "use strict";
 
 const url_module = require('url');
-const SimpleRouter = require('../../index.js').middleware.SimpleRouter;
+const SimpleRouter = require('../../../index.js').middleware.SimpleRouter;
 const buildRouter = function buildRouter() {
 	return new SimpleRouter();
 };
+
+const router_file_test_path = __dirname + '/../../resources/_router_file_test.js';
 
 const buildMockRoad = function buildMockRoad() {
 	return {
@@ -15,7 +17,7 @@ const buildMockRoad = function buildMockRoad() {
 			this.useArgs.push(Array.prototype.slice.call(arguments)[0]);
 		},
 		request: function (index) {
-			this.useArgs[index].apply(this, Array.prototype.slice.call(arguments, 1));
+			return this.useArgs[index].apply(this, Array.prototype.slice.call(arguments, 1));
 		}
 	};
 };
@@ -264,4 +266,61 @@ exports['test routes with query params route properly'] = function (test) {
 
 	test.equal('route', route_hit);
 	test.done();
+};
+
+exports['test routes loaded from a file'] = function (test) {
+	let mockRoad = buildMockRoad();
+	let router = buildRouter();
+	router.applyMiddleware(mockRoad);
+
+	router.addRouteFile(router_file_test_path);
+
+	Promise.all([
+		mockRoad.request(0, 'GET', url_module.parse('/'), {}, {}, () => {}),
+		mockRoad.request(0, 'POST', url_module.parse('/'), {}, {}, () => {}),
+		mockRoad.request(0, 'GET', url_module.parse('/test'), {}, {}, () => {}),
+		//Bad Method
+		mockRoad.request(0, 'POST', url_module.parse('/test'), {}, {}, () => {}),
+		//Bad Path
+		mockRoad.request(0, 'GET', url_module.parse('/fakeurl'), {}, {}, () => {})
+	]).then(results => {
+		test.equal(results[0], 'root get successful');
+		test.equal(results[1], 'root post successful');
+		test.equal(results[2], 'test get successful');
+
+		test.equal(results[3], undefined);
+
+		test.equal(results[4], undefined);
+
+		test.done();
+	});	
+};
+
+
+exports['test routes loaded from a file with prefix'] = function (test) {
+	let mockRoad = buildMockRoad();
+	let router = buildRouter();
+	router.applyMiddleware(mockRoad);
+
+	router.addRouteFile(router_file_test_path, '/test_prefix');
+
+	Promise.all([
+		mockRoad.request(0, 'GET', url_module.parse('/test_prefix'), {}, {}, () => {}),
+		mockRoad.request(0, 'POST', url_module.parse('/test_prefix'), {}, {}, () => {}),
+		mockRoad.request(0, 'GET', url_module.parse('/test_prefix/test'), {}, {}, () => {}),
+		//Bad Method
+		mockRoad.request(0, 'POST', url_module.parse('/test_prefix/test'), {}, {}, () => {}),
+		//Bad Path
+		mockRoad.request(0, 'GET', url_module.parse('/test_prefix/fakeurl'), {}, {}, () => {})
+	]).then(results => {
+		test.equal(results[0], 'root get successful');
+		test.equal(results[1], 'root post successful');
+		test.equal(results[2], 'test get successful');
+
+		test.equal(results[3], undefined);
+
+		test.equal(results[4], undefined);
+
+		test.done();
+	});	
 };

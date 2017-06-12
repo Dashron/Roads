@@ -1,6 +1,6 @@
 "use strict";
 
-const roads = require('../../index.js');
+const roads = require('../../../index.js');
 const url_module = require('url');
 
 /**

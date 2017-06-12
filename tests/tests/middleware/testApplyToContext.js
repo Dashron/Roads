@@ -1,6 +1,6 @@
 "use strict";
 
-const applyToContext = require('../../index.js').middleware.applyToContext;
+const applyToContext = require('../../../index.js').middleware.applyToContext;
 
 /**
  * Test that applyToContext actually applies the value properly

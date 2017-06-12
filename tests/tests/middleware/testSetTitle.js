@@ -1,6 +1,6 @@
 "use strict";
 
-var setTitle = require('../../index.js').middleware.setTitle;
+var setTitle = require('../../../index.js').middleware.setTitle;
 
 /**
  * Test that the setTitle function is properly applied by the setTitle middlware

@@ -10,7 +10,7 @@
   "keywords": ["api", "framework"],
   "homepage": "https://github.com/Dashron/roads",
   "scripts": {
-    "test": "node ./node_modules/nodeunit/bin/nodeunit ./tests/*"
+    "test": "node ./node_modules/nodeunit/bin/nodeunit ./tests/tests/*"
   },
   "bugs": { 
     "url" : "http://github.com/Dashron/roads/issues", 

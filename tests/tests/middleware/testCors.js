@@ -1,6 +1,6 @@
 "use strict";
 
-const roads = require('../../index.js');
+const roads = require('../../../index.js');
 const url_module = require('url');
 
 function makeCorsCall (allowed_origins, method, allowed_methods, allowed_headers, provide_origin, throw_error) {

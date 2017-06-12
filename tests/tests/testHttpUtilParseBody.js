@@ -1,6 +1,6 @@
 "use strict";
 
-var http_util = require('../src/util/httpUtil');
+var http_util = require('../../src/util/httpUtil');
 
 /**
  * Test that an object passed to parseBody returns immediately

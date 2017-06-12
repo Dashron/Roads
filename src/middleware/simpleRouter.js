@@ -1,10 +1,25 @@
 "use strict";
 
+
 /**
 * simpleRouter.js
 * Copyright(c) 2017 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
  */
+
+
+function buildRouterPath(path, prefix) {
+	if (!prefix) {
+		prefix = '';
+	}
+
+	if (prefix.length && path === '/') {
+		return prefix;
+	}
+
+	return prefix + path;
+}
+
 module.exports = class SimpleRouter {
 	constructor (road) {
 		this.routes = [];
@@ -45,6 +60,19 @@ module.exports = class SimpleRouter {
 				fn: fn
 			});
 		});
+	}
+
+	/**
+	 * [addRouteFile description]
+	 * @param {[type]} path [description]
+	 */
+	addRouteFile (file_path, prefix) {
+		let routes = require(file_path);
+		for (var path in routes) {
+			for (var method in routes[path]) {
+				this.addRoute(method, buildRouterPath(path, prefix), routes[path][method]);
+			}
+		}
 	}
 
 	/**

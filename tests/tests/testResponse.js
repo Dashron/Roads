@@ -1,6 +1,6 @@
 "use strict";
 
-var roads = require('../index');
+var roads = require('../../index.js');
 
 /**
  * Test that getData with a promise is still the original promise

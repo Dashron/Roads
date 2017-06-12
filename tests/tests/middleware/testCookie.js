@@ -1,7 +1,7 @@
 "use strict";
 
-const cookie = require('../../index.js').middleware.cookie;
-var Response = require('../../index.js').Response;
+const cookie = require('../../../index.js').middleware.cookie;
+var Response = require('../../../index.js').Response;
 
 /**
  * Test that the cookies are properly parsed into the request context

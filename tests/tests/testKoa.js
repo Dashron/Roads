@@ -1,11 +1,11 @@
 "use strict";
 
-const koaIntegration = require('../index.js').integrations.koa;
+const koaIntegration = require('../../index.js').integrations.koa;
 const KoaModule = require('koa');
 const http = require('http');
 const KOA_PORT = 3456;
-const Response = require('../index.js').Response;
-const cookie = require('../index.js').middleware.cookie;
+const Response = require('../../index.js').Response;
+const cookie = require('../../index.js').middleware.cookie;
 
 function koa() {
 	var k = new KoaModule();
