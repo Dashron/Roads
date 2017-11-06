@@ -10,6 +10,7 @@ module.exports.response_lib = require('./src/response.js');
 module.exports.Response = module.exports.response_lib.Response;
 module.exports.Road = require('./src/road.js');
 module.exports.Server = require('./src/httpServer.js');
+module.exports.Http2Server = require('./src/http2Server.js');
 module.exports.PJAX = require('./src/client/pjax');
 
 /**

@@ -83,9 +83,23 @@ module.exports = class Server {
 	 * @param  HTTPResponse http_response
 	 * @param  Response response
 	 */
-	_writeToResponse (http_response, response) {
+	_sendResponse (http_response, response) {
 		// wrap up and write the response to the server
-		response.writeToServer(http_response);
+		if (typeof(response.headers['content-type']) !== "string" && typeof(response.body) === "object") {
+			response.headers['content-type'] = 'application/json';
+		}
+
+		http_response.writeHead(response.status, response.headers);
+		
+		if (response.body === null) {
+			return;
+		}	
+		else if (typeof(response.body) === "object") {
+			http_response.write(JSON.stringify(response.body));
+		} else if (response.body !== undefined) {
+			http_response.write(response.body);
+		}
+
 		http_response.end();
 	}
 
@@ -102,7 +116,7 @@ module.exports = class Server {
 		let _self = this;
 
 		let error_handler = _self._error_handler.bind(_self, http_response);
-		let success_handler = _self._writeToResponse.bind(_self, http_response);
+		let success_handler = _self._sendResponse.bind(_self, http_response);
 
 		http_request.on('readable', () => {
 	  		let chunk = null;

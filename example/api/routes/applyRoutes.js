@@ -11,7 +11,10 @@ var collectionRepresentation = require('../representations/collection');
 
 module.exports = function (api) {
 	api.addRoute('GET', '/', function (url, body, headers) {
-		return new this.Response('Hello!');
+		return new this.Response({
+			"users" : "/users",
+			"posts" : "/posts"
+		});
 	});
 
 	api.addRoute('GET', '/users/#user_id', async function (url, body, headers) {
@@ -67,12 +70,11 @@ module.exports = function (api) {
 	});
 
 
-	/**
-	api.addRoute('/users', 'GET', async function (url, body, headers) {
+	api.addRoute('GET', '/users', async function (url, body, headers) {
 		return new this.Response(collectionRepresentation(await Users.get('all'), userRepresentation));
 	});
 
-	api.addRoute('/users', 'POST', function (url, body, headers) {
+	api.addRoute('POST', '/users', function (url, body, headers) {
 		var user = {};
 
 		if (body.name) {
@@ -88,5 +90,5 @@ module.exports = function (api) {
 		}
 
 		return new this.Response(userRepresentation(user), 201);
-	});*/
+	});
 };

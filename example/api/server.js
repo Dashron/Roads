@@ -16,7 +16,9 @@ api.use(roads.middleware.killSlash);
 api.use(roads.middleware.cors(['http://localhost:8081']));
 require('./routes/applyRoutes.js')(new roads.middleware.SimpleRouter(api));
 
-
+// Use the following line if you want an HTTP2 server. Notice the only change is roads.Http2Server vs. roads.Server
+// var server = new roads.Http2Server(api, function (err) {
+// Use the following line if you want an HTTP 1.1 server
 var server = new roads.Server(api, function (err) {
 	var response = null;
 	console.log(err.stack);

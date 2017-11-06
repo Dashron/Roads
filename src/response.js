@@ -21,30 +21,6 @@ module.exports.Response = class Response {
 		this.status = status || 200;
 		this.headers = headers || {};
 	}
-
-	/**
-	 * Helper function to write this response to the server
-	 * 
-	 * @param dynamic data
-	 * @param ServerResponse http_response
-	 * @param boolean end
-	 */
-	writeToServer (http_response) {
-		if (typeof(this.headers['content-type']) !== "string" && typeof(this.body) === "object") {
-			this.headers['content-type'] = 'application/json';
-		}
-
-		http_response.writeHead(this.status, this.headers);
-		
-		if (this.body === null) {
-			return;
-		}	
-		else if (typeof(this.body) === "object") {
-			http_response.write(JSON.stringify(this.body));
-		} else if (this.body !== undefined) {
-			http_response.write(this.body);
-		}
-	}
 };
 
 /**
