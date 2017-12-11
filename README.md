@@ -33,7 +33,8 @@ Roads is a web framework built for use with async functions. It's similar to Koa
   - [cors(*Array|string* allow_origins, *Array* allow_headers)](#corsarraystring-allow_origins-array-allow_headers)
   - [SimpleRouter](#simplerouter)
     - [SimpleRouter.applyMiddleware(road)](#simplerouterapplymiddlewareroad)
-    - [Road.addRoute(*string* method, *string* path,*function* fn)](#roadaddroutestring-method-string-path-function-fn)
+    - [SimpleRouter.addRoute(*string* method, *string* path,*function* fn)](#roadaddroutestring-method-string-path-function-fn)
+    - [SimpleRouter.addRouteFile(*string* full_path)](#roadaddroutefilestring-full_path)
 - [Roads.build](#roadsbuildstring-input_file-string-output_file-object-options)
 - [Roads.PJAX(*Object* road, *DomElement* container_element, *Object* window)](#roadspjaxobject-road-domelement-container_element-object-window)
   - [register()](#pjaxregister)
@@ -411,7 +412,9 @@ road.use(roads.middleware.cors(['http://localhost:8080'], ['authorization']));
 
 #### SimpleRouter.applyMiddleware(road)
 
-#### Road.addRoute(*string* method, *string* path, *function* fn)
+#### SimpleRouter.addRoute(*string* method, *string* path, *function* fn)
+
+#### SimpleRouter.addRouteFile(*string* full_path)
 
 
 ## Roads.build(*string* input_file, *string* output_file, *object* options)
