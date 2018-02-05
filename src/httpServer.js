@@ -67,13 +67,13 @@ module.exports = class Server {
 	 */
 	_error_handler (http_response, error) {
 		if (this._custom_error_handler) {
-			return this._writeToResponse(http_response, this._custom_error_handler(error));
+			return this._sendResponse(http_response, this._custom_error_handler(error));
 		}
 
 		if (error instanceof roads.HttpError) {
-			this._writeToResponse(http_response, new roads.Response({"error": error.message}, error.code, error.headers));
+			this._sendResponse(http_response, new roads.Response({"error": error.message}, error.code, error.headers));
 		} else {
-			this._writeToResponse(http_response, new roads.Response({"error" : "An unknown error has occured"}, 500));
+			this._sendResponse(http_response, new roads.Response({"error" : "An unknown error has occured"}, 500));
 		}
 	}
 
