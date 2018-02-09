@@ -1,6 +1,7 @@
 {
   "name": "roads",
   "version": "5.0.0-alpha.13",
+  "types": "index.d.ts",
   "author": {
     "name": "Aaron Hedges",
     "email": "aaron@dashron.com",
@@ -14,7 +15,10 @@
   ],
   "homepage": "https://github.com/Dashron/roads",
   "scripts": {
-    "test": "node ./node_modules/nodeunit/bin/nodeunit ./tests/tests/*"
+    "test": "node ./node_modules/nodeunit/bin/nodeunit ./tests/tests/*",
+    "lint": "node_modules/tslint/bin/tslint tests/types/*",
+    "server-koa": "node_modules/nodemon/bin/nodemon.js --watch 'tests/types/*' -e ts --exec 'ts-node' ./tests/types/roads.koa.types.ts",
+    "server-express": "node_modules/nodemon/bin/nodemon.js --watch 'tests/types/*' -e ts --exec 'ts-node' ./tests/types/roads.express.types.ts"
   },
   "bugs": {
     "url": "http://github.com/Dashron/roads/issues",
@@ -25,16 +29,22 @@
     "url": "git://github.com/Dashron/roads.git"
   },
   "devDependencies": {
-    "nodeunit": "0.11.2",
-    "browserify": "16.0.0",
+    "@types/express": "^4.11.1",
+    "@types/koa": "^2.0.44",
     "babel": "6.23.0",
-    "babelify": "8.0.0",
     "babel-core": "6.26.0",
     "babel-preset-es2017": "6.24.1",
+    "babelify": "8.0.0",
+    "browserify": "16.0.0",
     "envify": "4.1.0",
-    "koa": "2.4.1",
-    "express": "4.16.2",
-    "roads-server": "1.0.0-alpha.1"
+    "express": "^4.16.2",
+    "koa": "^2.4.1",
+    "nodemon": "^1.14.12",
+    "nodeunit": "0.11.2",
+    "roads-server": "1.0.0-alpha.1",
+    "ts-node": "^4.1.0",
+    "tslint": "^5.9.1",
+    "typescript": "^2.7.1"
   },
   "dependencies": {
     "cookie": "0.3.1"
