@@ -496,8 +496,8 @@ There's a very easy pattern to follow to ensure sharing client and server code w
 
 ### TODO:
 - Use the new URL class instead of a parsed url
+- Clean up the example, ensure pjax works
 - Improved PJAX test coverage
-- Unit tests for HTTPServer class
 - Examples of koa and express middleware
 - Add a code coverage library to track and improve test coverage
 - Mention roads-api as an alternative for creating APIs
