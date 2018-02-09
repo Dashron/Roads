@@ -1,12 +1,13 @@
 "use strict";
 /**
 * server.js
-* Copyright(c) 2017 Aaron Hedges <aaron@dashron.com>
+* Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
  */
 
-var roads = require(__dirname + '/../../index');
+var roads = require(__dirname + '/../index');
 var road = new roads.Road();
+var Server = require('roads-server').Server;
 
 road.use(roads.middleware.killSlash);
 road.use(roads.middleware.cookie());
@@ -16,7 +17,7 @@ let router = new roads.middleware.SimpleRouter(road)
 require('./routes/applyPublicRoutes.js')(router);
 require('./routes/applyPrivateRoutes.js')(router);
 
-var server = new roads.Server(road, function (err) {
+var server = new Server(road, function (err) {
 	console.log(err.stack);
 	
 	switch (err.code) {

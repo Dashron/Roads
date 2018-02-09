@@ -2,7 +2,7 @@
 
 /**
 * build.js
-* Copyright(c) 2017 Aaron Hedges <aaron@dashron.com>
+* Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
  */
 
@@ -27,8 +27,16 @@ function fixBabelify (babel_options) {
 		babel_options.presets = [];
 	}
 
-	babel_options.presets.push('es2015');
+	babel_options.presets.push('es2017');
 	return babel_options;
+}
+
+function fixIgnore(ignore_list) {
+	if (!ignore_list) {
+		ignore_list = [];
+	}
+
+	return ignore_list;
 }
 
 function fixExclude(exclude_list) {
@@ -37,7 +45,9 @@ function fixExclude(exclude_list) {
 	}
 
 	exclude_list.push(__filename);
+	exclude_list.push(__dirname + '/../../tests');
 	exclude_list.push(__dirname + '/../integrations/koa.js');
+	exclude_list.push(__dirname + '/../integrations/express.js');
 	exclude_list.push(__dirname + '/../middleware/cors.js');
 	return exclude_list;
 }
@@ -51,6 +61,7 @@ function fixOptions (options) {
 
 	options.babelify = fixBabelify(options.babelify);
 	options.external = fixExternal(options.external);
+	options.ignore = fixIgnore(options.ignore);
 	options.exclude = fixExclude(options.exclude);
 	return options;
 }
@@ -72,7 +83,8 @@ module.exports = function (input_file, output_file, options) {
 	options = fixOptions(options);
 
 	let builder = browserify(input_file, {
-		debug: options.use_sourcemaps
+		debug: options.use_sourcemaps,
+		ignoreMissing: options.ignore_missing
 	})
 	.transform("babelify", options.babelify);
 
@@ -82,10 +94,9 @@ module.exports = function (input_file, output_file, options) {
 			externals[key] = options.external[key];
 		}
 	}
-	
-	for (let i = 0; i < options.exclude.length; i++) {
-		builder.exclude(options.exclude[i]);
-	}
+
+	builder.ignore(options.ignore);
+	builder.exclude(options.exclude);
 
 	builder
 		.transform(envify(options.envify))

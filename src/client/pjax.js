@@ -4,7 +4,7 @@ var cookie = require('cookie');
 
 /**
  * pjax.js
- * Copyright(c) 2017 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  */
 module.exports = class RoadsPjax {
@@ -123,7 +123,7 @@ module.exports = class RoadsPjax {
 	 * @param  {Object} event             [description]
 	 */
 	_roadsLinkEvent (event) {
-		if (event.target.tagName === 'A' && event.target.dataset.roads === "link" && !event.ctrlKey) {
+		if (event.target.tagName === 'A' && event.target.dataset['roads-pjax'] === "link" && !event.ctrlKey) {
 			var _self = this;
 
 			event.preventDefault();

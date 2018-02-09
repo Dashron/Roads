@@ -1,11 +1,11 @@
 "use strict";
 /**
 * client.js
-* Copyright(c) 2017 Aaron Hedges <aaron@dashron.com>
+* Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
  */
 
-var roads = require('../../../index.js');
+var roads = require('../../index.js');
 var road = new roads.Road();
 
 var pjax = new roads.PJAX(road, document.getElementById('container'), window);

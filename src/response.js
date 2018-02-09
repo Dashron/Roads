@@ -3,7 +3,7 @@
 
 /**
 * response.js
-* Copyright(c) 2017 Aaron Hedges <aaron@dashron.com>
+* Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
  */
 

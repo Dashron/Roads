@@ -1,7 +1,7 @@
 "use strict";
 /**
 * road.js
-* Copyright(c) 2017 Aaron Hedges <aaron@dashron.com>
+* Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
  */
 
@@ -103,10 +103,6 @@ module.exports = class Road {
 			Response : roads.Response
 		})());
 	}
-
-
-
-
 
 	/**
 	 * Turn an HTTP request into an executable function with a useful request context. Will also incorporate the entire

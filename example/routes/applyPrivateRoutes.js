@@ -1,12 +1,9 @@
 "use strict";
 /**
 * applyPrivateRoutes.js
-* Copyright(c) 2017 Aaron Hedges <aaron@dashron.com>
+* Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
 * MIT Licensed
  */
-
-var roads = require('../../../index');
-var Resource = roads.Resource;
 
 /**
  * [one description]
@@ -25,5 +22,9 @@ module.exports = function (router) {
 		});
 
 		return response;
+	});
+
+	router.addRoute('GET', '/privateJSON', function () {
+		return new this.Response(JSON.stringify({"private-success": true}));
 	});
 };
