@@ -1,8 +1,10 @@
 "use strict";
 /**
-* Express.js
-* Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
-* MIT Licensed
+ * Express.js
+ * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
+ * MIT Licensed
+ * 
+ * This file exposes a function that allows you to use roads within express.js
  */
 
 /**
@@ -10,8 +12,9 @@
  *
  * This middleware works best if the road provided is using the roads cookie middleware.
  * 
- * @param  Road road The Road object that contains all routing information for this integration.
- * @return function A middleware function to use with Express's use method.
+ * @param {Road} road - The Road object that contains all routing information for this integration.
+ * @returns {function} A middleware function to use with Express's use method.
+ * @todo tests
  */
 module.exports = function (road) {
 	// express middleware to translate express requests into roads requests, and roads responses into Express responses

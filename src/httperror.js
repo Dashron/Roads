@@ -1,11 +1,23 @@
 "use strict";
 /**
-* httperror.js
-* Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
-* MIT Licensed
+ * httperror.js
+ * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
+ * MIT Licensed
+ * 
+ * Exposes an HTTP error class to simplify handling errors that are associated with HTTP response statuses 
  */
 
+ /**
+  * 
+  * @name HttpError
+  */
 module.exports = class HttpError extends Error {
+	/**
+	 * 
+	 * @param {string} body - The HTTP response body
+	 * @param {number} [status] - The HTTP response status code
+	 * @param {object} [headers] - Any custom HTTP response headers
+	 */
 	constructor(body, status, headers) {
 		super();
 		this.message = body;

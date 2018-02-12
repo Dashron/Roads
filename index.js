@@ -1,12 +1,17 @@
 "use strict";
 /**
-* index.js
-* Copyright(c) 2017 Aaron Hedges <aaron@dashron.com>
-* MIT Licensed
+ * index.js
+ * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
+ * MIT Licensed
+ * 
+ * Exposes all of the core components of the Roads library
  */
 
 module.exports.Promise = Promise;
 module.exports.response_lib = require('./src/response.js');
+/**
+ * @todo this is a janky way of handling this. We should find a better option
+ */
 module.exports.Response = module.exports.response_lib.Response;
 module.exports.Road = require('./src/road.js');
 module.exports.PJAX = require('./src/client/pjax');
@@ -14,16 +19,8 @@ module.exports.Client = require('./src/client/request');
 module.exports.HttpError = require('./src/httperror.js');
 
 /**
- * Compiles the input_file node script to be used in the browser.
  * 
- * @param  {String} input_file  The source file that will be converted to use in the browser
- * @param  {String} output_file The output file that will be accessible by your browser
- * @param  {Object} options     A set of options that can influence the build process. See all fields below
- * @param  {Boolean} options.use_sourcemaps  Whether or not the build process should include source maps.
- * @param  {Array} options.ignore     An array of dependencies that should be ignored from exernal resources instead of built into the project
- * @param  {Object} options.envify     An object to pass to envify. This allows you to change values between your server and client scripts.
- * @param  {Array} options.exclude An array of files that should not be included in the build process.
- * @param  {Object} options.babelify An object containing parameters to pass to the babelify transform
+ * @see ./src/client/build.js
  */
 module.exports.build = function (input_file, output_file, options) {
 	return require('./src/client/build.js')(input_file, output_file, options);
@@ -36,8 +33,7 @@ module.exports.integrations = {
 	 *
 	 * This middleware works best if the road provided is using the roads cookie middleware.
 	 * 
-	 * @param  Road road The Road object that contains all routing information for this integration.
-	 * @return function A middleware function to use with Koa's use method.
+	 * @see ./src/integrations/koa.js
 	 */
 	koa: function (road) {
 		return require('./src/integrations/koa.js')(road)
@@ -48,8 +44,7 @@ module.exports.integrations = {
 	 *
 	 * This middleware works best if the road provided is using the roads cookie middleware.
 	 * 
-	 * @param  Road road The Road object that contains all routing information for this integration.
-	 * @return function A middleware function to use with Expresses use method.
+	 * @see ./src/integrations/express.js
 	 */
 	express: function (road) {
 		return require('./src/integrations/express.js')(road);
@@ -60,11 +55,9 @@ module.exports.integrations = {
 module.exports.middleware = {
 	applyToContext: require('./src/middleware/applyToContext.js'),
 	/**
-	 * Apply proper cors headers
+	 * Middleware to apply proper cors headers
 	 * 
-	 * @param  Array|String allow_origins Either * to allow all origins, or an explicit list of valid origins.
-	 * @param  Array allow_headers (optional) A white list of headers that the client is allowed to send in their requests
-	 * @return Function The middleware to bind to your road
+	 * @see ./src/middleware/cors.js
 	 */
 	cors: function (allow_origins, allow_headers) {
 		return require('./src/middleware/cors.js')(allow_origins, allow_headers);

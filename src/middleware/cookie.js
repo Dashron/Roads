@@ -1,8 +1,10 @@
 "use strict";
 /**
-* cookie.js
-* Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
-* MIT Licensed
+ * cookie.js
+ * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
+ * MIT Licensed
+ * 
+ * Exposes a single middleware function to help with cookies
  */
 
 /**

@@ -1,8 +1,10 @@
 "use strict";
 /**
-* road.js
-* Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
-* MIT Licensed
+ * road.js
+ * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
+ * MIT Licensed
+ * 
+ * Exposes the core Road class
  */
 
 const url_module = require('url');
@@ -11,8 +13,9 @@ const http_util = require('./util/httpUtil');
 const response_lib = roads.response_lib;
 
 /**
- * [exports description]
- * @type {[type]}
+ * See roadsjs.com for full docs.
+ * 
+ * @name Road
  */
 module.exports = class Road {
 
@@ -49,8 +52,8 @@ module.exports = class Road {
 	 *
 	 * If the callback does not return a [response](#roadsresponse) object, it will be wrapped in a [response](#roadsresponse) object with the default status code of 200.
 	 *  
-	 * @param {Function} fn A callback (function or generator function) that will be executed every time a request is made.
-	 * @return {Road} this road object. Useful for chaining use statements.
+	 * @param {function} fn - A callback (function or generator function) that will be executed every time a request is made.
+	 * @returns {Road} this road object. Useful for chaining use statements.
 	 */
 	use (fn) {
 		if (!fn || typeof(fn) !== "function") {
@@ -69,11 +72,11 @@ module.exports = class Road {
 	 *
 	 * This function will locate the appropriate [resource method](#resource-method) for the provided HTTP Method and URL, execute it and return a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A). The thenable will always resolve to a [Response](#roadsresponse) object.
 	 * 
-	 * @param  string method
-	 * @param  string url     
-	 * @param  string body    
-	 * @param  array headers 
-	 * @return string
+	 * @param {string} method - HTTP request method
+	 * @param {string} url - HTTP request url
+	 * @param {string} [body] - HTTP request body
+	 * @param {array} [headers] - HTTP request headers
+	 * @returns {Promse} this promise will resolve to a Response object
 	 */
 	request (method, url, body, headers) {
 		if (typeof(method) !== "string") {
@@ -108,11 +111,12 @@ module.exports = class Road {
 	 * Turn an HTTP request into an executable function with a useful request context. Will also incorporate the entire
 	 * request handler chain
 	 *
-	 * @param  string request_method
-	 * @param  object parsed_url
-	 * @param  object request_body
-	 * @param  object request_headers
-	 * @return function
+	 * @param {string} request_method - HTTP request method
+	 * @param {object} parsed_url - Parsed HTTP request url
+	 * @param {object} request_body - HTTP request body
+	 * @param {object} request_headers - HTTP request headers
+	 * @param {object} context - Request context
+	 * @returns {function} A function that will start (or continue) the request chain
 	 */
 	_buildNext (request_method, parsed_url, request_body, request_headers, context) {
 		let _self = this;
@@ -141,8 +145,8 @@ module.exports = class Road {
 	/**
 	 * Execute a resource method, and ensure that a promise is always returned
 	 * 
-	 * @param  Function   route
-	 * @return Promise
+	 * @param {function} route
+	 * @returns {Promise}
 	 */
 	_executeRoute (route) {
 		let result = null;

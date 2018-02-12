@@ -1,8 +1,10 @@
 "use strict";
 /**
-* koa.js
-* Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
-* MIT Licensed
+ * koa.js
+ * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
+ * MIT Licensed
+ * 
+ * This file exposes a single function to allow you to use roads as middleware with koa.js
  */
 
 /**
@@ -10,8 +12,8 @@
  *
  * This middleware works best if the road provided is using the roads cookie middleware.
  * 
- * @param  Road road The Road object that contains all routing information for this integration.
- * @return function A middleware function to use with Koa's use method.
+ * @param {Road} road -  The Road object that contains all routing information for this integration.
+ * @returns {function} A middleware function to use with Koa's use method.
  */
 module.exports = function (road) {
 	// koa middleware to translate koa requests into roads requests, and roads responses into koa responses

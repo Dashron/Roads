@@ -1,13 +1,18 @@
 "use strict";
 /**
-* cors.js
-* Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
-* MIT Licensed
+ * cors.js
+ * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
+ * MIT Licensed
+ * 
+ * This exposes a function that helps you manage CORS in your roads service
  */
 const roads = require('../../index.js');
 
 /**
- * Helper function used internally to manage the origin headers
+ * Checks to see if the client provided cors origin matches the preconfigured list of valid origins
+ * 
+ * @param {string} origin - Client provided cors origin
+ * @param {(string|array)} allowed_origins - One or many allowed cors origins
  */
 function locateOrigin(origin, allowed_origins) {
 	if (allowed_origins === '*') {
@@ -27,9 +32,9 @@ function locateOrigin(origin, allowed_origins) {
 /**
  * Apply proper cors headers
  * 
- * @param  Array|String allow_origins Either * to allow all origins, or an explicit list of valid origins.
- * @param  Array allow_headers (optional) A white list of headers that the client is allowed to send in their requests
- * @return Function The middleware to bind to your road
+ * @param {(array|string)} [allow_origins] - Either * to allow all origins, or an explicit list of valid origins.
+ * @param {array} [allow_headers] - A white list of headers that the client is allowed to send in their requests
+ * @return {function} The middleware to bind to your road
  */
 module.exports = function (allow_origins, allow_headers) {
 	if (!allow_origins || (allow_origins !== '*' && !Array.isArray(allow_origins))) {
