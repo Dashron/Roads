@@ -1,36 +1,25 @@
 "use strict";
 /**
-* applyPublicRoutes.js
-* Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
-* MIT Licensed
+ * applyPublicRoutes.js
+ * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
+ * MIT Licensed
+ * 
+ * This file is an example of how to assign some public routes to a roads server
  */
-var fs = require('fs');
 
-/**
- * [one description]
- * @type {Resource}
- */
+ /**
+  * Before calling this function you should create your roads object and bind a SimpleRouter to that road.
+  * You then pass the road to this function to assign a collection of example routes that will be rendered
+  * on both the client and the server
+  * 
+  * @param {SimpleRouter} router - The router that the routes will be added to
+  */
 module.exports = function (router) {
 	router.addRoute('GET', '/', function () {
 		this.setTitle('Root Resource');
 		// In the real world the body of the response should be created from a template engine.
 		return new this.Response('Hello!<br /> Try the <a href="/public" data-roads-pjax="link">public test link</a>. It\'s available to the server and can be rendered from the client! Try clicking it for the client path, or control clicking for the server.<br />\
 Try the <a href="/private">private test link</a>. It\'s available to the server, but is not build in the client! Check your console for proof of the 404!');
-	});
-
-	router.addRoute('GET', 'client.brws.js', function (url, body, headers) {
-		this.ignore_layout = true;
-		// In the real world the body of the response should be created from a template engine.
-		return new this.Response(fs.readFileSync(__dirname + '/../static/client.brws.js').toString('utf-8'), 200, {
-			'Content-Type': 'application/json; charset=UTF-8'
-		});
-	});
-
-	router.addRoute('GET', 'client.map.json', function (url, body, headers) {
-		// In the real world the body of the response should be created from a template engine.
-		return new this.Response(fs.readFileSync(__dirname + '/../static/client.map.json').toString('utf-8'), 200, {
-			'Content-Type': 'application/json; charset=UTF-8'
-		});
 	});
 
 	router.addRoute('GET', 'public', function () {

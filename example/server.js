@@ -1,8 +1,10 @@
 "use strict";
 /**
-* server.js
-* Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
-* MIT Licensed
+ * server.js
+ * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
+ * MIT Licensed
+ * 
+ * This file starts up the HTTP roads server
  */
 
 var roads = require(__dirname + '/../index');
