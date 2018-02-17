@@ -8,6 +8,7 @@ resources/*
 !resources/official
 !resources/example
 
+package-lock.json
 .project
 .settings
 roads.sublime-project
