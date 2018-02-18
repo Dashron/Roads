@@ -76,7 +76,7 @@ Building a project with roads is very straightforward.
         server.listen(8080);
         ```
 
- - You can use the road as a router for your Koa.js server. 
+ - You can use the road with a Koa.js server. 
         ```node
         const roads = require('roads');
         const koa = require('koa');
@@ -89,7 +89,7 @@ Building a project with roads is very straightforward.
         ```
     **Note: There is alpha express support with roads.integrations.express**
 
- - You can Manually execute a resource method.
+ - You can manually interact with the road
 
 	```node
         const roads = require('roads');
@@ -134,7 +134,7 @@ Now that you can use your road, continue reading the docs below for more informa
 
 ## Roads.Road
 
-A Road is a container that holds an array of functions. It exposes a [request](#requeststring-method-string-url-dynamic-body-object-headers) method which allows you to execute the functions and provide consistent parameters..
+A Road is a container that holds an array of functions. It exposes a [request](#requeststring-method-string-url-dynamic-body-object-headers) method which allows you to execute the functions and provide consistent parameters.
 
 ### new Road()
 **Create a Road.**
@@ -159,13 +159,13 @@ The use function can be called one or more times. Each time it is called, the fu
  Each function can choose whether or not it wants to progress to the following function by calling or ignoring the `next` parameter. The `next` parameter is defined below as part of the use callback, along with all other parameters that will be passed to your function when the route is executed.
  
 #### use Callback 
-**function (*string* method,*string* url, *Object* body, *Object* headers, *Function* next)**
+**function (*string* method,*string* url, *string* body, *Object* headers, *Function* next)**
 
 name     | type                               | description
  --------|------------------------------------|---------------
  method  | string                             | The HTTP method that was provided to the request
- url     | string                             | The URL that was provided to the request
- body    | object                             | The body that was provided to the request, after it was properly parsed into an object
+ url     | string                             | The URL that was provided to the request. To have separate code for each url, see the SimpleRouter middleware
+ body    | string                             | The body that was provided to the request. To parse this see the parseBody middleware.
  headers | object                             | The headers that were provided to the request
  next    | function                           | The next step of the handler chain. If there are no more custom handlers assigned, next will resolve to the [resource method](#resource-method) that the router located. This method will always return a promise.
 
@@ -173,7 +173,7 @@ If the callback does not return a [response](#roadsresponse) object, roads.reque
 
 ```node
 // Simple example that sends a JSON response
-road.use((method, url, body, headers, next) => {
+road.use(function (method, url, body, headers, next) {
     return JSON.stringify({
         method: method,
         url: url,
@@ -192,8 +192,8 @@ road.use(async function (method, url, body, headers, next) {
 
 
 // Example of a request handler that kills trailing slashes (This is code is provided for you at roads.middleware.skillSlash!)
-// The main logic of this function will be executed before the resource method, because it all happens before the middleware calls next()
-road.use((method, url, body, headers, next) => {
+// The logic will happen before any other middleware because it's before you call next
+road.use(function (method, url, body, headers, next) {
 	// kill trailing slash as long as we aren't at the root level
     if (url.path != '/' && url.path[url.path.length - 1] === '/') {
         return new roads.Response(null, 302, {
@@ -205,8 +205,8 @@ road.use((method, url, body, headers, next) => {
 });
 
 // Example of a request handler that catches errors and returns Response objects
-// The main logic of this function will execute after the resource method, because it all happens after the middleware calls next()
-road.use((method, url, body, headers, next) => {
+// The logic will happen after any other middleware because it's in response to the promise result of next();
+road.use(function (method, url, body, headers, next) {
     // execute the actual resource method, and return the response
     return next()
         // Catch any errors that are thrown by the resources
@@ -261,16 +261,17 @@ name             | type     | description
 request          | function | An alias for [Road.request](#roadrequeststring-method-string-url-dynamic-body-object-headers). If you need to make a roads request from within middleware, it is recommended to use this instead of `Road.request`.
 Response         | Response | The Response constructor. Every request *should* return a `Response`, so this is provided to simplify the process. If you are constructing a `Response` from within middleware it is recommended that you use this instead of `Roads.Response`.
 
+**Note:** Do not use arrow functions if you want to interact with `this`. JavaScript is unable to transmit the custom `this` object into arrow functions.
 
 ```node
 var road = new Road();
 
-road.use((method, url, body, headers, next) => {
+road.use(function (method, url, body, headers, next) {
     this.extraInfo = 'hello!';
     return next();
 });
 
-road.use((method, url, body, headers) => {
+road.use(function (method, url, body, headers) {
     // true because the middleware persists to this context
     console.log(this.extraInfo === 'hello!');
 
@@ -289,7 +290,7 @@ Middleware is encouraged to add variables to this context to simplify developmen
 eg:
 ```node
 var road = new Road();
-road.use((method, url, body, headers) => {
+road.use(function (method, url, body, headers) {
     this.context.my_project.require_authentication = true;
 });
 ```
