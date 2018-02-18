@@ -391,16 +391,94 @@ name            | type                               | description
 road.use(roads.middleware.cors(['http://localhost:8080'], ['authorization']));
 ```
 
-### SimpleRouter()
+### SimpleRouter(*Road* road)
+This is a simple router middleware for roads. To use it, you have to take a couple of steps.
 
-**TODO:** Docs. See the testSimpleRouter.js file in the meanwhile.
+1. Create your road
 
-#### SimpleRouter.applyMiddleware(road)
+```js
+    const roads = require('roads');
+    var road = ...; // See steps 1 and 2 in the introduction for road construction
+```
+
+2. Create your Router
+
+```js
+    let router = new roads.middleware.SimpleRouter(road);
+```
+
+3. Assign routes to the router
+
+```js
+    // This is a simple route with no URI variables
+    router.addRoute('GET', '/posts', (url, body, headers) => {
+        // url, body and headers are all identical to the values sent to functions in roads.use
+    });
+
+    // This route supports numeric variables
+    router.addRoute('GET', '/posts/#post_id', (url, body, headers) => {
+        // url.args.post_id will contain the integer from the URL.
+        // e.g. GET /posts/12345 will have url.args.post_id === 12345
+    });
+
+    // This route supports any variable
+    router.addRoute('GET', '/posts/$post_slug', (url, body, headers) => {
+        // url.args.post_slug will contain the value from the URL.
+        // e.g. GET /posts/my-post will have url.args.post_slug === 'my-ost'
+    });
+```
+
+You can assign functions to url paths, and those paths can have some very basic variable templating. See addRoute for more details.
+
+#### SimpleRouter.applyMiddleware(*Road* road)
+If you don't provide a road to the SimpleRouter constructor, the router will not be used. This function allows you to assign the router to the road middleware.
 
 #### SimpleRouter.addRoute(*string* method, *string* path, *function* fn)
 
-#### SimpleRouter.addRouteFile(*string* full_path)
+Templating is simple. Each URI is considered to be a series of "path parts" separated by slashes.
+ - If a path part starts with a #, it is assumed to be a numeric variable. Non-numbers will not match this route
+ - If a path part starts with a $, it is considered to be an alphanumeric variabe. All non-slash values will match this route.
 
+Any variables will be added to the route's request url object under the "args" object.
+
+e.g. /users/#user_id will match /users/12345, not /users/abcde. If a request is made to /users/12345 the route's requestUrl object will contain { args: {user_id: 12345}} along with all other url object values
+
+```js
+    // This is a simple route with no URI variables
+    router.addRoute('GET', '/posts', (url, body, headers) => {
+        // url, body and headers are all identical to the values sent to functions in roads.use
+    });
+
+    // This route supports numeric variables
+    router.addRoute('GET', '/posts/#post_id', (url, body, headers) => {
+        // url.args.post_id will contain the integer from the URL.
+        // e.g. GET /posts/12345 will have url.args.post_id === 12345
+    });
+
+    // This route supports any variable
+    router.addRoute('GET', '/posts/$post_slug', (url, body, headers) => {
+        // url.args.post_slug will contain the value from the URL.
+        // e.g. GET /posts/my-post will have url.args.post_slug === 'my-ost'
+    });
+```
+
+#### SimpleRouter.addRouteFile(*string* full_path)
+Add an entire file worth of routes. 
+
+The file should be a node module that exposes an object. 
+Each key should be an HTTP path, each value should be an object.
+In that object, each key should be an HTTP method, and the value should be your route function.
+
+Example File:
+```js
+{
+    '/posts/#post_id': {
+        'GET': (url, body, headers) => {
+
+        }
+    }
+}
+```
 
 ## Roads.build(*string* input_file, *string* output_file, *object* options)
 **Browserify function to convert your script to run in the browser**
