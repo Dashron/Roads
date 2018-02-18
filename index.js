@@ -66,5 +66,6 @@ module.exports.middleware = {
 	killSlash: require('./src/middleware/killSlash.js'),
 	reroute: require('./src/middleware/reroute.js'),
 	setTitle: require('./src/middleware/setTitle.js'),
-	SimpleRouter: require('./src/middleware/simpleRouter.js')
+	SimpleRouter: require('./src/middleware/simpleRouter.js'),
+	parseBody: require('./src/middleware/parseBody.js')
 };

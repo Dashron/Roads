@@ -7,9 +7,7 @@
  * Exposes the core Road class
  */
 
-const url_module = require('url');
 const roads = require('../index');
-const http_util = require('./util/httpUtil');
 const response_lib = roads.response_lib;
 
 /**
@@ -35,24 +33,24 @@ module.exports = class Road {
 	 *
 	 * name | type                                                                  | required | description
 	 * -----|-----------------------------------------------------------------------|----------|---------------
-	 * fn   | Function(*string* method, *string* url,*object* body,*object* headers,*function* next) | yes      | Will be called any time a request is made on the object.
+	 * fn   | Function(*string* method, *string* url,*string* body,*object* headers,*function* next) | yes      | Will be called any time a request is made on the object.
 	 * 
 	 * This will be called for every request, even for routes that do not exist. The callback will be executed with the following five parameters :
 	 * 
 	 * Callback 
-	 * **function (*string* method,*string* url, *Object* body, *Object* headers, *Function* next)**
+	 * **function (*string* method, *string* url, *string* body, *Object* headers, *Function* next)**
 	 *
 	 * name     | type                               | description
 	 * --------|------------------------------------|---------------
 	 * method  | string                             | The HTTP method that was provided to the request
 	 * url     | string                             | The URL that was provided to the request
-	 * body    | object                             | The body that was provided to the request, after it was properly parsed into an object
+	 * body    | string                             | The body that was provided to the request
 	 * headers | object                             | The headers that were provided to the request
 	 * next    | function                           | The next step of the handler chain. If there are no more custom handlers assigned, next will resolve to the [resource method](#resource-method) that the router located. This method will always return a promise.
 	 *
 	 * If the callback does not return a [response](#roadsresponse) object, it will be wrapped in a [response](#roadsresponse) object with the default status code of 200.
 	 *  
-	 * @param {function} fn - A callback (function or generator function) that will be executed every time a request is made.
+	 * @param {function} fn - A callback (function or async function) that will be executed every time a request is made.
 	 * @returns {Road} this road object. Useful for chaining use statements.
 	 */
 	use (fn) {
@@ -87,20 +85,6 @@ module.exports = class Road {
 			throw new Error('You must provide a url when making a request');
 		}
 
-		// Create an empty headers object if no value is provided
-		if (!headers) {
-			headers = {};
-		}
-
-		try {
-			url = url_module.parse(url, true);
-			body = http_util.parseBody(body, headers['content-type']);
-		} catch (e) {
-			return new roads.Promise((resolve, reject) => {
-				reject(e);
-			});
-		}
-
 		return response_lib.wrap(this._buildNext(method, url, body, headers, {
 			request : this.request.bind(this),
 			Response : roads.Response
@@ -112,20 +96,20 @@ module.exports = class Road {
 	 * request handler chain
 	 *
 	 * @param {string} request_method - HTTP request method
-	 * @param {object} parsed_url - Parsed HTTP request url
-	 * @param {object} request_body - HTTP request body
+	 * @param {string} path - HTTP request path
+	 * @param {string} request_body - HTTP request body
 	 * @param {object} request_headers - HTTP request headers
 	 * @param {object} context - Request context
 	 * @returns {function} A function that will start (or continue) the request chain
 	 */
-	_buildNext (request_method, parsed_url, request_body, request_headers, context) {
+	_buildNext (request_method, path, request_body, request_headers, context) {
 		let _self = this;
 		let progress = 0;
 		let route_fn = null;
 
 		let next = () => {
 			if (_self._request_chain.length && _self._request_chain[progress]) {
-				route_fn = _self._request_chain[progress].bind(context, request_method, parsed_url, request_body, request_headers, () => {
+				route_fn = _self._request_chain[progress].bind(context, request_method, path, request_body, request_headers, () => {
 					
 					progress += 1;
 					return next();

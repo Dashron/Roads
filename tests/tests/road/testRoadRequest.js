@@ -1,7 +1,6 @@
 "use strict";
 
 var roads = require('../../../index.js');
-var url_module = require('url');
 
 
 /**
@@ -166,24 +165,4 @@ exports.testRequestErrorWithHandlerThatCatchesErrors = function (test) {
 		});
 		test.done();
 	});
-};
-
-/**
- * Test that invalid json parsing fails as expected
- */
-exports.testRequestWithInvalidJsonBody = function (test) {
-	var road = new roads.Road();
-	var body = '{stuff yeah';
-	
-	road.request('', '', body, {
-		'content-type' : "application/json"
-	}).then(function (response) {
-		// this should never happen
-		test.ok(false);
-	})
-	.catch(function (e) {
-		test.equal('Unexpected token s in JSON at position 1', e.message);
-	});
-
-	test.done();
 };

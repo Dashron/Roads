@@ -66,7 +66,7 @@ exports['test middleware function routes successfully to successful routes'] = f
 	};
 
 	router.addRoute(method, path, fn);
-	router.middleware(router.routes, method, url_module.parse(path), {}, {}, () => {});
+	router._middleware(router.routes, method, path, {}, {}, () => {});
 
 	test.equal(true, route_hit);
 	test.done();
@@ -90,7 +90,7 @@ exports['test middleware function routes successfully to successful routes only 
 
 	router.addRoute(method, path, fn);
 	router.addRoute(method, path, fn2);
-	router.middleware(router.routes, method, url_module.parse(path), {}, {}, () => {});
+	router._middleware(router.routes, method, path, {}, {}, () => {});
 
 	test.equal(true, route_hit);
 	test.done();
@@ -110,7 +110,7 @@ exports['test middleware function routes to next  on a missed url'] = function (
 	};
 
 	router.addRoute("/foo", method, fn);
-	router.middleware(router.routes, method, url_module.parse(path), {}, {}, () => {
+	router._middleware(router.routes, method, path, {}, {}, () => {
 		next_hit = true;
 	});
 
@@ -133,7 +133,7 @@ exports['test middleware function routes to next on a missed http method but mat
 	};
 
 	router.addRoute(path, "PUT", fn);
-	router.middleware(router.routes, method, url_module.parse(path), {}, {}, () => {
+	router._middleware(router.routes, method, path, {}, {}, () => {
 		next_hit = true;
 	});
 
@@ -145,21 +145,76 @@ exports['test middleware function routes to next on a missed http method but mat
 /**
  * 
  */
-exports['test route function gets the proper context and arguments'] = function (test) {
+exports['test route function with no template gets the proper context and arguments'] = function (test) {
 	let router = buildRouter();
 	let path = '/';
 	let method = 'GET';
-	let body = {harvey: 'birdman'};
+	let body = '{"harvey": "birdman"}';
 	let headers = {bojack: 'horseman'};
 
 	router.addRoute(method, path, (request_url, request_body, request_headers) => {
-		test.deepEqual(url_module.parse(path), request_url);
+		// parsed url
+		test.deepEqual(url_module.parse(path, true), request_url);
+		// passthrough request body
 		test.equal(body, request_body);
+		// passthrough headers
 		test.equal(headers, request_headers);
 		test.done();
 	});
 
-	router.middleware(router.routes, method, url_module.parse(path), body, headers, () => {});
+	router._middleware(router.routes, method, path, body, headers, () => {});
+};
+
+/**
+ * 
+ */
+exports['test route function with numeric template gets the proper context and arguments'] = function (test) {
+	let router = buildRouter();
+	let path = '/#numeric';
+	let req_path = '/12345';
+	let method = 'GET';
+	let body = '{"harvey": "birdman"}';
+	let headers = {bojack: 'horseman'};
+
+	router.addRoute(method, path, (request_url, request_body, request_headers) => {
+		// parsed url
+		let parsed_url = url_module.parse(req_path, true);
+		parsed_url.args = {numeric: 12345};
+		test.deepEqual(parsed_url, request_url);
+		// passthrough request body
+		test.equal(body, request_body);
+		// passthrough headers
+		test.equal(headers, request_headers);
+		test.done();
+	});
+
+	router._middleware(router.routes, method, req_path, body, headers, () => {});
+}
+
+/**
+ * 
+ */
+exports['test route function with string template gets the proper context and arguments'] = function (test) {
+	let router = buildRouter();
+	let path = '/$string';
+	let req_path = '/hello';
+	let method = 'GET';
+	let body = '{"harvey": "birdman"}';
+	let headers = {bojack: 'horseman'};
+
+	router.addRoute(method, path, (request_url, request_body, request_headers) => {
+		// parsed url
+		let parsed_url = url_module.parse(req_path, true);
+		parsed_url.args = {string: 'hello'};
+		test.deepEqual(parsed_url, request_url);
+		// passthrough request body
+		test.equal(body, request_body);
+		// passthrough headers
+		test.equal(headers, request_headers);
+		test.done();
+	});
+
+	router._middleware(router.routes, method, req_path, body, headers, () => {});
 };
 
 /**
@@ -176,7 +231,7 @@ exports['test route that throws an exception is handled properly'] = function (t
 
 	router.addRoute(method, path, fn);
 	try {
-		router.middleware(router.routes, method, url_module.parse(path), {}, {}, () => {});
+		router._middleware(router.routes, method, path, {}, {}, () => {});
 	} catch (error) {
 		test.ok(error instanceof Error);
 		test.equal(error_message, error.message);
@@ -197,7 +252,7 @@ exports['test route successfully returns value out of the middleware'] = functio
 	};
 
 	router.addRoute(method, path, fn);
-	route_hit = router.middleware(router.routes, method, url_module.parse(path), {}, {}, () => {});
+	route_hit = router._middleware(router.routes, method, path, {}, {}, () => {});
 
 	test.equal('route', route_hit);
 	test.done();
@@ -216,7 +271,7 @@ exports['test next successfully returns value out of the middleware'] = function
 	};
 
 	router.addRoute(path, 'PUT', fn);
-	route_hit = router.middleware(router.routes, method, url_module.parse(path), {}, {}, () => {
+	route_hit = router._middleware(router.routes, method, path, {}, {}, () => {
 		return 'next';
 	});
 
@@ -240,7 +295,7 @@ exports['test applyMiddleware can call the middleware properly'] = function (tes
 	};
 
 	router.addRoute(method, path, fn);
-	mockRoad.request(0, method, url_module.parse(path), {}, {}, () => {});
+	mockRoad.request(0, method, path, {}, {}, () => {});
 
 	test.equal('route', route_hit);
 	test.done();
@@ -262,7 +317,7 @@ exports['test routes with query params route properly'] = function (test) {
 	};
 
 	router.addRoute(method, path, fn);
-	mockRoad.request(0, method, url_module.parse(path + '?foo=bar'), {}, {}, () => {});
+	mockRoad.request(0, method, path + '?foo=bar', {}, {}, () => {});
 
 	test.equal('route', route_hit);
 	test.done();
@@ -276,13 +331,13 @@ exports['test routes loaded from a file'] = function (test) {
 	router.addRouteFile(router_file_test_path);
 
 	Promise.all([
-		mockRoad.request(0, 'GET', url_module.parse('/'), {}, {}, () => {}),
-		mockRoad.request(0, 'POST', url_module.parse('/'), {}, {}, () => {}),
-		mockRoad.request(0, 'GET', url_module.parse('/test'), {}, {}, () => {}),
+		mockRoad.request(0, 'GET', '/', {}, {}, () => {}),
+		mockRoad.request(0, 'POST', '/', {}, {}, () => {}),
+		mockRoad.request(0, 'GET', '/test', {}, {}, () => {}),
 		//Bad Method
-		mockRoad.request(0, 'POST', url_module.parse('/test'), {}, {}, () => {}),
+		mockRoad.request(0, 'POST', '/test', {}, {}, () => {}),
 		//Bad Path
-		mockRoad.request(0, 'GET', url_module.parse('/fakeurl'), {}, {}, () => {})
+		mockRoad.request(0, 'GET', '/fakeurl', {}, {}, () => {})
 	]).then(results => {
 		test.equal(results[0], 'root get successful');
 		test.equal(results[1], 'root post successful');
@@ -305,13 +360,13 @@ exports['test routes loaded from a file with prefix'] = function (test) {
 	router.addRouteFile(router_file_test_path, '/test_prefix');
 
 	Promise.all([
-		mockRoad.request(0, 'GET', url_module.parse('/test_prefix'), {}, {}, () => {}),
-		mockRoad.request(0, 'POST', url_module.parse('/test_prefix'), {}, {}, () => {}),
-		mockRoad.request(0, 'GET', url_module.parse('/test_prefix/test'), {}, {}, () => {}),
+		mockRoad.request(0, 'GET', '/test_prefix', {}, {}, () => {}),
+		mockRoad.request(0, 'POST', '/test_prefix', {}, {}, () => {}),
+		mockRoad.request(0, 'GET', '/test_prefix/test', {}, {}, () => {}),
 		//Bad Method
-		mockRoad.request(0, 'POST', url_module.parse('/test_prefix/test'), {}, {}, () => {}),
+		mockRoad.request(0, 'POST', '/test_prefix/test', {}, {}, () => {}),
 		//Bad Path
-		mockRoad.request(0, 'GET', url_module.parse('/test_prefix/fakeurl'), {}, {}, () => {})
+		mockRoad.request(0, 'GET', '/test_prefix/fakeurl', {}, {}, () => {})
 	]).then(results => {
 		test.equal(results[0], 'root get successful');
 		test.equal(results[1], 'root post successful');

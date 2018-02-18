@@ -7,6 +7,8 @@
  * Exposes the SimpleRouter class to be used with roads middleware. 
  */
 
+const url_module = require('url');
+
 /**
  * Applies a prefix to paths of route files
  * 
@@ -39,7 +41,6 @@ function buildRouterPath(path, prefix) {
  * e.g.
  * /users/#user_id will match /users/12345, not /users/abcde. If a request is made to /users/12345 the route's requestUrl object will contain { args: {user_id: 12345}} along with all other url object values
  * 
- * @todo tests
  * @name SimpleRouter
  */
 module.exports = class SimpleRouter {
@@ -63,7 +64,7 @@ module.exports = class SimpleRouter {
 
 		// We do this to ensure we have access to the SimpleRouter once we lose this due to road's context
 		road.use(function (request_method, request_url, request_body, request_headers, next) {
-			return _self.middleware.call(this, _self.routes, request_method, request_url, request_body, request_headers, next);
+			return _self._middleware.call(this, _self.routes, request_method, request_url, request_body, request_headers, next);
 		});
 	}
 
@@ -116,16 +117,18 @@ module.exports = class SimpleRouter {
 	 * 
 	 * @todo there might be a better way to do this
 	 */
-	middleware (routes, request_method, request_url, request_body, request_headers, next) {
+	_middleware (routes, request_method, request_url, request_body, request_headers, next) {
 		let context = this;
 		let response = null;
 		let hit = false;
 
+		let parsed_url = url_module.parse(request_url, true);
+
 		for (let i = 0; i < routes.length; i++) {
 			let route = routes[i];
 
-			if (compareRouteAndApplyArgs(route, request_url, request_method)) {
-				response = (route.fn).call(context, request_url, request_body, request_headers, next);
+			if (compareRouteAndApplyArgs(route, parsed_url, request_method)) {
+				response = (route.fn).call(context, parsed_url, request_body, request_headers, next);
 				hit = true;
 				break;
 			}

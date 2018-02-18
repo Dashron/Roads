@@ -28,8 +28,9 @@ Roads is a web framework built for use with async functions. It's similar to Koa
 - [Roads.HttpError](#roadshttperror)
   - [new HttpError(*string* message, *number* code)](#new-httperrorstring-message-number-code)
 - [Roads.middleware](#roadsmiddleware)
-  - [killSlash()](#killslash)
   - [cors(*Array|string* allow_origins, *Array* allow_headers)](#corsarraystring-allow_origins-array-allow_headers)
+  - [killSlash()](#killslash)
+  - [parseBody](#parsebody)
   - [SimpleRouter](#simplerouterroad-road)
     - [SimpleRouter.applyMiddleware(road)](#simplerouterapplymiddlewareroad-road)
     - [SimpleRouter.addRoute(*string* method, *string* path,*function* fn)](#simplerouteraddroutestring-method-string-path-function-fn)
@@ -368,15 +369,6 @@ HttpError.internal_server_error = 500;
 
 ## Roads.middleware
 
-### killSlash()
-**Middleware to kill the trailing slash on http requests**
-
-If used, any url that ends with a trailing slash will return a response object redirecting the client to the same url without the trailing slash (302 redirect with Location: [url_without_slash])
-
-```node
-road.use(roads.middleware.killSlash);
-```
-
 ### cors(*Array|string* allow_origins, *array* allow_headers)
 **Middleware to Apply proper cors headers**
 
@@ -389,6 +381,31 @@ name            | type                               | description
 
 ```node
 road.use(roads.middleware.cors(['http://localhost:8080'], ['authorization']));
+```
+
+### killSlash()
+**Middleware to kill the trailing slash on http requests**
+
+If used, any url that ends with a trailing slash will return a response object redirecting the client to the same url without the trailing slash (302 redirect with Location: [url_without_slash])
+
+```node
+road.use(roads.middleware.killSlash);
+```
+
+### parseBody
+**Middleware to parse the request body**
+
+This middleware looks at the Content-Type header, and uses that information to attempt to parse the incoming request body string. The body will be applied to the context field `body`
+
+```node
+road.use(roads.middleware.parseBody);
+
+road.use(function (method, url, body, headers) {
+    console.log(body); // The string '{"name":"dashron"}'
+    console.log(this.body); // The parsed object { name : "dashron" }
+});
+
+road.request('POST', '/users', '{"name":"dashron"}', {"content-type": "application/json"});
 ```
 
 ### SimpleRouter(*Road* road)
@@ -573,7 +590,7 @@ There's a very easy pattern to follow to ensure sharing client and server code w
 
 
 ### TODO:
-- Use the new URL class instead of a parsed url
+- Use the new URL class instead of a parsed url (maybe)
 - Clean up the example, ensure pjax works
 - Improved PJAX test coverage
 - Examples of koa and express middleware
