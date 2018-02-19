@@ -28,7 +28,7 @@ Roads is a web framework built for use with async functions. It's similar to Koa
 - [Roads.HttpError](#roadshttperror)
   - [new HttpError(*string* message, *number* code)](#new-httperrorstring-message-number-code)
 - [Roads.middleware](#roadsmiddleware)
-  - [cors(*array|string* allow_origins, *array* allow_headers)](#corsarraystring-allow_origins-array-allow_headers)
+  - [cors(*array\|string* allow_origins, *array* allow_headers)](#corsarraystring-allow_origins-array-allow_headers)
   - [killSlash()](#killslash)
   - [parseBody](#parsebody)
   - [SimpleRouter](#simplerouterroad-road)
