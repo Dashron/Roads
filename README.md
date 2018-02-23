@@ -28,6 +28,7 @@ Roads is a web framework built for use with async functions. It's similar to Koa
 - [Roads.HttpError](#roadshttperror)
   - [new HttpError(*string* message, *number* code)](#new-httperrorstring-message-number-code)
 - [Roads.middleware](#roadsmiddleware)
+  - [cookie()](#cookie)
   - [cors(*array\|string* allow_origins, *array* allow_headers)](#corsarraystring-allow_origins-array-allow_headers)
   - [killSlash()](#killslash)
   - [parseBody](#parsebody)
@@ -369,6 +370,40 @@ HttpError.internal_server_error = 500;
 ```
 
 ## Roads.middleware
+
+### cookie()
+**Middleware to add some cookie management functions**
+
+When you use the cookie middleware, it adds one method to the request context and two methods to any response created from the request context.
+
+`this.cookies`
+The cookies object on the request context will contain an object with all the parsed out cookie values sent by the client. Each key is the cookie name, each value is the cookie value.
+
+`setCookie(name, value, options)`
+Calling this function will set any necessary headers to create or update the cookie on the client. The values directly map to the [cookie](https://github.com/jshttp/cookie) module. 
+
+To remove a cookie, set the value to null.
+
+`getCookies()`
+Returns an object with all the response cookies.
+
+```node
+road.use(roads.middleware.cookie());
+
+roads.use(function (method, url, body, headers) {
+	console.log(this.cookies);
+	
+	let response = new this.Response();
+	
+	response.setCookie('auth', 12345, {
+		domain: 'dashron.com'
+	});
+	
+	console.log(response.getCookies());
+	
+	return new this.Response(200, 'Hello!');
+});
+```
 
 ### cors(*Array|string* allow_origins, *array* allow_headers)
 **Middleware to Apply proper cors headers**
