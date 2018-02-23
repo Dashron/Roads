@@ -226,6 +226,34 @@ road.use(function (method, url, body, headers, next) {
 });
 ```
 
+**How do I control the order my logic executes?**
+
+Let's say you have assigned a function via `use`. Each function has two places you can put your logic. I have described them in the example below.
+
+```js
+road.use(function (method, url, body, params, next) {
+	// This is the first point. This code will be executed first.
+	return next()
+	.then((response) => {
+		// This is the second point. This code will be executed after all subsequent middleware have executed both their first and second mount points.
+	});
+});
+```
+
+You can picture the logic path like a U.
+
+```
+First mount point                  Second mount point        
+for first middleware              for first middleware
+          |                              / \
+         \ /                              |
+First mount point       ____ \    Second mount point
+for second middleware        /    for second middleware
+```
+
+
+Each new function is added to the bottom of the U.
+
 
 ### Road.request(*string* method, *string* url, *dynamic* body, *Object* headers)
 **Locate and execute the resource method associated with the request parameters.**
