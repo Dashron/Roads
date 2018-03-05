@@ -437,18 +437,6 @@ roads.use(function (method, url, body, headers) {
 
 Sets up the proper preflight, and standard repsonse headers so that browsers can make proper CORS requests.
 
- * Apply proper cors headers
- * 
- * @param {object} [options] - A collection of different cors settings.
- * @param {object} [options.validOrigins] - An array of origin urls that can send requests to this API
- * @param {object} [options.supportsCredentials] - A boolean, true if you want this endpoint to receive cookies
- * @param {object} [options.responseHeaders] - An array of valid HTTP response headers
- * @param {object} [options.requestHeaders] - An array of valid HTTP request headers
- * @param {object} [options.validMethods] - An array of valid HTTP methods
- * @param {object} [options.cacheMaxAge] - The maximum age to cache the cors information
- * 
- * @return {function} The middleware to bind to your road
-
 The options object spports the following keys
 
 name            | type                               | description
