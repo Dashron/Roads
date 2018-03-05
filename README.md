@@ -18,16 +18,17 @@ Roads is a web framework built for use with async functions. It's similar to Koa
 - [Getting Started](#getting-started)
 - [Roads.Road](#roadsroad)
   - [new Road()](#new-road)
-  - [use(*Function* fn)](#roadusefunction-fn)
-  - [request(*string* method, *string* url, *dynamic* body, *Object* headers)](#roadrequeststring-method-string-url-dynamic-body-object-headers)
+  - [use(*function* fn)](#roadusefunction-fn)
+  - [request(*string* method, *string* url, *dynamic* body, *object* headers)](#roadrequeststring-method-string-url-dynamic-body-object-headers)
 - [Roads.Response](#roadsresponse)
-  - [new Response(*mixed* body, *number* status, *Object* headers)](#new-responsemixed-body-number-status-object-headers)
+  - [new Response(*mixed* body, *number* status, *object* headers)](#new-responsemixed-body-number-status-object-headers)
   - [body](#body)
   - [status](#status)
   - [headers](#headers)
 - [Roads.HttpError](#roadshttperror)
   - [new HttpError(*string* message, *number* code)](#new-httperrorstring-message-number-code)
 - [Roads.middleware](#roadsmiddleware)
+  - [cookie()](#cookie)
   - [cors(*object* options)](#corsobject-options)
   - [killSlash()](#killslash)
   - [parseBody](#parsebody)
@@ -36,7 +37,7 @@ Roads is a web framework built for use with async functions. It's similar to Koa
     - [SimpleRouter.addRoute(*string* method, *string* path,*function* fn)](#simplerouteraddroutestring-method-string-path-function-fn)
     - [SimpleRouter.addRouteFile(*string* full_path)](#simplerouteraddroutefilestring-full_path)
 - [Roads.build](#roadsbuildstring-input_file-string-output_file-object-options)
-- [Roads.PJAX(*Object* road, *DomElement* container_element, *Object* window)](#roadspjaxobject-road-domelement-container_element-object-window)
+- [Roads.PJAX(*object* road, *DomElement* container_element, *object* window)](#roadspjaxobject-road-domelement-container_element-object-window)
   - [register()](#pjaxregister)
   - [PJAX Link Format](#pjax-link-format)
   - [PJAX Page titles](#pjax-page-titles)
@@ -225,6 +226,34 @@ road.use(function (method, url, body, headers, next) {
 });
 ```
 
+**How do I control the order my logic executes?**
+
+Let's say you have assigned a function via `use`. Each function has two places you can put your logic. I have described them in the example below.
+
+```js
+road.use(function (method, url, body, params, next) {
+	// This is the first point. This code will be executed first.
+	return next()
+	.then((response) => {
+		// This is the second point. This code will be executed after all subsequent middleware have executed both their first and second mount points.
+	});
+});
+```
+
+You can picture the logic path like a U.
+
+```
+First mount point                  Second mount point        
+for first middleware              for first middleware
+          |                              / \
+         \ /                              |
+First mount point       ____ \    Second mount point
+for second middleware        /    for second middleware
+```
+
+
+Each new function is added to the bottom of the U.
+
 
 ### Road.request(*string* method, *string* url, *dynamic* body, *Object* headers)
 **Locate and execute the resource method associated with the request parameters.**
@@ -369,6 +398,39 @@ HttpError.internal_server_error = 500;
 ```
 
 ## Roads.middleware
+### cookie()
+**Middleware to add some cookie management functions**
+
+When you use the cookie middleware, it adds one method to the request context and two methods to any response created from the request context.
+
+`this.cookies`
+The cookies object on the request context will contain an object with all the parsed out cookie values sent by the client. Each key is the cookie name, each value is the cookie value.
+
+`setCookie(name, value, options)`
+Calling this function will set any necessary headers to create or update the cookie on the client. The values directly map to the [cookie](https://github.com/jshttp/cookie) module. 
+
+To remove a cookie, set the value to null.
+
+`getCookies()`
+Returns an object with all the response cookies.
+
+```node
+road.use(roads.middleware.cookie());
+
+roads.use(function (method, url, body, headers) {
+	console.log(this.cookies);
+	
+	let response = new this.Response();
+	
+	response.setCookie('auth', 12345, {
+		domain: 'dashron.com'
+	});
+	
+	console.log(response.getCookies());
+	
+	return new this.Response(200, 'Hello!');
+});
+```
 
 ### cors(*object* options)
 **Middleware to Apply proper cors headers**
