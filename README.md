@@ -28,7 +28,7 @@ Roads is a web framework built for use with async functions. It's similar to Koa
 - [Roads.HttpError](#roadshttperror)
   - [new HttpError(*string* message, *number* code)](#new-httperrorstring-message-number-code)
 - [Roads.middleware](#roadsmiddleware)
-  - [cors(*Array|string* allow_origins, *Array* allow_headers)](#corsarraystring-allow_origins-array-allow_headers)
+  - [cors(*object* options)](#corsobject-options)
   - [killSlash()](#killslash)
   - [parseBody](#parsebody)
   - [SimpleRouter](#simplerouterroad-road)
@@ -370,18 +370,39 @@ HttpError.internal_server_error = 500;
 
 ## Roads.middleware
 
-### cors(*Array|string* allow_origins, *array* allow_headers)
+### cors(*object* options)
 **Middleware to Apply proper cors headers**
 
 Sets up the proper preflight, and standard repsonse headers so that browsers can make proper CORS requests.
 
+ * Apply proper cors headers
+ * 
+ * @param {object} [options] - A collection of different cors settings.
+ * @param {object} [options.validOrigins] - An array of origin urls that can send requests to this API
+ * @param {object} [options.supportsCredentials] - A boolean, true if you want this endpoint to receive cookies
+ * @param {object} [options.responseHeaders] - An array of valid HTTP response headers
+ * @param {object} [options.requestHeaders] - An array of valid HTTP request headers
+ * @param {object} [options.validMethods] - An array of valid HTTP methods
+ * @param {object} [options.cacheMaxAge] - The maximum age to cache the cors information
+ * 
+ * @return {function} The middleware to bind to your road
+
+The options object spports the following keys
+
 name            | type                               | description
- ---------------|------------------------------------|---------------
- allow_origins  | Array|string                       | Either * to allow all origins, or an explicit list of valid origins.
- allow_headers  | Array                              | (optional) A white list of headers that the client is allowed to send in their requests
+---------------|------------------------------------|---------------
+validOrigins  | array                      | An array of origin urls that can send requests to this API
+supportsCredentials  | boolean                       | A boolean, true if you want this endpoint to receive cookies
+responseHeaders  | array                       | An array of valid HTTP response headers
+requestHeaders  | array                       | An array of valid HTTP request headers
+validMethods  | array                       | An array of valid HTTP methods
+cacheMaxAge  | number                       | The maximum age to cache the cors information
 
 ```node
-road.use(roads.middleware.cors(['http://localhost:8080'], ['authorization']));
+road.use(roads.middleware.cors({
+    validOrigins: ['http://localhost:8080'],
+    responseHeaders: ['content-type']
+}));
 ```
 
 ### killSlash()

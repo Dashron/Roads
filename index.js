@@ -54,14 +54,7 @@ module.exports.integrations = {
 // Expose all middleware functions
 module.exports.middleware = {
 	applyToContext: require('./src/middleware/applyToContext.js'),
-	/**
-	 * Middleware to apply proper cors headers
-	 * 
-	 * @see ./src/middleware/cors.js
-	 */
-	cors: function (allow_origins, allow_headers) {
-		return require('./src/middleware/cors.js')(allow_origins, allow_headers);
-	},
+	cors: require('./src/middleware/cors.js'),
 	cookie: require('./src/middleware/cookie.js'),
 	killSlash: require('./src/middleware/killSlash.js'),
 	reroute: require('./src/middleware/reroute.js'),

@@ -1,14 +1,13 @@
 "use strict";
 
 const roads = require('../../../index.js');
-const url_module = require('url');
 
 /**
  * Test that a request with slash fixing on a request without a trailing slash passes through unmodified
  */
 exports['test kill slash doesn\'t break normal'] = function (test) {
 	var method = 'GET';
-	var url = url_module.parse('/users');
+	var url = '/users';
 	var body = {};
 	var headers = {};
 	var contents = 'fooo';
@@ -30,7 +29,7 @@ exports['test kill slash doesn\'t break normal'] = function (test) {
  */
 exports['test kill slash only trailing slash fixing a route'] = function (test) {
 	var method = 'GET';
-	var url = url_module.parse('/users/');
+	var url = '/users/';
 	var body = {};
 	var headers = {};
 	var contents = 'fooo';
@@ -68,7 +67,7 @@ exports['test kill slash only trailing slash fixing a route'] = function (test) 
  */
 exports['test kill slash not breaking on root'] = function (test) {
 	var method = 'GET';
-	var url = url_module.parse('/');
+	var url = '/';
 	var body = {};
 	var headers = {};
 	var contents = 'fooo';

@@ -6,134 +6,216 @@
  * 
  * This exposes a function that helps you manage CORS in your roads service
  */
-const roads = require('../../index.js');
-
-/**
- * Checks to see if the client provided cors origin matches the preconfigured list of valid origins
- * 
- * @param {string} origin - Client provided cors origin
- * @param {(string|array)} allowed_origins - One or many allowed cors origins
- */
-function locateOrigin(origin, allowed_origins) {
-	if (allowed_origins === '*') {
-		return '*';
-	} else if (Array.isArray(allowed_origins)) {
-		let i = allowed_origins.indexOf(origin);
-		if (i === -1) {
-			// Origin not allowed
-			return false;
-		}
-		return allowed_origins[i];
-	} else {
-		throw new Error('Misconfigured CORS middleware. allow_origins must be * or an array');
-	}
-}
 
 /**
  * Apply proper cors headers
  * 
- * @param {(array|string)} [allow_origins] - Either * to allow all origins, or an explicit list of valid origins.
- * @param {array} [allow_headers] - A white list of headers that the client is allowed to send in their requests
+ * @param {object} [options] - A collection of different cors settings.
+ * @param {object} [options.validOrigins] - An array of origin urls that can send requests to this API
+ * @param {object} [options.supportsCredentials] - A boolean, true if you want this endpoint to receive cookies
+ * @param {object} [options.responseHeaders] - An array of valid HTTP response headers
+ * @param {object} [options.requestHeaders] - An array of valid HTTP request headers
+ * @param {object} [options.validMethods] - An array of valid HTTP methods
+ * @param {object} [options.cacheMaxAge] - The maximum age to cache the cors information
+ * 
  * @return {function} The middleware to bind to your road
  */
-module.exports = function (allow_origins, allow_headers) {
-	if (!allow_origins || (allow_origins !== '*' && !Array.isArray(allow_origins))) {
-		throw new Error('You must define the origins allowed by these cors requests as "*" or an array of valid origins');
-	}
+module.exports = function (options) {
+	let validOrigins = options.validOrigins || [];
+	let supportsCredentials = options.supportsCredentials || false;
+	let responseHeaders = options.responseHeaders || [];
+	let requestHeaders = options.requestHeaders || [];
+	// todo: lowercase all valid methods
+	let validMethods = options.validMethods || [];
+	let cacheMaxAge = options.cacheMaxAge || null;
 
-	allow_headers = allow_headers ? allow_headers : [];
+	/*
+	Note: the comments below are pulled from the spec https://www.w3.org/TR/cors/ to help development
+	*/
+	return function (method, url, body, headers, next) {
+		let corsResponseHeaders = {};
+		let preflight = method === 'OPTIONS' && headers['access-control-request-method'];
+		// Terms
+		/*
+		list of origins consisting of zero or more origins that are allowed access to the resource.
+			Note: This can include the origin of the resource itself though be aware that requests to cross-origin resources can be redirected back to the resource.
+		list of methods consisting of zero or more methods that are supported by the resource.
+		list of headers consisting of zero or more header field names that are supported by the resource.
+		list of exposed headers consisting of zero or more header field names of headers other than the simple response headers that the resource might use and can be exposed.
+		supports credentials flag that indicates whether the resource supports user credentials in the request. It is true when the resource does and false otherwise.
+		*/
 
-	/**
-	 * This function has some rebind trickery down the line, and should not be an arrow function
-	 */
-	return function (method, uri, body, headers, next) {
-		let _self = this;
-		let cors_methods = this.http_methods;
-		let cors_headers = allow_headers;
+	// Simple Requests or Actual Requests https://www.w3.org/TR/cors/#resource-requests
+	// Preflight Requests: https://www.w3.org/TR/cors/#resource-preflight-requests
 
-		if (this.resource_context && this.resource_context.cors) {
-			if (this.resource_context.cors.methods) {
-				cors_methods = this.resource_context.cors.methods;
+		// Simple: If the Origin header is not present terminate this set of steps. The request is outside the scope of this 
+		//         specification.
+		// Preflight: If the Origin header is not present terminate this set of steps. The request is outside the scope of 
+		//         this specification.
+		if (!headers.origin) {
+			console.log('no origin');
+			return next();
+		}
+
+		/* Simple:
+		If the value of the Origin header is not a case-sensitive match for any of the values in list of 
+		origins do not set any additional headers and terminate this set of steps.
+
+		Note: Always matching is acceptable since the list of origins can be unbounded.
+		*/
+
+		/* Preflight: 
+		If the value of the Origin header is not a case-sensitive match for any of the values in list of 
+		origins do not set any additional headers and terminate this set of steps.
+
+		Note: Always matching is acceptable since the list of origins can be unbounded.
+		Note: The Origin header can only contain a single origin as the user agent will not follow redirects.
+		Implementation Note: Resources that wish to enable themselves to be shared with multiple Origins but do not respond 
+			uniformly with "*" must in practice generate the Access-Control-Allow-Origin header dynamically in response to every 
+			request they wish to allow. As a consequence, authors of such resources should send a Vary: Origin HTTP header 
+			or provide other appropriate control directives to prevent caching of such responses, which may be inaccurate 
+			if re-used across-origins.
+		*/
+		if (validOrigins[0] !== '*' && validOrigins.indexOf(headers.origin) === -1) {
+			console.log('bad origin', headers.origin);
+			return next();
+		}
+
+		if (preflight) {
+			/*
+			Preflight
+			Let method be the value as result of parsing the Access-Control-Request-Method header.
+			If there is no Access-Control-Request-Method header or if parsing failed, do not set any additional headers and terminate this set of steps. The request is outside the scope of this specification.
+			*/
+			let corsMethod = headers['access-control-request-method'];
+
+			/*
+			preflight
+			If method is not a case-sensitive match for any of the values in list of methods do not set any additional 
+				headers and terminate this set of steps.
+
+			Note: Always matching is acceptable since the list of methods can be unbounded.
+			*/
+
+			// todo: lowercase valid methods and cors method
+			if (validMethods.indexOf(corsMethod) === -1) {
+				// todo: better messaging
+				console.log('bad method', corsMethod);
+				return next();
 			}
 
-			if (this.resource_context.cors.headers) {
-				cors_headers.concat(this.resource_context.cors.headers);
+			/*
+			preflight
+			Let header field-names be the values as result of parsing the Access-Control-Request-Headers headers.
+
+			Note: If there are no Access-Control-Request-Headers headers let header field-names be the empty list.
+			Note: If parsing failed do not set any additional headers and terminate this set of steps. The request is outside the scope of this specification.
+			*/
+			try {
+				var headerNames = headers['access-control-request-headers'] ? headers['access-control-request-headers'].split(',') : [];
+			} catch (e) {
+				// todo: better messaging
+				console.log('request headers parse fail');
+				return next();
+			}
+
+			/*
+			preflight
+			If any of the header field-names is not a ASCII case-insensitive match for any of the values in list of 
+				headers do not set any additional headers and terminate this set of steps.
+
+			Note: Always matching is acceptable since the list of headers can be unbounded.
+			*/
+
+			for (let i = 0; i < headerNames.length; i++) {
+				if (requestHeaders.indexOf(headerNames[i]) === -1) {
+					// todo: better error messaging
+					console.log('invalid header requested', headerNames[i]);
+					return next();
+				}
+			}
+
+			/*
+			Preflight
+			Optionally add a single Access-Control-Max-Age header with as value the amount of seconds the user agent is allowed to cache the result of the request.
+			*/
+			if (typeof(cacheMaxAge) === "number") {
+				corsResponseHeaders['access-control-max-age'] = cacheMaxAge;
+			}
+
+			/*
+			Preflight
+			If method is a simple method this step may be skipped.
+			Add one or more Access-Control-Allow-Methods headers consisting of (a subset of) the list of methods.
+			Note: If a method is a simple method it does not need to be listed, but this is not prohibited.
+			Note: Since the list of methods can be unbounded, simply returning the method indicated by Access-Control-Request-Method (if supported) can be enough.
+			*/
+			corsResponseHeaders['access-control-allow-methods'] = validMethods.join(', ');
+
+			/*
+			Preflight
+			If each of the header field-names is a simple header and none is Content-Type, this step may be skipped.
+			Add one or more Access-Control-Allow-Headers headers consisting of (a subset of) the list of headers.
+			Note: If a header field name is a simple header and is not Content-Type, it is not required to be listed. Content-Type is to be listed as only a subset of its values makes it qualify as simple header.
+			Note: Since the list of headers can be unbounded, simply returning supported headers from Access-Control-Allow-Headers can be enough.
+			*/
+			corsResponseHeaders['access-control-allow-headers'] = requestHeaders.join(', ');
+		} else {
+			/*
+			Simple
+			If the list of exposed headers is not empty add one or more Access-Control-Expose-Headers headers, 
+			with as values the header field names given in the list of exposed headers.
+
+			By not adding the appropriate headers resource can also clear the preflight result cache of all entries 
+			where origin is a case-sensitive match for the value of the Origin header and url is a case-sensitive 
+			match for the URL of the resource.
+			*/
+			if (responseHeaders && responseHeaders.length) {
+				corsResponseHeaders['access-control-expose-headers'] = responseHeaders.join(', ');
 			}
 		}
 
-		// http://www.html5rocks.com/static/images/cors_server_flowchart.png
-		if (headers.origin) {
-			if (method === 'OPTIONS') {
-				if (headers.origin && headers['access-control-request-method']) {
-					
-					let allowed_origin = locateOrigin(headers.origin, allow_origins, cors_methods);
-					// if the requested origin is not an allowed cors origin, fail
-					if (!allowed_origin) {
-						return new Promise((resolve, reject) => {
-							reject(new roads.HttpError(allow_origins.join(','), 403));
-						});
-					}
+		/*
+		preflight
+		If the resource supports credentials add a single Access-Control-Allow-Origin header, 
+		with the value of the Origin header as value, and add a single Access-Control-Allow-Credentials 
+		header with the case-sensitive string "true" as value.
 
-					// if the requested method is not an allowed cors method, fail
-					if (cors_methods.indexOf(headers['access-control-request-method']) === -1) {
-						return new Promise((resolve, reject) => {
-							reject(new roads.HttpError(cors_methods, 405));
-						});
-					}
+		Note: Otherwise, add a single Access-Control-Allow-Origin header, with either the value of the Origin header or 
+			the string "*" as value.
+		Note: The string "*" cannot be used for a resource that supports credentials.
+		*/
 
-					// todo: find a good way to properly validate 'access-control-request-headers'
-					return new Promise((resolve) => {
-						resolve(new _self.Response(null, 200, {
-							'Access-Control-Allow-Methods' : _self.http_methods.join(', '),
-							'Access-Control-Allow-Headers' : cors_headers.join(', '),
-							'Access-Control-Allow-Origin' : allowed_origin,
-							'Access-Control-Allow-Credentials' : true
-						}));
-					});
-				}
-			}
+		/*
+		Simple
+		If the resource supports credentials add a single Access-Control-Allow-Origin header, 
+		with the value of the Origin header as value, and add a single Access-Control-Allow-Credentials 
+		header with the case-sensitive string "true" as value
+
+		Note: Otherwise, add a single Access-Control-Allow-Origin header, with either the value of the Origin header or
+			the string "*" as value.
+		Note: The string "*" cannot be used for a resource that supports credentials.
+		*/
+
+		if (supportsCredentials) {
+			corsResponseHeaders['access-control-allow-origin'] = headers.origin;
+			corsResponseHeaders['access-control-allow-credentials'] = 'true';
+		} else {
+			// We can't have allow-credentials if we use an asterisk for the origin headers.
+			corsResponseHeaders['access-control-allow-origin'] = headers.origin;
+		}
+
+		if (preflight) {
+			return new this.Response('', 200, corsResponseHeaders);
 		}
 
 		return next()
-		// All responses need to include some sort of header
 		.then((response) => {
-			if (!headers.origin) {
-				return response;
+			for (let key in corsResponseHeaders) {
+				response.headers[key] = corsResponseHeaders[key];
 			}
 
-			if (cors_headers.length) {
-				response.headers['Access-Control-Expose-Headers'] = cors_headers.join(', ');
-			}
-
-			response.headers['Access-Control-Allow-Origin'] = locateOrigin(headers.origin, allow_origins, cors_methods);
-			response.headers['Access-Control-Allow-Credentials'] = true;
 			return response;
-		})
-		// Errors should surface the headers too
-		.catch((error) => {
-			if (!headers.origin) {
-				throw error;
-			}
-
-			if (!error.headers) {
-				error.headers = {};
-			}
-
-			let allowed_origin = locateOrigin(headers.origin, allow_origins, cors_methods);
-			// if the requested origin is not an allowed cors origin, fail
-			if (!allowed_origin) {
-				return new Promise((resolve, reject) => {
-					reject(new roads.HttpError(allow_origins.join(','), 403));
-				});
-			}
-
-			if (cors_headers.length) {
-				error.headers['Access-Control-Expose-Headers'] = cors_headers.join(', ');
-			}
-
-			error.headers['Access-Control-Allow-Origin'] = allowed_origin;
-			error.headers['Access-Control-Allow-Credentials'] = true;
-			throw error;
 		});
 	};
 };
