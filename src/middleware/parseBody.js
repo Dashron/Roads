@@ -25,10 +25,10 @@ function parseBody (body, content_type) {
 		return body;
 	}
 
-	if (content_type === 'application/json') {
+	if (content_type.indexOf('application/json') !== -1) {
 		// parse json
 		return JSON.parse(body);
-	} else if (content_type === 'application/x-www-form-urlencoded') {
+	} else if (content_type.indexOf('application/x-www-form-urlencoded') !== -1) {
 		// parse form encoded
 		return qs_module.parse(body);
 	} else {
