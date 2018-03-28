@@ -1,6 +1,6 @@
 {
   "name": "roads",
-  "version": "5.0.0-alpha.15",
+  "version": "5.0.0-alpha.16",
   "author": {
     "name": "Aaron Hedges",
     "email": "aaron@dashron.com",
@@ -37,6 +37,7 @@
     "roads-server": "1.0.0-alpha.1"
   },
   "dependencies": {
+    "content-type": "^1.0.4",
     "cookie": "0.3.1"
   },
   "license": "MIT"

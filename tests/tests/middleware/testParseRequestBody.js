@@ -66,3 +66,17 @@ exports['test used request with invalid json body'] = function (test) {
         test.done();
     });
 };
+
+
+/**
+ * Test that the content type can contain parameters
+ */
+exports['test content type with parameters'] = function (test) {
+    let context = {};
+    var body = '{"hello": "there"}';
+
+    roads.middleware.parseBody.call(context, '', '', body, {'content-type': 'application/json; charset=utf-8'}, () => {});
+    test.deepEqual(context.body, {hello: "there"});
+    
+    test.done();
+};
