@@ -7,7 +7,8 @@
  * Exposes a single middleware function to help parse request bodies
  */
 
- let content_type_module = require('content-type');
+let content_type_module = require('content-type');
+let qs_module = require('querystring');
 
 /**
  * Translate the request body into a usable value.
