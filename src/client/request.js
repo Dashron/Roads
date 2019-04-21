@@ -9,6 +9,7 @@
  */
 
 var http = require('http');
+var https = require('https');
 
 /**
  * This class is a helper with making HTTP requests. 
@@ -21,10 +22,12 @@ module.exports = class Request {
 	/**
 	 * @todo: port should just be part of the host
 	 * 
+	 * @param {boolean} secure - Whether or not this request should use HTTPS
 	 * @param {string} host - The hostname of all requests made by this function
 	 * @param {number} port - The post of all requests made by this function
 	 */
-	constructor (host, port) {
+	constructor (secure, host, port) {
+		this.secure = secure;
 		this.host = host;
 		this.port = port;
 	}
@@ -49,7 +52,7 @@ module.exports = class Request {
 				body = JSON.stringify(body);
 			}
 
-			var req = http.request({
+			var req = (secure ? https : http).request({
 				hostname: this.host,
 				port: this.port,
 				path: path,
