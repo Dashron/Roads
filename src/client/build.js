@@ -8,7 +8,6 @@
  */
 
 const browserify = require('browserify');
-const envify = require('envify/custom');
 const fs = require('fs');
 
 /*function fixExternal (external) {
@@ -34,7 +33,7 @@ function fixBabelify (babel_options) {
 		babel_options.presets = [];
 	}
 
-	babel_options.presets.push('es2017');
+	babel_options.presets.push('@babel/preset-env');
 	return babel_options;
 }
 
@@ -132,7 +131,7 @@ module.exports = function (input_file, output_file, options) {
 	builder.exclude(options.exclude);
 
 	builder
-		.transform(envify(options.envify))
+		//.transform(envify(options.envify))
 		.bundle()
 		.pipe(fs.createWriteStream(output_file));
 
