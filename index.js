@@ -54,7 +54,10 @@ module.exports.integrations = {
 // Expose all middleware functions
 module.exports.middleware = {
 	applyToContext: require('./src/middleware/applyToContext.js'),
-	cors: require('./src/middleware/cors.js'),
+	// this is done to reduce browserify errors. we don't need to call this on page load for broserify
+	cors: (options) => {
+		return require('./src/middleware/cors.js')(options);
+	},
 	cookie: require('./src/middleware/cookie.js'),
 	killSlash: require('./src/middleware/killSlash.js'),
 	reroute: require('./src/middleware/reroute.js'),
