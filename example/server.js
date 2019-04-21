@@ -11,6 +11,11 @@ var roads = require(__dirname + '/../index');
 var road = new roads.Road();
 var Server = require('roads-server').Server;
 
+road.use(function (method, url, body, headers, next) {
+	console.log(method + ' ' + url);
+	return next();
+});
+
 road.use(roads.middleware.killSlash);
 road.use(roads.middleware.cookie());
 road.use(require('./middleware/addLayout.js'));
