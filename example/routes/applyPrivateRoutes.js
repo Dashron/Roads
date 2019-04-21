@@ -39,7 +39,7 @@ module.exports = function (router) {
 		this.ignore_layout = true;
 		// In the real world the body of the response should be created from a template engine.
 		return new this.Response(fs.readFileSync(__dirname + '/../static/client.brws.js').toString('utf-8'), 200, {
-			'Content-Type': 'application/json; charset=UTF-8'
+			'Content-Type': 'application/javascript; charset=UTF-8'
 		});
 	});
 
