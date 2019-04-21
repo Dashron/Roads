@@ -116,7 +116,7 @@ module.exports = class RoadsPjax {
 	 * @param  {Object} event             [description]
 	 */
 	_roadsLinkEvent (event) {
-		if (event.target.tagName === 'A' && event.target.dataset['roads-pjax'] === "link" && !event.ctrlKey) {
+		if (event.target.tagName === 'A' && event.target.dataset['roadsPjax'] === "link" && !event.ctrlKey) {
 			event.preventDefault();
 
 			this._road.request('GET', event.target.href)
