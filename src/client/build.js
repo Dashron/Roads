@@ -121,7 +121,7 @@ module.exports = function (input_file, output_file, options) {
 		ignoreMissing: options.ignore_missing
 	})
 	.transform("babelify", options.babelify)
-	transform("brfs");
+	.transform("brfs");
 
 	builder.on('dep', function(dep) {
 		console.log('adding dependency ' + dep.file);
