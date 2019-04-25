@@ -113,13 +113,19 @@ module.exports = function (input_file, output_file, options) {
 	 * let externals = {};
 	 */
 
+	console.log('starting to build ' + output_file + ' from source ' + input_file);
 	options = fixOptions(options);
 
 	let builder = browserify(input_file, {
 		debug: options.use_sourcemaps,
 		ignoreMissing: options.ignore_missing
 	})
-	.transform("babelify", options.babelify);
+	.transform("babelify", options.babelify)
+	transform("brfs");
+
+	builder.on('dep', function(dep) {
+		console.log('adding dependency ' + dep.file);
+	});
 
 	/*for (let key in options.external) {
 		if (options.external.hasOwnProperty(key)) {

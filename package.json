@@ -1,6 +1,6 @@
 {
   "name": "roads",
-  "version": "5.0.0-beta.2",
+  "version": "5.0.0-beta.3",
   "author": {
     "name": "Aaron Hedges",
     "email": "aaron@dashron.com",
@@ -30,6 +30,7 @@
     "@babel/core": "7.4.3",
     "babelify": "10.0.0",
     "@babel/preset-env": "7.4.3",
+    "brfs": "2.0.2",
     "envify": "4.1.0",
     "koa": "2.7.0",
     "express": "4.16.4",
