@@ -9,6 +9,7 @@
 
 const browserify = require('browserify');
 const fs = require('fs');
+const envify = require('envify/custom');
 
 /*function fixExternal (external) {
 	if (!external) {
@@ -129,9 +130,8 @@ module.exports = function (input_file, output_file, options) {
 
 	builder.ignore(options.ignore);
 	builder.exclude(options.exclude);
-
 	builder
-		//.transform(envify(options.envify))
+		.transform(envify(options.envify))
 		.bundle()
 		.pipe(fs.createWriteStream(output_file));
 

@@ -52,7 +52,7 @@ module.exports = class Request {
 				body = JSON.stringify(body);
 			}
 
-			var req = (secure ? https : http).request({
+			var req = (this.secure ? https : http).request({
 				hostname: this.host,
 				port: this.port,
 				path: path,
