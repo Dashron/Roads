@@ -53,7 +53,6 @@ module.exports = function (options) {
 		// Preflight: If the Origin header is not present terminate this set of steps. The request is outside the scope of 
 		//         this specification.
 		if (!headers.origin) {
-			console.log('no origin');
 			return next();
 		}
 
