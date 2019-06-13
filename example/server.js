@@ -23,6 +23,7 @@ road.use(roads.middleware.setTitle);
 let router = new roads.middleware.SimpleRouter(road)
 require('./routes/applyPublicRoutes.js')(router);
 require('./routes/applyPrivateRoutes.js')(router);
+road.use(roads.middleware.emptyTo404);
 
 var server = new Server(road, function (err) {
 	console.log(err.stack);

@@ -17,20 +17,36 @@
 module.exports = function (router) {
 	router.addRoute('GET', '/', function () {
 		this.setTitle('Root Resource');
+
 		// In the real world the body of the response should be created from a template engine.
-		return new this.Response('Hello!<br /> Try the <a href="/public" data-roads-pjax="link">public test link</a>. It\'s available to the server and can be rendered from the client! Try clicking it for the client path, or control clicking for the server.<br />\
-Try the <a href="/private">private test link</a>. It\'s available to the server, but is not build in the client! Check your console for proof of the 404!');
+		return new this.Response(`Hello!<br />
+		 Try the <a href="/public" data-roads-pjax="link">public test link</a>.
+		 It's available to the server and can be rendered from the client! Try clicking it for the client path, or control clicking for the server.<br />
+		 Try the <a href="/private">private test link</a>. Itt's available to the server, but is not build in the client! Check your console for proof of the 404!`);
 	});
 
-	router.addRoute('GET', 'public', function () {
+	router.addRoute('GET', '/public', function () {
 		this.setTitle('Public Resource');
 		console.log('Here are all cookies accessible to this code: ', this.cookies);
 		console.log("Cookies are not set until you access the private route.");
 		console.log("Notice that the http only cookies do not show in your browser's console.log");
-		let html = 'Hello!<br /> The page you are looking at can be renderd via server or client. The landing page can too, so try going back <a href="/" data-roads-pjax="link">home</a>!<br />';
+
+		let html = `Hello!<br />
+		 The page you are looking at can be renderd via server or client. 
+		 The landing page can too, so try going back <a href="/" data-roads-pjax="link">home</a>!
+		 <form method="POST" action="/postdata" data-roads-pjax="form">
+			Message: <input type="text" name="message">
+			<input type="submit" value="Send message" data-roads-pjax="submit">
+		 </form>`;
 
 		// todo: make a client request to /privateJSON and get { "private-success": true }
 
 		return new this.Response(html);
+	});
+
+	router.addRoute('POST', '/postdata', function (url, body, headers) {
+		console.log('You sent the message:' + this.body.message);
+		this.ignore_layout = true;
+		return new this.Response('', 302, { location: '/public' });
 	});
 };

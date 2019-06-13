@@ -30,7 +30,8 @@ module.exports = class RoadsPjax {
 	}
 
 	/**
-	 * Adds middleware to the assigned road whcih will adds setTitle to the request context. This allows you to easily update the page title.
+	 * Adds middleware to the assigned road whcih will adds setTitle to the PJAX object (as opposed to the request object like the setTitle middlweare does).
+	 * This allows you to easily update the page title.
 	 *
 	 * @returns {RoadsPjax} this, useful for chaining
 	 */
@@ -92,7 +93,7 @@ module.exports = class RoadsPjax {
 		};
 
 		// Trigger the pjax on any click event for roads links
-		this._container_element.addEventListener('click', this._roadsLinkEvent.bind(this));
+		this._container_element.addEventListener('click', this._pjaxEventMonitor.bind(this));
 
 		// initial state
 		this._window.history.replaceState({
@@ -107,32 +108,78 @@ module.exports = class RoadsPjax {
 	 * @param {Response} response_object 
 	 */
 	render (response_object) {
-		this._container_element.innerHTML = response_object.body;
+		if (response_object.body !== undefined) {
+			this._container_element.innerHTML = response_object.body;
+		} else {
+			this._container_element.innerHTML = '';
+		}
 	}
 
 	/**
-	 * Handles the link click event. If the link has the right data attribute we will execute and render the appropriate controller
-	 * 
-	 * @param  {Object} event             [description]
+	 * Handles all click events, and directs 
+	 * @param {Object} event 
 	 */
-	_roadsLinkEvent (event) {
+	_pjaxEventMonitor (event) {
 		if (event.target.tagName === 'A' && event.target.dataset['roadsPjax'] === "link" && !event.ctrlKey) {
 			event.preventDefault();
-
-			this._road.request('GET', event.target.href)
-			.then((response) => {
-				this._window.history.pushState({
-					page_title: this._page_title, 
-					pjax: true
-				}, this._page_title, event.target.href);
-				this.render(response);
-				this._window.document.title = this._page_title;
-			})
-			.catch((err) => {
-				console.log('road err');
-				console.log(err);
-				return;
-			});
+			this._roadsLinkEvent(event.target);
+			// TODO: Roads Submit might be the right way to do this? Not sure
+		} else if (['SUBMIT', 'INPUT', 'BUTTON'].includes(event.target.tagName) && event.target.dataset['roadsPjax'] === 'submit' && event.target.form && event.target.form.dataset['roadsPjax'] === "form") {
+			event.preventDefault();
+			this._roadsFormEvent(event.target.form);
 		}
+	}
+
+	/**
+	 * Follows the link and renders the UI
+	 * 
+	 * @param  {Element} link
+	 */
+	_roadsLinkEvent (link) {
+
+		this._road.request('GET', link.href)
+		.then((response) => {
+			this._window.history.pushState({
+				page_title: this._page_title, 
+				pjax: true
+			}, this._page_title, link.href);
+
+			this.render(response);
+			this._window.document.title = this._page_title;
+		})
+		.catch((err) => {
+			console.log('road err');
+			console.log(err);
+			return;
+		});
+	}
+
+	/**
+	 * Submits the form and re-renders the UI
+	 * 
+	 * @param {Element} form 
+	 */
+	_roadsFormEvent (form) {
+		// execute the form. note: while HTTP methods are case sensitive, HTML forms seem to lowercase their methods. To fix this we uppercase here.
+		this._road.request(form.method.toUpperCase(), form.action, new URLSearchParams(new FormData(form)).toString(), {'content-type': 'application/x-www-form-urlencoded'})
+		.then((response) => {
+			if (response.status === 200) {
+				return response;
+			} else if ([301, 302, 303, 307, 308].includes(response.status)) {
+				return this._road.request('GET', response.headers.location);
+			} else {
+				// We can probably handle more of these better. TODO
+				throw new Error('unable to handle roads form response');
+			}
+		})
+		.then((response) => {
+			this.render(response);
+			this._window.document.title = this._page_title;
+		})
+		.catch((err) => {
+			console.log('roads err');
+			console.log(err);
+			return;
+		})
 	}
 };

@@ -10,23 +10,16 @@
 var roads = require('../../index.js');
 var road = new roads.Road();
 
+road.use(function (method, url, body, headers, next) {
+    console.log('fake ' + method + ' request to...', url);
+    return next();
+});
+
 var pjax = new roads.PJAX(road, document.getElementById('container'), window);
 pjax.addTitleMiddleware();
+road.use(roads.middleware.emptyTo404);
+road.use(roads.middleware.parseBody);
 pjax.addCookieMiddleware(document);
 pjax.register();
 let router = new roads.middleware.SimpleRouter(road);
 require('../routes/applyPublicRoutes.js')(router);
-
-/*road.request('GET', '/')
-	.then(function (response) {
-		console.log(response);
-	});
-
-road.request('GET', '/test')
-	.then(function (response) {
-		console.log(response);
-	})
-	.catch(function (err) {
-		console.log('[' + err.code + ']' + err.message);
-		console.log(err.stack);
-	});*/

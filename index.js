@@ -8,11 +8,7 @@
  */
 
 module.exports.Promise = Promise;
-module.exports.response_lib = require('./src/response.js');
-/**
- * @todo this is a janky way of handling this. We should find a better option
- */
-module.exports.Response = module.exports.response_lib.Response;
+module.exports.Response = require('./src/response.js').Response;
 module.exports.Road = require('./src/road.js');
 module.exports.PJAX = require('./src/client/pjax');
 module.exports.Client = require('./src/client/request');
@@ -63,5 +59,6 @@ module.exports.middleware = {
 	reroute: require('./src/middleware/reroute.js'),
 	setTitle: require('./src/middleware/setTitle.js'),
 	SimpleRouter: require('./src/middleware/simpleRouter.js'),
-	parseBody: require('./src/middleware/parseBody.js')
+	parseBody: require('./src/middleware/parseBody.js'),
+	emptyTo404: require('./src/middleware/emptyTo404.js')
 };

@@ -8,7 +8,7 @@
  */
 
 const roads = require('../index');
-const response_lib = roads.response_lib;
+const response_lib = require('./response.js');
 
 /**
  * See roadsjs.com for full docs.
@@ -86,8 +86,8 @@ module.exports = class Road {
 		}
 
 		return response_lib.wrap(this._buildNext(method, url, body, headers, {
-			request : this.request.bind(this),
-			Response : roads.Response
+			request: this.request.bind(this),
+			Response: roads.Response
 		})());
 	}
 

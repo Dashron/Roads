@@ -46,10 +46,6 @@ module.exports = function (method, url, body, headers, next) {
 	
 	return next()
 		.then((response) => {
-			if (!response) {
-				response = new this.Response('Page not found', 404);
-			}
-
 			response.body = wrapLayout(response.body, _self._page_title ? _self._page_title : '', _self.ignore_layout ? true : false);
 			return response;
 		});

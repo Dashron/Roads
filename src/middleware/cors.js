@@ -76,7 +76,9 @@ module.exports = function (options) {
 			if re-used across-origins.
 		*/
 		if (validOrigins[0] !== '*' && validOrigins.indexOf(headers.origin) === -1) {
-			console.log('bad origin', headers.origin);
+			// this shouldn't use console.log, but boy it's such a pain in the ass to debug that I'm going to keep it here for a bit
+			// todo: better debug tracking
+			console.log('CORS ERROR: bad origin', headers.origin);
 			return next();
 		}
 
@@ -98,8 +100,9 @@ module.exports = function (options) {
 
 			// todo: lowercase valid methods and cors method
 			if (validMethods.indexOf(corsMethod) === -1) {
-				// todo: better messaging
-				console.log('bad method', corsMethod);
+				// this shouldn't use console.log, but boy it's such a pain in the ass to debug that I'm going to keep it here for a bit
+				// todo: better debug tracking
+				console.log('CORS Error: bad method', corsMethod);
 				return next();
 			}
 
@@ -113,8 +116,9 @@ module.exports = function (options) {
 			try {
 				var headerNames = headers['access-control-request-headers'] ? headers['access-control-request-headers'].split(',') : [];
 			} catch (e) {
-				// todo: better messaging
-				console.log('request headers parse fail');
+				// this shouldn't use console.log, but boy it's such a pain in the ass to debug that I'm going to keep it here for a bit
+				// todo: better debug tracking
+				console.log('CORS Error: request headers parse fail');
 				return next();
 			}
 
@@ -128,8 +132,9 @@ module.exports = function (options) {
 
 			for (let i = 0; i < headerNames.length; i++) {
 				if (requestHeaders.indexOf(headerNames[i]) === -1) {
-					// todo: better error messaging
-					console.log('invalid header requested', headerNames[i]);
+					// this shouldn't use console.log, but boy it's such a pain in the ass to debug that I'm going to keep it here for a bit
+					// todo: better debug tracking
+					console.log('CORS Error: invalid header requested', headerNames[i]);
 					return next();
 				}
 			}

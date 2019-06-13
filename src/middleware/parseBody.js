@@ -46,7 +46,7 @@ function parseBody (body, content_type) {
  * Attempts the parse the request body into a useful object
  */
 module.exports = function (method, url, body, headers, next) {
-	this.body = parseBody(body, headers['content-type']);
+	this.body = parseBody(body, headers ? headers['content-type'] : undefined);
 
 	return next();
 };

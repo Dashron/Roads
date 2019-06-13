@@ -40,6 +40,7 @@ Roads is a web framework built for use with async functions. It's similar to Koa
 - [Roads.PJAX(*object* road, *DomElement* container_element, *object* window)](#roadspjaxobject-road-domelement-container_element-object-window)
   - [register()](#pjaxregister)
   - [PJAX Link Format](#pjax-link-format)
+  - [PJAX Form Format](#pjax-form-format)
   - [PJAX Page titles](#pjax-page-titles)
   - [Isomorphic PJAX tips](#isomorphic-pjax-tips)
 
@@ -626,6 +627,25 @@ If you would like a link to run via PJAX instead of a new page load, simply add 
 e.g.
 
 `<a href="/home" data-roads-pjax="link">Home</a>`
+
+### PJAX Form Format
+
+If you would like a form to run via PJAX instead of a new page load, simply add the following data attributes
+
+Form attributes
+- `data-roads-pjax="form"`
+
+Submit button attributes
+- `data-roads-pjax="submit"`
+
+e.g.
+
+```html
+    <form method="POST" action="/users/12345" data-roads-pjax="form">
+        {{your form elements}{}
+        <input type="submit" value="Send message" data-roads-pjax="submit">
+    </form>
+```
 
 ### PJAX Page titles
 
