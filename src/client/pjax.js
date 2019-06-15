@@ -123,8 +123,8 @@ module.exports = class RoadsPjax {
 		if (event.target.tagName === 'A' && event.target.dataset['roadsPjax'] === "link" && !event.ctrlKey) {
 			event.preventDefault();
 			this._roadsLinkEvent(event.target);
-			// TODO: Roads Submit might be the right way to do this? Not sure
-		} else if (['SUBMIT', 'INPUT', 'BUTTON'].includes(event.target.tagName) && event.target.dataset['roadsPjax'] === 'submit' && event.target.form && event.target.form.dataset['roadsPjax'] === "form") {
+			// TODO: Change this to a on submit event?
+		} else if (['INPUT', 'BUTTON'].includes(event.target.tagName) && event.target.dataset['roadsPjax'] === 'submit' && event.target.form && event.target.form.dataset['roadsPjax'] === "form") {
 			event.preventDefault();
 			this._roadsFormEvent(event.target.form);
 		}
@@ -169,7 +169,7 @@ module.exports = class RoadsPjax {
 				return this._road.request('GET', response.headers.location);
 			} else {
 				// We can probably handle more of these better. TODO
-				throw new Error('unable to handle roads form response');
+				throw new Error('unable to handle roads form response: ' + JSON.stringify(response));
 			}
 		})
 		.then((response) => {
