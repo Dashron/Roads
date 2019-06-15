@@ -7,6 +7,7 @@
  * This file is an example of how to apply HTML layouts via a middleware system
  */
 
+let roads = require('../../index.js');
 /**
  * This middleware translates missing responses into 404s
  * 
@@ -20,7 +21,7 @@ module.exports = function (method, url, body, headers, next) {
 	return next()
 		.then((response) => {
 			if (!response) {
-                response = new this.Response('Page not found', 404);
+                throw new roads.HttpError('Page not found', roads.HttpError.not_found);
             }
 
 			return response;
