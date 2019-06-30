@@ -7,6 +7,7 @@
  * This file is an example of using roads router in the client
  */
 
+require("regenerator-runtime/runtime");
 var roads = require('../../index.js');
 var road = new roads.Road();
 

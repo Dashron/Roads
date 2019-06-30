@@ -8,11 +8,10 @@
  * the roads.request method
  */
 
-var http = require('http');
-var https = require('https');
+const roadsReq = require('roads-req');
 
 /**
- * This class is a helper with making HTTP requests. 
+ * This class is a helper with making HTTP requests that look like roads requests. 
  * The function signature matches the roads "request" method to allow the details of a request to be abstracted
  * away from the client. Sometimes the request may route internally, sometimes it may be an HTTP request.
  * 
@@ -41,69 +40,26 @@ module.exports = class Request {
 	 * @param {object} [headers] - HTTP Request headers
 	 * @returns {Promise} The promise will resolve with an object with three properties. The response headers, response status and the response body. If the response content-type is "application/json" the body will be an object, otherwise it will resolve to a string
 	 */
-	request (method, path, body, headers) {
-		if (!headers) {
-			headers = {};
-		}
-
-		return (new Promise((resolve, reject) => {
-			if (body && typeof(body) !== "string") {
-				headers['content-type'] = 'application/json';
-				body = JSON.stringify(body);
-			}
-
-			var req = (this.secure ? https : http).request({
+	async request (method, path, body, headers) {
+		let response = await roadsReq.request({
+			request: {
 				hostname: this.host,
 				port: this.port,
 				path: path,
 				method: method,
 				headers: headers,
-				withCredentials: true
-			}, resolve);
-
-			req.on('error', reject);
-
-			if (body) {
-				req.write(body);
-			}
-
-			req.end();
-		}))
-		.then((response) => {
-			return new Promise((resolve, reject) => {
-				var response_body = '';
-		
-				response.on('data', (chunk) => {
-					response_body += chunk;
-				});
-		
-				response.on('end', () => {
-					resolve({
-						body: this._decodeBody(response_body, response.headers),
-						headers: response.headers,
-						status: response.statusCode
-					});
-				});
-
-				response.on('error', reject);
-			});
+				withCredentials: true // does this really work here?
+			},
+			requestBody: body,
+			followRedirects: false
 		});
-	}
-	
-	/**
-	 * Attempts to parse the response body and return a useful object
-	 * 
-	 * @param {string} body - The response body
-	 * @param {object} headers - The response headers
-	 * 
-	 * @returns {(object|string)} - The response body, parsed if json, string if not
-	 */
-	_decodeBody (body, headers) {
-		switch (headers['content-type']) {
-			case 'application/json':
-				return JSON.parse(body);
-			default: 
-				return body;
-		}
+
+		let resp = {
+			status: response.response.statusCode,
+			body: response.body,
+			headers: response.response.headers
+		};
+		
+		return resp;
 	}
 };
