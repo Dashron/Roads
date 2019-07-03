@@ -25,8 +25,6 @@ Roads is a web framework built for use with async functions. It's similar to Koa
   - [body](#body)
   - [status](#status)
   - [headers](#headers)
-- [Roads.HttpError](#roadshttperror)
-  - [new HttpError(*string* message, *number* code)](#new-httperrorstring-message-number-code)
 - [Roads.middleware](#roadsmiddleware)
   - [cookie()](#cookie)
   - [cors(*object* options)](#corsobject-options)
@@ -213,16 +211,8 @@ road.use(function (method, url, body, headers, next) {
     return next()
         // Catch any errors that are thrown by the resources
         .catch ((err) => {
-            // Wrap the errors in response objects. If they are [HttpErrors](#roadshttperror) we adjust the status code
-            switch (err.code) {
-                case 404:
-                    return new roads.Response(notFoundRepresentation(err), 404);
-                case 405:
-                    return new roads.Response(notAllowedRepresentation(err), 405);
-                case 500:
-                default:
-                    return new roads.Response(unknownRepresentation(err), 500);
-            }
+            // Wrap the errors in response objects. There might be some javascript errors worth translating into different response status codes
+            return new roads.Response(unknownRepresentation(err), 500);
         });
 });
 ```
@@ -262,12 +252,10 @@ Each new function is added to the bottom of the U.
 
 This function will execute all of the functions assigned via [use](#roadusefunction-fn) in the order they were assigned and return a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A). The thenable will always resolve to a [Response](#roadsresponse) object.
 
-If the system encounters an unexpected error, it will try to throw an [HttpError](#roadshttperror) with a 500 status code. There may be circumstances where we were unable to wrap the exception with an HttpError, so be sure to check whether or not your exceptions are `instance of HttpError`.
+Make sure to listen for errors surfaced by the request promise!.
 
 
 ```node
-let HttpError = require('roads').HttpError;
-
 var promise = road.request('GET', '/users/dashron');
 
 promise.then((response) => {        
@@ -275,11 +263,7 @@ promise.then((response) => {
 });
 
 promise.catch((error) => {
-    if (error instanceof HttpError) {
-        // handle http errors
-    } else {
-        // handle all other errors
-    }
+    // handle errors
 });
 ```
 
@@ -364,38 +348,6 @@ console.log(response.status);
 
 ```node
 console.log(response.headers);
-```
-
-## Roads.HttpError
-
-### new HttpError(*string* message, *number* code)
-**A helper error, that contains information relevant to common HTTP errors**
-
-name        | type                               | description
- -----------|------------------------------------|---------------
- message    | string                             | A message describing the HTTP error
- code       | number                             | An official [http status code](#http://www.httpstatus.es)
-
-```node
-throw new Roads.HttpError('Page not found', 404);
-```
-
-### Constants
-
-These constants make it easier to keep track of some common error status codes. For more information on what they mean, check out (httpstatus.es)[http://httpstatus.es].
-
-```
-HttpError.invalid_request = 400;
-HttpError.unauthorized = 401;
-HttpError.forbidden = 403;
-HttpError.not_found = 404;
-HttpError.method_not_allowed = 405;
-HttpError.not_acceptable = 406;
-HttpError.conflict = 409;
-HttpError.gone = 410;
-HttpError.unprocessable_entity = 422;
-HttpError.too_many_requests = 429;
-HttpError.internal_server_error = 500;
 ```
 
 ## Roads.middleware

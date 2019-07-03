@@ -12,7 +12,6 @@ module.exports.Response = require('./src/response.js').Response;
 module.exports.Road = require('./src/road.js');
 module.exports.PJAX = require('./src/client/pjax');
 module.exports.Client = require('./src/client/request');
-module.exports.HttpError = require('./src/httperror.js');
 
 /**
  * 
