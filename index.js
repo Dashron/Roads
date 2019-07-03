@@ -21,31 +21,6 @@ module.exports.build = function (input_file, output_file, options) {
 	return require('./src/client/build.js')(input_file, output_file, options);
 };
 
-// Expose all integration helpers
-module.exports.integrations = {
-	/**
-	 * Koa.js middleware to use a roads.js router.
-	 *
-	 * This middleware works best if the road provided is using the roads cookie middleware.
-	 * 
-	 * @see ./src/integrations/koa.js
-	 */
-	koa: function (road) {
-		return require('./src/integrations/koa.js')(road)
-	},
-
-	/**
-	 * Express.js middleware to use a roads.js router.
-	 *
-	 * This middleware works best if the road provided is using the roads cookie middleware.
-	 * 
-	 * @see ./src/integrations/express.js
-	 */
-	express: function (road) {
-		return require('./src/integrations/express.js')(road);
-	}
-};
-
 // Expose all middleware functions
 module.exports.middleware = {
 	applyToContext: require('./src/middleware/applyToContext.js'),
