@@ -14,7 +14,7 @@
   ],
   "homepage": "https://github.com/Dashron/roads",
   "scripts": {
-    "test": "node ./node_modules/nodeunit/bin/nodeunit ./tests/tests/*"
+    "test": "jest tests/"
   },
   "bugs": {
     "url": "http://github.com/Dashron/roads/issues",
@@ -25,7 +25,6 @@
     "url": "git://github.com/Dashron/roads.git"
   },
   "devDependencies": {
-    "nodeunit": "0.11.3",
     "browserify": "16.2.3",
     "@babel/core": "7.4.5",
     "babelify": "10.0.0",
