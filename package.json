@@ -14,7 +14,7 @@
   ],
   "homepage": "https://github.com/Dashron/roads",
   "scripts": {
-    "test": "jest tests/"
+    "test": "node node_modules/jest/bin/jest.js tests/"
   },
   "bugs": {
     "url": "http://github.com/Dashron/roads/issues",
@@ -25,14 +25,13 @@
     "url": "git://github.com/Dashron/roads.git"
   },
   "devDependencies": {
+    "jest": "24.8.0",
     "browserify": "16.2.3",
     "@babel/core": "7.4.5",
     "babelify": "10.0.0",
     "@babel/preset-env": "7.4.5",
     "brfs": "2.0.2",
     "envify": "4.1.0",
-    "koa": "2.7.0",
-    "express": "4.17.1",
     "roads-server": "1.0.0-alpha.6",
     "regenerator-runtime": "0.13.2"
   },
