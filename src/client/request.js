@@ -48,7 +48,8 @@ module.exports = class Request {
 				path: path,
 				method: method,
 				headers: headers,
-				withCredentials: true // does this really work here?
+				withCredentials: true, // does this really work here?
+				protocol: this.secure ? 'https' : 'http'
 			},
 			requestBody: body,
 			followRedirects: false
