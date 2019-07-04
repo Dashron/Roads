@@ -18,7 +18,7 @@ road.use(function (method, url, body, headers, next) {
 
 var pjax = new roads.PJAX(road, document.getElementById('container'), window);
 pjax.addTitleMiddleware();
-road.use(roads.middleware.emptyTo404);
+road.use(require('../middleware/emptyTo404.js'));
 road.use(roads.middleware.parseBody);
 pjax.addCookieMiddleware(document);
 pjax.register();

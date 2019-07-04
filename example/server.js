@@ -23,20 +23,11 @@ road.use(roads.middleware.setTitle);
 let router = new roads.middleware.SimpleRouter(road)
 require('./routes/applyPublicRoutes.js')(router);
 require('./routes/applyPrivateRoutes.js')(router);
-road.use(roads.middleware.emptyTo404);
+road.use(require('./middleware/emptyTo404.js'));
 
 var server = new Server(road, function (err) {
 	console.log(err.stack);
-	
-	switch (err.code) {
-		case 404:
-			return new roads.Response('Not Found', 404);
-		case 405:
-			return new roads.Response('Not Allowed', 405);
-		default:
-		case 500:
-			return new roads.Response('Unknown Error', 500);
-	}
+	return new roads.Response('Unknown Error', 500);
 });
 
 server.listen(8081, function () {

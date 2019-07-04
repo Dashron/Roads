@@ -33,6 +33,5 @@ module.exports.middleware = {
 	reroute: require('./src/middleware/reroute.js'),
 	setTitle: require('./src/middleware/setTitle.js'),
 	SimpleRouter: require('./src/middleware/simpleRouter.js'),
-	parseBody: require('./src/middleware/parseBody.js'),
-	emptyTo404: require('./src/middleware/emptyTo404.js')
+	parseBody: require('./src/middleware/parseBody.js')
 };

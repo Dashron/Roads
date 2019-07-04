@@ -21,7 +21,7 @@ module.exports = function (method, url, body, headers, next) {
 	return next()
 		.then((response) => {
 			if (!response) {
-                throw new roads.HttpError('Page not found', roads.HttpError.not_found);
+                return new this.Response('Page not found', 404);
             }
 
 			return response;
