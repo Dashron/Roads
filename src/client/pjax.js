@@ -163,13 +163,10 @@ module.exports = class RoadsPjax {
 		// execute the form. note: while HTTP methods are case sensitive, HTML forms seem to lowercase their methods. To fix this we uppercase here.
 		this._road.request(form.method.toUpperCase(), form.action, new URLSearchParams(new FormData(form)).toString(), {'content-type': 'application/x-www-form-urlencoded'})
 		.then((response) => {
-			if (response.status === 200) {
-				return response;
-			} else if ([301, 302, 303, 307, 308].includes(response.status)) {
+			if ([301, 302, 303, 307, 308].includes(response.status)) {
 				return this._road.request('GET', response.headers.location);
 			} else {
-				// We can probably handle more of these better. TODO
-				throw new Error('unable to handle roads form response: ' + JSON.stringify(response));
+				return response;
 			}
 		})
 		.then((response) => {
