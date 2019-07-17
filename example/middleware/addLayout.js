@@ -23,6 +23,7 @@ function wrapLayout(body, title, ignore_layout) {
 <html>\
 <head><title>' + title + '</title></head>\
 <body>\
+	<a id="home" data-roads-pjax="link" href="/">Home</a>\
 	<div id="container">' + body +
 '	<script src="/client.brws.js"></script>\
     </div>\

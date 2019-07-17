@@ -22,5 +22,6 @@ road.use(require('../middleware/emptyTo404.js'));
 road.use(roads.middleware.parseBody);
 pjax.addCookieMiddleware(document);
 pjax.register();
+pjax.registerAdditionalElement(document.getElementById('home'));
 let router = new roads.middleware.SimpleRouter(road);
 require('../routes/applyPublicRoutes.js')(router);

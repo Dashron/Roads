@@ -102,6 +102,10 @@ module.exports = class RoadsPjax {
 		}, this._page_title);
 	}
 
+	registerAdditionalElement (element) {
+		element.addEventListener('click', this._pjaxEventMonitor.bind(this));
+	}
+
 	/**
 	 * The response from the roads request
 	 * 
