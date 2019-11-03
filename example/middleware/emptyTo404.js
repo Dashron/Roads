@@ -7,7 +7,7 @@
  * This file is an example of how to apply HTML layouts via a middleware system
  */
 
-let roads = require('../../index.js');
+let roads = require('../../src/index.js');
 /**
  * This middleware translates missing responses into 404s
  * 

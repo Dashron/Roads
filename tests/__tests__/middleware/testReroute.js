@@ -1,6 +1,6 @@
 "use strict";
 
-const reroute = require('../../../index.js').middleware.reroute;
+const reroute = require('../../../src/index.js').middleware.reroute;
 
 describe('Reroute middleware tests', () => {
 	/**

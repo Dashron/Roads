@@ -1,6 +1,6 @@
 "use strict";
 
-var roads = require('../../../index.js');
+var roads = require('../../../src/index.js');
 var url_module = require('url');
 
 describe('Execute Route', () => {

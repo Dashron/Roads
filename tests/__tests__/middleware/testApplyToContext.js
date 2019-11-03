@@ -1,6 +1,6 @@
 "use strict";
 
-const applyToContext = require('../../../index.js').middleware.applyToContext;
+const applyToContext = require('../../../src/index.js').middleware.applyToContext;
 
 describe('ApplyToContext tests', () => {
 	test('test apply to context applies context', () => {

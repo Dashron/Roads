@@ -1,6 +1,6 @@
 {
   "name": "roads",
-  "version": "5.0.0-beta.15",
+  "version": "5.0.0-beta.16",
   "author": {
     "name": "Aaron Hedges",
     "email": "aaron@dashron.com",
@@ -25,15 +25,15 @@
     "url": "git://github.com/Dashron/roads.git"
   },
   "devDependencies": {
-    "jest": "24.8.0",
-    "browserify": "16.2.3",
-    "@babel/core": "7.4.5",
+    "jest": "24.9.0",
+    "browserify": "16.5.0",
+    "@babel/core": "7.6.4",
     "babelify": "10.0.0",
-    "@babel/preset-env": "7.4.5",
+    "@babel/preset-env": "7.6.3",
     "brfs": "2.0.2",
     "envify": "4.1.0",
     "roads-server": "1.0.0-alpha.6",
-    "regenerator-runtime": "0.13.2"
+    "regenerator-runtime": "0.13.3"
   },
   "dependencies": {
     "content-type": "^1.0.4",

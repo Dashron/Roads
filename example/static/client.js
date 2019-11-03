@@ -8,7 +8,7 @@
  */
 
 require("regenerator-runtime/runtime");
-var roads = require('../../index.js');
+var roads = require('../../src/index.js');
 var road = new roads.Road();
 
 road.use(function (method, url, body, headers, next) {

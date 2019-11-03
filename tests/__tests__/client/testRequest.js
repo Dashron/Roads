@@ -1,6 +1,6 @@
 "use strict";
 
-var roads = require('../../../index.js');
+var roads = require('../../../src/index.js');
 let server = require('../../resources/mockServer.js')();
 
 describe('request', () => {

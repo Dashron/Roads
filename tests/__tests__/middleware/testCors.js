@@ -1,6 +1,6 @@
 "use strict";
 
-const roads = require('../../../index.js');
+const roads = require('../../../src/index.js');
 
 describe('Cors tests', () => {
 	test.skip('old cors tests. need to update these', () => {

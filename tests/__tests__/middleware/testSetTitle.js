@@ -1,6 +1,6 @@
 "use strict";
 
-var setTitle = require('../../../index.js').middleware.setTitle;
+var setTitle = require('../../../src/index.js').middleware.setTitle;
 
 describe('Set Title', () => {
 	/**

@@ -7,6 +7,6 @@
  * This file build the client side javascript for in browser rendering
  */
 
-require('../index.js').build(__dirname + '/static/client.js', __dirname + '/static/client.brws.js', {
+require('../src/index.js').build(__dirname + '/static/client.js', __dirname + '/static/client.brws.js', {
 	use_sourcemaps: true
 });

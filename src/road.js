@@ -7,7 +7,7 @@
  * Exposes the core Road class
  */
 
-const roads = require('../index');
+const roads = require('./index.js');
 const response_lib = require('./response.js');
 
 /**

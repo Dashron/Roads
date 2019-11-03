@@ -7,7 +7,7 @@
  * This file starts up the HTTP roads server
  */
 
-var roads = require(__dirname + '/../index');
+var roads = require(__dirname + '/../src/index.js');
 var road = new roads.Road();
 var Server = require('roads-server').Server;
 

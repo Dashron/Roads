@@ -1,6 +1,6 @@
 "use strict";
 
-const roads = require('../../../index.js');
+const roads = require('../../../src/index.js');
 
 describe('KillSlashes tests', () => {
 	test('test kill slash doesn\'t break normal', () => {
