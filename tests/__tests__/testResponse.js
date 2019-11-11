@@ -1,6 +1,6 @@
 "use strict";
 
-const roads = require('../../src/index.js');
+const roads = require('../../built/index.js');
 
 describe('response tests', () => {
 	/**

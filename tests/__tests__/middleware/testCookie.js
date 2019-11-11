@@ -1,7 +1,7 @@
 "use strict";
 
-const cookie = require('../../../src/index.js').middleware.cookie;
-let Response = require('../../../src/index.js').Response;
+const cookie = require('../../../built/index.js').middleware.cookie;
+let Response = require('../../../built/index.js').Response;
 
 describe('cookie tests', () => {
 	test('test cookie middleware parses cookies into context', () => {

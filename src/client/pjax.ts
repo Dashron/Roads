@@ -7,6 +7,9 @@
  * This file exposes a PJAX class to help with client side rendering
  */
 
+import * as Road from '../road';
+import * as cookie  from 'cookie';
+
  /**
   * This is a helper class to make PJAX easier. PJAX is a clean way of improving the performance of webpages
   * by progressively turning standard HTML links into AJAX requests for portions of a web page.
@@ -14,15 +17,20 @@
   * @todo Form support
   * @todo tests
   */
-module.exports = class RoadsPjax {
+export class RoadsPjax {
+	_road: Road;
+	_page_title: string|null;
+	_window: Window;
+	_container_element: HTMLElement;
+
 	/**
 	 * Creates a new RoadsPjax instance. The road provided to this constructor will be the backbone of your PJAX requests.
 	 * 
 	 * @param {Road} road - The road that will turn your pjax requests into HTML
-	 * @param {DomElement} container_element - The element that will be filled with your roads output
+	 * @param {HTMLElement} container_element - The element that will be filled with your roads output
 	 * @param {Window} window - The pages window object to help set page title and other items
 	 */
-	constructor(road, container_element, window) {
+	constructor(road: Road, container_element: HTMLElement, window: Window) {
 		this._road = road;
 		this._page_title = null;
 		this._window = window;
@@ -38,8 +46,8 @@ module.exports = class RoadsPjax {
 	addTitleMiddleware () {
 		var _self = this;
 
-		this._road.use(function (method, url, body, headers, next) {
-			this.setTitle = function (title) {
+		this._road.use(function (method: any, url: any, body: any, headers: any, next: () => void) {
+			this.setTitle = function (title: string | null) {
 				_self._page_title = title;
 			};
 
@@ -54,10 +62,8 @@ module.exports = class RoadsPjax {
 	 * 
 	 * @param {Document} document - The pages document object to properly parse and set cookies
 	 */
-	addCookieMiddleware (document) {
-		var cookie = require('cookie');
-
-		this._road.use(function (method, url, body, headers, next) {
+	addCookieMiddleware (document: { cookie: any; }) {
+		this._road.use(function (method: any, url: any, body: any, headers: any, next: () => void) {
 			if (document.cookie) {
 				this.cookies = cookie.parse(document.cookie);
 			} else {
@@ -78,11 +84,11 @@ module.exports = class RoadsPjax {
 			if (event.state.pjax) {
 				// if the popped state was generated  via pjax, execute the appropriate route
 				this._road.request('GET', this._window.location.pathname)
-				.then((response) => {
+				.then((response: any) => {
 					this.render(response);
-					this._window.document.title = this._page_title;
+					this._window.document.title = this._page_title ? this._page_title : '';
 				})
-				.catch((err) => {
+				.catch((err: any) => {
 					console.log('road err');
 					console.log(err);
 				});
@@ -99,10 +105,10 @@ module.exports = class RoadsPjax {
 		this._window.history.replaceState({
 			page_title: this._window.document.title, 
 			pjax: false
-		}, this._page_title);
+		}, this._page_title ? this._page_title : '');
 	}
 
-	registerAdditionalElement (element) {
+	registerAdditionalElement (element: { addEventListener: (arg0: string, arg1: any) => void; }) {
 		element.addEventListener('click', this._pjaxEventMonitor.bind(this));
 	}
 
@@ -111,7 +117,7 @@ module.exports = class RoadsPjax {
 	 * 
 	 * @param {Response} response_object 
 	 */
-	render (response_object) {
+	render (response_object: { body: string | undefined; }) {
 		if (response_object.body !== undefined) {
 			this._container_element.innerHTML = response_object.body;
 		} else {
@@ -123,7 +129,7 @@ module.exports = class RoadsPjax {
 	 * Handles all click events, and directs 
 	 * @param {Object} event 
 	 */
-	_pjaxEventMonitor (event) {
+	_pjaxEventMonitor (event: { target: { tagName: string; dataset: { [x: string]: string; }; form: { dataset: { [x: string]: string; }; }; }; ctrlKey: any; preventDefault: { (): void; (): void; }; }) {
 		if (event.target.tagName === 'A' && event.target.dataset['roadsPjax'] === "link" && !event.ctrlKey) {
 			event.preventDefault();
 			this._roadsLinkEvent(event.target);
@@ -139,19 +145,19 @@ module.exports = class RoadsPjax {
 	 * 
 	 * @param  {Element} link
 	 */
-	_roadsLinkEvent (link) {
+	_roadsLinkEvent (link: { tagName?: string; dataset?: { [x: string]: string; }; form?: { dataset: { [x: string]: string; }; }; href?: any; }) {
 
 		this._road.request('GET', link.href)
-		.then((response) => {
+		.then((response: any) => {
 			this._window.history.pushState({
 				page_title: this._page_title, 
 				pjax: true
-			}, this._page_title, link.href);
+			}, this._page_title ? this._page_title : '', link.href);
 
 			this.render(response);
-			this._window.document.title = this._page_title;
+			this._window.document.title = this._page_title ? this._page_title : '';
 		})
-		.catch((err) => {
+		.catch((err: any) => {
 			console.log('road err');
 			console.log(err);
 			return;
@@ -161,23 +167,23 @@ module.exports = class RoadsPjax {
 	/**
 	 * Submits the form and re-renders the UI
 	 * 
-	 * @param {Element} form 
+	 * @param {HTMLFormElement} form 
 	 */
-	_roadsFormEvent (form) {
+	_roadsFormEvent (form: HTMLFormElement) {
 		// execute the form. note: while HTTP methods are case sensitive, HTML forms seem to lowercase their methods. To fix this we uppercase here.
 		this._road.request(form.method.toUpperCase(), form.action, new URLSearchParams(new FormData(form)).toString(), {'content-type': 'application/x-www-form-urlencoded'})
-		.then((response) => {
+		.then((response: { status: any; headers: { location: any; }; }) => {
 			if ([301, 302, 303, 307, 308].includes(response.status)) {
 				return this._road.request('GET', response.headers.location);
 			} else {
 				return response;
 			}
 		})
-		.then((response) => {
+		.then((response: any) => {
 			this.render(response);
-			this._window.document.title = this._page_title;
+			this._window.document.title = this._page_title ? this._page_title : '';
 		})
-		.catch((err) => {
+		.catch((err: any) => {
 			console.log('roads err');
 			console.log(err);
 			return;

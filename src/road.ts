@@ -7,15 +7,15 @@
  * Exposes the core Road class
  */
 
-const roads = require('./index.js');
-const response_lib = require('./response.js');
+import * as response_lib from './response';
 
 /**
  * See roadsjs.com for full docs.
  * 
  * @name Road
  */
-module.exports = class Road {
+export default class Road {
+	protected _request_chain: Middleware[];
 
 	/**
 	 * Road Constructor
@@ -50,14 +50,10 @@ module.exports = class Road {
 	 *
 	 * If the callback does not return a [response](#roadsresponse) object, it will be wrapped in a [response](#roadsresponse) object with the default status code of 200.
 	 *  
-	 * @param {function} fn - A callback (function or async function) that will be executed every time a request is made.
+	 * @param {Function} fn - A callback (function or async function) that will be executed every time a request is made.
 	 * @returns {Road} this road object. Useful for chaining use statements.
 	 */
-	use (fn) {
-		if (!fn || typeof(fn) !== "function") {
-			throw new Error('You must provide a valid function to the use method');
-		}
-		
+	use (fn: Middleware): Road {		
 		// Currently we pass everything through the coroutine wrapper to be save. Let that library decide what does and does not actually need to be wrapped
 		this._request_chain.push(fn);
 
@@ -73,21 +69,13 @@ module.exports = class Road {
 	 * @param {string} method - HTTP request method
 	 * @param {string} url - HTTP request url
 	 * @param {string} [body] - HTTP request body
-	 * @param {array} [headers] - HTTP request headers
-	 * @returns {Promse} this promise will resolve to a Response object
+	 * @param {object} [headers] - HTTP request headers
+	 * @returns {Promise} this promise will resolve to a Response object
 	 */
-	request (method, url, body, headers) {
-		if (typeof(method) !== "string") {
-			throw new Error('You must provide an HTTP method when making a request');
-		}
-
-		if (typeof(url) !== "string") {
-			throw new Error('You must provide a url when making a request');
-		}
-
+	request (method: string, url: string, body?: string, headers?: object): Promise<response_lib.Response> {
 		return response_lib.wrap(this._buildNext(method, url, body, headers, {
 			request: this.request.bind(this),
-			Response: roads.Response
+			Response: response_lib.Response
 		})());
 	}
 
@@ -99,25 +87,30 @@ module.exports = class Road {
 	 * @param {string} path - HTTP request path
 	 * @param {string} request_body - HTTP request body
 	 * @param {object} request_headers - HTTP request headers
-	 * @param {object} context - Request context
-	 * @returns {function} A function that will start (or continue) the request chain
+	 * @param {Context} context - Request context
+	 * @returns {NextMiddleware} A function that will start (or continue) the request chain
 	 */
-	_buildNext (request_method, path, request_body, request_headers, context) {
-		let _self = this;
-		let progress = 0;
-		let route_fn = null;
+	_buildNext (request_method: string, path: string, request_body: string | undefined, request_headers: object | undefined, context: Context): ResponseMiddleware {
+		let _self: Road;
+		let progress: number;
+		let route_fn: ResponseMiddleware;
+		let next: ResponseMiddleware;
 
-		let next = () => {
+		_self = this;
+		progress = 0;
+		next = () => {
 			if (_self._request_chain.length && _self._request_chain[progress]) {
 				route_fn = _self._request_chain[progress].bind(context, request_method, path, request_body, request_headers, () => {
-					
 					progress += 1;
 					return next();
 				});
 
 			} else {
 				// If next is called and there is nothing next, we should still return a promise, it just shouldn't do anything
-				route_fn = () => {};
+				route_fn = () => { 
+					console.log('Request: ' + request_method + ' ' + path + ' has reached the end of the request chain. Ideally this would never happen. Make sure to stop calling next() when you\'ve built your full response');
+					return Promise.resolve(new response_lib.Response('', 500)) 
+				};
 			}
 
 			return _self._executeRoute(route_fn);
@@ -129,27 +122,41 @@ module.exports = class Road {
 	/**
 	 * Execute a resource method, and ensure that a promise is always returned
 	 * 
-	 * @param {function} route
-	 * @returns {Promise}
+	 * @param {Function} route
+	 * @returns {Promise<Response>}
 	 */
-	_executeRoute (route) {
-		let result = null;
+	_executeRoute (route: ResponseMiddleware): Promise<response_lib.Response> {
+		let result: Promise<response_lib.Response> | response_lib.Response;
 
 		// Handle errors properly
 		try {
 			result = route();
 		} catch (e) {
 			// this should never be reached if route is a coroutine. This will only be reached if the route is function that throws an error.
-			return new roads.Promise((resolve, reject) => {
+			return new Promise((resolve, reject) => {
 				reject(e);
 			});
 		}
 
 		// If the result isn't a promise already, make it one for consistency
-		if (!(result instanceof roads.Promise)) {
+		if (!(result instanceof Promise)) {
 			result = Promise.resolve(result);
 		}
 
 		return result;
 	}
-};
+}
+
+export interface Middleware {
+	(this: Context, method: string, path: string, body: string, headers: object, next: ResponseMiddleware): Promise<response_lib.Response>
+}
+
+interface Context {
+	request: Function,
+	Response: response_lib.ResponseConstructor,
+	[x: string]: any
+}
+
+export interface ResponseMiddleware {
+	(): Promise<response_lib.Response>
+}

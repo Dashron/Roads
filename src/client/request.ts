@@ -17,7 +17,7 @@ const roadsReq = require('roads-req');
  * 
  * @todo tests
  */
-module.exports = class Request {
+export class Request {
 	/**
 	 * @todo: port should just be part of the host
 	 * 

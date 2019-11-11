@@ -7,27 +7,25 @@
  * Exposes the SimpleRouter class to be used with roads middleware. 
  */
 
-const url_module = require('url');
+import * as url_module from "url";
+import {Middleware, ResponseMiddleware} from '../road';
+import Road from '../road';
+import {Response} from '../response';
 
-/**
- * Applies a prefix to paths of route files
- * 
- * @todo I'm pretty sure there's an existing library that will do this more accurately
- * @param {string} path - The HTTP path of a route
- * @param {string} [prefix] - An optional prefix for the HTTP path
- */
-function buildRouterPath(path, prefix) {
-	if (!prefix) {
-		prefix = '';
-	}
 
-	if (prefix.length && path === '/') {
-		return prefix;
-	}
-
-	return prefix + path;
+export interface Route {
+	(): Promise<Response> | Response
 }
 
+interface RouteDetails {
+	route: Route,
+	path: string,
+	method: string
+}
+
+interface SimpleRouterURL extends url_module.UrlWithParsedQuery {
+	args: Object | undefined
+}
 /**
  * This is a simple router middleware for roads. 
  * You can assign functions to url paths, and those paths can have some very basic variable templating
@@ -43,12 +41,15 @@ function buildRouterPath(path, prefix) {
  * 
  * @name SimpleRouter
  */
-module.exports = class SimpleRouter {
+export class SimpleRouter {
+	routes: RouteDetails[];
+
 	/**
 	 * @param {Road} [road] - The road that will receive the SimpleRouter middleware
 	 */
-	constructor (road) {
+	constructor (road?: Road) {
 		this.routes = [];
+
 		if (road) {
 			this.applyMiddleware(road);
 		}
@@ -59,13 +60,13 @@ module.exports = class SimpleRouter {
 	 * 
 	 * @param  {Road} road - The road that will receive the SimpleRouter middleware
 	 */
-	applyMiddleware (road) {
+	applyMiddleware (road: Road) {
 		var _self = this;
 
 		// We do this to ensure we have access to the SimpleRouter once we lose this due to road's context
-		road.use(function (request_method, request_url, request_body, request_headers, next) {
+		road.use((function (request_method, request_url, request_body, request_headers, next) {
 			return _self._middleware.call(this, _self.routes, request_method, request_url, request_body, request_headers, next);
-		});
+		}) as Middleware);
 	}
 
 	/**
@@ -76,7 +77,7 @@ module.exports = class SimpleRouter {
 	 * @param {(string|array)} paths - One or many URL paths that will trigger the provided function
 	 * @param {function} fn - The function containing all of your route logic
 	 */
-	addRoute (method, paths, fn) {
+	addRoute (method: string, paths: string | string[], fn: Route) {
 		var context = this;
 		if (!Array.isArray(paths)) {
 			paths = [paths];
@@ -86,7 +87,7 @@ module.exports = class SimpleRouter {
 			context.routes.push({
 				path: path,
 				method: method,
-				fn: fn
+				route: fn
 			});
 		});
 	}
@@ -101,13 +102,14 @@ module.exports = class SimpleRouter {
 	 * @param {string} file_path - The file path
 	 * @param {string} [prefix] - A string that will help namespace this file. e.g. if you call this on a file with a route of "/posts", and the prefix "/users", the route will be assigned to "/users/posts"
 	 */
-	addRouteFile (file_path, prefix) {
-		let routes = require(file_path);
-		for (var path in routes) {
-			for (var method in routes[path]) {
-				this.addRoute(method, buildRouterPath(path, prefix), routes[path][method]);
+	addRouteFile (file_path: string, prefix: string) {
+		import(file_path).then(routes => {
+			for (var path in routes) {
+				for (var method in routes[path]) {
+					this.addRoute(method, buildRouterPath(path, prefix), routes[path][method]);
+				}
 			}
-		}
+		});
 	}
 
 	/**
@@ -117,7 +119,7 @@ module.exports = class SimpleRouter {
 	 * 
 	 * @todo there might be a better way to do this
 	 */
-	_middleware (routes, request_method, request_url, request_body, request_headers, next) {
+	_middleware (routes: RouteDetails[], request_method: string, request_url: string, request_body: object, request_headers: object, next: ResponseMiddleware) {
 		let context = this;
 		let response = null;
 		let hit = false;
@@ -128,7 +130,7 @@ module.exports = class SimpleRouter {
 			let route = routes[i];
 
 			if (compareRouteAndApplyArgs(route, parsed_url, request_method)) {
-				response = (route.fn).call(context, parsed_url, request_body, request_headers, next);
+				response = (route.route).call(context, parsed_url, request_body, request_headers, next);
 				hit = true;
 				break;
 			}
@@ -151,7 +153,7 @@ module.exports = class SimpleRouter {
  * @param {object} request_url - Parsed HTTP request url
  * @param {string} request_method - HTTP request method
  */
-function compareRouteAndApplyArgs (route, request_url, request_method) {
+function compareRouteAndApplyArgs (route: {method: string, path: string}, request_url: url_module.UrlWithParsedQuery, request_method: string) {
 	if (route.method !== request_method) {
 		return false;
 	}
@@ -210,7 +212,7 @@ function compareRouteAndApplyArgs (route, request_url, request_method) {
  * @param {string} template_part - The template variable
  * @param {*} actual_part - The url value
  */
-function applyArg(request_url, template_part, actual_part) {
+function applyArg(request_url: SimpleRouterURL, template_part: string, actual_part: string | number) {
 	if (typeof(request_url.args) === "undefined") {
 		request_url.args = {};
 	}
@@ -220,4 +222,23 @@ function applyArg(request_url, template_part, actual_part) {
 	}
 
 	request_url.args[template_part] = actual_part;
+}
+
+/**
+ * Applies a prefix to paths of route files
+ * 
+ * @todo I'm pretty sure there's an existing library that will do this more accurately
+ * @param {string} path - The HTTP path of a route
+ * @param {string} [prefix] - An optional prefix for the HTTP path
+ */
+function buildRouterPath(path: string, prefix: string) {
+	if (!prefix) {
+		prefix = '';
+	}
+
+	if (prefix.length && path === '/') {
+		return prefix;
+	}
+
+	return prefix + path;
 }

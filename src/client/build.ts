@@ -7,9 +7,9 @@
  * This file makes it easier to write browserify scripts to build roads to work in the browser
  */
 
-const browserify = require('browserify');
-const fs = require('fs');
-const envify = require('envify/custom');
+import * as browserify from 'browserify';
+import * as fs from 'fs';
+import * as envify from 'envify/custom';
 
 /*function fixExternal (external) {
 	if (!external) {
@@ -60,7 +60,7 @@ function fixIgnore(ignore_list) {
  * @param {Array} exclude_list - Array of file paths or node module names to exclude
  * @returns {Array} exclude_list with defaults applied
  */
-function fixExclude(exclude_list) {
+function fixExclude(exclude_list: any[] | never[]) {
 	if (!exclude_list) {
 		exclude_list = [];
 	}
@@ -79,7 +79,7 @@ function fixExclude(exclude_list) {
  * @param {object} options - The options passed into the function exposed by this file
  * @returns {object} options with defaults applied
  */
-function fixOptions (options) {
+function fixOptions (options: { use_sourcemaps?: any; ignore_missing?: any; babelify?: any; ignore?: any; exclude?: any; envify?: any; }) {
 	if (!options) {
 		options = {};
 	}
@@ -105,7 +105,7 @@ function fixOptions (options) {
  * @param  {Object} [options.babelify] An object containing parameters to pass to the babelify transform
  * @todo tests
  */
-module.exports = function (input_file, output_file, options) {
+export default function build (input_file: string, output_file: string, options: { use_sourcemaps: any; ignore_missing: any; babelify: any; ignore: any; exclude: any; envify: any; }) {
 	/**
 	 * Externals has been commented out because the code didn't make any sense, and didn't match the docs. It will be returned
 	 * oonce there is an appropriate, well understood, well documented purpose
@@ -123,7 +123,7 @@ module.exports = function (input_file, output_file, options) {
 	.transform("babelify", options.babelify)
 	.transform("brfs");
 
-	builder.on('dep', function(dep) {
+	builder.on('dep', function(dep: { file: string; }) {
 		console.log('adding dependency ' + dep.file);
 	});
 

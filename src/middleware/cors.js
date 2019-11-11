@@ -20,7 +20,7 @@
  * 
  * @return {function} The middleware to bind to your road
  */
-module.exports = function (options) {
+export function cors (options) {
 	let validOrigins = options.validOrigins || [];
 	let supportsCredentials = options.supportsCredentials || false;
 	let responseHeaders = options.responseHeaders || [];

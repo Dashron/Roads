@@ -1,7 +1,7 @@
 "use strict";
 
 
-const roads = require('../../../src/index.js');
+const roads = require('../../../built/index.js');
 
 describe('Parse Request Body tests', () => {
 	test('test request with valid json body', () => {

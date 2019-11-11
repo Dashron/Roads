@@ -7,8 +7,12 @@
  * Exposes a single middleware function to help parse request bodies
  */
 
-let content_type_module = require('content-type');
-let qs_module = require('querystring');
+import {Middleware} from '../road';
+
+import content_type_module from 'content-type';
+import qs_module from 'querystring';
+//let content_type_module = require('content-type');
+//let qs_module = require('querystring');
 
 /**
  * Translate the request body into a usable value.
@@ -22,7 +26,7 @@ let qs_module = require('querystring');
  * @returns {(object|string)} parsed body
  * @todo Actually do something with the parameters, such as charset
  */
-function parseBody (body, content_type) {
+function parseRequestBody (body: any, content_type: string): object | string {
 	if (typeof(body) === "object" || Array.isArray(body) || !body) {
 		// no need to parse if it's already an object
 		return body;
@@ -45,8 +49,11 @@ function parseBody (body, content_type) {
 /**
  * Attempts the parse the request body into a useful object
  */
-module.exports = function (method, url, body, headers, next) {
-	this.body = parseBody(body, headers ? headers['content-type'] : undefined);
+let parseBody: Middleware;
+parseBody = function (method, url, body, headers, next) {
+	this.body = parseRequestBody(body, headers ? headers['content-type'] : undefined);
 
 	return next();
 };
+
+export default parseBody;

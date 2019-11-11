@@ -7,7 +7,11 @@
  * Provides a simple class to manage HTTP responses
  */
 
-module.exports.Response = class Response {
+export class Response {
+	status: number;
+	body: string;
+	headers: object;
+
 	/**
 	 * Creates a new Response object. 
 	 * 
@@ -15,12 +19,16 @@ module.exports.Response = class Response {
 	 * @param {number} [status] - Your response status
 	 * @param {object} [headers] - Your response headers
 	 */
-	constructor (body, status, headers) {
+	constructor (body: string, status?: number, headers?: object) {
 		this.body = body;
 		this.status = status || 200;
 		this.headers = headers || {};
 	}
 };
+
+export interface ResponseConstructor {
+	new (body: string, status?: number, headers?: object): Response
+}
 
 /**
  * Wraps the return value of a promise in a Response object to ensure consistency.
@@ -28,13 +36,13 @@ module.exports.Response = class Response {
  * @param {Promise} promise
  * @returns {Promise}
  */
-module.exports.wrap = function (promise) {
+export function wrap (promise: Promise<any>): Promise<any> {
 	return promise.then((route_response) => {
-		if (typeof(route_response) !== "object" || !(route_response instanceof module.exports.Response)) {
+		if (typeof(route_response) !== "object" || !(route_response instanceof Response)) {
 			// we should always return a response object
-			route_response = new module.exports.Response(route_response);
+			route_response = new Response(route_response);
 		}
 
 		return route_response;
 	});
-};
+}

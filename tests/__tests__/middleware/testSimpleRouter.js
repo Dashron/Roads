@@ -1,7 +1,7 @@
 "use strict";
 
 const url_module = require('url');
-const SimpleRouter = require('../../../src/index.js').middleware.SimpleRouter;
+const SimpleRouter = require('../../../built/index.js').middleware.SimpleRouter;
 const buildRouter = function buildRouter() {
 	return new SimpleRouter();
 };
