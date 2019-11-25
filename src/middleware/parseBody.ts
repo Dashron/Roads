@@ -9,10 +9,8 @@
 
 import {Middleware} from '../road';
 
-import content_type_module from 'content-type';
-import qs_module from 'querystring';
-//let content_type_module = require('content-type');
-//let qs_module = require('querystring');
+import * as content_type_module from 'content-type';
+import * as qs_module from 'querystring';
 
 /**
  * Translate the request body into a usable value.

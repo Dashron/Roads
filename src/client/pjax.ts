@@ -7,7 +7,9 @@
  * This file exposes a PJAX class to help with client side rendering
  */
 
-import * as Road from '../road';
+import {Middleware} from '../road';
+import Road from '../road';
+import Response from '../response';
 import * as cookie  from 'cookie';
 
  /**
@@ -46,13 +48,16 @@ export class RoadsPjax {
 	addTitleMiddleware () {
 		var _self = this;
 
-		this._road.use(function (method: any, url: any, body: any, headers: any, next: () => void) {
+		let titleMiddleware: Middleware;
+		titleMiddleware = function (method, url, body, headers, next) {
 			this.setTitle = function (title: string | null) {
 				_self._page_title = title;
 			};
 
 			return next();
-		});
+		};
+
+		this._road.use(titleMiddleware);
 
 		return this;
 	}
@@ -62,8 +67,9 @@ export class RoadsPjax {
 	 * 
 	 * @param {Document} document - The pages document object to properly parse and set cookies
 	 */
-	addCookieMiddleware (document: { cookie: any; }) {
-		this._road.use(function (method: any, url: any, body: any, headers: any, next: () => void) {
+	addCookieMiddleware (document: Document) {
+		let cookieMiddleware: Middleware;
+		cookieMiddleware = function (method, url, body, headers, next) {
 			if (document.cookie) {
 				this.cookies = cookie.parse(document.cookie);
 			} else {
@@ -71,7 +77,9 @@ export class RoadsPjax {
 			}
 
 			return next();
-		});
+		};
+
+		this._road.use(cookieMiddleware);
 	}
 
 	/**
@@ -80,15 +88,15 @@ export class RoadsPjax {
 	register () {
 		// Handle navigation changes besides pushState. TODO: don' blow out existing onpopstate's
 		// TODO: If a request is in process during the popstate, we should kill it and use the new url
-		this._window.onpopstate = (event) => {
+		this._window.onpopstate = (event: PopStateEvent) => {
 			if (event.state.pjax) {
 				// if the popped state was generated  via pjax, execute the appropriate route
 				this._road.request('GET', this._window.location.pathname)
-				.then((response: any) => {
+				.then((response: Response) => {
 					this.render(response);
 					this._window.document.title = this._page_title ? this._page_title : '';
 				})
-				.catch((err: any) => {
+				.catch((err: Error) => {
 					console.log('road err');
 					console.log(err);
 				});
@@ -108,7 +116,7 @@ export class RoadsPjax {
 		}, this._page_title ? this._page_title : '');
 	}
 
-	registerAdditionalElement (element: { addEventListener: (arg0: string, arg1: any) => void; }) {
+	registerAdditionalElement (element: HTMLAnchorElement) {
 		element.addEventListener('click', this._pjaxEventMonitor.bind(this));
 	}
 
@@ -117,7 +125,7 @@ export class RoadsPjax {
 	 * 
 	 * @param {Response} response_object 
 	 */
-	render (response_object: { body: string | undefined; }) {
+	render (response_object: Response) {
 		if (response_object.body !== undefined) {
 			this._container_element.innerHTML = response_object.body;
 		} else {
@@ -129,12 +137,15 @@ export class RoadsPjax {
 	 * Handles all click events, and directs 
 	 * @param {Object} event 
 	 */
-	_pjaxEventMonitor (event: { target: { tagName: string; dataset: { [x: string]: string; }; form: { dataset: { [x: string]: string; }; }; }; ctrlKey: any; preventDefault: { (): void; (): void; }; }) {
-		if (event.target.tagName === 'A' && event.target.dataset['roadsPjax'] === "link" && !event.ctrlKey) {
+	_pjaxEventMonitor (event: MouseEvent) {
+		if (event.target instanceof HTMLAnchorElement && event.target.dataset['roadsPjax'] === "link" && !event.ctrlKey) {
 			event.preventDefault();
-			this._roadsLinkEvent(event.target);
+			this._roadsLinkEvent(event.target as HTMLAnchorElement);
 			// TODO: Change this to a on submit event?
-		} else if (['INPUT', 'BUTTON'].includes(event.target.tagName) && event.target.dataset['roadsPjax'] === 'submit' && event.target.form && event.target.form.dataset['roadsPjax'] === "form") {
+		} else if ((event.target instanceof HTMLInputElement || event.target instanceof HTMLButtonElement) 
+					&& event.target.dataset['roadsPjax'] === 'submit' 
+					&& event.target.form && event.target.form.dataset['roadsPjax'] === "form") {
+
 			event.preventDefault();
 			this._roadsFormEvent(event.target.form);
 		}
@@ -145,10 +156,10 @@ export class RoadsPjax {
 	 * 
 	 * @param  {Element} link
 	 */
-	_roadsLinkEvent (link: { tagName?: string; dataset?: { [x: string]: string; }; form?: { dataset: { [x: string]: string; }; }; href?: any; }) {
+	_roadsLinkEvent (link: HTMLAnchorElement) {
 
 		this._road.request('GET', link.href)
-		.then((response: any) => {
+		.then((response: Response) => {
 			this._window.history.pushState({
 				page_title: this._page_title, 
 				pjax: true
@@ -157,7 +168,7 @@ export class RoadsPjax {
 			this.render(response);
 			this._window.document.title = this._page_title ? this._page_title : '';
 		})
-		.catch((err: any) => {
+		.catch((err: Error) => {
 			console.log('road err');
 			console.log(err);
 			return;
@@ -171,19 +182,19 @@ export class RoadsPjax {
 	 */
 	_roadsFormEvent (form: HTMLFormElement) {
 		// execute the form. note: while HTTP methods are case sensitive, HTML forms seem to lowercase their methods. To fix this we uppercase here.
-		this._road.request(form.method.toUpperCase(), form.action, new URLSearchParams(new FormData(form)).toString(), {'content-type': 'application/x-www-form-urlencoded'})
-		.then((response: { status: any; headers: { location: any; }; }) => {
+		this._road.request(form.method.toUpperCase(), form.action, new URLSearchParams(new FormData(form).toString()).toString(), {'content-type': 'application/x-www-form-urlencoded'})
+		.then((response: Response) => {
 			if ([301, 302, 303, 307, 308].includes(response.status)) {
 				return this._road.request('GET', response.headers.location);
 			} else {
 				return response;
 			}
 		})
-		.then((response: any) => {
+		.then((response: Response) => {
 			this.render(response);
 			this._window.document.title = this._page_title ? this._page_title : '';
 		})
-		.catch((err: any) => {
+		.catch((err: Error) => {
 			console.log('roads err');
 			console.log(err);
 			return;

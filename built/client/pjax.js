@@ -29,12 +29,14 @@ export class RoadsPjax {
      */
     addTitleMiddleware() {
         var _self = this;
-        this._road.use(function (method, url, body, headers, next) {
+        let titleMiddleware;
+        titleMiddleware = function (method, url, body, headers, next) {
             this.setTitle = function (title) {
                 _self._page_title = title;
             };
             return next();
-        });
+        };
+        this._road.use(titleMiddleware);
         return this;
     }
     /**
@@ -43,7 +45,8 @@ export class RoadsPjax {
      * @param {Document} document - The pages document object to properly parse and set cookies
      */
     addCookieMiddleware(document) {
-        this._road.use(function (method, url, body, headers, next) {
+        let cookieMiddleware;
+        cookieMiddleware = function (method, url, body, headers, next) {
             if (document.cookie) {
                 this.cookies = cookie.parse(document.cookie);
             }
@@ -51,7 +54,8 @@ export class RoadsPjax {
                 this.cookies = {};
             }
             return next();
-        });
+        };
+        this._road.use(cookieMiddleware);
     }
     /**
      * Hooks up the PJAX functionality to the information provided via the constructor.
@@ -106,12 +110,14 @@ export class RoadsPjax {
      * @param {Object} event
      */
     _pjaxEventMonitor(event) {
-        if (event.target.tagName === 'A' && event.target.dataset['roadsPjax'] === "link" && !event.ctrlKey) {
+        if (event.target instanceof HTMLAnchorElement && event.target.dataset['roadsPjax'] === "link" && !event.ctrlKey) {
             event.preventDefault();
             this._roadsLinkEvent(event.target);
             // TODO: Change this to a on submit event?
         }
-        else if (['INPUT', 'BUTTON'].includes(event.target.tagName) && event.target.dataset['roadsPjax'] === 'submit' && event.target.form && event.target.form.dataset['roadsPjax'] === "form") {
+        else if ((event.target instanceof HTMLInputElement || event.target instanceof HTMLButtonElement)
+            && event.target.dataset['roadsPjax'] === 'submit'
+            && event.target.form && event.target.form.dataset['roadsPjax'] === "form") {
             event.preventDefault();
             this._roadsFormEvent(event.target.form);
         }
@@ -144,7 +150,7 @@ export class RoadsPjax {
      */
     _roadsFormEvent(form) {
         // execute the form. note: while HTTP methods are case sensitive, HTML forms seem to lowercase their methods. To fix this we uppercase here.
-        this._road.request(form.method.toUpperCase(), form.action, new URLSearchParams(new FormData(form)).toString(), { 'content-type': 'application/x-www-form-urlencoded' })
+        this._road.request(form.method.toUpperCase(), form.action, new URLSearchParams(new FormData(form).toString()).toString(), { 'content-type': 'application/x-www-form-urlencoded' })
             .then((response) => {
             if ([301, 302, 303, 307, 308].includes(response.status)) {
                 return this._road.request('GET', response.headers.location);

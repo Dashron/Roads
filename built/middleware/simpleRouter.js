@@ -6,7 +6,7 @@
  *
  * Exposes the SimpleRouter class to be used with roads middleware.
  */
-import url_module from 'url';
+import * as url_module from "url";
 /**
  * This is a simple router middleware for roads.
  * You can assign functions to url paths, and those paths can have some very basic variable templating
@@ -61,7 +61,7 @@ export class SimpleRouter {
             context.routes.push({
                 path: path,
                 method: method,
-                fn: fn
+                route: fn
             });
         });
     }
@@ -76,12 +76,13 @@ export class SimpleRouter {
      * @param {string} [prefix] - A string that will help namespace this file. e.g. if you call this on a file with a route of "/posts", and the prefix "/users", the route will be assigned to "/users/posts"
      */
     addRouteFile(file_path, prefix) {
-        let routes = require(file_path);
-        for (var path in routes) {
-            for (var method in routes[path]) {
-                this.addRoute(method, buildRouterPath(path, prefix), routes[path][method]);
+        import(file_path).then(routes => {
+            for (var path in routes) {
+                for (var method in routes[path]) {
+                    this.addRoute(method, buildRouterPath(path, prefix), routes[path][method]);
+                }
             }
-        }
+        });
     }
     /**
      * Slightly non-standar roads middleware to execute the functions in this router when requests are received by the road
@@ -98,7 +99,7 @@ export class SimpleRouter {
         for (let i = 0; i < routes.length; i++) {
             let route = routes[i];
             if (compareRouteAndApplyArgs(route, parsed_url, request_method)) {
-                response = (route.fn).call(context, parsed_url, request_body, request_headers, next);
+                response = (route.route).call(context, parsed_url, request_body, request_headers, next);
                 hit = true;
                 break;
             }
@@ -120,7 +121,7 @@ export class SimpleRouter {
  * @param {string} request_method - HTTP request method
  */
 function compareRouteAndApplyArgs(route, request_url, request_method) {
-    if (route.method !== request_method) {
+    if (route.method !== request_method || !request_url.pathname) {
         return false;
     }
     let template = route.path.split('/');

@@ -8,6 +8,21 @@
  */
 
 import * as response_lib from './response';
+import Response from './response';
+
+export interface Middleware {
+	(this: Context, method: string, path: string, body: string, headers: {[x: string]: any}, next: ResponseMiddleware): Promise<Response>
+}
+
+export interface Context {
+	request: Function,
+	Response: response_lib.ResponseConstructor,
+	[x: string]: any
+}
+
+export interface ResponseMiddleware {
+	(): Promise<Response>
+}
 
 /**
  * See roadsjs.com for full docs.
@@ -72,10 +87,10 @@ export default class Road {
 	 * @param {object} [headers] - HTTP request headers
 	 * @returns {Promise} this promise will resolve to a Response object
 	 */
-	request (method: string, url: string, body?: string, headers?: object): Promise<response_lib.Response> {
+	request (method: string, url: string, body?: string, headers?: object): Promise<Response> {
 		return response_lib.wrap(this._buildNext(method, url, body, headers, {
 			request: this.request.bind(this),
-			Response: response_lib.Response
+			Response: Response
 		})());
 	}
 
@@ -90,7 +105,7 @@ export default class Road {
 	 * @param {Context} context - Request context
 	 * @returns {NextMiddleware} A function that will start (or continue) the request chain
 	 */
-	_buildNext (request_method: string, path: string, request_body: string | undefined, request_headers: object | undefined, context: Context): ResponseMiddleware {
+	protected _buildNext (request_method: string, path: string, request_body: string | undefined, request_headers: object | undefined, context: Context): ResponseMiddleware {
 		let _self: Road;
 		let progress: number;
 		let route_fn: ResponseMiddleware;
@@ -109,7 +124,7 @@ export default class Road {
 				// If next is called and there is nothing next, we should still return a promise, it just shouldn't do anything
 				route_fn = () => { 
 					console.log('Request: ' + request_method + ' ' + path + ' has reached the end of the request chain. Ideally this would never happen. Make sure to stop calling next() when you\'ve built your full response');
-					return Promise.resolve(new response_lib.Response('', 500)) 
+					return Promise.resolve(new Response('', 500)) 
 				};
 			}
 
@@ -125,8 +140,8 @@ export default class Road {
 	 * @param {Function} route
 	 * @returns {Promise<Response>}
 	 */
-	_executeRoute (route: ResponseMiddleware): Promise<response_lib.Response> {
-		let result: Promise<response_lib.Response> | response_lib.Response;
+	protected _executeRoute (route: ResponseMiddleware): Promise<Response> {
+		let result: Promise<Response> | Response;
 
 		// Handle errors properly
 		try {
@@ -145,18 +160,4 @@ export default class Road {
 
 		return result;
 	}
-}
-
-export interface Middleware {
-	(this: Context, method: string, path: string, body: string, headers: object, next: ResponseMiddleware): Promise<response_lib.Response>
-}
-
-interface Context {
-	request: Function,
-	Response: response_lib.ResponseConstructor,
-	[x: string]: any
-}
-
-export interface ResponseMiddleware {
-	(): Promise<response_lib.Response>
 }

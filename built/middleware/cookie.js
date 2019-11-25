@@ -28,9 +28,10 @@
  * - firstPartyOnly
  *
  */
-module.exports = function () {
-    const cookie = require('cookie');
-    return function (route_method, route_path, route_body, route_headers, next) {
+import * as cookie from 'cookie';
+export default function () {
+    let cookieMiddleware;
+    cookieMiddleware = function (route_method, route_path, route_body, route_headers, next) {
         // Find the cookies from the request
         if (route_headers.cookie) {
             this.cookies = cookie.parse(route_headers.cookie);
@@ -59,4 +60,6 @@ module.exports = function () {
         };
         return next();
     };
-};
+    return cookieMiddleware;
+}
+;

@@ -1,15 +1,16 @@
 "use strict";
 
-
-const roads = require('../../../built/index.js');
+import parseBody from '../../../middleware/parseBody';
+import Road, {Middleware} from '../../../road';
+import Response from '../../../response';
 
 describe('Parse Request Body tests', () => {
 	test('test request with valid json body', () => {
         expect.assertions(1);
-        let context = {};
+        let context: {[X: string]: any} = {};
         var body = '{"hello": "there"}';
 
-        roads.middleware.parseBody.call(context, '', '', body, {'content-type': 'application/json'}, () => {});
+        parseBody.call(context, '', '', body, {'content-type': 'application/json'}, () => {});
         expect(context.body).toEqual({hello: "there"});
     });
 
@@ -22,7 +23,7 @@ describe('Parse Request Body tests', () => {
         var body = '{hello ';
 
         return expect(() => {
-            return roads.middleware.parseBody.call(context, '', '', body, {'content-type': 'application/json'}, () => {});
+            return parseBody.call(context, '', '', body, {'content-type': 'application/json'}, () => {});
         }).toThrowError();
     });
 
@@ -32,13 +33,17 @@ describe('Parse Request Body tests', () => {
     test('test used request with valid json body', () => {
         expect.assertions(1);
 
-        var road = new roads.Road();
-        road.use(roads.middleware.parseBody);
+        var road = new Road();
+        road.use(parseBody);
         var body = '{"hello": "there"}';
 
-        road.use(function (method, url, request_body, headers) {
+        let middleware: Middleware;
+        middleware = function (method, url, request_body, headers) {
             expect(this.body).toEqual({hello: "there"});
-        });
+            return Promise.resolve(new Response(''));
+        };
+
+        road.use(middleware);
 
         road.request('', '', body, {
             'content-type' : "application/json"
@@ -50,8 +55,8 @@ describe('Parse Request Body tests', () => {
      */
     test('test used request with invalid json body', () => {
         expect.assertions(1);
-        var road = new roads.Road();
-        road.use(roads.middleware.parseBody);
+        var road = new Road();
+        road.use(parseBody);
         var body = '{hello there';
 
         return expect(road.request('', '', body, {
@@ -65,10 +70,11 @@ describe('Parse Request Body tests', () => {
      */
     test('test content type with parameters', () => {
         expect.assertions(1);
-        let context = {};
+        let context: {[X: string]: any};
+        context = {};
         var body = '{"hello": "there"}';
 
-        roads.middleware.parseBody.call(context, '', '', body, {'content-type': 'application/json; charset=utf-8'}, () => {})
+        parseBody.call(context, '', '', body, {'content-type': 'application/json; charset=utf-8'}, () => {})
         expect(context.body).toEqual({hello: "there"});
     });
 });

@@ -6,7 +6,7 @@
  *
  * Provides a simple class to manage HTTP responses
  */
-export class Response {
+export default class Response {
     /**
      * Creates a new Response object.
      *

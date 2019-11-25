@@ -8,8 +8,9 @@
  */
 
 import * as browserify from 'browserify';
+import * as babelify from 'babelify';
 import * as fs from 'fs';
-import * as envify from 'envify/custom';
+import envify from 'envify/custom';
 
 /*function fixExternal (external) {
 	if (!external) {
@@ -25,7 +26,7 @@ import * as envify from 'envify/custom';
  * @param {object} babel_options - The options object that is passed to babel
  * @returns {object} babel_options with defaults applied
  */
-function fixBabelify (babel_options) {
+function fixBabelify (babel_options: babelify.BabelifyOptions) {
 	if (!babel_options) {
 		babel_options = {};
 	}
@@ -45,7 +46,7 @@ function fixBabelify (babel_options) {
  * @param {Array} ignore_list - Array of file paths or node module names to ignore
  * @returns {Array} ignore_list with defaults applied
  */
-function fixIgnore(ignore_list) {
+function fixIgnore(ignore_list?: string[]) {
 	if (!ignore_list) {
 		ignore_list = [];
 	}
@@ -60,7 +61,7 @@ function fixIgnore(ignore_list) {
  * @param {Array} exclude_list - Array of file paths or node module names to exclude
  * @returns {Array} exclude_list with defaults applied
  */
-function fixExclude(exclude_list: any[] | never[]) {
+function fixExclude(exclude_list?: string[]) {
 	if (!exclude_list) {
 		exclude_list = [];
 	}
@@ -105,7 +106,7 @@ function fixOptions (options: { use_sourcemaps?: any; ignore_missing?: any; babe
  * @param  {Object} [options.babelify] An object containing parameters to pass to the babelify transform
  * @todo tests
  */
-export default function build (input_file: string, output_file: string, options: { use_sourcemaps: any; ignore_missing: any; babelify: any; ignore: any; exclude: any; envify: any; }) {
+export default function build (input_file: string, output_file: string, options: { use_sourcemaps?: any; ignore_missing?: any; babelify?: any; ignore?: any; exclude?: any; envify?: any; }) {
 	/**
 	 * Externals has been commented out because the code didn't make any sense, and didn't match the docs. It will be returned
 	 * oonce there is an appropriate, well understood, well documented purpose

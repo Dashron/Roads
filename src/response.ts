@@ -7,10 +7,10 @@
  * Provides a simple class to manage HTTP responses
  */
 
-export class Response {
+export default class Response {
 	status: number;
 	body: string;
-	headers: object;
+	headers: { [x: string ]: any };
 
 	/**
 	 * Creates a new Response object. 

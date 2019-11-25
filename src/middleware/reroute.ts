@@ -19,9 +19,7 @@ import Road from '../road';
  * @return {function} The middleware function. This value should be passed to road.use(fn);
  */
 export default function (key: string, road: Road) {
-	let reroute: Middleware;
-
-	reroute = function (route_method, route_path, route_body, route_headers, next) {
+	let reroute: Middleware = function (route_method, route_path, route_body, route_headers, next) {
 		this[key] = function (method: string, path: string, body?: string, headers?: object) {
 			if (!headers) {
 				headers = {};

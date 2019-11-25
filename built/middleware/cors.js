@@ -1,4 +1,5 @@
 "use strict";
+import Response from '../response';
 /**
  * cors.js
  * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
@@ -30,9 +31,11 @@ export function cors(options) {
     /*
     Note: the comments below are pulled from the spec https://www.w3.org/TR/cors/ to help development
     */
-    return function (method, url, body, headers, next) {
-        let corsResponseHeaders = {};
+    let corsMiddleware;
+    corsMiddleware = function (method, url, body, headers, next) {
+        let corsResponseHeaders;
         let preflight = method === 'OPTIONS' && headers['access-control-request-method'];
+        corsResponseHeaders = {};
         // Terms
         /*
         list of origins consisting of zero or more origins that are allowed access to the resource.
@@ -194,7 +197,7 @@ export function cors(options) {
             corsResponseHeaders['access-control-allow-origin'] = headers.origin;
         }
         if (preflight) {
-            return new this.Response('', 200, corsResponseHeaders);
+            return Promise.resolve(new Response('', 200, corsResponseHeaders));
         }
         return next()
             .then((response) => {
@@ -204,5 +207,6 @@ export function cors(options) {
             return response;
         });
     };
+    return corsMiddleware;
 }
 ;

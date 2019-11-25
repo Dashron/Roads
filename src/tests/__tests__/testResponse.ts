@@ -1,6 +1,6 @@
 "use strict";
 
-const roads = require('../../built/index.js');
+import Response from '../../response';
 
 describe('response tests', () => {
 	/**
@@ -10,9 +10,9 @@ describe('response tests', () => {
 		expect.assertions(3);
 		let response_data = { message : "hello" };
 		let headers = {hello: "there"}
-		let res = new roads.Response(response_data, 200, headers);
+		let res = new Response(JSON.stringify(response_data), 200, headers);
 
-		expect(res.body).toEqual(response_data);
+		expect(res.body).toEqual(JSON.stringify(response_data));
 		expect(res.status).toEqual(200);
 		expect(res.headers).toEqual(headers);
 	});

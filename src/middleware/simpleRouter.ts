@@ -9,12 +9,13 @@
 
 import * as url_module from "url";
 import {Middleware, ResponseMiddleware} from '../road';
-import Road from '../road';
-import {Response} from '../response';
+import Road, {Context} from '../road';
+import Response from '../response';
+import { request } from "http";
 
 
 export interface Route {
-	(): Promise<Response> | Response
+	(this: Context, path: string, body: string, headers: {[x: string]: any}, next: ResponseMiddleware): Promise<Response>
 }
 
 interface RouteDetails {
@@ -23,8 +24,8 @@ interface RouteDetails {
 	method: string
 }
 
-interface SimpleRouterURL extends url_module.UrlWithParsedQuery {
-	args: Object | undefined
+export interface SimpleRouterURL extends url_module.UrlWithParsedQuery {
+	args?: { [x: string]: any }
 }
 /**
  * This is a simple router middleware for roads. 
@@ -41,7 +42,7 @@ interface SimpleRouterURL extends url_module.UrlWithParsedQuery {
  * 
  * @name SimpleRouter
  */
-export class SimpleRouter {
+export default class SimpleRouter {
 	routes: RouteDetails[];
 
 	/**
@@ -102,7 +103,7 @@ export class SimpleRouter {
 	 * @param {string} file_path - The file path
 	 * @param {string} [prefix] - A string that will help namespace this file. e.g. if you call this on a file with a route of "/posts", and the prefix "/users", the route will be assigned to "/users/posts"
 	 */
-	addRouteFile (file_path: string, prefix: string) {
+	addRouteFile (file_path: string, prefix?: string) {
 		import(file_path).then(routes => {
 			for (var path in routes) {
 				for (var method in routes[path]) {
@@ -119,7 +120,7 @@ export class SimpleRouter {
 	 * 
 	 * @todo there might be a better way to do this
 	 */
-	_middleware (routes: RouteDetails[], request_method: string, request_url: string, request_body: object, request_headers: object, next: ResponseMiddleware) {
+	protected _middleware (routes: RouteDetails[], request_method: string, request_url: string, request_body: string, request_headers: object, next: ResponseMiddleware): Promise<Response> {
 		let context = this;
 		let response = null;
 		let hit = false;
@@ -154,7 +155,7 @@ export class SimpleRouter {
  * @param {string} request_method - HTTP request method
  */
 function compareRouteAndApplyArgs (route: {method: string, path: string}, request_url: url_module.UrlWithParsedQuery, request_method: string) {
-	if (route.method !== request_method) {
+	if (route.method !== request_method || !request_url.pathname) {
 		return false;
 	}
 
@@ -183,13 +184,13 @@ function compareRouteAndApplyArgs (route: {method: string, path: string}, reques
 				return false;
 			}
 
-			applyArg(request_url, template_part.substring(1), Number(actual_part));
+			applyArg(request_url as SimpleRouterURL, template_part.substring(1), Number(actual_part));
 			continue;
 		}
 
 		if (template_part[0] === '$') {
 			// $ templates accept any non-slash alphanumeric character
-			applyArg(request_url, template_part.substring(1), String(actual_part));
+			applyArg(request_url as SimpleRouterURL, template_part.substring(1), String(actual_part));
 			// Continue so that 
 			continue;
 		}
@@ -231,7 +232,7 @@ function applyArg(request_url: SimpleRouterURL, template_part: string, actual_pa
  * @param {string} path - The HTTP path of a route
  * @param {string} [prefix] - An optional prefix for the HTTP path
  */
-function buildRouterPath(path: string, prefix: string) {
+function buildRouterPath(path: string, prefix?: string) {
 	if (!prefix) {
 		prefix = '';
 	}

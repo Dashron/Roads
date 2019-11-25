@@ -1,14 +1,15 @@
 "use strict";
 
-const cookie = require('../../../built/index.js').middleware.cookie;
-let Response = require('../../../built/index.js').Response;
+import cookie, {CookieResponse} from '../../../middleware/cookie';
+import Response from '../../../response';
 
 describe('cookie tests', () => {
 	test('test cookie middleware parses cookies into context', () => {
 		expect.assertions(3);
-		let context = {
+		let context: {[x:string]: any} = {
 			Response: Response
 		};
+		
 
 		let middleware = cookie();
 
@@ -38,7 +39,7 @@ describe('cookie tests', () => {
 
 		});
 
-		let resp = new context.Response();
+		let resp: CookieResponse = new CookieResponse('');
 
 		expect(typeof(resp.setCookie)).toEqual('function');
 		resp.setCookie('foo', 'bar');
@@ -62,7 +63,7 @@ describe('cookie tests', () => {
 	test('test cookie middleware successfully updates the headers', () => {
 		expect.assertions(4);
 
-		let context = {
+		let context: {[x: string]: any} = {
 			Response: Response
 		};
 

@@ -17,19 +17,18 @@ let killSlash: Middleware;
 killSlash = function (method, url, body, headers, next) {
 	let _self = this;
 
-	let parsed_url = url_module.parse(url);
-
-	if (!parsed_url.path) {
+	let parsedUrl = url_module.parse(url);
+	let parsedPath = parsedUrl.path;
+	
+	if (!parsedPath) {
 		return next();
 	}
 
 	// kill trailing slash as long as we aren't at the root level
-	if (parsed_url.path !== '/' && parsed_url.path[parsed_url.path.length - 1] === '/') {
-		return new Promise((resolve) => {
-			resolve (new _self.Response('', 302, {
-				location : parsed_url.path.substring(0, parsed_url.path.length - 1)
-			}));
-		});
+	if (parsedPath !== '/' && parsedPath[parsedPath.length - 1] === '/') {
+		return Promise.resolve(new _self.Response('', 302, {
+			location : parsedPath.substring(0, parsedPath.length - 1)
+		}));
 	}
 
 	return next();

@@ -1,13 +1,6 @@
 "use strict";
-/**
- * parseBody.js
- * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
- * MIT Licensed
- *
- * Exposes a single middleware function to help parse request bodies
- */
-let content_type_module = require('content-type');
-let qs_module = require('querystring');
+import * as content_type_module from 'content-type';
+import * as qs_module from 'querystring';
 /**
  * Translate the request body into a usable value.
  *
@@ -20,7 +13,7 @@ let qs_module = require('querystring');
  * @returns {(object|string)} parsed body
  * @todo Actually do something with the parameters, such as charset
  */
-function parseBody(body, content_type) {
+function parseRequestBody(body, content_type) {
     if (typeof (body) === "object" || Array.isArray(body) || !body) {
         // no need to parse if it's already an object
         return body;
@@ -42,7 +35,9 @@ function parseBody(body, content_type) {
 /**
  * Attempts the parse the request body into a useful object
  */
-module.exports = function (method, url, body, headers, next) {
-    this.body = parseBody(body, headers ? headers['content-type'] : undefined);
+let parseBody;
+parseBody = function (method, url, body, headers, next) {
+    this.body = parseRequestBody(body, headers ? headers['content-type'] : undefined);
     return next();
 };
+export default parseBody;

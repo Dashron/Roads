@@ -8,7 +8,7 @@
  */
 import * as browserify from 'browserify';
 import * as fs from 'fs';
-import * as envify from 'envify/custom';
+import envify from 'envify/custom';
 /*function fixExternal (external) {
     if (!external) {
         external = {};

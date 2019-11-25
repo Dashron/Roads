@@ -18,6 +18,9 @@ const roadsReq = require('roads-req');
  * @todo tests
  */
 export class Request {
+	secure: boolean;
+	host: string;
+	port: number;
 	/**
 	 * @todo: port should just be part of the host
 	 * 
@@ -25,7 +28,7 @@ export class Request {
 	 * @param {string} host - The hostname of all requests made by this function
 	 * @param {number} port - The post of all requests made by this function
 	 */
-	constructor (secure, host, port) {
+	constructor (secure: boolean, host: string, port: number) {
 		this.secure = secure;
 		this.host = host;
 		this.port = port;
@@ -40,7 +43,7 @@ export class Request {
 	 * @param {object} [headers] - HTTP Request headers
 	 * @returns {Promise} The promise will resolve with an object with three properties. The response headers, response status and the response body. If the response content-type is "application/json" the body will be an object, otherwise it will resolve to a string
 	 */
-	async request (method, path, body, headers) {
+	async request (method: string, path: string, body: string | {[x: string]: any}, headers: {[x:string]: any}) {
 		let response = await roadsReq.request({
 			request: {
 				hostname: this.host,

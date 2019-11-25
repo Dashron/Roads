@@ -1,4 +1,8 @@
 "use strict";
+
+import { Middleware } from "../road";
+import Response from '../response';
+
 /**
  * cors.js
  * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
@@ -20,7 +24,14 @@
  * 
  * @return {function} The middleware to bind to your road
  */
-export function cors (options) {
+export function cors (options: {
+				validOrigins?: string[], 
+				supportsCredentials?: boolean, 
+				responseHeaders?: {[x: string]: any}, 
+				requestHeaders?: {[x:string]: any}, 
+				validMethods?: string[],
+				cacheMaxAge?: number }) {
+
 	let validOrigins = options.validOrigins || [];
 	let supportsCredentials = options.supportsCredentials || false;
 	let responseHeaders = options.responseHeaders || [];
@@ -32,9 +43,12 @@ export function cors (options) {
 	/*
 	Note: the comments below are pulled from the spec https://www.w3.org/TR/cors/ to help development
 	*/
-	return function (method, url, body, headers, next) {
-		let corsResponseHeaders = {};
+	let corsMiddleware: Middleware;
+
+	corsMiddleware = function (method, url, body, headers, next) {
+		let corsResponseHeaders: { [x: string]: any };
 		let preflight = method === 'OPTIONS' && headers['access-control-request-method'];
+		corsResponseHeaders = {};
 		// Terms
 		/*
 		list of origins consisting of zero or more origins that are allowed access to the resource.
@@ -210,11 +224,11 @@ export function cors (options) {
 		}
 
 		if (preflight) {
-			return new this.Response('', 200, corsResponseHeaders);
+			return Promise.resolve(new Response('', 200, corsResponseHeaders));
 		}
 
 		return next()
-		.then((response) => {
+		.then((response: Response) => {
 			for (let key in corsResponseHeaders) {
 				response.headers[key] = corsResponseHeaders[key];
 			}
@@ -222,4 +236,6 @@ export function cors (options) {
 			return response;
 		});
 	};
+
+	return corsMiddleware;
 };

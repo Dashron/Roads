@@ -7,6 +7,7 @@
  * Exposes the core Road class
  */
 import * as response_lib from './response';
+import Response from './response';
 /**
  * See roadsjs.com for full docs.
  *
@@ -68,7 +69,7 @@ export default class Road {
     request(method, url, body, headers) {
         return response_lib.wrap(this._buildNext(method, url, body, headers, {
             request: this.request.bind(this),
-            Response: response_lib.Response
+            Response: Response
         })());
     }
     /**
@@ -100,7 +101,7 @@ export default class Road {
                 // If next is called and there is nothing next, we should still return a promise, it just shouldn't do anything
                 route_fn = () => {
                     console.log('Request: ' + request_method + ' ' + path + ' has reached the end of the request chain. Ideally this would never happen. Make sure to stop calling next() when you\'ve built your full response');
-                    return Promise.resolve(new response_lib.Response('', 500));
+                    return Promise.resolve(new Response('', 500));
                 };
             }
             return _self._executeRoute(route_fn);
