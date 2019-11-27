@@ -14,6 +14,6 @@ describe('road buildNext test', () => {
 		expect.assertions(1);
 
 		var road = new Road();
-		return expect(road['_buildNext']('GET', '/', '', {}, {request: function(){}, Response: Response})()).resolves.toEqual(new Response('', 500, {}));
+		return expect(road['_buildNext']('GET', '/', '', {}, {request: function(){}, Response: Response})()).resolves.toEqual(new Response('Page not found', 404, {}));
 	});
 });

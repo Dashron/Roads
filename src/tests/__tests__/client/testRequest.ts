@@ -1,7 +1,8 @@
 "use strict";
 
-var roads = require('../../../built/index.js');
-let server = require('../../resources/mockServer.js')();
+import Client from '../../../client/request';
+import server from '../../resources/mockServer.js';
+import Response from '../../../response';
 
 describe('request', () => {
     /**
@@ -9,14 +10,14 @@ describe('request', () => {
      */
     test('Request Without Body', () => {
         expect.assertions(3);
-        var client = new roads.Client(false, '127.0.0.1', 8081);
+        var client = new Client(false, '127.0.0.1', 8081);
         
         return new Promise((resolve, reject) => {
             
             server.listen(8081, () => {
                 resolve(client.request('GET', '/', undefined, {
                     "one" : "two"
-                }).then(function (response) {
+                }).then(function (response: Response) {
                     expect(response.status).toEqual(200);
                     expect(response.body).toEqual({ 
                         url: '/',
@@ -38,13 +39,13 @@ describe('request', () => {
      */
     test('Request With Body', () => {
         expect.assertions(2);
-        var client = new roads.Client(false, '127.0.0.1', 8081);
+        var client = new Client(false, '127.0.0.1', 8081);
          
         return new Promise((resolve, reject) => {
             server.listen(8081, () => {
                 resolve(client.request('POST', '/', '{"yeah": "what"}', {
                     "three" : "four"
-                }).then(function (response) {
+                }).then(function (response: Response) {
                     expect(response.status).toEqual(200);
 
                     expect(response.body).toEqual({ 

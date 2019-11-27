@@ -23,7 +23,7 @@ describe('Simple Router Tests', () => {
 		expect({
 			path: path,
 			method: method,
-			fn: fn
+			route: fn
 		}).toEqual(router.routes[0]);
 	});
 
@@ -352,26 +352,26 @@ describe('Simple Router Tests', () => {
 		let router = new SimpleRouter();
 		router.applyMiddleware(road);
 
-		router.addRouteFile(router_file_test_path);
-
-		// todo: this probably isn't the right way for jest
-		return Promise.all([
-			road.request('GET', '/'),
-			road.request('POST', '/'),
-			road.request('GET', '/test'),
-			//Bad Method
-			road.request('POST', '/test'),
-			//Bad Path
-			road.request('GET', '/fakeurl')
-		]).then(results => {
-			expect(results[0]).toEqual('root get successful');
-			expect(results[1]).toEqual('root post successful');
-			expect(results[2]).toEqual('test get successful');
-
-			expect(results[3]).toEqual(undefined);
-
-			expect(results[4]).toEqual(undefined);
-		});	
+		return router.addRouteFile(router_file_test_path)
+			.then(() => {
+				return Promise.all([
+					road.request('GET', '/'),
+					road.request('POST', '/'),
+					road.request('GET', '/test'),
+					//Bad Method
+					road.request('POST', '/test'),
+					//Bad Path
+					road.request('GET', '/fakeurl')
+				]).then(results => {
+					expect(results[0]).toEqual(new Response('root get successful')) ;
+					expect(results[1]).toEqual(new Response('root post successful'));
+					expect(results[2]).toEqual(new Response('test get successful'));
+		
+					expect(results[3]).toEqual(new Response('Page not found', 404));
+		
+					expect(results[4]).toEqual(new Response('Page not found', 404));
+				});
+			});
 	});
 
 
@@ -381,25 +381,25 @@ describe('Simple Router Tests', () => {
 		let router = new SimpleRouter();
 		router.applyMiddleware(road);
 
-		router.addRouteFile(router_file_test_path, '/test_prefix');
-
-		// todo: this probably isn't the right way for jest
-		return Promise.all([
-			road.request('GET', '/test_prefix'),
-			road.request('POST', '/test_prefix'),
-			road.request('GET', '/test_prefix/test'),
-			//Bad Method
-			road.request('POST', '/test_prefix/test'),
-			//Bad Path
-			road.request('GET', '/test_prefix/fakeurl')
-		]).then(results => {
-			expect(results[0]).toEqual('root get successful');
-			expect(results[1]).toEqual('root post successful');
-			expect(results[2]).toEqual('test get successful');
-
-			expect(results[3]).toEqual(undefined);
-
-			expect(results[4]).toEqual(undefined);
-		});	
+		return router.addRouteFile(router_file_test_path, '/test_prefix')
+			.then(() => {
+				return Promise.all([
+					road.request('GET', '/test_prefix'),
+					road.request('POST', '/test_prefix'),
+					road.request('GET', '/test_prefix/test'),
+					//Bad Method
+					road.request('POST', '/test_prefix/test'),
+					//Bad Path
+					road.request('GET', '/test_prefix/fakeurl')
+				]).then(results => {
+					expect(results[0]).toEqual(new Response('root get successful'));
+					expect(results[1]).toEqual(new Response('root post successful'));
+					expect(results[2]).toEqual(new Response('test get successful'));
+		
+					expect(results[3]).toEqual(new Response('Page not found', 404));
+		
+					expect(results[4]).toEqual(new Response('Page not found', 404));
+				});
+			})
 	});
 });

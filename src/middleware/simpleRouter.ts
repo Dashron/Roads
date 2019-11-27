@@ -104,7 +104,7 @@ export default class SimpleRouter {
 	 * @param {string} [prefix] - A string that will help namespace this file. e.g. if you call this on a file with a route of "/posts", and the prefix "/users", the route will be assigned to "/users/posts"
 	 */
 	addRouteFile (file_path: string, prefix?: string) {
-		import(file_path).then(routes => {
+		return import(file_path).then(routes => {
 			for (var path in routes) {
 				for (var method in routes[path]) {
 					this.addRoute(method, buildRouterPath(path, prefix), routes[path][method]);

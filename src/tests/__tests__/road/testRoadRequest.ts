@@ -14,9 +14,9 @@ describe('road request', () => {
 		return expect(road.request('GET', '/', 'yeah', {
 			"one" : "two"
 		})).resolves.toEqual({
-			status: 500,
+			status: 404,
 			headers : {},
-			body : ''
+			body : 'Page not found'
 		});
 	});
 
