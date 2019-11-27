@@ -1,7 +1,7 @@
 "use strict";
 
-var roads = require('../../../built/index.js');
-var url_module = require('url');
+import Road from '../../../road';
+import url_module from 'url';
 
 describe('road use', () => {
 	/**
@@ -10,7 +10,7 @@ describe('road use', () => {
 	test('Use Returns Self', () => {
 		expect.assertions(1);
 
-		var road = new roads.Road();
+		var road = new Road();
 
 		expect(road.use(function (method, path, body, headers, next) {
 			return next();

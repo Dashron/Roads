@@ -1,6 +1,7 @@
 "use strict";
 
-var setTitle = require('../../../built/index.js').middleware.setTitle;
+import setTitle from '../../../middleware/setTitle';
+
 
 describe('Set Title', () => {
 	/**
@@ -9,7 +10,7 @@ describe('Set Title', () => {
 	test('test setTitle function is properly applied to middleware', () => {
 		expect.assertions(2);
 
-		var context = {};
+		var context: {[x: string]: any} = {};
 
 		expect(typeof(setTitle)).toEqual('function');
 
@@ -24,7 +25,7 @@ describe('Set Title', () => {
 	test('test setTitle function properly updates request context', () => {
 		expect.assertions(2);
 
-		var context = {};
+		var context: {[x: string]: any} = {};
 
 		expect(typeof(setTitle)).toEqual('function');
 

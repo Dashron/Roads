@@ -1,7 +1,7 @@
 "use strict";
 
-var roads = require('../../../built/index.js');
-var url_module = require('url');
+import Road from '../../../road';
+import url_module from 'url';
 
 describe('Road Context', () => {
 	/**
@@ -11,7 +11,7 @@ describe('Road Context', () => {
 		expect.assertions(1);
 
 		var response_string = 'blahblahwhatwhatwhat';
-		var road = new roads.Road();
+		var road = new Road();
 
 		road.use(function (method, url, body, headers) {
 			switch (method) {
@@ -33,10 +33,10 @@ describe('Road Context', () => {
 	 * Ensure that the request context is the context provided in the Road constructor
 	 */
 	test('Road Context Persists', () => {
-		expect.assertions()
+		expect.assertions(1)
 		var response_string = 'blahblahwhatwhatwhat';
 
-		var road = new roads.Road();
+		var road = new Road();
 
 		road.use(function (method, url, body, headers, next) {
 			this.confirmString = function () {
@@ -65,7 +65,7 @@ describe('Road Context', () => {
 
 		var response_string = 'blahblahwhatwhatwhat';
 
-		var road = new roads.Road();
+		var road = new Road();
 
 		road.use(async function (method, url, body, headers, next) {
 			this.confirmString = function () {
@@ -91,12 +91,12 @@ describe('Road Context', () => {
 	 */
 	test('Road Async Uniqueness', () => {
 		expect.assertions(1);
-		var road = new roads.Road();
+		var road = new Road();
 
 		road.use(async function (method, url, body, headers, next) {
 			return await next();
 		});
 
-		expect(road._request_chain.length).toEqual(1);
+		expect(road['_request_chain'].length).toEqual(1);
 	});
 });

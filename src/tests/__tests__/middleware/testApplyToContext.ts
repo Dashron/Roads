@@ -1,13 +1,13 @@
 "use strict";
 
-const applyToContext = require('../../../built/index.js').middleware.applyToContext;
+import applyToContext from '../../../middleware/applyToContext';
 
 describe('ApplyToContext tests', () => {
 	test('test apply to context applies context', () => {
 		expect.assertions(2);
 		var key = 'foo';
 		var val = 'bar';
-		var context = {};
+		var context: {[x: string]: any} = {};
 
 		var fn = applyToContext(key, val);
 		expect(typeof(fn)).toEqual('function');

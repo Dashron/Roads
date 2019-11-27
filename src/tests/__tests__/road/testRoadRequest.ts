@@ -1,7 +1,7 @@
 "use strict";
 
-var roads = require('../../../built/index.js');
-
+import Road, { Middleware } from '../../../road';
+import Response from '../../../response';
 
 describe('road request', () => {
 	/**
@@ -9,14 +9,14 @@ describe('road request', () => {
 	 */
 	test('Request', () => {
 		expect.assertions(1);
-		var road = new roads.Road();
+		var road = new Road();
 
 		return expect(road.request('GET', '/', 'yeah', {
 			"one" : "two"
 		})).resolves.toEqual({
-			status: 200,
+			status: 500,
 			headers : {},
-			body : undefined
+			body : ''
 		});
 	});
 
@@ -25,7 +25,7 @@ describe('road request', () => {
 	 */
 	test('Method With Error', () => {
 		expect.assertions(1);
-		var road = new roads.Road();
+		var road = new Road();
 
 		road.use(function () {
 			throw new Error('huh');
@@ -39,7 +39,7 @@ describe('road request', () => {
 	 */
 	test('Async Method With Error', () => {
 		expect.assertions(1);
-		var road = new roads.Road();
+		var road = new Road();
 
 		road.use(async function () {
 			throw new Error('huh');
@@ -53,7 +53,7 @@ describe('road request', () => {
 	 */
 	test('Request With Multiple Handlers Called', () => {
 		expect.assertions(2);
-		var road = new roads.Road();
+		var road = new Road();
 		var step1 = false;
 		var step2 = false;
 
@@ -79,7 +79,7 @@ describe('road request', () => {
 	test('Request Error With Handler', () => {
 		expect.assertions(1);
 
-		var road = new roads.Road();
+		var road = new Road();
 
 		road.use(function (method, url, body, headers, next) {
 			return next();
@@ -99,7 +99,7 @@ describe('road request', () => {
 	test('Async Request Error With Handler', () => {
 		expect.assertions(1);
 
-		var road = new roads.Road();
+		var road = new Road();
 
 		road.use(function (method, url, body, headers, next) {
 			return next();
@@ -117,14 +117,16 @@ describe('road request', () => {
 	 */
 	test('Request Error With Handler That Catches Errors', () => {
 		expect.assertions(1);
-		var road = new roads.Road();
+		var road = new Road();
 
-		road.use(function (method, url, body, headers, next) {
+		let middleware: Middleware = function (method, url, body, headers, next) {
 			return next()
 				.catch(function (error) {
-					return {"error" : error.message};
+					return new Response(JSON.stringify({"error" : error.message}), 200);
 				});
-		});
+		};
+
+		road.use(middleware);
 
 		road.use(function () {
 			throw new Error('huh');
@@ -133,7 +135,7 @@ describe('road request', () => {
 		return expect(road.request('GET', '/')).resolves.toEqual({
 			status: 200,
 			headers : {},
-			body : {"error":"huh"}
+			body : '{"error":"huh"}'
 		});
 	});
 });

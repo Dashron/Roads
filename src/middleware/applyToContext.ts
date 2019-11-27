@@ -14,12 +14,11 @@ import {Middleware} from '../road';
  * Very simple middleware to apply a single value to the request context.
  * 
  * @param {string} key - The key that should store the value on the request context.
- * @param {*} val - The value to apply to the request context.
- * @returns {function} The middleware function to apply to the road.use(fn) method.
+ * @param {any} val - The value to apply to the request context.
+ * @returns {Middleware} The middleware function to apply to the road.use(fn) method.
  */
-module.exports = function (key: string, val: any) {
-	let applyToContext: Middleware;
-	applyToContext = function (method, url, body, headers, next) {
+export default function applyToContext (key: string, val: any): Middleware {
+	let applyToContext: Middleware = function (method, url, body, headers, next) {
 		this[key] = val;
 		return next();
 	};

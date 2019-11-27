@@ -1,6 +1,7 @@
 "use strict";
 
-const roads = require('../../../built/index.js');
+import killSlash from '../../../middleware/killSlash';
+import Response from '../../../response';
 
 describe('KillSlashes tests', () => {
 	test('test kill slash doesn\'t break normal', () => {
@@ -17,7 +18,7 @@ describe('KillSlashes tests', () => {
 			});
 		};
 
-		return expect(roads.middleware.killSlash.call({}, method, url, body, headers, next)).resolves.toEqual(contents);
+		return expect(killSlash.call({}, method, url, body, headers, next)).resolves.toEqual(contents);
 	});
 
 /**
@@ -37,12 +38,12 @@ describe('KillSlashes tests', () => {
 			});
 		};
 
-		return expect(roads.middleware.killSlash.call({
+		return expect(killSlash.call({
 			// the redirection needs the Response context
-			Response : roads.Response
+			Response : Response
 		}, method, url, body, headers, next)).resolves.toEqual({
 			status : 302,
-			body : null,
+			body : '',
 			headers : {
 				'location' : '/users'
 			}
@@ -67,6 +68,6 @@ describe('KillSlashes tests', () => {
 			});
 		};
 
-		return expect(roads.middleware.killSlash.call({}, method, url, body, headers, next)).resolves.toEqual(contents);
+		return expect(killSlash.call({}, method, url, body, headers, next)).resolves.toEqual(contents);
 	});
 });
