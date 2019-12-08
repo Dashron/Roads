@@ -1,4 +1,5 @@
 node_modules
+built
 config/dev/server.json
 config/dev/web.json
 config/prod/server.json

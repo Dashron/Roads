@@ -123,8 +123,7 @@ export default class Road {
 			} else {
 				// If next is called and there is nothing next, we should still return a promise, it just shouldn't do anything
 				route_fn = () => { 
-					console.log('Request: ' + request_method + ' ' + path + ' has reached the end of the request chain. Ideally this would never happen. Make sure to stop calling next() when you\'ve built your full response');
-					return Promise.resolve(new Response('', 500)) 
+					return Promise.resolve(new Response('Page not found', 404));
 				};
 			}
 

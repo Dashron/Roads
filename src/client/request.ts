@@ -8,7 +8,8 @@
  * the roads.request method
  */
 
-const roadsReq = require('roads-req');
+import roadsRequest from 'roads-req';
+import Response from '../response';
 
 /**
  * This class is a helper with making HTTP requests that look like roads requests. 
@@ -17,7 +18,7 @@ const roadsReq = require('roads-req');
  * 
  * @todo tests
  */
-export class Request {
+export default class Request {
 	secure: boolean;
 	host: string;
 	port: number;
@@ -39,31 +40,25 @@ export class Request {
 	 * 
 	 * @param {string} method - HTTP Request method
 	 * @param {string} path - HTTP Request path
-	 * @param {(object|string)} [body] - The request body. If an object is provided, the body will be turned to JSON, and the appropriate content header set
+	 * @param {string|undefined} [body] - The request body. If an object is provided, the body will be turned to JSON, and the appropriate content header set
 	 * @param {object} [headers] - HTTP Request headers
 	 * @returns {Promise} The promise will resolve with an object with three properties. The response headers, response status and the response body. If the response content-type is "application/json" the body will be an object, otherwise it will resolve to a string
 	 */
-	async request (method: string, path: string, body: string | {[x: string]: any}, headers: {[x:string]: any}) {
-		let response = await roadsReq.request({
+	async request (method: string, path: string, body: string | undefined, headers: {[x:string]: any}): Promise<Response> {
+		let response = await roadsRequest({
 			request: {
 				hostname: this.host,
 				port: this.port,
 				path: path,
 				method: method,
 				headers: headers,
-				withCredentials: true, // does this really work here?
+				// withCredentials: true, // does this really work here? The goal is to have it sent when compiled into a client request with browserify
 				protocol: this.secure ? 'https' : 'http'
 			},
 			requestBody: body,
 			followRedirects: false
 		});
 
-		let resp = {
-			status: response.response.statusCode,
-			body: response.body,
-			headers: response.response.headers
-		};
-		
-		return resp;
+		return new Response(response.body, response.response.statusCode, response.response.headers);
 	}
 };

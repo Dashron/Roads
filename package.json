@@ -1,6 +1,6 @@
 {
   "name": "roads",
-  "version": "6.0.0-alpha.1",
+  "version": "6.0.0-alpha.2",
   "author": {
     "name": "Aaron Hedges",
     "email": "aaron@dashron.com",
@@ -8,13 +8,14 @@
   },
   "description": "An isomophic http framework",
   "keywords": [
-    "api",
+    "http",
     "framework",
     "isomorphic"
   ],
   "homepage": "https://github.com/Dashron/roads",
   "scripts": {
     "test": "node node_modules/jest/bin/jest.js --config jest.config.js tests/",
+    "prepare": "tsc",
     "build": "tsc"
   },
   "bugs": {
@@ -28,9 +29,13 @@
   "devDependencies": {
     "@babel/core": "7.6.4",
     "@babel/preset-env": "7.6.3",
+    "@types/babelify": "^7.3.6",
+    "@types/browserify": "^12.0.36",
+    "@types/content-type": "^1.1.3",
     "@types/cookie": "^0.3.3",
+    "@types/envify": "0.0.29",
     "@types/jest": "^24.0.23",
-    "@types/node": "^12.12.7",
+    "@types/node": "^12.12.14",
     "babelify": "10.0.0",
     "brfs": "2.0.2",
     "browserify": "16.5.0",
@@ -39,16 +44,12 @@
     "jest": "^24.9.0",
     "regenerator-runtime": "0.13.3",
     "roads-server": "1.0.0-alpha.6",
-    "ts-jest": "^24.2.0",
-    "@types/babelify": "^7.3.6",
-    "@types/browserify": "^12.0.36",
-    "@types/content-type": "^1.1.3",
-    "@types/envify": "0.0.29"
+    "ts-jest": "^24.2.0"
   },
   "dependencies": {
     "content-type": "^1.0.4",
     "cookie": "0.4.0",
-    "roads-req": "0.2.5"
+    "roads-req": "0.4.2"
   },
   "license": "MIT"
 }
