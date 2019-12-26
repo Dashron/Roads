@@ -7,9 +7,9 @@ import Response from '../response';
  * @todo tests
  */
 export default class Request {
-    secure: boolean;
-    host: string;
-    port: number;
+    protected _secure: boolean;
+    protected _host: string;
+    protected _port: number;
     /**
      * @todo: port should just be part of the host
      *

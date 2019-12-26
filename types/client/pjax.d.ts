@@ -8,10 +8,10 @@ import Response from '../response';
  * @todo tests
  */
 export declare class RoadsPjax {
-    _road: Road;
-    _page_title: string | null;
-    _window: Window;
-    _container_element: HTMLElement;
+    protected _road: Road;
+    protected _page_title: string | null;
+    protected _window: Window;
+    protected _container_element: HTMLElement;
     /**
      * Creates a new RoadsPjax instance. The road provided to this constructor will be the backbone of your PJAX requests.
      *
@@ -48,17 +48,17 @@ export declare class RoadsPjax {
      * Handles all click events, and directs
      * @param {Object} event
      */
-    _pjaxEventMonitor(event: MouseEvent): void;
+    protected _pjaxEventMonitor(event: MouseEvent): void;
     /**
      * Follows the link and renders the UI
      *
      * @param  {Element} link
      */
-    _roadsLinkEvent(link: HTMLAnchorElement): void;
+    protected _roadsLinkEvent(link: HTMLAnchorElement): void;
     /**
      * Submits the form and re-renders the UI
      *
      * @param {HTMLFormElement} form
      */
-    _roadsFormEvent(form: HTMLFormElement): void;
+    protected _roadsFormEvent(form: HTMLFormElement): void;
 }

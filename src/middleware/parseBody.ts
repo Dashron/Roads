@@ -47,8 +47,7 @@ function parseRequestBody (body: any, content_type: string): object | string {
 /**
  * Attempts the parse the request body into a useful object
  */
-let parseBody: Middleware;
-parseBody = function (method, url, body, headers, next) {
+let parseBody: Middleware = function (method, url, body, headers, next) {
 	this.body = parseRequestBody(body, headers ? headers['content-type'] : undefined);
 
 	return next();

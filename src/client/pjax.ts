@@ -20,10 +20,10 @@ import * as cookie  from 'cookie';
   * @todo tests
   */
 export class RoadsPjax {
-	_road: Road;
-	_page_title: string|null;
-	_window: Window;
-	_container_element: HTMLElement;
+	protected _road: Road;
+	protected _page_title: string|null;
+	protected _window: Window;
+	protected _container_element: HTMLElement;
 
 	/**
 	 * Creates a new RoadsPjax instance. The road provided to this constructor will be the backbone of your PJAX requests.
@@ -137,7 +137,7 @@ export class RoadsPjax {
 	 * Handles all click events, and directs 
 	 * @param {Object} event 
 	 */
-	_pjaxEventMonitor (event: MouseEvent) {
+	protected _pjaxEventMonitor (event: MouseEvent) {
 		if (event.target instanceof HTMLAnchorElement && event.target.dataset['roadsPjax'] === "link" && !event.ctrlKey) {
 			event.preventDefault();
 			this._roadsLinkEvent(event.target as HTMLAnchorElement);
@@ -156,7 +156,7 @@ export class RoadsPjax {
 	 * 
 	 * @param  {Element} link
 	 */
-	_roadsLinkEvent (link: HTMLAnchorElement) {
+	protected _roadsLinkEvent (link: HTMLAnchorElement) {
 
 		this._road.request('GET', link.href)
 		.then((response: Response) => {
@@ -180,7 +180,7 @@ export class RoadsPjax {
 	 * 
 	 * @param {HTMLFormElement} form 
 	 */
-	_roadsFormEvent (form: HTMLFormElement) {
+	protected _roadsFormEvent (form: HTMLFormElement) {
 		// execute the form. note: while HTTP methods are case sensitive, HTML forms seem to lowercase their methods. To fix this we uppercase here.
 		this._road.request(form.method.toUpperCase(), form.action, new URLSearchParams(new FormData(form).toString()).toString(), {'content-type': 'application/x-www-form-urlencoded'})
 		.then((response: Response) => {

@@ -19,9 +19,10 @@ import Response from '../response';
  * @todo tests
  */
 export default class Request {
-	secure: boolean;
-	host: string;
-	port: number;
+	protected _secure: boolean;
+	protected _host: string;
+	protected _port: number;
+	
 	/**
 	 * @todo: port should just be part of the host
 	 * 
@@ -30,9 +31,9 @@ export default class Request {
 	 * @param {number} port - The post of all requests made by this function
 	 */
 	constructor (secure: boolean, host: string, port: number) {
-		this.secure = secure;
-		this.host = host;
-		this.port = port;
+		this._secure = secure;
+		this._host = host;
+		this._port = port;
 	}
 	
 	/**
@@ -47,13 +48,13 @@ export default class Request {
 	async request (method: string, path: string, body: string | undefined, headers: {[x:string]: any}): Promise<Response> {
 		let response = await roadsRequest({
 			request: {
-				hostname: this.host,
-				port: this.port,
+				hostname: this._host,
+				port: this._port,
 				path: path,
 				method: method,
 				headers: headers,
 				// withCredentials: true, // does this really work here? The goal is to have it sent when compiled into a client request with browserify
-				protocol: this.secure ? 'https' : 'http'
+				protocol: this._secure ? 'https' : 'http'
 			},
 			requestBody: body,
 			followRedirects: false

@@ -12,9 +12,7 @@ import {Middleware} from '../road';
 /**
  * Adds two simple functions to get and set a page title on the request context. This is very helpful for isomorphic js, since on the client, page titles aren't part of the rendered view data.
  */
-let setTitle: Middleware;
-
-setTitle = function (method, path, body, headers, next) {
+let setTitle: Middleware = function (method, path, body, headers, next) {
 	this._page_title = null;
 
 	this.setTitle = (title?: string) => {

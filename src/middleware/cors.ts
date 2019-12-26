@@ -43,9 +43,7 @@ export function cors (options: {
 	/*
 	Note: the comments below are pulled from the spec https://www.w3.org/TR/cors/ to help development
 	*/
-	let corsMiddleware: Middleware;
-
-	corsMiddleware = function (method, url, body, headers, next) {
+	let corsMiddleware: Middleware = function (method, url, body, headers, next) {
 		let corsResponseHeaders: { [x: string]: any };
 		let preflight = method === 'OPTIONS' && headers['access-control-request-method'];
 		corsResponseHeaders = {};

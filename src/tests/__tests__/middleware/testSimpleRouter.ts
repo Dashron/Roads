@@ -24,7 +24,7 @@ describe('Simple Router Tests', () => {
 			path: path,
 			method: method,
 			route: fn
-		}).toEqual(router.routes[0]);
+		}).toEqual(router['_routes'][0]);
 	});
 
 	/**
@@ -60,7 +60,7 @@ describe('Simple Router Tests', () => {
 		};
 
 		router.addRoute(method, path, fn);
-		router["_middleware"](router.routes, method, path, '', {}, next);
+		router["_middleware"](router['_routes'], method, path, '', {}, next);
 
 		expect(route_hit).toEqual(true);
 	});
@@ -90,7 +90,7 @@ describe('Simple Router Tests', () => {
 
 		router.addRoute(method, path, fn);
 		router.addRoute(method, path, fn2);
-		router["_middleware"](router.routes, method, path, '', {}, next);
+		router["_middleware"](router['_routes'], method, path, '', {}, next);
 
 		expect(route_hit).toEqual(true);
 	});
@@ -111,7 +111,7 @@ describe('Simple Router Tests', () => {
 		};
 
 		router.addRoute("/foo", method, fn);
-		router["_middleware"](router.routes, method, path, '', {}, () => {
+		router["_middleware"](router['_routes'], method, path, '', {}, () => {
 			next_hit = true;
 			return Promise.resolve(new Response(''));
 		});
@@ -136,7 +136,7 @@ describe('Simple Router Tests', () => {
 		};
 
 		router.addRoute(path, "PUT", fn);
-		router["_middleware"](router.routes, method, path, '', {}, () => {
+		router["_middleware"](router['_routes'], method, path, '', {}, () => {
 			next_hit = true;
 			return Promise.resolve(new Response(''));
 		});
@@ -170,7 +170,7 @@ describe('Simple Router Tests', () => {
 
 		router.addRoute(method, path,route);
 
-		router['_middleware'](router.routes, method, path, body, headers, () => {
+		router['_middleware'](router['_routes'], method, path, body, headers, () => {
 			return Promise.resolve(new Response(''));
 		});
 	});
@@ -202,7 +202,7 @@ describe('Simple Router Tests', () => {
 
 		router.addRoute(method, path, route);
 
-		router['_middleware'](router.routes, method, req_path, body, headers, () => { return Promise.resolve(new Response(''));});
+		router['_middleware'](router['_routes'], method, req_path, body, headers, () => { return Promise.resolve(new Response(''));});
 	});
 
 	/**
@@ -231,7 +231,7 @@ describe('Simple Router Tests', () => {
 
 		router.addRoute(method, path, route);
 
-		router["_middleware"](router.routes, method, req_path, body, headers, () => { return Promise.resolve(new Response('')); });
+		router["_middleware"](router['_routes'], method, req_path, body, headers, () => { return Promise.resolve(new Response('')); });
 	});
 
 	/**
@@ -249,7 +249,7 @@ describe('Simple Router Tests', () => {
 
 		router.addRoute(method, path, fn);
 		expect(() => {
-			router['_middleware'](router.routes, method, path, '', {}, () => { return Promise.resolve(new Response('')); });
+			router['_middleware'](router['_routes'], method, path, '', {}, () => { return Promise.resolve(new Response('')); });
 		}).toThrow(new Error(error_message));
 	});
 
@@ -267,7 +267,7 @@ describe('Simple Router Tests', () => {
 		};
 
 		router.addRoute(method, path, fn);
-		route_hit = router['_middleware'](router.routes, method, path, '', {}, () => { return Promise.resolve(new Response('')); });
+		route_hit = router['_middleware'](router['_routes'], method, path, '', {}, () => { return Promise.resolve(new Response('')); });
 
 		route_hit.then((response: Response) => {
 			expect(response.body).toEqual('route');
@@ -287,7 +287,7 @@ describe('Simple Router Tests', () => {
 		};
 
 		router.addRoute(path, 'PUT', fn);
-		route_hit = router['_middleware'](router.routes, method, path, '', {}, () => {
+		route_hit = router['_middleware'](router['_routes'], method, path, '', {}, () => {
 			return Promise.resolve(new Response('next'));
 		});
 

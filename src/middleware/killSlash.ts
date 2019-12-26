@@ -13,8 +13,7 @@ import * as url_module from 'url';
 /**
  * Any requests with trailing slashes will immediately return a Response object redirecting to a non-trailing-slash path
  */
-let killSlash: Middleware;
-killSlash = function (method, url, body, headers, next) {
+let killSlash: Middleware = function (method, url, body, headers, next) {
 	let _self = this;
 
 	let parsedUrl = url_module.parse(url);
