@@ -21,7 +21,7 @@ import * as cookie  from 'cookie';
   */
 export class RoadsPjax {
 	protected _road: Road;
-	protected _page_title: string|null;
+	protected _page_title?: string;
 	protected _window: Window;
 	protected _container_element: HTMLElement;
 
@@ -34,7 +34,7 @@ export class RoadsPjax {
 	 */
 	constructor(road: Road, container_element: HTMLElement, window: Window) {
 		this._road = road;
-		this._page_title = null;
+		this._page_title = undefined;
 		this._window = window;
 		this._container_element = container_element;
 	}
@@ -45,12 +45,12 @@ export class RoadsPjax {
 	 *
 	 * @returns {RoadsPjax} this, useful for chaining
 	 */
-	addTitleMiddleware () {
+	addTitleMiddleware (): RoadsPjax {
 		var _self = this;
 
 		let titleMiddleware: Middleware;
 		titleMiddleware = function (method, url, body, headers, next) {
-			this.setTitle = function (title: string | null) {
+			this.setTitle = function (title?: string) {
 				_self._page_title = title;
 			};
 
@@ -66,8 +66,9 @@ export class RoadsPjax {
 	 * Assigns the cookie middlware to the road to properly handle cookies
 	 * 
 	 * @param {Document} document - The pages document object to properly parse and set cookies
+	 * @returns {RoadsPjax} this object, useful for chaining
 	 */
-	addCookieMiddleware (document: Document) {
+	addCookieMiddleware (document: Document): RoadsPjax {
 		let cookieMiddleware: Middleware;
 		cookieMiddleware = function (method, url, body, headers, next) {
 			if (document.cookie) {
@@ -80,12 +81,14 @@ export class RoadsPjax {
 		};
 
 		this._road.use(cookieMiddleware);
+
+		return this;
 	}
 
 	/**
 	 * Hooks up the PJAX functionality to the information provided via the constructor.
 	 */
-	register () {
+	register (): void {
 		// Handle navigation changes besides pushState. TODO: don' blow out existing onpopstate's
 		// TODO: If a request is in process during the popstate, we should kill it and use the new url
 		this._window.onpopstate = (event: PopStateEvent) => {
@@ -116,7 +119,11 @@ export class RoadsPjax {
 		}, this._page_title ? this._page_title : '');
 	}
 
-	registerAdditionalElement (element: HTMLAnchorElement) {
+	/**
+	 * 
+	 * @param {HTMLAnchorElement} element 
+	 */
+	registerAdditionalElement (element: HTMLAnchorElement): void {
 		element.addEventListener('click', this._pjaxEventMonitor.bind(this));
 	}
 
@@ -125,7 +132,7 @@ export class RoadsPjax {
 	 * 
 	 * @param {Response} response_object 
 	 */
-	render (response_object: Response) {
+	render (response_object: Response): void {
 		if (response_object.body !== undefined) {
 			this._container_element.innerHTML = response_object.body;
 		} else {
@@ -135,9 +142,9 @@ export class RoadsPjax {
 
 	/**
 	 * Handles all click events, and directs 
-	 * @param {Object} event 
+	 * @param {MouseEvent} event 
 	 */
-	protected _pjaxEventMonitor (event: MouseEvent) {
+	protected _pjaxEventMonitor (event: MouseEvent): void {
 		if (event.target instanceof HTMLAnchorElement && event.target.dataset['roadsPjax'] === "link" && !event.ctrlKey) {
 			event.preventDefault();
 			this._roadsLinkEvent(event.target as HTMLAnchorElement);
@@ -154,9 +161,9 @@ export class RoadsPjax {
 	/**
 	 * Follows the link and renders the UI
 	 * 
-	 * @param  {Element} link
+	 * @param  {HTMLAnchorElement} link
 	 */
-	protected _roadsLinkEvent (link: HTMLAnchorElement) {
+	protected _roadsLinkEvent (link: HTMLAnchorElement): void {
 
 		this._road.request('GET', link.href)
 		.then((response: Response) => {
@@ -180,7 +187,7 @@ export class RoadsPjax {
 	 * 
 	 * @param {HTMLFormElement} form 
 	 */
-	protected _roadsFormEvent (form: HTMLFormElement) {
+	protected _roadsFormEvent (form: HTMLFormElement): void {
 		// execute the form. note: while HTTP methods are case sensitive, HTML forms seem to lowercase their methods. To fix this we uppercase here.
 		this._road.request(form.method.toUpperCase(), form.action, new URLSearchParams(new FormData(form).toString()).toString(), {'content-type': 'application/x-www-form-urlencoded'})
 		.then((response: Response) => {

@@ -12,21 +12,28 @@ import * as babelify from 'babelify';
 import * as fs from 'fs';
 import envify from 'envify/custom';
 
-/*function fixExternal (external) {
-	if (!external) {
-		external = {};
-	}
-
-	return external;
-}*/
+/**
+ * @param  {boolean} [options.use_sourcemaps] Whether or not the build process should include source maps.
+ * @param  {Object} [options.envify] An object to pass to envify. This allows you to change values between your server and client scripts.
+ * @param  {Array} [options.exclude] An array of files that should not be included in the build process.
+ * @param  {Object} [options.babelify] An object containing parameters to pass to the babelify transform
+ */
+interface RoadsBuildOptions { 
+	use_sourcemaps?: any; 
+	ignore_missing?: any; 
+	babelify?: any; 
+	ignore?: any; 
+	exclude?: any; 
+	envify?: any; 
+};
 
 /**
  * Applys some defaults and useful standards to the babel options
  * 
- * @param {object} babel_options - The options object that is passed to babel
- * @returns {object} babel_options with defaults applied
+ * @param {babelify.BabelifyOptions} babel_options - The options object that is passed to babel
+ * @returns {babelify.BabelifyOptions} babel_options with defaults applied
  */
-function fixBabelify (babel_options: babelify.BabelifyOptions) {
+function fixBabelify (babel_options: babelify.BabelifyOptions): babelify.BabelifyOptions {
 	if (!babel_options) {
 		babel_options = {};
 	}
@@ -43,10 +50,10 @@ function fixBabelify (babel_options: babelify.BabelifyOptions) {
  * An array of files or node modules to ignore in browserify. Ignored modules are replaced with an
  * empty object {}.
  * 
- * @param {Array} ignore_list - Array of file paths or node module names to ignore
- * @returns {Array} ignore_list with defaults applied
+ * @param {Array<string>} ignore_list - Array of file paths or node module names to ignore
+ * @returns {Array<string>} ignore_list with defaults applied
  */
-function fixIgnore(ignore_list?: string[]) {
+function fixIgnore(ignore_list?: Array<string>):  Array<string> {
 	if (!ignore_list) {
 		ignore_list = [];
 	}
@@ -58,10 +65,10 @@ function fixIgnore(ignore_list?: string[]) {
  * An array of files or node modules to exclude in browserify. Excluded modules will throw an exception
  * if they are required
  * 
- * @param {Array} exclude_list - Array of file paths or node module names to exclude
- * @returns {Array} exclude_list with defaults applied
+ * @param {Array<string>} exclude_list - Array of file paths or node module names to exclude
+ * @returns {Array<string>} exclude_list with defaults applied
  */
-function fixExclude(exclude_list?: string[]) {
+function fixExclude(exclude_list?: Array<string>): Array<string>{
 	if (!exclude_list) {
 		exclude_list = [];
 	}
@@ -80,7 +87,7 @@ function fixExclude(exclude_list?: string[]) {
  * @param {object} options - The options passed into the function exposed by this file
  * @returns {object} options with defaults applied
  */
-function fixOptions (options: { use_sourcemaps?: any; ignore_missing?: any; babelify?: any; ignore?: any; exclude?: any; envify?: any; }) {
+function fixOptions (options?: RoadsBuildOptions): RoadsBuildOptions {
 	if (!options) {
 		options = {};
 	}
@@ -88,7 +95,6 @@ function fixOptions (options: { use_sourcemaps?: any; ignore_missing?: any; babe
 	options.use_sourcemaps = options.use_sourcemaps ? true : false;
 
 	options.babelify = fixBabelify(options.babelify);
-	// options.external = fixExternal(options.external);
 	options.ignore = fixIgnore(options.ignore);
 	options.exclude = fixExclude(options.exclude);
 	return options;
@@ -97,23 +103,12 @@ function fixOptions (options: { use_sourcemaps?: any; ignore_missing?: any; babe
 /**
  * Compiles the input_file node script to be used in the browser.
  * 
- * @param  {String} input_file  The source file that will be converted to use in the browser
- * @param  {String} output_file The output file that will be accessible by your browser
- * @param  {Object} [options] A set of options that can influence the build process. See all fields below
- * @param  {boolean} [options.use_sourcemaps] Whether or not the build process should include source maps.
- * @param  {Object} [options.envify] An object to pass to envify. This allows you to change values between your server and client scripts.
- * @param  {Array} [options.exclude] An array of files that should not be included in the build process.
- * @param  {Object} [options.babelify] An object containing parameters to pass to the babelify transform
+ * @param  {string} input_file  The source file that will be converted to use in the browser
+ * @param  {string} output_file The output file that will be accessible by your browser
+ * @param  {RoadsBuildOptions} [options] A set of options that can influence the build process. See all fields below
  * @todo tests
  */
-export default function build (input_file: string, output_file: string, options: { use_sourcemaps?: any; ignore_missing?: any; babelify?: any; ignore?: any; exclude?: any; envify?: any; }) {
-	/**
-	 * Externals has been commented out because the code didn't make any sense, and didn't match the docs. It will be returned
-	 * oonce there is an appropriate, well understood, well documented purpose
-	 * 
-	 * let externals = {};
-	 */
-
+export default function build (input_file: string, output_file: string, options: RoadsBuildOptions): void {
 	console.log('starting to build ' + output_file + ' from source ' + input_file);
 	options = fixOptions(options);
 
@@ -128,30 +123,11 @@ export default function build (input_file: string, output_file: string, options:
 		console.log('adding dependency ' + dep.file);
 	});
 
-	/*for (let key in options.external) {
-		if (options.external.hasOwnProperty(key)) {
-			builder.external(key);
-			externals[key] = options.external[key];
-		}
-	}*/
-
 	builder.ignore(options.ignore);
 	builder.exclude(options.exclude);
 	builder
 		.transform(envify(options.envify))
 		.bundle()
 		.pipe(fs.createWriteStream(output_file));
-
-	/*for (let key in externals) {
-		if (externals.hasOwnProperty(key)) {
-			browserify(null, {	
-				debug: options.use_sourcemaps
-			})
-			.transform("babelify", options.babelify)
-			.require(key)
-			.bundle()
-			.pipe(fs.createWriteStream(externals[key].output_file));
-		}
-	}*/
 };
 
