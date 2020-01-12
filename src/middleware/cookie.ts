@@ -1,7 +1,6 @@
-"use strict";
 /**
  * cookie.js
- * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  * 
  * Exposes a single middleware function to help with cookies
@@ -36,7 +35,7 @@ import Response from '../response';
 
 export class CookieResponse extends Response {
 	setCookie: {
-		(name: string, value: any, options?: cookie.CookieSerializeOptions): void
+		(name: string, value?: any, options?: cookie.CookieSerializeOptions): void
 	}
 
 	getCookies: {
@@ -45,7 +44,7 @@ export class CookieResponse extends Response {
 
 }
 
-export default function () {
+export default function (): Middleware {
 	let cookieMiddleware: Middleware = function (route_method, route_path, route_body, route_headers, next) {
 		// Find the cookies from the request
 		if (route_headers.cookie) {

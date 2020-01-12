@@ -1,6 +1,6 @@
 "use strict";
 
-import Response from '../../response';
+import { Response } from '../../index';
 
 describe('response tests', () => {
 	/**

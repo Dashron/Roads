@@ -1,0 +1,17 @@
+{
+  "name": "roads-example",
+  "version": "6.0.0-alpha.2",
+  "author": {
+    "name": "Aaron Hedges",
+    "email": "aaron@dashron.com",
+    "url": "http://www.dashron.com"
+  },
+  "description": "Example for roads.js",
+  "devDependencies": {
+  },
+  "dependencies": {
+    "roads": "6.0.0-alpha.2"
+  },
+  "private": true,
+  "license": "MIT"
+}

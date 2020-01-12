@@ -1,6 +1,8 @@
 "use strict";
 
-import killSlash from '../../../middleware/killSlash';
+import { Middleware } from '../../../index';
+let killSlash = Middleware.killSlash;
+
 import Response from '../../../response';
 
 describe('KillSlashes tests', () => {

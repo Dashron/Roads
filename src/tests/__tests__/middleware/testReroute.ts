@@ -1,7 +1,10 @@
 "use strict";
 
-import reroute from '../../../middleware/reroute';
-import Road, { Middleware } from '../../../road';
+import { Middleware } from '../../../index';
+let reroute = Middleware.reroute;
+
+import { Road } from '../../../index';
+import { Middleware as MiddlewareType } from '../../../road';
 import Response from '../../../response';
 
 describe('Reroute middleware tests', () => {
@@ -12,7 +15,7 @@ describe('Reroute middleware tests', () => {
 	test('test request method is bound to context key', () => {
 		expect.assertions(3);
 		
-		let request: Middleware;
+		let request: MiddlewareType;
 		request = function (method, path, body, headers) {
 			return Promise.resolve(new Response('banana'));
 		};

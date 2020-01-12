@@ -1,6 +1,8 @@
 "use strict";
 
-import cookie, {CookieResponse} from '../../../middleware/cookie';
+import { Middleware } from '../../../index';
+let cookie = Middleware.cookie;
+import { CookieResponse } from '../../../middleware/cookie';
 import Response from '../../../response';
 
 describe('cookie tests', () => {

@@ -1,11 +1,11 @@
-import { Middleware } from "../road";
 /**
  * cors.js
- * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * This exposes a function that helps you manage CORS in your roads service
  */
+import { Middleware } from "../road";
 /**
  * Apply proper cors headers
  *

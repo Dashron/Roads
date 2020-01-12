@@ -1,15 +1,13 @@
-"use strict";
-
-import { Middleware } from "../road";
-import Response from '../response';
-
 /**
  * cors.js
- * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  * 
  * This exposes a function that helps you manage CORS in your roads service
  */
+
+import { Middleware } from "../road";
+import Response from '../response';
 
 /**
  * Apply proper cors headers
@@ -30,7 +28,7 @@ export function cors (options: {
 				responseHeaders?: {[x: string]: any}, 
 				requestHeaders?: {[x:string]: any}, 
 				validMethods?: string[],
-				cacheMaxAge?: number }) {
+				cacheMaxAge?: number }): Middleware {
 
 	let validOrigins = options.validOrigins || [];
 	let supportsCredentials = options.supportsCredentials || false;

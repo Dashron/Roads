@@ -1,6 +1,6 @@
 /**
  * cookie.js
- * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * Exposes a single middleware function to help with cookies
@@ -32,7 +32,7 @@ import { Middleware } from '../road';
 import Response from '../response';
 export declare class CookieResponse extends Response {
     setCookie: {
-        (name: string, value: any, options?: cookie.CookieSerializeOptions): void;
+        (name: string, value?: any, options?: cookie.CookieSerializeOptions): void;
     };
     getCookies: {
         (): {

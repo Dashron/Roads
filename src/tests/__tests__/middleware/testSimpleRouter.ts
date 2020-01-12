@@ -1,10 +1,14 @@
 "use strict";
 
 import * as url_module from "url";
-import SimpleRouter, { Route, SimpleRouterURL } from '../../../middleware/simpleRouter';
-import Response from "../../../response";
-import Road, { ResponseMiddleware } from "../../../road";
-import { promises } from "fs";
+
+import { Middleware } from '../../../index';
+let SimpleRouter = Middleware.SimpleRouter;
+
+import { Route, SimpleRouterURL } from '../../../middleware/simpleRouter';
+import { Response, Road } from "../../../index";
+import { ResponseMiddleware } from "../../../road";
+
 const router_file_test_path = __dirname + '/../../resources/_router_file_test.js';
 
 describe('Simple Router Tests', () => {

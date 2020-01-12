@@ -1,7 +1,6 @@
-"use strict";
 /**
  * applyToContext.js
- * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  * 
  * Exposes a single function to be used with roads middleware. It makes it easy to assign

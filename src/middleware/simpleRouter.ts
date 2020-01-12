@@ -1,7 +1,6 @@
-"use strict";
 /**
  * simpleRouter.js
- * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  * 
  * Exposes the SimpleRouter class to be used with roads middleware. 

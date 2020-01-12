@@ -1,7 +1,10 @@
 "use strict";
 
-import parseBody from '../../../middleware/parseBody';
-import Road, {Middleware} from '../../../road';
+import { Middleware } from '../../../index';
+let parseBody = Middleware.parseBody;
+
+import { Middleware as MiddlewareType } from '../../../road';
+import { Road } from '../../../index';
 import Response from '../../../response';
 
 describe('Parse Request Body tests', () => {
@@ -37,7 +40,7 @@ describe('Parse Request Body tests', () => {
         road.use(parseBody);
         var body = '{"hello": "there"}';
 
-        let middleware: Middleware;
+        let middleware: MiddlewareType;
         middleware = function (method, url, request_body, headers) {
             expect(this.body).toEqual({hello: "there"});
             return Promise.resolve(new Response(''));

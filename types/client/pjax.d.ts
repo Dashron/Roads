@@ -1,3 +1,10 @@
+/**
+ * pjax.js
+ * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
+ * MIT Licensed
+ *
+ * This file exposes a PJAX class to help with client side rendering
+ */
 import Road from '../road';
 import Response from '../response';
 /**
@@ -9,7 +16,7 @@ import Response from '../response';
  */
 export declare class RoadsPjax {
     protected _road: Road;
-    protected _page_title: string | null;
+    protected _page_title?: string;
     protected _window: Window;
     protected _container_element: HTMLElement;
     /**
@@ -26,17 +33,22 @@ export declare class RoadsPjax {
      *
      * @returns {RoadsPjax} this, useful for chaining
      */
-    addTitleMiddleware(): this;
+    addTitleMiddleware(): RoadsPjax;
     /**
      * Assigns the cookie middlware to the road to properly handle cookies
      *
      * @param {Document} document - The pages document object to properly parse and set cookies
+     * @returns {RoadsPjax} this object, useful for chaining
      */
-    addCookieMiddleware(document: Document): void;
+    addCookieMiddleware(document: Document): RoadsPjax;
     /**
      * Hooks up the PJAX functionality to the information provided via the constructor.
      */
     register(): void;
+    /**
+     *
+     * @param {HTMLAnchorElement} element
+     */
     registerAdditionalElement(element: HTMLAnchorElement): void;
     /**
      * The response from the roads request
@@ -46,13 +58,13 @@ export declare class RoadsPjax {
     render(response_object: Response): void;
     /**
      * Handles all click events, and directs
-     * @param {Object} event
+     * @param {MouseEvent} event
      */
     protected _pjaxEventMonitor(event: MouseEvent): void;
     /**
      * Follows the link and renders the UI
      *
-     * @param  {Element} link
+     * @param  {HTMLAnchorElement} link
      */
     protected _roadsLinkEvent(link: HTMLAnchorElement): void;
     /**

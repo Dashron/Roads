@@ -1,15 +1,7 @@
 node_modules
-built
-config/dev/server.json
-config/dev/web.json
-config/prod/server.json
-config/prod/web.json
 
-resources/*
-!resources/official
-!resources/example
+.vscode
 
-.project
-.settings
-roads.sublime-project
-roads.sublime-workspace
+*.js
+*/*.js
+!src

@@ -1,7 +1,7 @@
 "use strict";
 
-import Road from '../../../road';
-import Response from '../../../response';
+import { Road } from '../../../index';
+import { Response } from '../../../index';
 
 describe('Execute Route', () => {
 	/**

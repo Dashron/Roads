@@ -1,7 +1,6 @@
 "use strict";
 
-import Road from '../../../road';
-import url_module from 'url';
+import { Road } from '../../../index';
 
 describe('road use', () => {
 	/**

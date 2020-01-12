@@ -7,8 +7,7 @@
  * This file starts up the HTTP roads server
  */
 
-var roads = require(__dirname + '/../src/index.js');
-var road = new roads.Road();
+var road = new (require('roads/road.js').default)();
 var Server = require('roads-server').Server;
 
 road.use(function (method, url, body, headers, next) {
@@ -16,11 +15,11 @@ road.use(function (method, url, body, headers, next) {
 	return next();
 });
 
-road.use(roads.middleware.killSlash);
-road.use(roads.middleware.cookie());
+road.use(require('roads/middleware/killSlash.js'));
+road.use(require('roads/middleware/cookie').default());
 road.use(require('./middleware/addLayout.js'));
-road.use(roads.middleware.setTitle);
-let router = new roads.middleware.SimpleRouter(road)
+road.use(require('roads/middleware/setTitle.js'));
+let router = new (require('roads/middleware/simpleRouter.js').default)(road);
 require('./routes/applyPublicRoutes.js')(router);
 require('./routes/applyPrivateRoutes.js')(router);
 road.use(require('./middleware/emptyTo404.js'));

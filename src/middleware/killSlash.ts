@@ -1,7 +1,6 @@
-"use strict";
 /**
  * killSlash.js
- * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  * 
  * Exposes a single middleware function to kill trailing slashes in HTTP requests.

@@ -1,7 +1,6 @@
-"use strict";
 /**
  * request.js
- * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  * 
  * This file exposes a Request object to offer an HTTP request library with a method signature that matches
@@ -41,11 +40,11 @@ export default class Request {
 	 * 
 	 * @param {string} method - HTTP Request method
 	 * @param {string} path - HTTP Request path
-	 * @param {string|undefined} [body] - The request body. If an object is provided, the body will be turned to JSON, and the appropriate content header set
+	 * @param {string} [body] - The request body. If an object is provided, the body will be turned to JSON, and the appropriate content header set
 	 * @param {object} [headers] - HTTP Request headers
 	 * @returns {Promise} The promise will resolve with an object with three properties. The response headers, response status and the response body. If the response content-type is "application/json" the body will be an object, otherwise it will resolve to a string
 	 */
-	async request (method: string, path: string, body: string | undefined, headers: {[x:string]: any}): Promise<Response> {
+	async request (method: string, path: string, body?: string, headers?: {[x:string]: any}): Promise<Response> {
 		let response = await roadsRequest({
 			request: {
 				hostname: this._host,

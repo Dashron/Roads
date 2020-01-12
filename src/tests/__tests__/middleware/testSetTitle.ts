@@ -1,6 +1,7 @@
 "use strict";
 
-import setTitle from '../../../middleware/setTitle';
+import { Middleware } from '../../../index';
+let setTitle = Middleware.setTitle;
 
 
 describe('Set Title', () => {

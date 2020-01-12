@@ -1,6 +1,6 @@
 /**
  * reroute.js
- * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * Exposes a method that allows you to bind additional roads to a road context. This allows you to manage multiple

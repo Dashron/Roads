@@ -1,7 +1,8 @@
 "use strict";
 
-import Road, { Middleware } from '../../../road';
-import Response from '../../../response';
+import { Road } from '../../../index';
+import { Middleware } from '../../../road';
+import { Response } from '../../../index';
 
 describe('road request', () => {
 	/**

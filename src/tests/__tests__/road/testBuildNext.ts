@@ -1,8 +1,7 @@
 "use strict";
 
-import Road from '../../../road';
-import url_module from 'url';
-import Response from '../../../response';
+import { Road } from '../../../index';
+import { Response } from '../../../index';
 
 // Note: This file used to have many more tests, but a recent roads change invalidated most of them, and the migration to jest made it clear that many of them were 
 // covered by other tests (context, multi use, etc)
