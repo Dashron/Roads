@@ -1,6 +1,6 @@
 "use strict";
 
-import { Middleware } from '../../../index';
+import * as Middleware from '../../../middleware';
 let applyToContext = Middleware.applyToContext;
 
 describe('ApplyToContext tests', () => {

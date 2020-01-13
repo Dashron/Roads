@@ -1,6 +1,6 @@
 "use strict";
 
-import { Middleware } from '../../../index';
+import * as Middleware from '../../../middleware';
 let cookie = Middleware.cookie;
 import { CookieResponse } from '../../../middleware/cookie';
 import Response from '../../../response';
@@ -11,13 +11,10 @@ describe('cookie tests', () => {
 		let context: {[x:string]: any} = {
 			Response: Response
 		};
-		
 
-		let middleware = cookie();
+		expect(typeof(cookie)).toEqual('function');
 
-		expect(typeof(middleware)).toEqual('function');
-
-		middleware.call(context, 'a', 'b', 'c', {
+		cookie.call(context, 'a', 'b', 'c', {
 			cookie: 'foo=bar;abc=def'
 		}, function () {
 
@@ -33,11 +30,9 @@ describe('cookie tests', () => {
 			Response: Response
 		};
 
-		let middleware = cookie();
+		expect(typeof(cookie)).toEqual('function');
 
-		expect(typeof(middleware)).toEqual('function');
-
-		middleware.call(context, 'a', 'b', 'c', {}, function () {
+		cookie.call(context, 'a', 'b', 'c', {}, function () {
 
 		});
 
@@ -69,11 +64,9 @@ describe('cookie tests', () => {
 			Response: Response
 		};
 
-		let middleware = cookie();
+		expect(typeof(cookie)).toEqual('function');
 
-		expect(typeof(middleware)).toEqual('function');
-
-		middleware.call(context, 'a', 'b', 'c', {}, function () {});
+		cookie.call(context, 'a', 'b', 'c', {}, function () {});
 
 		let resp = new context.Response();
 

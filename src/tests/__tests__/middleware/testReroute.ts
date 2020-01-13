@@ -1,6 +1,6 @@
 "use strict";
 
-import { Middleware } from '../../../index';
+import * as Middleware from '../../../middleware';
 let reroute = Middleware.reroute;
 
 import { Road } from '../../../index';

@@ -1,6 +1,6 @@
 "use strict";
 
-import { Middleware } from '../../../index';
+import * as Middleware from '../../../middleware';
 let killSlash = Middleware.killSlash;
 
 import Response from '../../../response';

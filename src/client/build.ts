@@ -9,7 +9,8 @@
 import * as browserify from 'browserify';
 import * as babelify from 'babelify';
 import * as fs from 'fs';
-import envify from 'envify/custom';
+// I don't like this, but it seems to be the only option with envify's current module declaration
+import envify = require('envify/custom');
 
 /**
  * @param  {boolean} [options.use_sourcemaps] Whether or not the build process should include source maps.
@@ -73,10 +74,6 @@ function fixExclude(exclude_list?: Array<string>): Array<string>{
 	}
 
 	exclude_list.push(__filename);
-	exclude_list.push(__dirname + '/../../tests');
-	exclude_list.push(__dirname + '/../integrations/koa.js');
-	exclude_list.push(__dirname + '/../integrations/express.js');
-	exclude_list.push(__dirname + '/../middleware/cors.js');
 	return exclude_list;
 }
 

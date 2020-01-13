@@ -40,4 +40,5 @@ export declare class CookieResponse extends Response {
         };
     };
 }
-export default function (): Middleware;
+declare let cookieMiddleware: Middleware;
+export default cookieMiddleware;

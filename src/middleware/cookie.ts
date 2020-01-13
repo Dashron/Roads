@@ -30,7 +30,7 @@
  */
 
 import * as cookie from 'cookie';
-import {Middleware} from '../road';
+import { Middleware } from '../road';
 import Response from '../response';
 
 export class CookieResponse extends Response {
@@ -44,44 +44,42 @@ export class CookieResponse extends Response {
 
 }
 
-export default function (): Middleware {
-	let cookieMiddleware: Middleware = function (route_method, route_path, route_body, route_headers, next) {
-		// Find the cookies from the request
-		if (route_headers.cookie) {
-			this.cookies = cookie.parse(route_headers.cookie);
-		} else {
-			this.cookies = {};
+let cookieMiddleware: Middleware = function (route_method, route_path, route_body, route_headers, next) {
+	// Find the cookies from the request
+	if (route_headers.cookie) {
+		this.cookies = cookie.parse(route_headers.cookie);
+	} else {
+		this.cookies = {};
+	}
+
+	// Add a cookie method to the response object. Allows you to set cookies like koa.js
+	this.Response.prototype.setCookie = function (name: string, value: any, options?: cookie.CookieSerializeOptions) {
+		if (!this._cookie_values) {
+			this._cookie_values = {};
 		}
 
-		// Add a cookie method to the response object. Allows you to set cookies like koa.js
-		this.Response.prototype.setCookie = function (name: string, value: any, options?: cookie.CookieSerializeOptions) {
-			if (!this._cookie_values) {
-				this._cookie_values = {};
-			}
-
-			// todo: is this a bug? shouldn't this record an array of cookie values? I think calling this multiple times for the same value will set multiple cookie headers, yet only the most recent value in local memory
-			// also I think this will be inconsistent with the initially set cookie data. not sure. needs research
-			this._cookie_values[name] = {
-				value: value
-			};
-
-			if (options) {
-				this._cookie_values[name].options = options;
-			}
-
-			if (!this.headers['Set-Cookie']) {
-				this.headers['Set-Cookie'] = [];
-			}
-
-			this.headers['Set-Cookie'].push(cookie.serialize(name,value, options));
+		// todo: is this a bug? shouldn't this record an array of cookie values? I think calling this multiple times for the same value will set multiple cookie headers, yet only the most recent value in local memory
+		// also I think this will be inconsistent with the initially set cookie data. not sure. needs research
+		this._cookie_values[name] = {
+			value: value
 		};
 
-		this.Response.prototype.getCookies = function () {
-			return this._cookie_values;
-		};
+		if (options) {
+			this._cookie_values[name].options = options;
+		}
 
-		return next();
+		if (!this.headers['Set-Cookie']) {
+			this.headers['Set-Cookie'] = [];
+		}
+
+		this.headers['Set-Cookie'].push(cookie.serialize(name,value, options));
 	};
 
-	return cookieMiddleware;
+	this.Response.prototype.getCookies = function () {
+		return this._cookie_values;
+	};
+
+	return next();
 };
+
+export default cookieMiddleware;

@@ -1,20 +1,4 @@
 export { default as Response } from './response';
 export { default as Road } from './road';
-export { default as build } from './client/build';
-export { default as RoadsPjax } from './client/pjax';
+export { default as RoadsPJAX } from './client/pjax';
 export { default as Request } from './client/request';
-import { default as _applyToContext } from './middleware/applyToContext';
-import { default as _cookie } from './middleware/cookie';
-import { default as _cors } from './middleware/cors';
-import { default as _reroute } from './middleware/reroute';
-import { default as _simpleRouter } from './middleware/simpleRouter';
-export declare const Middleware: {
-    applyToContext: typeof _applyToContext;
-    cookie: typeof _cookie;
-    cors: typeof _cors;
-    killSlash: import("./road").Middleware;
-    parseBody: import("./road").Middleware;
-    reroute: typeof _reroute;
-    setTitle: import("./road").Middleware;
-    SimpleRouter: typeof _simpleRouter;
-};

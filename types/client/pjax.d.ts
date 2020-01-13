@@ -14,7 +14,7 @@ import Response from '../response';
  * @todo Form support
  * @todo tests
  */
-export declare class RoadsPjax {
+export default class RoadsPjax {
     protected _road: Road;
     protected _page_title?: string;
     protected _window: Window;

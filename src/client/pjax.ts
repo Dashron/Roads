@@ -6,7 +6,7 @@
  * This file exposes a PJAX class to help with client side rendering
  */
 
-import {Middleware} from '../road';
+import { Middleware } from '../road';
 import Road from '../road';
 import Response from '../response';
 import * as cookie  from 'cookie';
@@ -18,7 +18,7 @@ import * as cookie  from 'cookie';
   * @todo Form support
   * @todo tests
   */
-export class RoadsPjax {
+export default class RoadsPjax {
 	protected _road: Road;
 	protected _page_title?: string;
 	protected _window: Window;
@@ -188,7 +188,8 @@ export class RoadsPjax {
 	 */
 	protected _roadsFormEvent (form: HTMLFormElement): void {
 		// execute the form. note: while HTTP methods are case sensitive, HTML forms seem to lowercase their methods. To fix this we uppercase here.
-		this._road.request(form.method.toUpperCase(), form.action, new URLSearchParams(new FormData(form).toString()).toString(), {'content-type': 'application/x-www-form-urlencoded'})
+		// as any is a workaround. see https://github.com/Microsoft/TypeScript/issues/30584
+		this._road.request(form.method.toUpperCase(), form.action, new URLSearchParams(new FormData(form) as any).toString(), {'content-type': 'application/x-www-form-urlencoded'})
 		.then((response: Response) => {
 			if ([301, 302, 303, 307, 308].includes(response.status)) {
 				return this._road.request('GET', response.headers.location);
