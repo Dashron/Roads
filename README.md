@@ -25,11 +25,14 @@ Roads is a web framework built for use with async functions. It's similar to Koa
   - [body](#body)
   - [status](#status)
   - [headers](#headers)
-- [Roads.middleware](#roadsmiddleware)
+- [Middleware](#roadsmiddleware)
   - [cookie()](#cookie)
   - [cors(*object* options)](#corsobject-options)
   - [killSlash()](#killslash)
   - [parseBody](#parsebody)
+  - [applyToContext](#applytocontext)
+  - [reroute](#reroute)
+  - [setTitle](#settitle)
   - [SimpleRouter](#simplerouterroad-road)
     - [SimpleRouter.applyMiddleware(road)](#simplerouterapplymiddlewareroad-road)
     - [SimpleRouter.addRoute(*string* method, *string* path,*function* fn)](#simplerouteraddroutestring-method-string-path-function-fn)
@@ -47,85 +50,107 @@ Roads is a web framework built for use with async functions. It's similar to Koa
 Building a project with roads is very straightforward.
 
 1. Create your Road object
-    ```
+    **TypeScript**
+    ```TypeScript
+    import * as roads from 'roads';
+    let road = new roads.Road();
+	```
+
+    **JavaScript**
+    ```JavaScript
     const roads = require('roads');
-    var road = new Road();
+    let road = new roads.Road();
 	```
 
 2. Add code to the road
-    ```
-    const roads = require('roads');
-    var road = new Road();
+    **TypeScript**
+    ```TypeScript
+    import * as roads from 'roads';
+    let road = new roads.Road();
+
     road.use(function (method, path, body, headers) {
         console.log('A ' + method + ' request was made to ' + path);
     });
-    ```
+	```
+
+    **JavaScript**
+    ```JavaScript
+    const roads = require('roads');
+    let road = new roads.Road();
+
+    road.use(function (method, path, body, headers) {
+        console.log('A ' + method + ' request was made to ' + path);
+    });
+	```
 
 5. Run your code.
 
- - Roads comes with it's own server object to help you attach your road to the node HTTP server.
-        ```node
-        const roads = require('roads');
-        const Server = require('roads-server').Server;
+ - roads-server helps you attach your road to the standard node HTTP server. Feel free to use other http servers. roads-server is documented below.
+     **TypeScript**
+    ```TypeScript
+    import * as roads from 'roads';
+    import { Server } from 'roads-server';
 
-        var road = ...; // See steps 1 and 2 for road construction
-        var server = new Server(road, function (error) {
-            console.log('roads encountered an error', error);
-        });
+    let road = ...; // See steps 1 and 2 for road construction
+    let server = new Server(road, function (error) {
+        console.log('roads encountered an error', error);
+    });
 
-        server.listen(8080);
-        ```
+    server.listen(8080);
+	```
 
- - You can use the road with a Koa.js server. 
-        ```node
-        const roads = require('roads');
-        const koa = require('koa');
+    **JavaScript**
+    ```JavaScript
+    const roads = require('roads');
+    const Server = require('roads-server').Server;
 
-        var road = ...; // See steps 1 and 2 for road construction
-        var app = koa();
-        app.use(roads.integrations.koa(road));
-        app.listen(8080);
-        
-        ```
-    **Note: There is alpha express support with roads.integrations.express**
+    let road = ...; // See steps 1 and 2 for road construction
+    let server = new Server(road, function (error) {
+        console.log('roads encountered an error', error);
+    });
+
+    server.listen(8080);
+	```
 
  - You can manually interact with the road
+     **TypeScript**
+    ```TypeScript
+    import * as roads from 'roads';
+    import { Server } from 'roads-server';
 
-	```node
-        const roads = require('roads');
-
-        var road = ...; // See steps 1 and 2 for road construction
-
-    	// Call directly
-    	road.request('GET', '/users', {page: 2})
-    	    .then(function (response) {
-    	        console.log(response);
-    	    });
-	```
- - You can use browserify to compile everything for use in the browser.
-    
-    **client_index.js**
-    ```node
-        const roads = require('roads');
-        var road = ...; // See steps 1 and 2 for road construction
-
-        // Make a client side request. See the PJAX section of the docs for more client side options
-        road.request('GET', '/users', {page: 2})
-            .then(function (response) {
-                console.log(response);
-            });
-
-    ```
-
-    **build.js** - Run this to compile your code to be run in the browser.
-    ```node
-        require('roads').build('client_index.js', '/build/client.js', {
-            roads: {
-                output_file: './build/roads.js',
-            }
+    let road = ...; // See steps 1 and 2 for road construction
+    // Call directly
+    road.request('GET', '/users', {page: 2})
+        .then(function (response) {
+            console.log(response);
         });
+	```
 
-    ```
+    **JavaScript**
+    ```JavaScript
+    const roads = require('roads');
+    const Server = require('roads-server').Server;
+
+    let road = ...; // See steps 1 and 2 for road construction
+    // Call directly
+    road.request('GET', '/users', {page: 2})
+        .then(function (response) {
+            console.log(response);
+        });
+	```
+
+ - You can use browserify to compile everything for use in the browser. The following are the scripts necessary to compile the previous manual example, if it were saved as a file "client_index.js".
+     **TypeScript**
+    ```TypeScript
+    import { build } from 'roads/build';
+    build('client_index.js', __dirname + '/build/client.js', { use_sourcemaps: true });
+	```
+
+    **JavaScript**
+    ```JavaScript
+    const build = require('roads/build');
+    build('client_index.js', __dirname + '/build/client.js', { use_sourcemaps: true });
+	```
 
 
 Now that you can use your road, continue reading the docs below for more information on [routers](#simplerouter), [error handling](#roadusefunction-fn), [PJAX support](#roadspjaxobject-road) and more!
@@ -134,29 +159,36 @@ Now that you can use your road, continue reading the docs below for more informa
 
 ## Roads.Road
 
-A Road is a container that holds an array of functions. It exposes a [request](#requeststring-method-string-url-dynamic-body-object-headers) method which allows you to execute the functions and provide consistent parameters.
+A Road is a container that holds an array of functions called the *request chain*. The request chain generally holds your routing logic, and any pre or post processing instructions. You interact with your road primarily via the [use](#roadusefunction-fn) method, which assigns new functions to the request chain, or the [request](#requeststring-method-string-url-dynamic-body-object-headers) method which executes all functions in the request chain.
 
 ### new Road()
 **Create a Road.**
 
 Creates your Road object. 
 
-```node
+**TypeScript**
+```TypeScript
+import * as roads from 'roads';
+let road = new roads.Road();
+```
+
+**JavaScript**
+```JavaScript
 const roads = require('roads');
-var road = new roads.Road();
+let road = new roads.Road();
 ```
 
 
 ### Road.use(*Function* fn)
 **Add a custom function that will be executed with every request.**
 
-The use function can be called one or more times. Each time it is called, the function provided via the `fn` parameter will be added to a queue that is executed when you call the [request](#roadrequeststring-method-string-url-dynamic-body-object-headers) method. The execution order will match the order the functions were added to the road.
+The use function can be called one or more times. Each time it is called, the function provided via the `fn` parameter will be added to the end of the request chain. The execution order will match the order the functions were added to the road. 
 
  name | type                                                                  | required | description
  -----|-----------------------------------------------------------------------|----------|---------------
- fn   | Function(*string* method, *string* url,*object* body,*object* headers,*function* next) | yes      | Will be called any time a request is made on the object.
+ fn   | Function(*string* method, *string* url,*string* body,*object* headers,*function* next) | yes      | Adds this function to the request chain, which is executed any time a request is made on the object. See the [use callback](#roadusefunction-fn) below for more details on the function parameters.
  
- Each function can choose whether or not it wants to progress to the following function by calling or ignoring the `next` parameter. The `next` parameter is defined below as part of the use callback, along with all other parameters that will be passed to your function when the route is executed.
+ **Note:** Each function in the request chain can choose to progress to the following function by calling and returning the `next` parameter. The `next` parameter is defined below as part of the use callback
  
 #### use Callback 
 **function (*string* method,*string* url, *string* body, *Object* headers, *Function* next)**
@@ -169,7 +201,9 @@ name     | type                               | description
  headers | object                             | The headers that were provided to the request
  next    | function                           | The next step of the handler chain. If there are no more custom handlers assigned, next will resolve to the [resource method](#resource-method) that the router located. This method will always return a promise.
 
-If the callback does not return a [response](#roadsresponse) object, roads.request will wrap whatever the callback returns in a [response](#roadsresponse) object with the default status code of 200.
+If the callback does not return a [response](#roadsresponse) object, roads.request will turn the return value into the response body of a [response](#roadsresponse) object with the default status code of 200 and no headers.
+
+TODO: Everything below this line
 
 ```node
 // Simple example that sends a JSON response
@@ -191,7 +225,7 @@ road.use(async function (method, url, body, headers, next) {
 })
 
 
-// Example of a request handler that kills trailing slashes (This is code is provided for you at roads.middleware.skillSlash!)
+// Example of a request handler that kills trailing slashes (This is code is provided for you at middleware.skillSlash!)
 // The logic will happen before any other middleware because it's before you call next
 road.use(function (method, url, body, headers, next) {
 	// kill trailing slash as long as we aren't at the root level
@@ -432,6 +466,18 @@ road.use(function (method, url, body, headers) {
 
 road.request('POST', '/users', '{"name":"dashron"}', {"content-type": "application/json"});
 ```
+
+### applyToContext
+**Middleware to ensure that a predefined value is always part of the request context**
+DOCS TODO
+
+### reroute
+**Middleware**
+DOCS TODO
+
+### setTitle
+**Middleware that helps you work with setting page titles. Used in conjunction with PJAX's setTitle**
+DOCS TODO
 
 ### SimpleRouter(*Road* road)
 This is a simple router middleware for roads. To use it, you have to take a couple of steps.
