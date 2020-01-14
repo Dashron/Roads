@@ -203,9 +203,8 @@ name     | type                               | description
 
 If the callback does not return a [response](#roadsresponse) object, roads.request will turn the return value into the response body of a [response](#roadsresponse) object with the default status code of 200 and no headers.
 
-TODO: Everything below this line
 
-```node
+```JavaScript   
 // Simple example that sends a JSON response
 road.use(function (method, url, body, headers, next) {
     return JSON.stringify({
@@ -251,11 +250,11 @@ road.use(function (method, url, body, headers, next) {
 });
 ```
 
-**How do I control the order my logic executes?**
+**How do I control the order of my middleware?**
 
-Let's say you have assigned a function via `use`. Each function has two places you can put your logic. I have described them in the example below.
+Let's say you have assigned a middlewawre function via `use`. Each function has two places you can put your logic. I have described them in the example below.
 
-```js
+```JavaScript
 road.use(function (method, url, body, params, next) {
 	// This is the first point. This code will be executed first.
 	return next()
@@ -265,19 +264,19 @@ road.use(function (method, url, body, params, next) {
 });
 ```
 
-You can picture the logic path like a U.
+You can picture the logic path like a U. The following example assumes two functions have been added to the request chain.
 
 ```
-First mount point                  Second mount point        
-for first middleware              for first middleware
+First point for                  Second point for        
+first middleware                 first middleware
           |                              / \
          \ /                              |
-First mount point       ____ \    Second mount point
-for second middleware        /    for second middleware
+First point for       ____ \     Second mount for
+second middleware          /     second middleware
 ```
 
+As you add more functions to the request chain, it lengthens each side of the U.
 
-Each new function is added to the bottom of the U.
 
 
 ### Road.request(*string* method, *string* url, *dynamic* body, *Object* headers)
@@ -289,8 +288,8 @@ This function will execute all of the functions assigned via [use](#roadusefunct
 Make sure to listen for errors surfaced by the request promise!.
 
 
-```node
-var promise = road.request('GET', '/users/dashron');
+```JavaScript
+let promise = road.request('GET', '/users/dashron');
 
 promise.then((response) => {        
     console.log(response);
@@ -311,7 +310,7 @@ Response         | Response | The Response constructor. Every request *should* r
 
 **Note:** Do not use arrow functions if you want to interact with `this`. JavaScript is unable to transmit the custom `this` object into arrow functions.
 
-```node
+```JavaScript
 var road = new Road();
 
 road.use(function (method, url, body, headers, next) {
@@ -336,7 +335,7 @@ road.request('GET', '/me').then((response) => {
 Middleware is encouraged to add variables to this context to simplify development. Make sure to namespace your variables to ensure there are no conflicts with other librares.
 
 eg:
-```node
+```JavaScript
 var road = new Road();
 road.use(function (method, url, body, headers) {
     this.context.my_project.require_authentication = true;
@@ -359,32 +358,43 @@ name        | type                               | description
 
 Create a response object. 
 
-```node
+```JavaScript
 new Response({"uri": "..."}, 200, {"last-modified":"2014-04-27 00:00:00"});
 ```
 
 ### Body
 **The raw JavaScript object returned by the request**
 
-```node
+```JavaScript
 console.log(response.body);
 ```
 
 ### Status
 **The HTTP status returned by the request**
 
-```node
+```JavaScript
 console.log(response.status);
 ```
 
 ### Headers
 **A JavaScript object of all response headers**
 
-```node
+```JavaScript
 console.log(response.headers);
 ```
 
-## Roads.middleware
+## Middleware
+
+Roads comes bundled with some common middleware. All bundled middleware can be acccessed via the `roads/middleware` package.
+
+```TypeScript
+    import * as Middleware from 'roads/middleware';
+```
+
+```JavaScript
+    let Middleware = require('roads/middleware');
+```
+
 ### cookie()
 **Middleware to add some cookie management functions**
 
@@ -401,8 +411,8 @@ To remove a cookie, set the value to null.
 `getCookies()`
 Returns an object with all the response cookies.
 
-```node
-road.use(roads.middleware.cookie());
+```JavaScript
+road.use(Middleware.cookie);
 
 roads.use(function (method, url, body, headers) {
 	console.log(this.cookies);
@@ -435,8 +445,8 @@ requestHeaders  | array                       | An array of valid HTTP request h
 validMethods  | array                       | An array of valid HTTP methods
 cacheMaxAge  | number                       | The maximum age to cache the cors information
 
-```node
-road.use(roads.middleware.cors({
+```JavaScript
+road.use(Middleware.cors({
     validOrigins: ['http://localhost:8080'],
     responseHeaders: ['content-type']
 }));
@@ -447,8 +457,8 @@ road.use(roads.middleware.cors({
 
 If used, any url that ends with a trailing slash will return a response object redirecting the client to the same url without the trailing slash (302 redirect with Location: [url_without_slash])
 
-```node
-road.use(roads.middleware.killSlash);
+```JavaScript
+road.use(Middleware.killSlash);
 ```
 
 ### parseBody
@@ -456,8 +466,8 @@ road.use(roads.middleware.killSlash);
 
 This middleware looks at the Content-Type header, and uses that information to attempt to parse the incoming request body string. The body will be applied to the context field `body`
 
-```node
-road.use(roads.middleware.parseBody);
+```JavaScript
+road.use(Middleware.parseBody);
 
 road.use(function (method, url, body, headers) {
     console.log(body); // The string '{"name":"dashron"}'
@@ -482,22 +492,17 @@ DOCS TODO
 ### SimpleRouter(*Road* road)
 This is a simple router middleware for roads. To use it, you have to take a couple of steps.
 
-1. Create your road
+1. Create your road (see [Getting Started](#getting-started) step 1)
+2. Load the Middleware (see [Middleware](#middleware))
+3. Create your Router
 
-```js
-    const roads = require('roads');
-    var road = ...; // See steps 1 and 2 in the introduction for road construction
-```
-
-2. Create your Router
-
-```js
-    let router = new roads.middleware.SimpleRouter(road);
+```JavaScript
+    let router = new Middleware.SimpleRouter(road);
 ```
 
 3. Assign routes to the router
 
-```js
+```JavaScript
     // This is a simple route with no URI variables
     router.addRoute('GET', '/posts', (url, body, headers) => {
         // url, body and headers are all identical to the values sent to functions in roads.use
@@ -523,7 +528,9 @@ If you don't provide a road to the SimpleRouter constructor, the router will not
 
 #### SimpleRouter.addRoute(*string* method, *string* path, *function* fn)
 
-Templating is simple. Each URI is considered to be a series of "path parts" separated by slashes.
+This assigns a function to an HTTP Method and Path combination. When roads middleware uses the Simple Router, incoming requests will execute the appropriate function for the incoming method and path.
+
+When assigning a function, you can use a simple templating language in your path. In these templates each URI is considered to be a series of "path parts" separated by slashes.
  - If a path part starts with a #, it is assumed to be a numeric variable. Non-numbers will not match this route
  - If a path part starts with a $, it is considered to be an alphanumeric variabe. All non-slash values will match this route.
 
@@ -531,7 +538,7 @@ Any variables will be added to the route's request url object under the "args" o
 
 e.g. /users/#user_id will match /users/12345, not /users/abcde. If a request is made to /users/12345 the route's requestUrl object will contain { args: {user_id: 12345}} along with all other url object values
 
-```js
+```JavaScript
     // This is a simple route with no URI variables
     router.addRoute('GET', '/posts', (url, body, headers) => {
         // url, body and headers are all identical to the values sent to functions in roads.use
@@ -558,7 +565,7 @@ Each key should be an HTTP path, each value should be an object.
 In that object, each key should be an HTTP method, and the value should be your route function.
 
 Example File:
-```js
+```JavaScript
 {
     '/posts/#post_id': {
         'GET': (url, body, headers) => {
@@ -568,7 +575,7 @@ Example File:
 }
 ```
 
-## Roads.build(*string* input_file, *string* output_file, *object* options)
+## build(*string* input_file, *string* output_file, *object* options)
 **Browserify function to convert your script to run in the browser**
 
 name                    | type                               | description
@@ -583,9 +590,27 @@ name                    | type                               | description
  options.use_sourcemaps | boolean                            | Whether or not the build process should include source maps.
 
 
+```TypeScript
+    let build = require('roads/build');
+
+    build(__dirname + '/static/client.js', __dirname + '/static/client.brws.js', {
+        use_sourcemaps: true,
+        external: {
+            roads: {
+                output_file: __dirname + '/static/roads.brws.js',
+            }, 
+            react: {
+                output_file: __dirname + '/static/react.brws.js',
+            }
+        },
+        babelify: {presets: ['react']}
+    });
 ```
-require('roads')
-    .build(__dirname + '/static/client.js', __dirname + '/static/client.brws.js', {
+
+```JavaScript
+    import build from 'roads/build';
+
+    build(__dirname + '/static/client.js', __dirname + '/static/client.brws.js', {
         use_sourcemaps: true,
         external: {
             roads: {
@@ -651,18 +676,19 @@ To handle page titles you will need to add matching middleware to your client an
 
 Your server should include the following:
 
-```node
+```JavaScript
 var roads = require('roads');
+var Middleware = require('roads/middleware');
+
 var road = ...; // Incomplete. See the getting started section for more information about creating a road
-road.use(roads.middleware.setTitle);
+road.use(Middleware.setTitle);
 ```
 
-```node
-
+```JavaScript
 var roads = require('roads');
 var road = ...; // Incomplete. See the getting started section for more information about creating a road
 
-var pjax = new roads.PJAX(road);
+var pjax = new roads.RoadsPJAX(road);
 pjax.addTitleMiddleware();
 pjax.register(window, document.getElementById('container'));
 ```
@@ -677,12 +703,3 @@ There's a very easy pattern to follow to ensure sharing client and server code w
 4. Keep your page layout (headers, footers, body, meta tags, etc.) in the "backend only" section.
 5. Keep your DB calls in the "backend only" section
 6. Make sure the mixed frontend-or-backend routes only ever make HTTP requests, or render HTML
-
-
-### TODO:
-- Use the new URL class instead of a parsed url (maybe)
-- Clean up the example, ensure pjax works
-- Improved PJAX test coverage
-- Examples of koa and express middleware
-- Add a code coverage library to track and improve test coverage
-- Mention roads-api as an alternative for creating APIs
