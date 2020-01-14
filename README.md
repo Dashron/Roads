@@ -37,7 +37,7 @@ Roads is a web framework built for use with async functions. It's similar to Koa
     - [SimpleRouter.applyMiddleware(road)](#simplerouterapplymiddlewareroad-road)
     - [SimpleRouter.addRoute(*string* method, *string* path,*function* fn)](#simplerouteraddroutestring-method-string-path-function-fn)
     - [SimpleRouter.addRouteFile(*string* full_path)](#simplerouteraddroutefilestring-full_path)
-- [build](#buildstring-input_file-string-output_file-object-options)
+- [build(*string* input_file, *string* output_file, *object* options)](#buildstring-input_file-string-output_file-object-options)
 - [Roads.PJAX(*object* road, *DomElement* container_element, *object* window)](#roadspjaxobject-road-domelement-container_element-object-window)
   - [register()](#pjaxregister)
   - [PJAX Link Format](#pjax-link-format)
