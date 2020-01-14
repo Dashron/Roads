@@ -50,6 +50,7 @@ Roads is a web framework built for use with async functions. It's similar to Koa
 Building a project with roads is very straightforward.
 
 1. Create your Road object
+
     **TypeScript**
     ```TypeScript
     import * as roads from 'roads';
@@ -63,6 +64,7 @@ Building a project with roads is very straightforward.
 	```
 
 2. Add code to the road
+
     **TypeScript**
     ```TypeScript
     import * as roads from 'roads';
@@ -86,6 +88,7 @@ Building a project with roads is very straightforward.
 5. Run your code.
 
  - roads-server helps you attach your road to the standard node HTTP server. Feel free to use other http servers. roads-server is documented below.
+
      **TypeScript**
     ```TypeScript
     import * as roads from 'roads';
@@ -113,6 +116,7 @@ Building a project with roads is very straightforward.
 	```
 
  - You can manually interact with the road
+
      **TypeScript**
     ```TypeScript
     import * as roads from 'roads';
@@ -140,6 +144,7 @@ Building a project with roads is very straightforward.
 	```
 
  - You can use browserify to compile everything for use in the browser. The following are the scripts necessary to compile the previous manual example, if it were saved as a file "client_index.js".
+ 
      **TypeScript**
     ```TypeScript
     import { build } from 'roads/build';
