@@ -16,11 +16,11 @@ Roads is a web framework built for use with async functions. It's similar to Koa
 # Index
 
 - [Getting Started](#getting-started)
-- [Roads.Road](#roadsroad)
+- [Road](#road)
   - [new Road()](#new-road)
   - [use(*function* fn)](#roadusefunction-fn)
   - [request(*string* method, *string* url, *dynamic* body, *object* headers)](#roadrequeststring-method-string-url-dynamic-body-object-headers)
-- [Roads.Response](#roadsresponse)
+- [Response](#response)
   - [new Response(*mixed* body, *number* status, *object* headers)](#new-responsemixed-body-number-status-object-headers)
   - [body](#body)
   - [status](#status)
@@ -38,7 +38,7 @@ Roads is a web framework built for use with async functions. It's similar to Koa
     - [SimpleRouter.addRoute(*string* method, *string* path,*function* fn)](#simplerouteraddroutestring-method-string-path-function-fn)
     - [SimpleRouter.addRouteFile(*string* full_path)](#simplerouteraddroutefilestring-full_path)
 - [build(*string* input_file, *string* output_file, *object* options)](#buildstring-input_file-string-output_file-object-options)
-- [Roads.PJAX(*object* road, *DomElement* container_element, *object* window)](#roadspjaxobject-road-domelement-container_element-object-window)
+- [PJAX(*object* road, *DomElement* container_element, *object* window)](#pjaxobject-road-domelement-container_element-object-window)
   - [register()](#pjaxregister)
   - [PJAX Link Format](#pjax-link-format)
   - [PJAX Form Format](#pjax-form-format)
@@ -157,7 +157,7 @@ Now that you can use your road, continue reading the docs below for more informa
 
 
 
-## Roads.Road
+## Road
 
 A Road is a container that holds an array of functions called the *request chain*. The request chain generally holds your routing logic, and any pre or post processing instructions. You interact with your road primarily via the [use](#roadusefunction-fn) method, which assigns new functions to the request chain, or the [request](#requeststring-method-string-url-dynamic-body-object-headers) method which executes all functions in the request chain.
 
@@ -342,7 +342,7 @@ road.use(function (method, url, body, headers) {
 });
 ```
 
-## Roads.Response
+## Response
 
 The response object contains all of the information you want to send to the client. This includes the body, status code and all applicable headers. 
 
@@ -624,7 +624,7 @@ name                    | type                               | description
     });
 ```
 
-## Roads.PJAX(*Object* road, *DomElement* container_element, *Object* window)
+## PJAX(*Object* road, *DomElement* container_element, *Object* window)
 **A helper object to easily enable PJAX on your website using roads**
 
 PJAX stands for pushState + AJAX. PJAX a technique for speeding up webpages by replacing certain links on the page with AJAX calls. To enable PJAX, you must create a PJAX object and call the register method. Until you call register, PJAX links will not be handled properly.
