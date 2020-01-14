@@ -144,7 +144,7 @@ Building a project with roads is very straightforward.
 	```
 
  - You can use browserify to compile everything for use in the browser. The following are the scripts necessary to compile the previous manual example, if it were saved as a file "client_index.js".
- 
+
      **TypeScript**
     ```TypeScript
     import { build } from 'roads/build';
@@ -483,16 +483,38 @@ road.request('POST', '/users', '{"name":"dashron"}', {"content-type": "applicati
 ```
 
 ### applyToContext
-**Middleware to ensure that a predefined value is always part of the request context**
-DOCS TODO
+**Middleware to apply a predefined value to the request context**
+
+```JavaScript
+road.use(Middleware.applyToContext('example', 'test'));
+
+road.use(function (method, url, body, headers) {
+    console.log(this.example); // test
+});
+```
 
 ### reroute
-**Middleware**
-DOCS TODO
+**Middleware that offers a function in the request context that allows you to easily interact with a road**
+
+In the following exxample, road and APIRoad are two different Road objects.
+```JavaScript
+road.use(Middleware.reroute('api', APIRoad));
+
+road.use(function (method, url, body, headers) {
+    this.api('GET', '/users')
+        .then((response) => {
+            console.log(response);
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+});
+```
 
 ### setTitle
 **Middleware that helps you work with setting page titles. Used in conjunction with PJAX's setTitle**
-DOCS TODO
+
+See [PJAX](#pjaxobject-road-domelement-container_element-object-window) for more information about this middleware.
 
 ### SimpleRouter(*Road* road)
 This is a simple router middleware for roads. To use it, you have to take a couple of steps.
