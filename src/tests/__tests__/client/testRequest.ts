@@ -4,7 +4,7 @@ import Client from '../../../client/request';
 import createServer, {port} from '../../resources/mockServer';
 import { Server as HttpServer } from 'http';
 import { Server as HttpsServer } from 'https';
-import Response from '../../../response';
+import Response from '../../../core/response';
 
 describe('request', () => {
     let server: HttpServer | HttpsServer;

@@ -7,9 +7,9 @@
  */
 /// <reference types="node" />
 import * as url_module from "url";
-import { ResponseMiddleware } from '../road';
-import Road, { Context } from '../road';
-import Response from '../response';
+import { ResponseMiddleware } from '../core/road';
+import Road, { Context } from '../core/road';
+import Response from '../core/response';
 export interface Route {
     (this: Context, path: string, body: string, headers: {
         [x: string]: any;

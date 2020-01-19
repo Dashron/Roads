@@ -5,8 +5,8 @@
  *
  * This file exposes a PJAX class to help with client side rendering
  */
-import Road from '../road';
-import Response from '../response';
+import Road from '../core/road';
+import Response from '../core/response';
 /**
  * This is a helper class to make PJAX easier. PJAX is a clean way of improving the performance of webpages
  * by progressively turning standard HTML links into AJAX requests for portions of a web page.

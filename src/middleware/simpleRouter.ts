@@ -7,9 +7,9 @@
  */
 
 import * as url_module from "url";
-import {Middleware, ResponseMiddleware} from '../road';
-import Road, {Context} from '../road';
-import Response from '../response';
+import {Middleware, ResponseMiddleware} from '../core/road';
+import Road, {Context} from '../core/road';
+import Response from '../core/response';
 import { request } from "http";
 
 

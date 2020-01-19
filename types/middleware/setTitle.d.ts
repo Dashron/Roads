@@ -5,7 +5,7 @@
  *
  * Exposes a single middleware function to help manage the page title. This is best used alongside the PJAX helper
  */
-import { Middleware } from '../road';
+import { Middleware } from '../core/road';
 /**
  * Adds two simple functions to get and set a page title on the request context. This is very helpful for isomorphic js, since on the client, page titles aren't part of the rendered view data.
  */

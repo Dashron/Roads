@@ -1,8 +1,15 @@
 "use strict";
 
+import * as Middleware from '../../../middleware';
+let cors = Middleware.cors;
 
 describe('Cors tests', () => {
-	test.skip('old cors tests. need to update these', () => {
+	test('test kill slash doesn\'t break normal', () => {
+		expect.assertions(1);
+		return expect(cors({})).toBeInstanceOf(Function);
+	});
+
+	//test.skip('old cors tests. need to update these', () => {
 
 // Temporarily deactivated. This is for the old cors middlware, which has been rewritten. These tests need to be rewritten.
 
@@ -225,5 +232,5 @@ function makeCorsCall (allowed_origins, method, allowed_methods, allowed_headers
 		test.equal(err.message, 'Forbidden');
 	});
 };*/
-	});
+	//});
 });

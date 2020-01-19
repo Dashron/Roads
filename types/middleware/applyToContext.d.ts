@@ -6,7 +6,7 @@
  * Exposes a single function to be used with roads middleware. It makes it easy to assign
  * static values to a roads context.
  */
-import { Middleware } from '../road';
+import { Middleware } from '../core/road';
 /**
  * Very simple middleware to apply a single value to the request context.
  *

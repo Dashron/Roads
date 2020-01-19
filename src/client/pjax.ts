@@ -6,9 +6,9 @@
  * This file exposes a PJAX class to help with client side rendering
  */
 
-import { Middleware } from '../road';
-import Road from '../road';
-import Response from '../response';
+import { Middleware } from '../core/road';
+import Road from '../core/road';
+import Response from '../core/response';
 import * as cookie  from 'cookie';
 
  /**

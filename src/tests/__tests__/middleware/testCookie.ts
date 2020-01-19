@@ -3,7 +3,7 @@
 import * as Middleware from '../../../middleware';
 let cookie = Middleware.cookie;
 import { CookieResponse } from '../../../middleware/cookie';
-import Response from '../../../response';
+import Response from '../../../core/response';
 
 describe('cookie tests', () => {
 	test('test cookie middleware parses cookies into context', () => {

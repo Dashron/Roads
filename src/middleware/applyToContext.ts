@@ -7,7 +7,7 @@
  * static values to a roads context.
  */
 
-import {Middleware} from '../road';
+import {Middleware} from '../core/road';
 
 /**
  * Very simple middleware to apply a single value to the request context.

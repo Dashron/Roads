@@ -3,7 +3,7 @@
 import * as Middleware from '../../../middleware';
 let killSlash = Middleware.killSlash;
 
-import Response from '../../../response';
+import Response from '../../../core/response';
 
 describe('KillSlashes tests', () => {
 	test('test kill slash doesn\'t break normal', () => {

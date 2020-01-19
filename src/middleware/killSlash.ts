@@ -6,7 +6,7 @@
  * Exposes a single middleware function to kill trailing slashes in HTTP requests.
  * This is done by redirecting the end user to the same route without the trailing slash.
  */
-import {Middleware} from '../road';
+import {Middleware} from '../core/road';
 import * as url_module from 'url';
 
 /**

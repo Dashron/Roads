@@ -6,8 +6,8 @@
  * This exposes a function that helps you manage CORS in your roads service
  */
 
-import { Middleware } from "../road";
-import Response from '../response';
+import { Middleware } from "../core/road";
+import Response from '../core/response';
 
 /**
  * Apply proper cors headers
@@ -22,7 +22,7 @@ import Response from '../response';
  * 
  * @return {function} The middleware to bind to your road
  */
-export function cors (options: {
+export default function cors (options: {
 				validOrigins?: string[], 
 				supportsCredentials?: boolean, 
 				responseHeaders?: {[x: string]: any}, 

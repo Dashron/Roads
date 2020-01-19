@@ -4,8 +4,8 @@ import * as Middleware from '../../../middleware';
 let reroute = Middleware.reroute;
 
 import { Road } from '../../../index';
-import { Middleware as MiddlewareType } from '../../../road';
-import Response from '../../../response';
+import { Middleware as MiddlewareType } from '../../../core/road';
+import Response from '../../../core/response';
 
 describe('Reroute middleware tests', () => {
 	/**

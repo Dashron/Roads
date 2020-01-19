@@ -7,7 +7,7 @@ let SimpleRouter = Middleware.SimpleRouter;
 
 import { Route, SimpleRouterURL } from '../../../middleware/simpleRouter';
 import { Response, Road } from "../../../index";
-import { ResponseMiddleware } from "../../../road";
+import { ResponseMiddleware } from "../../../core/road";
 
 const router_file_test_path = __dirname + '/../../resources/_router_file_test.js';
 

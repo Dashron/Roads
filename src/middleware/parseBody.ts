@@ -6,7 +6,7 @@
  * Exposes a single middleware function to help parse request bodies
  */
 
-import {Middleware} from '../road';
+import {Middleware} from '../core/road';
 
 import * as content_type_module from 'content-type';
 import * as qs_module from 'querystring';

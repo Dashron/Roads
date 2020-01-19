@@ -6,8 +6,8 @@
  * Exposes a method that allows you to bind additional roads to a road context. This allows you to manage multiple
  * client side or server side road objects at once
  */
-import { Middleware } from '../road';
-import Road from '../road';
+import { Middleware } from '../core/road';
+import Road from '../core/road';
 /**
  * Applies a method to the request context that allows you to make requests into another roads object
  *

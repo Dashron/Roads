@@ -6,7 +6,7 @@
  * This file exposes a Request object to offer an HTTP request library with a method signature that matches
  * the roads.request method
  */
-import Response from '../response';
+import Response from '../core/response';
 /**
  * This class is a helper with making HTTP requests that look like roads requests.
  * The function signature matches the roads "request" method to allow the details of a request to be abstracted

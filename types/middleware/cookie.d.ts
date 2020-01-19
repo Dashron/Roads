@@ -28,8 +28,8 @@
  *
  */
 import * as cookie from 'cookie';
-import { Middleware } from '../road';
-import Response from '../response';
+import { Middleware } from '../core/road';
+import Response from '../core/response';
 export declare class CookieResponse extends Response {
     setCookie: {
         (name: string, value?: any, options?: cookie.CookieSerializeOptions): void;

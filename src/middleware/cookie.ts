@@ -30,8 +30,8 @@
  */
 
 import * as cookie from 'cookie';
-import { Middleware } from '../road';
-import Response from '../response';
+import { Middleware } from '../core/road';
+import Response from '../core/response';
 
 export class CookieResponse extends Response {
 	setCookie: {

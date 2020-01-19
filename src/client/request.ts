@@ -8,7 +8,7 @@
  */
 
 import roadsRequest from 'roads-req';
-import Response from '../response';
+import Response from '../core/response';
 
 /**
  * This class is a helper with making HTTP requests that look like roads requests. 

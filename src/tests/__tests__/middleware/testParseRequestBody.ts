@@ -3,9 +3,9 @@
 import * as Middleware from '../../../middleware';
 let parseBody = Middleware.parseBody;
 
-import { Middleware as MiddlewareType } from '../../../road';
+import { Middleware as MiddlewareType } from '../../../core/road';
 import { Road } from '../../../index';
-import Response from '../../../response';
+import Response from '../../../core/response';
 
 describe('Parse Request Body tests', () => {
 	test('test request with valid json body', () => {
