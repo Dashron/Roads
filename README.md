@@ -147,13 +147,13 @@ Building a project with roads is very straightforward.
 
      **TypeScript**
     ```TypeScript
-    import { build } from 'roads/build';
+    import { build } from 'roads';
     build('client_index.js', __dirname + '/build/client.js', { use_sourcemaps: true });
 	```
 
     **JavaScript**
     ```JavaScript
-    const build = require('roads/build');
+    const build = require('roads').build;
     build('client_index.js', __dirname + '/build/client.js', { use_sourcemaps: true });
 	```
 
@@ -390,14 +390,14 @@ console.log(response.headers);
 
 ## Middleware
 
-Roads comes bundled with some common middleware. All bundled middleware can be acccessed via the `roads/middleware` package.
+Roads comes bundled with some common middleware. All bundled middleware can be acccessed via the `roads` package.
 
 ```TypeScript
-    import * as Middleware from 'roads/middleware';
+    import { Middleware } from 'roads';
 ```
 
 ```JavaScript
-    let Middleware = require('roads/middleware');
+    let Middleware = require('roads').Middleware;
 ```
 
 ### cookie()
@@ -618,7 +618,7 @@ name                    | type                               | description
 
 
 ```TypeScript
-    let build = require('roads/build');
+    let build = require('roads').build;
 
     build(__dirname + '/static/client.js', __dirname + '/static/client.brws.js', {
         use_sourcemaps: true,
@@ -635,7 +635,7 @@ name                    | type                               | description
 ```
 
 ```JavaScript
-    import build from 'roads/build';
+    import { build } from 'roads';
 
     build(__dirname + '/static/client.js', __dirname + '/static/client.brws.js', {
         use_sourcemaps: true,
@@ -705,7 +705,7 @@ Your server should include the following:
 
 ```JavaScript
 var roads = require('roads');
-var Middleware = require('roads/middleware');
+var Middleware = require('roads').Middleware;
 
 var road = ...; // Incomplete. See the getting started section for more information about creating a road
 road.use(Middleware.setTitle);

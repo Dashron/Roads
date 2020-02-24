@@ -1,6 +1,6 @@
 "use strict";
 
-import * as Middleware from '../../../middleware';
+import { Middleware } from '../../../index';
 let parseBody = Middleware.parseBody;
 
 import { Middleware as MiddlewareType } from '../../../core/road';

@@ -2,7 +2,7 @@
 
 import * as url_module from "url";
 
-import * as Middleware from '../../../middleware';
+import { Middleware } from '../../../index';
 let SimpleRouter = Middleware.SimpleRouter;
 
 import { Route, SimpleRouterURL } from '../../../middleware/simpleRouter';

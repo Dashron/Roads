@@ -1,6 +1,6 @@
 "use strict";
 
-import * as Middleware from '../../../middleware';
+import { Middleware } from '../../../index';
 let cookie = Middleware.cookie;
 import { CookieResponse } from '../../../middleware/cookie';
 import Response from '../../../core/response';

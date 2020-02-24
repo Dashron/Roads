@@ -58,6 +58,7 @@ function fixIgnore(ignore_list?: Array<string>):  Array<string> {
 		ignore_list = [];
 	}
 
+	ignore_list.push(__filename);
 	return ignore_list;
 }
 
@@ -73,7 +74,6 @@ function fixExclude(exclude_list?: Array<string>): Array<string>{
 		exclude_list = [];
 	}
 
-	exclude_list.push(__filename);
 	return exclude_list;
 }
 

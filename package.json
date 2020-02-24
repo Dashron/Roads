@@ -1,6 +1,6 @@
 {
   "name": "roads",
-  "version": "6.0.1",
+  "version": "6.1.0",
   "types": "./types/index.d.ts",
   "author": {
     "name": "Aaron Hedges",
@@ -15,7 +15,7 @@
   ],
   "homepage": "https://github.com/Dashron/roads",
   "scripts": {
-    "test": "node node_modules/jest/bin/jest.js --config jest.config.js tests/",
+    "test": "node node_modules/jest/bin/jest.js --config jest.config.js src/tests/",
     "prepare": "tsc",
     "build": "tsc"
   },
