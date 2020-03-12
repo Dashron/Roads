@@ -7,4 +7,5 @@ node_modules
 !src
 !jest.config.js
 !jsExample/*
+jsExample/package-lock.json
 jsExample/node_modules

@@ -11,7 +11,7 @@ import { ResponseMiddleware } from '../core/road';
 import Road, { Context } from '../core/road';
 import Response from '../core/response';
 export interface Route {
-    (this: Context, path: string, body: string, headers: {
+    (this: Context, path: SimpleRouterURL, body: string, headers: {
         [x: string]: any;
     }, next: ResponseMiddleware): Promise<Response>;
 }

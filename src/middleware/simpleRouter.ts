@@ -10,11 +10,10 @@ import * as url_module from "url";
 import {Middleware, ResponseMiddleware} from '../core/road';
 import Road, {Context} from '../core/road';
 import Response from '../core/response';
-import { request } from "http";
 
 
 export interface Route {
-	(this: Context, path: string, body: string, headers: {[x: string]: any}, next: ResponseMiddleware): Promise<Response>
+	(this: Context, path: SimpleRouterURL, body: string, headers: {[x: string]: any}, next: ResponseMiddleware): Promise<Response>
 }
 
 interface RouteDetails {

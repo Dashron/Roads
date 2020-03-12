@@ -1,6 +1,6 @@
 {
   "name": "roads",
-  "version": "6.1.0",
+  "version": "6.1.1",
   "types": "./types/index.d.ts",
   "author": {
     "name": "Aaron Hedges",
