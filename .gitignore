@@ -6,6 +6,7 @@ node_modules
 */*.js
 !src
 !jest.config.js
-!jsExample/*
+!jsExample/*.js
+!jsExample/*/*.js
 jsExample/package-lock.json
 jsExample/node_modules
