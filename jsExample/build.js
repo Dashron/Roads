@@ -8,5 +8,6 @@
  */
 
 require('roads').build(__dirname + '/static/client.js', __dirname + '/static/client.brws.js', {
-	use_sourcemaps: true
+	use_sourcemaps: true,
+	transform: ["brfs"]
 });

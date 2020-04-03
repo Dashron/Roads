@@ -5,6 +5,8 @@
  *
  * This file makes it easier to write browserify scripts to build roads to work in the browser
  */
+import * as browserify from 'browserify';
+import * as babelify from 'babelify';
 /**
  * @param  {boolean} [options.use_sourcemaps] Whether or not the build process should include source maps.
  * @param  {Object} [options.envify] An object to pass to envify. This allows you to change values between your server and client scripts.
@@ -12,12 +14,10 @@
  * @param  {Object} [options.babelify] An object containing parameters to pass to the babelify transform
  */
 interface RoadsBuildOptions {
-    use_sourcemaps?: any;
-    ignore_missing?: any;
-    babelify?: any;
-    ignore?: any;
-    exclude?: any;
-    envify?: any;
+    browserifyOptions?: browserify.Options;
+    babelifyOptions?: babelify.BabelifyOptions;
+    ignore?: string | Array<string>;
+    exclude?: string | Array<string>;
 }
 /**
  * Compiles the input_file node script to be used in the browser.

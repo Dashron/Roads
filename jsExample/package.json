@@ -9,8 +9,9 @@
   "description": "Example for roads.js",
   "devDependencies": {},
   "dependencies": {
-    "roads": "6.1.1",
-    "roads-server": "1.0.0"
+    "roads": "6.1.2",
+    "roads-server": "1.0.3",
+    "regenerator-runtime": "0.13.5"
   },
   "private": true,
   "license": "MIT"

@@ -1,6 +1,6 @@
 {
   "name": "roads",
-  "version": "6.1.2",
+  "version": "6.2.0",
   "types": "./types/index.d.ts",
   "author": {
     "name": "Aaron Hedges",
@@ -37,17 +37,13 @@
     "@types/envify": "0.0.29",
     "@types/jest": "^24.0.23",
     "@types/node": "^12.12.14",
-    "brfs": "2.0.2",
-    "dts-gen": "^0.5.8",
     "jest": "^24.9.0",
-    "regenerator-runtime": "0.13.3",
-    "roads-server": "1.0.0-alpha.6",
-    "ts-jest": "^24.2.0"
+    "ts-jest": "^24.2.0",
+    "typescript": "^3.8.3"
   },
   "dependencies": {
     "babelify": "10.0.0",
     "browserify": "16.5.0",
-    "envify": "4.1.0",
     "content-type": "^1.0.4",
     "cookie": "0.4.0",
     "roads-req": "0.4.2"
