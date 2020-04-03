@@ -605,32 +605,29 @@ Example File:
 ## build(*string* input_file, *string* output_file, *object* options)
 **Browserify function to convert your script to run in the browser**
 
-name                    | type                               | description
- -----------------------|------------------------------------|---------------
- input_file             | string                             | The source file that will be converted to use in the browser
- output_file            | string                             | The output file that will be accessible by your browser
- options                | object                             | A set of options that can influence the build process. See all fields below
- options.babelify       | object                             | An object containing parameters to pass to the babelify transform
- options.envify         | object                             | An object to pass to envify. This allows you to change values between your server and client scripts.
- options.exclude        | array                              | An array of files that should not be included in the build process.
- options.external       | array                              | An array of dependencies that should be included from exernal resources instead of built into the project
- options.use_sourcemaps | boolean                            | Whether or not the build process should include source maps.
+name                       | type                               | description
+ --------------------------|------------------------------------|---------------
+ input_file                | string                             | The source file that will be converted to use in the browser
+ output_file               | string                             | The output file that will be accessible by your browser
+ options                   | object                             | A set of options that can influence the build process. See all fields below
+ options.browserifyOptions | object                             | Custom configuration settings to pass to browserify (https://github.com/browserify/browserify#browserifyfiles--opts)
+ options.babelifyOptions   | object                             | Custom configuration settings to pass to babelify (https://github.com/babel/babelify#options)
+ options.exclude           | array                              | An array of files that should not be included in the build process. They will throw errors if required. See Browserify's "exclude"
+ options.ignore            | array                              | An array of files that should not be included in the build process, but should not error when required. See Browserify's "ignore"
 
 
 ```TypeScript
     let build = require('roads').build;
 
     build(__dirname + '/static/client.js', __dirname + '/static/client.brws.js', {
-        use_sourcemaps: true,
-        external: {
-            roads: {
-                output_file: __dirname + '/static/roads.brws.js',
-            }, 
-            react: {
-                output_file: __dirname + '/static/react.brws.js',
-            }
+        browserifyOptions: {
+            // standard browserify options
         },
-        babelify: {presets: ['react']}
+	    babelifyOptions: {
+            // standard babelify options
+        },
+	    ignore: ["file/to/be/ignored", "ignored_module"],
+        exclude: ["file/to/be/excluded", "excluded_module"]
     });
 ```
 
@@ -638,16 +635,14 @@ name                    | type                               | description
     import { build } from 'roads';
 
     build(__dirname + '/static/client.js', __dirname + '/static/client.brws.js', {
-        use_sourcemaps: true,
-        external: {
-            roads: {
-                output_file: __dirname + '/static/roads.brws.js',
-            }, 
-            react: {
-                output_file: __dirname + '/static/react.brws.js',
-            }
+        browserifyOptions: {
+            // standard browserify options
         },
-        babelify: {presets: ['react']}
+	    babelifyOptions: {
+            // standard babelify options
+        },
+	    ignore: ["file/to/be/ignored", "ignored_module"],
+        exclude: ["file/to/be/excluded", "excluded_module"]
     });
 ```
 
