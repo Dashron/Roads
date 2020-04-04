@@ -11,7 +11,8 @@
   "dependencies": {
     "roads": "6.1.2",
     "roads-server": "1.0.3",
-    "regenerator-runtime": "0.13.5"
+    "regenerator-runtime": "0.13.5",
+    "brfs": "2.0.2"
   },
   "private": true,
   "license": "MIT"
