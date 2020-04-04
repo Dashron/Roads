@@ -11,5 +11,6 @@ exports.Middleware = {
     killSlash: require("./middleware/killSlash").default,
     parseBody: require("./middleware/parseBody").default,
     reroute: require("./middleware/reroute").default,
-    setTitle: require("./middleware/setTitle").default
+    setTitle: require("./middleware/setTitle").default,
+    SimpleRouter: require("./middleware/simpleRouter").default
 };
