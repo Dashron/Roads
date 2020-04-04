@@ -27,5 +27,5 @@ interface RoadsBuildOptions {
  * @param  {RoadsBuildOptions} [options] A set of options that can influence the build process. See all fields below
  * @todo tests
  */
-export default function build(input_file: string, output_file: string, options: RoadsBuildOptions): void;
+export default function build(input_file: string, output_file: string, options: RoadsBuildOptions): Promise<void>;
 export {};
