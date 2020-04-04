@@ -65,8 +65,6 @@ export default function build (input_file: string, output_file: string, options:
 		// @ts-ignore Argument of type 'string[]' is not assignable to parameter of type 'string'.ts(2345)
 		builder.ignore(options.ignore);
 	}
-
-	builder.ignore(__filename);
 	
 	if (options.exclude) {
 		// Exclude also takes an array, but the types file doesn't think so

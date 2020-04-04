@@ -10,3 +10,5 @@ node_modules
 !jsExample/*/*.js
 jsExample/package-lock.json
 jsExample/node_modules
+
+!browser.js
