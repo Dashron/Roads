@@ -9,8 +9,8 @@ jobs:
 
     strategy:
       matrix:
-        # 8.x and lower not supported due to lack of URL
-        node-version: [10.x, 12.x, 13.3]
+        # 8.x and lower not supported due to lack of URL object
+        node-version: [10.x, 12.x, 13.x, 14.x]
 
     steps:
     - uses: actions/checkout@v1

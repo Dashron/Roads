@@ -1,6 +1,6 @@
 {
   "name": "roads",
-  "version": "6.2.6",
+  "version": "6.3.0",
   "types": "./types/index.d.ts",
   "author": {
     "name": "Aaron Hedges",
@@ -28,24 +28,24 @@
   },
   "devDependencies": {
     "@types/content-type": "^1.1.3",
-    "@types/cookie": "^0.3.3",
-    "@types/envify": "0.0.29",
-    "@types/jest": "^25.2.1",
-    "@types/node": "^12.12.14",
-    "jest": "^25.3.0",
-    "ts-jest": "^25.4.0",
-    "typescript": "^3.8.3"
+    "@types/cookie": "^0.4.0",
+    "@types/envify": "^0.0.30",
+    "@types/jest": "^26.0.10",
+    "@types/node": "^14.6.1",
+    "jest": "^26.4.2",
+    "ts-jest": "^26.3.0",
+    "typescript": "^4.0.2"
   },
   "dependencies": {
     "@types/babelify": "^7.3.6",
     "@types/browserify": "^12.0.36",
-    "babelify": "10.0.0",
-    "@babel/core": "7.9.0",
-    "@babel/preset-env": "7.9.5",
-    "browserify": "16.5.1",
+    "babelify": "^10.0.0",
+    "@babel/core": "^7.11.4",
+    "@babel/preset-env": "^7.11.0",
+    "browserify": "^16.5.2",
     "content-type": "^1.0.4",
-    "cookie": "0.4.0",
-    "roads-req": "0.4.5"
+    "cookie": "^0.4.1",
+    "roads-req": "^0.4.5"
   },
   "license": "MIT",
   "browser": "./browser.js"
