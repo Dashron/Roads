@@ -21,8 +21,8 @@ module.exports = function (router) {
 		// In the real world the body of the response should be created from a template engine.
 		return new this.Response(`Hello!<br />
 		 Try the <a href="/public" data-roads-pjax="link">public test link</a>.
-		 It's available to the server and can be rendered from the client! Try clicking it for the client path, or control clicking for the server.<br />
-		 Try the <a href="/private">private test link</a>. Itt's available to the server, but is not build in the client! Check your console for proof of the 404!`);
+		 It's available to the server and can be rendered from the client! Try clicking it for the client path, or control clicking for a real request to the server.<br />
+		 Try the <a href="/private">private test link</a>. Itt's available to the server, but is not build in the client! Check your console for proof of the network request!`);
 	});
 
 	router.addRoute('GET', '/public', function () {
