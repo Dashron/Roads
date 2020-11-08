@@ -1,6 +1,6 @@
 {
   "name": "roads",
-  "version": "6.3.0",
+  "version": "6.3.1",
   "types": "./types/index.d.ts",
   "author": {
     "name": "Aaron Hedges",
@@ -42,7 +42,7 @@
     "babelify": "^10.0.0",
     "@babel/core": "^7.12.3",
     "@babel/preset-env": "^7.12.1",
-    "browserify": "^16.5.2",
+    "browserify": "^17.0.0",
     "content-type": "^1.0.4",
     "cookie": "^0.4.1",
     "roads-req": "^0.4.6"
