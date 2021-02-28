@@ -602,7 +602,7 @@ Example File:
 }
 ```
 
-## build(*string* input_file, *string* output_file, *object* options)
+## build(*string* input_file, *string* output_file, *object* options, *boolean* watch)
 **Browserify function to convert your script to run in the browser**
 
 name                       | type                               | description
@@ -612,9 +612,10 @@ name                       | type                               | description
  options                   | object                             | A set of options that can influence the build process. See all fields below
  options.browserifyOptions | object                             | Custom configuration settings to pass to browserify (https://github.com/browserify/browserify#browserifyfiles--opts)
  options.babelifyOptions   | object                             | Custom configuration settings to pass to babelify (https://github.com/babel/babelify#options)
+ options.watchifyOptions   | object                             | Custom configuration settings to pass to watchify (https://github.com/browserify/watchify)
  options.exclude           | array                              | An array of files that should not be included in the build process. They will throw errors if required. See Browserify's "exclude"
  options.ignore            | array                              | An array of files that should not be included in the build process, but should not error when required. See Browserify's "ignore"
-
+ watch                     | boolean                            | A flag that when enabled, causes the builder to remain active, monitoring the built files for any changes an automatically rebuilding
 
 ```TypeScript
     let build = require('roads').build;

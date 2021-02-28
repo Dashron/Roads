@@ -7,6 +7,7 @@
  */
 import * as browserify from 'browserify';
 import * as babelify from 'babelify';
+import * as watchify from 'watchify';
 /**
  * @param  {boolean} [options.use_sourcemaps] Whether or not the build process should include source maps.
  * @param  {Object} [options.envify] An object to pass to envify. This allows you to change values between your server and client scripts.
@@ -16,6 +17,7 @@ import * as babelify from 'babelify';
 interface RoadsBuildOptions {
     browserifyOptions?: browserify.Options;
     babelifyOptions?: babelify.BabelifyOptions;
+    watchifyOptions?: watchify.Options;
     ignore?: string | Array<string>;
     exclude?: string | Array<string>;
 }
@@ -27,5 +29,5 @@ interface RoadsBuildOptions {
  * @param  {RoadsBuildOptions} [options] A set of options that can influence the build process. See all fields below
  * @todo tests
  */
-export default function build(input_file: string, output_file: string, options: RoadsBuildOptions): Promise<void>;
+export default function build(input_file: string, output_file: string, options: RoadsBuildOptions, watch?: boolean): Promise<void>;
 export {};

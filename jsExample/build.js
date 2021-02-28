@@ -10,7 +10,7 @@
 require('roads').build(__dirname + '/static/client.js', __dirname + '/static/client.brws.js', {
 	use_sourcemaps: true,
 	transform: ["brfs"]
-}).then(() => {
+}, true).then(() => {
 	console.log('build complete');
 }).catch((err) => {
 	console.log('build error', err);

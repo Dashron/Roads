@@ -9,6 +9,7 @@
 import * as browserify from 'browserify';
 import * as babelify from 'babelify';
 import * as fs from 'fs';
+import * as watchify from 'watchify';
 
 /**
  * @param  {boolean} [options.use_sourcemaps] Whether or not the build process should include source maps.
@@ -19,6 +20,7 @@ import * as fs from 'fs';
 interface RoadsBuildOptions { 
 	browserifyOptions?: browserify.Options,
 	babelifyOptions?: babelify.BabelifyOptions,
+	watchifyOptions?: watchify.Options,
 	ignore?: string | Array<string>,
 	exclude?: string | Array<string> 
 };
@@ -50,12 +52,30 @@ function fixBabelify (babel_options?: babelify.BabelifyOptions): babelify.Babeli
  * @param  {RoadsBuildOptions} [options] A set of options that can influence the build process. See all fields below
  * @todo tests
  */
-export default function build (input_file: string, output_file: string, options: RoadsBuildOptions): Promise<void> {
+export default function build (input_file: string, output_file: string, options: RoadsBuildOptions, watch: boolean = false): Promise<void> {
 	return new Promise((resolve, reject) => {
 		console.log('starting to build ' + output_file + ' from source ' + input_file);
 
+		if (watch) {
+			if (!options.browserifyOptions) {
+				options.browserifyOptions = {};
+			}
+
+			if (!options.browserifyOptions.cache) {
+				options.browserifyOptions.cache = {};
+			}
+
+			if (!options.browserifyOptions.packageCache) {
+				options.browserifyOptions.packageCache = {};
+			}
+		}
+
 		let builder = browserify(input_file, options.browserifyOptions)
 		.transform("babelify", fixBabelify(options.babelifyOptions));
+
+		if (watch) {
+			builder.plugin('watchify', options.watchifyOptions);
+		}
 
 		builder.on('dep', function(dep: { file: string; }) {
 			console.log('adding dependency ' + dep.file);
@@ -73,10 +93,20 @@ export default function build (input_file: string, output_file: string, options:
 			builder.exclude(options.exclude);
 		}
 		
-		let stream = builder.bundle();
-		stream.on('end', resolve);
-		stream.on('error', reject);
-		stream.pipe(fs.createWriteStream(output_file));
+		function bundle() {
+			builder.bundle()
+				.on('end', resolve)
+				.on('error', reject)
+				.pipe(fs.createWriteStream(output_file));
+		}
+
+		if (watch) {
+			builder.on('update', bundle);
+		}
+
+		bundle();
+
+		
 	});
 };
 
