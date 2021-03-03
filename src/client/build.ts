@@ -12,10 +12,10 @@ import * as fs from 'fs';
 import * as watchify from 'watchify';
 
 /**
- * @param  {boolean} [options.use_sourcemaps] Whether or not the build process should include source maps.
- * @param  {Object} [options.envify] An object to pass to envify. This allows you to change values between your server and client scripts.
+ * @param  {Object} [options.browserifyOptions] An object containing parameters to pass to browserify
+ * @param  {Object} [options.babelifyOptions] An object containing parameters to pass to the babelify transform
+ * @param  {Object} [options.watchifyOptions] An object containing parameters to pass to watchify
  * @param  {Array} [options.exclude] An array of files that should not be included in the build process.
- * @param  {Object} [options.babelify] An object containing parameters to pass to the babelify transform
  */
 interface RoadsBuildOptions { 
 	browserifyOptions?: browserify.Options,

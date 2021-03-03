@@ -615,7 +615,7 @@ name                       | type                               | description
  options.watchifyOptions   | object                             | Custom configuration settings to pass to watchify (https://github.com/browserify/watchify)
  options.exclude           | array                              | An array of files that should not be included in the build process. They will throw errors if required. See Browserify's "exclude"
  options.ignore            | array                              | An array of files that should not be included in the build process, but should not error when required. See Browserify's "ignore"
- watch                     | boolean                            | A flag that when enabled, causes the builder to remain active, monitoring the built files for any changes an automatically rebuilding
+ watch                     | boolean                            | A flag that when enabled, causes the builder to remain active, monitoring the built files for any changes and automatically rebuilding
 
 ```TypeScript
     let build = require('roads').build;
