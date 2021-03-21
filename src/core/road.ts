@@ -1,22 +1,28 @@
+/* eslint-disable max-len */
 /**
  * road.js
- * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
- * 
+ *
  * Exposes the core Road class
  */
 
 import * as response_lib from './response';
 import Response from './response';
 
+
+export interface IncomingHeaders { [x: string]: string | Array<string> | undefined }
+
 export interface Middleware {
-	(this: Context, method: string, path: string, body: string, headers: {[x: string]: any}, next: ResponseMiddleware): Promise<Response>
+	(this: Context, method: string, path: string,
+		body: string, headers: IncomingHeaders,
+		next: ResponseMiddleware): Promise<Response>
 }
 
 export interface Context {
-	request: Function,
+	request: Road['request'],
 	Response: response_lib.ResponseConstructor,
-	[x: string]: any
+	[x: string]: unknown
 }
 
 export interface ResponseMiddleware {
@@ -25,7 +31,7 @@ export interface ResponseMiddleware {
 
 /**
  * See roadsjs.com for full docs.
- * 
+ *
  * @name Road
  */
 export default class Road {
@@ -43,15 +49,16 @@ export default class Road {
 	/**
 	 * Add one or many custom functions to be executed along with every request.
 	 *
-	 * The functions added will be executed in the order they were added. Each handler must execute the "next" parameter if it wants to continue executing the chain.
+	 * The functions added will be executed in the order they were added. Each handler must
+	 * 		execute the "next" parameter if it wants to continue executing the chain.
 	 *
 	 * name | type                                                                  | required | description
 	 * -----|-----------------------------------------------------------------------|----------|---------------
 	 * fn   | Function(*string* method, *string* url,*string* body,*object* headers,*function* next) | yes      | Will be called any time a request is made on the object.
-	 * 
+	 *
 	 * This will be called for every request, even for routes that do not exist. The callback will be executed with the following five parameters :
-	 * 
-	 * Callback 
+	 *
+	 * Callback
 	 * **function (*string* method, *string* url, *string* body, *Object* headers, *Function* next)**
 	 *
 	 * name     | type                               | description
@@ -63,12 +70,13 @@ export default class Road {
 	 * next    | function                           | The next step of the handler chain. If there are no more custom handlers assigned, next will resolve to the [resource method](#resource-method) that the router located. This method will always return a promise.
 	 *
 	 * If the callback does not return a [response](#roadsresponse) object, it will be wrapped in a [response](#roadsresponse) object with the default status code of 200.
-	 *  
+	 *
 	 * @param {Function} fn - A callback (function or async function) that will be executed every time a request is made.
 	 * @returns {Road} this road object. Useful for chaining use statements.
 	 */
-	use (fn: Middleware): Road {		
-		// Currently we pass everything through the coroutine wrapper to be save. Let that library decide what does and does not actually need to be wrapped
+	use (fn: Middleware): Road {
+		// Currently we pass everything through the coroutine wrapper to be save. Let that library decide
+		// 		what does and does not actually need to be wrapped
 		this._request_chain.push(fn);
 
 		return this;
@@ -78,18 +86,21 @@ export default class Road {
 	 *
 	 * Execute the resource method associated with the request parameters.
 	 *
-	 * This function will locate the appropriate [resource method](#resource-method) for the provided HTTP Method and URL, execute it and return a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A). The thenable will always resolve to a [Response](#roadsresponse) object.
-	 * 
+	 * This function will locate the appropriate [resource method](#resource-method) for the
+	 * 		provided HTTP Method and URL, execute it and return a
+	 * 		[thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A).
+	 * 		The thenable will always resolve to a [Response](#roadsresponse) object.
+	 *
 	 * @param {string} method - HTTP request method
 	 * @param {string} url - HTTP request url
 	 * @param {string} [body] - HTTP request body
 	 * @param {object} [headers] - HTTP request headers
 	 * @returns {Promise} this promise will resolve to a Response object
 	 */
-	request (method: string, url: string, body?: string, headers?: object): Promise<Response> {
+	request (method: string, url: string, body?: string, headers?: IncomingHeaders): Promise<Response> {
 		return response_lib.wrap(this._buildNext(method, url, body, headers, {
 			request: this.request.bind(this),
-			Response: Response
+			Response
 		})());
 	}
 
@@ -104,29 +115,30 @@ export default class Road {
 	 * @param {Context} context - Request context
 	 * @returns {NextMiddleware} A function that will start (or continue) the request chain
 	 */
-	protected _buildNext (request_method: string, path: string, request_body: string | undefined, request_headers: object | undefined, context: Context): ResponseMiddleware {
-		let _self: Road;
-		let progress: number;
-		let route_fn: ResponseMiddleware;
-		let next: ResponseMiddleware;
+	protected _buildNext (request_method: string, path: string, request_body: string | undefined,
+		request_headers: IncomingHeaders | undefined, context: Context
+	): ResponseMiddleware {
 
-		_self = this;
-		progress = 0;
-		next = () => {
-			if (_self._request_chain.length && _self._request_chain[progress]) {
-				route_fn = _self._request_chain[progress].bind(context, request_method, path, request_body, request_headers, () => {
-					progress += 1;
-					return next();
-				});
+		let progress = 0;
+		let route_fn: ResponseMiddleware;
+		const next: ResponseMiddleware = () => {
+			if (this._request_chain.length && this._request_chain[progress]) {
+				route_fn = this._request_chain[progress].bind(context,
+					request_method, path, request_body, request_headers,
+					() => {
+						progress += 1;
+						return next();
+					});
 
 			} else {
-				// If next is called and there is nothing next, we should still return a promise, it just shouldn't do anything
-				route_fn = () => { 
+				// If next is called and there is nothing next, we should still return a promise,
+				//		it just shouldn't do anything
+				route_fn = () => {
 					return Promise.resolve(new Response('Page not found', 404));
 				};
 			}
 
-			return _self._executeRoute(route_fn);
+			return this._executeRoute(route_fn);
 		};
 
 		return next;
@@ -134,7 +146,7 @@ export default class Road {
 
 	/**
 	 * Execute a resource method, and ensure that a promise is always returned
-	 * 
+	 *
 	 * @param {Function} route
 	 * @returns {Promise<Response>}
 	 */
@@ -145,7 +157,8 @@ export default class Road {
 		try {
 			result = route();
 		} catch (e) {
-			// this should never be reached if route is a coroutine. This will only be reached if the route is function that throws an error.
+			// this should never be reached if route is a coroutine. This will only be reached if
+			//		the route is function that throws an error.
 			return new Promise((resolve, reject) => {
 				reject(e);
 			});

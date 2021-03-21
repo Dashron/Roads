@@ -1,2 +1,4 @@
-1. Reduce the files used by the build script. Ideally we would only import needed files, but since everything is referenced in index.js, everything is included. The part that makes this hard, is that typescript only supports one index file, so we won't get types if they aren't referenced in the index. Because of this, the best option might be splitting them to different npm packages.
-2. The current system doesn't properly handle bad http methods. If the route exists, but the method doesn't, we don't 405. If the method is something we know nothing about (e.g. "BanAnANanN"), it should 501
+1. Verify all examples work with new linted changes
+2. put es-lint and prettier in as mandatory for tests to pass
+3. Reduce the files used by the build script. Ideally we would only import needed files, but since everything is referenced in index.js, everything is included. The part that makes this hard, is that typescript only supports one index file, so we won't get types if they aren't referenced in the index. Because of this, the best option might be splitting them to different npm packages. In the meanwhile users can require a deep file directly.
+4. The current system doesn't properly handle bad http methods. If the route exists, but the method doesn't, we don't 405. If the method is something we know nothing about (e.g. "BanAnANanN"), it should 501

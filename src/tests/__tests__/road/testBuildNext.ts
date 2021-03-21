@@ -1,9 +1,8 @@
-"use strict";
-
 import { Road } from '../../../index';
 import { Response } from '../../../index';
 
-// Note: This file used to have many more tests, but a recent roads change invalidated most of them, and the migration to jest made it clear that many of them were 
+// Note: This file used to have many more tests, but a recent roads change invalidated most of them, and the
+//	migration to jest made it clear that many of them were
 // covered by other tests (context, multi use, etc)
 describe('road buildNext test', () => {
 	/**
@@ -12,7 +11,10 @@ describe('road buildNext test', () => {
 	test('build next hits', () => {
 		expect.assertions(1);
 
-		var road = new Road();
-		return expect(road['_buildNext']('GET', '/', '', {}, {request: function(){}, Response: Response})()).resolves.toEqual(new Response('Page not found', 404, {}));
+		const road = new Road();
+		return expect(road['_buildNext']('GET', '/', '', {}, {
+			request: function() { return Promise.resolve(new Response('')); },
+			Response: Response
+		})()).resolves.toEqual(new Response('Page not found', 404, {}));
 	});
 });

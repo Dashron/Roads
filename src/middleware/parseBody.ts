@@ -1,54 +1,64 @@
 /**
  * parseBody.js
- * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
- * 
+ *
  * Exposes a single middleware function to help parse request bodies
  */
 
-import {Middleware} from '../core/road';
+import {IncomingHeaders, Middleware} from '../core/road';
 
-import * as content_type_module from 'content-type';
-import * as qs_module from 'querystring';
+import * as contentTypeModule from 'content-type';
+import * as qsModule from 'querystring';
+import { OutgoingHeaders } from '../core/response';
+
+function getSingleHeader(headers: IncomingHeaders | OutgoingHeaders, key: string): string | undefined {
+	if (headers) {
+		// This is a little weirder than I would like, but it works better with typescript
+		const val = headers[key];
+
+		if (Array.isArray(val)) {
+			return val[0];
+		}
+
+		return val;
+	}
+}
 
 /**
  * Translate the request body into a usable value.
- * 
+ *
  * If the content type is application/json this will attempt to parse that json
  * If application/x-www-form-urlencoded this will attempt to parse it as a query format
  * Otherwise this will return a string
- * 
- * @param  {mixed} body - request body
+ *
+ * @param  {string} body - request body
  * @param  {string} content_type - media type of the body
  * @returns {(object|string)} parsed body
  * @todo Actually do something with the parameters, such as charset
  */
-function parseRequestBody (body: any, content_type: string): object | string {
-	if (typeof(body) === "object" || Array.isArray(body) || !body) {
-		// no need to parse if it's already an object
-		return body;
+function parseRequestBody (body: string, contentType?: string): unknown {
+	if (contentType) {
+		const parsedContentType = contentTypeModule.parse(contentType);
+
+		if (parsedContentType.type === 'application/json') {
+			// parse json
+			return JSON.parse(body);
+		} else if (parsedContentType.type === 'application/x-www-form-urlencoded') {
+			// parse form encoded
+			return qsModule.parse(body);
+		}
 	}
 
-	let parsed_content_type = content_type_module.parse(content_type);
-
-	if (parsed_content_type.type === 'application/json') {
-		// parse json
-		return JSON.parse(body);
-	} else if (parsed_content_type.type === 'application/x-www-form-urlencoded') {
-		// parse form encoded
-		return qs_module.parse(body);
-	} else {
-		// maybe it's supposed to be literal 
-		return body;
-	}
+	// maybe it's supposed to be literal
+	return body;
 }
 
 /**
  * Attempts the parse the request body into a useful object
  */
-let parseBody: Middleware = function (method, url, body, headers, next) {
-	this.body = parseRequestBody(body, headers ? headers['content-type'] : undefined);
-
+const parseBody: Middleware = function (method, url, body, headers, next) {
+	this.body = parseRequestBody(body, getSingleHeader(headers, 'content-type'));
 	return next();
 };
 
