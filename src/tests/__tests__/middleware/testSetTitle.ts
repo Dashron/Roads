@@ -1,7 +1,5 @@
-"use strict";
-
 import { Middleware } from '../../../index';
-let setTitle = Middleware.setTitle;
+const setTitle = Middleware.setTitle;
 
 
 describe('Set Title', () => {
@@ -11,10 +9,11 @@ describe('Set Title', () => {
 	test('test setTitle function is properly applied to middleware', () => {
 		expect.assertions(2);
 
-		var context: {[x: string]: any} = {};
+		const context: {[x: string]: any} = {};
 
 		expect(typeof(setTitle)).toEqual('function');
 
+		// eslint-disable-next-line @typescript-eslint/no-empty-function
 		setTitle.call(context, 'a', 'b', 'c', {}, function () {});
 
 		expect(typeof(context.setTitle)).toEqual('function');
@@ -26,10 +25,11 @@ describe('Set Title', () => {
 	test('test setTitle function properly updates request context', () => {
 		expect.assertions(2);
 
-		var context: {[x: string]: any} = {};
+		const context: {[x: string]: any} = {};
 
 		expect(typeof(setTitle)).toEqual('function');
 
+		// eslint-disable-next-line @typescript-eslint/no-empty-function
 		setTitle.call(context, 'a', 'b', 'c', {}, function () {});
 		context.setTitle('foo');
 

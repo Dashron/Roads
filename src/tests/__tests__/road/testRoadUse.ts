@@ -1,5 +1,3 @@
-"use strict";
-
 import { Road } from '../../../index';
 
 describe('road use', () => {
@@ -9,7 +7,7 @@ describe('road use', () => {
 	test('Use Returns Self', () => {
 		expect.assertions(1);
 
-		var road = new Road();
+		const road = new Road();
 
 		expect(road.use(function (method, path, body, headers, next) {
 			return next();

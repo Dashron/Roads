@@ -1,18 +1,17 @@
-"use strict";
-
 import { Middleware } from '../../../index';
-let applyToContext = Middleware.applyToContext;
+const applyToContext = Middleware.applyToContext;
 
 describe('ApplyToContext tests', () => {
 	test('test apply to context applies context', () => {
 		expect.assertions(2);
-		var key = 'foo';
-		var val = 'bar';
-		var context: {[x: string]: any} = {};
+		const key = 'foo';
+		const val = 'bar';
+		const context: {[x: string]: any} = {};
 
-		var fn = applyToContext(key, val);
+		const fn = applyToContext(key, val);
 		expect(typeof(fn)).toEqual('function');
 
+		// eslint-disable-next-line @typescript-eslint/no-empty-function
 		fn.call(context, 'a', 'b', 'c', 'd', function () {});
 
 		expect(val).toEqual(context[key]);
@@ -20,17 +19,17 @@ describe('ApplyToContext tests', () => {
 
 	test('test apply to context calls next', () => {
 		expect.assertions(2);
-		var key = 'foo';
-		var val = 'bar';
-		var context = {};
-	
-		var fn = applyToContext(key, val);
+		const key = 'foo';
+		const val = 'bar';
+		const context = {};
+
+		const fn = applyToContext(key, val);
 		expect(typeof(fn)).toEqual('function');
-	
-		var custom = fn.call(context, 'a', 'b', 'c', 'd', function () {
+
+		const custom = fn.call(context, 'a', 'b', 'c', 'd', function () {
 			return 'custom data';
 		});
-	
+
 		expect(custom).toEqual('custom data');
 	});
 });

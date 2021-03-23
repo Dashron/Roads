@@ -1,5 +1,3 @@
-"use strict";
-
 import { Road } from '../../../index';
 import { Middleware } from '../../../core/road';
 import { Response } from '../../../index';
@@ -10,10 +8,10 @@ describe('road request', () => {
 	 */
 	test('Request', () => {
 		expect.assertions(1);
-		var road = new Road();
+		const road = new Road();
 
 		return expect(road.request('GET', '/', 'yeah', {
-			"one" : "two"
+			one : 'two'
 		})).resolves.toEqual({
 			status: 404,
 			headers : {},
@@ -26,7 +24,7 @@ describe('road request', () => {
 	 */
 	test('Method With Error', () => {
 		expect.assertions(1);
-		var road = new Road();
+		const road = new Road();
 
 		road.use(function () {
 			throw new Error('huh');
@@ -40,7 +38,7 @@ describe('road request', () => {
 	 */
 	test('Async Method With Error', () => {
 		expect.assertions(1);
-		var road = new Road();
+		const road = new Road();
 
 		road.use(async function () {
 			throw new Error('huh');
@@ -54,9 +52,9 @@ describe('road request', () => {
 	 */
 	test('Request With Multiple Handlers Called', () => {
 		expect.assertions(2);
-		var road = new Road();
-		var step1 = false;
-		var step2 = false;
+		const road = new Road();
+		let step1 = false;
+		let step2 = false;
 
 		road.use(function (method, url, body, headers, next) {
 			step1 = true;
@@ -80,7 +78,7 @@ describe('road request', () => {
 	test('Request Error With Handler', () => {
 		expect.assertions(1);
 
-		var road = new Road();
+		const road = new Road();
 
 		road.use(function (method, url, body, headers, next) {
 			return next();
@@ -100,7 +98,7 @@ describe('road request', () => {
 	test('Async Request Error With Handler', () => {
 		expect.assertions(1);
 
-		var road = new Road();
+		const road = new Road();
 
 		road.use(function (method, url, body, headers, next) {
 			return next();
@@ -118,12 +116,12 @@ describe('road request', () => {
 	 */
 	test('Request Error With Handler That Catches Errors', () => {
 		expect.assertions(1);
-		var road = new Road();
+		const road = new Road();
 
-		let middleware: Middleware = function (method, url, body, headers, next) {
+		const middleware: Middleware = function (method, url, body, headers, next) {
 			return next()
-				.catch(function (error) {
-					return new Response(JSON.stringify({"error" : error.message}), 200);
+				.catch(function (error: Error) {
+					return new Response(JSON.stringify({error : error.message}), 200);
 				});
 		};
 

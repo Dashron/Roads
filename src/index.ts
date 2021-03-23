@@ -14,15 +14,15 @@ import setTitle from './middleware/setTitle';
 import SimpleRouter from './middleware/simpleRouter';
 
 
-let Middleware = {
-    applyToContext: applyToContext,
-    cookie: cookie,
-    cors: cors,
-    killSlash: killSlash,
-    parseBody: parseBody,
-    reroute: reroute,
-    setTitle: setTitle,
-    SimpleRouter: SimpleRouter
+const Middleware = {
+	applyToContext: applyToContext,
+	cookie: cookie,
+	cors: cors,
+	killSlash: killSlash,
+	parseBody: parseBody,
+	reroute: reroute,
+	setTitle: setTitle,
+	SimpleRouter: SimpleRouter
 };
 
 export { Middleware };

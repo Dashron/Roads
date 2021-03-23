@@ -1,5 +1,3 @@
-"use strict";
-
 import { Road } from '../../../index';
 import { Response } from '../../../index';
 
@@ -9,8 +7,8 @@ describe('Execute Route', () => {
 	 */
 	test('Execute Route', () => {
 		expect.assertions(1);
-		var road = new Road();
-		var result = new Response('all the things');
+		const road = new Road();
+		const result = new Response('all the things');
 
 		return expect(road['_executeRoute'](function () {
 			return Promise.resolve(result);
@@ -22,8 +20,8 @@ describe('Execute Route', () => {
 	 */
 	test('Execute Error Route', () => {
 		expect.assertions(1);
-		var road = new Road();
-		var err = new Error();
+		const road = new Road();
+		const err = new Error();
 
 		return expect(road['_executeRoute'](function () {
 			throw err;
@@ -35,8 +33,8 @@ describe('Execute Route', () => {
 	 */
 	test('Execute Async Route', () => {
 		expect.assertions(1);
-		var road = new Road();
-		var result = new Response('stuff stuff stuff');
+		const road = new Road();
+		const result = new Response('stuff stuff stuff');
 
 		// todo: eventually switch to async functions
 		expect(road['_executeRoute'](async function () {
@@ -49,10 +47,10 @@ describe('Execute Route', () => {
 	 */
 	test('Execute Error Async Route', () => {
 		expect.assertions(1);
-		var road = new Road();
+		const road = new Road();
 
 		// todo: eventually switch to async functions
-		var cr = async function () {
+		const cr = async function () {
 			throw new Error('random messageeeeeeeeeee');
 		};
 

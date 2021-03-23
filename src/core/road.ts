@@ -16,7 +16,7 @@ export interface IncomingHeaders { [x: string]: string | Array<string> | undefin
 export interface Middleware {
 	(this: Context, method: string, path: string,
 		body: string, headers: IncomingHeaders,
-		next: ResponseMiddleware): Promise<Response>
+		next: ResponseMiddleware): Promise<Response | string> | Response | string
 }
 
 export interface Context {
@@ -26,7 +26,7 @@ export interface Context {
 }
 
 export interface ResponseMiddleware {
-	(): Promise<Response>
+	(): Promise<Response | string>
 }
 
 /**
