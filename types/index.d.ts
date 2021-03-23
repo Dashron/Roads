@@ -7,7 +7,7 @@ import applyToContext from './middleware/applyToContext';
 import cors from './middleware/cors';
 import reroute from './middleware/reroute';
 import SimpleRouter from './middleware/simpleRouter';
-declare let Middleware: {
+declare const Middleware: {
     applyToContext: typeof applyToContext;
     cookie: import("./core/road").Middleware;
     cors: typeof cors;

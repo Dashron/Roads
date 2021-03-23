@@ -5,7 +5,7 @@ const SimpleRouter = Middleware.SimpleRouter;
 
 import { Route, SimpleRouterURL } from '../../../middleware/simpleRouter';
 import { Response, Road } from '../../../index';
-import { ResponseMiddleware } from '../../../core/road';
+import { NextCallback } from '../../../core/road';
 
 const router_file_test_path = `${__dirname  }/../../resources/_router_file_test.js`;
 
@@ -57,7 +57,7 @@ describe('Simple Router Tests', () => {
 			return Promise.resolve(new Response('{"route_hit": true}'));
 		};
 
-		const next: ResponseMiddleware = () => {
+		const next: NextCallback = () => {
 			return Promise.resolve(new Response(''));
 		};
 
@@ -87,7 +87,7 @@ describe('Simple Router Tests', () => {
 			return Promise.resolve(new Response(''));
 		};
 
-		const next: ResponseMiddleware = () => {
+		const next: NextCallback = () => {
 			return Promise.resolve(new Response(''));
 		};
 
@@ -275,7 +275,7 @@ describe('Simple Router Tests', () => {
 		};
 
 		router.addRoute(method, path, fn);
-		const route_hit: Promise<Response> = router['_middleware'](router['_routes'], method, path, '', {}, () => {
+		const route_hit: Promise<Response | string> = router['_middleware'](router['_routes'], method, path, '', {}, () => {
 			return Promise.resolve(new Response(''));
 		});
 
@@ -296,7 +296,7 @@ describe('Simple Router Tests', () => {
 		};
 
 		router.addRoute(path, 'PUT', fn);
-		const route_hit: Promise<Response> = router['_middleware'](router['_routes'], method, path, '', {}, () => {
+		const route_hit: Promise<Response | string> = router['_middleware'](router['_routes'], method, path, '', {}, () => {
 			return Promise.resolve(new Response('next'));
 		});
 

@@ -19,7 +19,7 @@ exports.Middleware = {
 "use strict";
 /**
  * pjax.js
- * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * This file exposes a PJAX class to help with client side rendering
@@ -27,12 +27,12 @@ exports.Middleware = {
 Object.defineProperty(exports, "__esModule", { value: true });
 const cookie = require("cookie");
 /**
- * This is a helper class to make PJAX easier. PJAX is a clean way of improving the performance of webpages
- * by progressively turning standard HTML links into AJAX requests for portions of a web page.
- *
- * @todo Form support
- * @todo tests
- */
+  * This is a helper class to make PJAX easier. PJAX is a clean way of improving the performance of webpages
+  * by progressively turning standard HTML links into AJAX requests for portions of a web page.
+  *
+  * @todo Form support
+  * @todo tests
+  */
 class RoadsPjax {
     /**
      * Creates a new RoadsPjax instance. The road provided to this constructor will be the backbone of your PJAX requests.
@@ -48,17 +48,17 @@ class RoadsPjax {
         this._container_element = container_element;
     }
     /**
-     * Adds middleware to the assigned road whcih will adds setTitle to the PJAX object (as opposed to the request object like the setTitle middlweare does).
+     * Adds middleware to the assigned road whcih will adds setTitle to the PJAX
+     * 		object (as opposed to the request object like the setTitle middlweare does).
+     *
      * This allows you to easily update the page title.
      *
      * @returns {RoadsPjax} this, useful for chaining
      */
     addTitleMiddleware() {
-        var _self = this;
-        let titleMiddleware;
-        titleMiddleware = function (method, url, body, headers, next) {
-            this.setTitle = function (title) {
-                _self._page_title = title;
+        const titleMiddleware = function (method, url, body, headers, next) {
+            this.setTitle = (title) => {
+                this._page_title = title;
             };
             return next();
         };
@@ -72,8 +72,7 @@ class RoadsPjax {
      * @returns {RoadsPjax} this object, useful for chaining
      */
     addCookieMiddleware(document) {
-        let cookieMiddleware;
-        cookieMiddleware = function (method, url, body, headers, next) {
+        const cookieMiddleware = function (method, url, body, headers, next) {
             if (document.cookie) {
                 this.cookies = cookie.parse(document.cookie);
             }
@@ -106,6 +105,7 @@ class RoadsPjax {
             }
             else {
                 // reload the page if the popped state wasn't generated via an pjax call
+                // eslint-disable-next-line no-self-assign
                 this._window.location.pathname = this._window.location.pathname;
             }
         };
@@ -142,14 +142,14 @@ class RoadsPjax {
      * @param {MouseEvent} event
      */
     _pjaxEventMonitor(event) {
-        if (event.target instanceof HTMLAnchorElement && event.target.dataset['roadsPjax'] === "link" && !event.ctrlKey) {
+        if (event.target instanceof HTMLAnchorElement && event.target.dataset['roadsPjax'] === 'link' && !event.ctrlKey) {
             event.preventDefault();
             this._roadsLinkEvent(event.target);
             // TODO: Change this to a on submit event?
         }
         else if ((event.target instanceof HTMLInputElement || event.target instanceof HTMLButtonElement)
             && event.target.dataset['roadsPjax'] === 'submit'
-            && event.target.form && event.target.form.dataset['roadsPjax'] === "form") {
+            && event.target.form && event.target.form.dataset['roadsPjax'] === 'form') {
             event.preventDefault();
             this._roadsFormEvent(event.target.form);
         }
@@ -181,11 +181,15 @@ class RoadsPjax {
      * @param {HTMLFormElement} form
      */
     _roadsFormEvent(form) {
-        // execute the form. note: while HTTP methods are case sensitive, HTML forms seem to lowercase their methods. To fix this we uppercase here.
-        // as any is a workaround. see https://github.com/Microsoft/TypeScript/issues/30584
-        this._road.request(form.method.toUpperCase(), form.action, new URLSearchParams(new FormData(form)).toString(), { 'content-type': 'application/x-www-form-urlencoded' })
+        // execute the form.
+        //	note: while HTTP methods are case sensitive, HTML forms seem
+        //		to lowercase their methods. To fix this we uppercase here as any is a workaround.
+        //		see https://github.com/Microsoft/TypeScript/issues/30584
+        this._road.request(form.method.toUpperCase(), form.action, new URLSearchParams(new FormData(form).toString()).toString(), { 'content-type': 'application/x-www-form-urlencoded' })
             .then((response) => {
-            if ([301, 302, 303, 307, 308].includes(response.status)) {
+            var _a;
+            if ([301, 302, 303, 307, 308].includes(response.status) && typeof ((_a = response.headers) === null || _a === void 0 ? void 0 : _a.location) === 'string') {
+                // todo: location can be an array via code, but I don't think it's vaild to the spec?
                 return this._road.request('GET', response.headers.location);
             }
             else {
@@ -204,13 +208,12 @@ class RoadsPjax {
     }
 }
 exports.default = RoadsPjax;
-;
 
 },{"cookie":22}],3:[function(require,module,exports){
 "use strict";
 /**
  * request.js
- * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * This file exposes a Request object to offer an HTTP request library with a method signature that matches
@@ -253,20 +256,25 @@ class Request {
      *
      * @param {string} method - HTTP Request method
      * @param {string} path - HTTP Request path
-     * @param {string} [body] - The request body. If an object is provided, the body will be turned to JSON, and the appropriate content header set
+     * @param {string} [body] - The request body. If an object is provided, the body will be turned to JSON,
+     * 		and the appropriate content header set
      * @param {object} [headers] - HTTP Request headers
-     * @returns {Promise} The promise will resolve with an object with three properties. The response headers, response status and the response body. If the response content-type is "application/json" the body will be an object, otherwise it will resolve to a string
+     * @returns {Promise} The promise will resolve with an object with three properties. The response headers,
+     * 		response status and the response body. If the response content-type is "application/json" the body
+     * 		will be an object, otherwise it will resolve to a string
      */
     request(method, path, body, headers) {
         return __awaiter(this, void 0, void 0, function* () {
-            let response = yield roads_req_1.default({
+            const response = yield roads_req_1.default({
                 request: {
                     hostname: this._host,
                     port: this._port,
                     path: path,
                     method: method,
                     headers: headers,
-                    // withCredentials: true, // does this really work here? The goal is to have it sent when compiled into a client request with browserify
+                    // does this really work here? The goal is to have it sent when compiled
+                    // 		into a client request with browserify
+                    // withCredentials: true,
                     protocol: this._secure ? 'https' : 'http'
                 },
                 requestBody: body,
@@ -277,13 +285,12 @@ class Request {
     }
 }
 exports.default = Request;
-;
 
 },{"../core/response":4,"roads-req":32}],4:[function(require,module,exports){
 "use strict";
 /**
  * response.js
- * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * Provides a simple class to manage HTTP responses
@@ -305,33 +312,38 @@ class Response {
     }
 }
 exports.default = Response;
-;
 /**
  * Wraps the return value of a promise in a Response object to ensure consistency.
  *
- * @param {Promise} promise
- * @returns {Promise}
+ * @param {Promise<Response | string>} promise
+ * @returns {Promise<unknown>}
  */
 function wrap(promise) {
-    return promise.then((route_response) => {
-        if (typeof (route_response) !== "object" || !(route_response instanceof Response)) {
-            // we should always return a response object
-            route_response = new Response(route_response);
-        }
-        return route_response;
+    return promise.then((routeResponse) => {
+        return routeResponse instanceof Response ? routeResponse : new Response(routeResponse);
     });
 }
 exports.wrap = wrap;
 
 },{}],5:[function(require,module,exports){
 "use strict";
+/* eslint-disable max-len */
 /**
  * road.js
- * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * Exposes the core Road class
  */
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const response_lib = require("./response");
 const response_1 = require("./response");
@@ -352,7 +364,8 @@ class Road {
     /**
      * Add one or many custom functions to be executed along with every request.
      *
-     * The functions added will be executed in the order they were added. Each handler must execute the "next" parameter if it wants to continue executing the chain.
+     * The functions added will be executed in the order they were added. Each handler must
+     * 		execute the "next" parameter if it wants to continue executing the chain.
      *
      * name | type                                                                  | required | description
      * -----|-----------------------------------------------------------------------|----------|---------------
@@ -377,7 +390,8 @@ class Road {
      * @returns {Road} this road object. Useful for chaining use statements.
      */
     use(fn) {
-        // Currently we pass everything through the coroutine wrapper to be save. Let that library decide what does and does not actually need to be wrapped
+        // Currently we pass everything through the coroutine wrapper to be save. Let that library decide
+        // 		what does and does not actually need to be wrapped
         this._request_chain.push(fn);
         return this;
     }
@@ -385,7 +399,10 @@ class Road {
      *
      * Execute the resource method associated with the request parameters.
      *
-     * This function will locate the appropriate [resource method](#resource-method) for the provided HTTP Method and URL, execute it and return a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A). The thenable will always resolve to a [Response](#roadsresponse) object.
+     * This function will locate the appropriate [resource method](#resource-method) for the
+     * 		provided HTTP Method and URL, execute it and return a
+     * 		[thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A).
+     * 		The thenable will always resolve to a [Response](#roadsresponse) object.
      *
      * @param {string} method - HTTP request method
      * @param {string} url - HTTP request url
@@ -411,52 +428,19 @@ class Road {
      * @returns {NextMiddleware} A function that will start (or continue) the request chain
      */
     _buildNext(request_method, path, request_body, request_headers, context) {
-        let _self;
-        let progress;
-        let route_fn;
-        let next;
-        _self = this;
-        progress = 0;
-        next = () => {
-            if (_self._request_chain.length && _self._request_chain[progress]) {
-                route_fn = _self._request_chain[progress].bind(context, request_method, path, request_body, request_headers, () => {
+        let progress = 0;
+        const next = () => __awaiter(this, void 0, void 0, function* () {
+            if (this._request_chain.length && this._request_chain[progress]) {
+                return this._request_chain[progress].call(context, request_method, path, request_body, request_headers, () => {
                     progress += 1;
                     return next();
                 });
             }
-            else {
-                // If next is called and there is nothing next, we should still return a promise, it just shouldn't do anything
-                route_fn = () => {
-                    return Promise.resolve(new response_1.default('Page not found', 404));
-                };
-            }
-            return _self._executeRoute(route_fn);
-        };
+            // If next is called and there is nothing next, we should still return a promise,
+            //		it just shouldn't do anything
+            return new response_1.default('Page not found', 404);
+        });
         return next;
-    }
-    /**
-     * Execute a resource method, and ensure that a promise is always returned
-     *
-     * @param {Function} route
-     * @returns {Promise<Response>}
-     */
-    _executeRoute(route) {
-        let result;
-        // Handle errors properly
-        try {
-            result = route();
-        }
-        catch (e) {
-            // this should never be reached if route is a coroutine. This will only be reached if the route is function that throws an error.
-            return new Promise((resolve, reject) => {
-                reject(e);
-            });
-        }
-        // If the result isn't a promise already, make it one for consistency
-        if (!(result instanceof Promise)) {
-            result = Promise.resolve(result);
-        }
-        return result;
     }
 }
 exports.default = Road;
@@ -1300,7 +1284,7 @@ require('../routes/applyPublicRoutes.js')(router);
 "use strict";
 /**
  * applyToContext.js
- * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * Exposes a single function to be used with roads middleware. It makes it easy to assign
@@ -1315,20 +1299,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * @returns {Middleware} The middleware function to apply to the road.use(fn) method.
  */
 function applyToContext(key, val) {
-    let applyToContext = function (method, url, body, headers, next) {
+    const applyToContext = function (method, url, body, headers, next) {
         this[key] = val;
         return next();
     };
     return applyToContext;
 }
 exports.default = applyToContext;
-;
 
 },{}],11:[function(require,module,exports){
 "use strict";
 /**
  * cookie.js
- * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * Exposes a single middleware function to help with cookies
@@ -1362,10 +1345,12 @@ const response_1 = require("../core/response");
 class CookieResponse extends response_1.default {
 }
 exports.CookieResponse = CookieResponse;
-let cookieMiddleware = function (route_method, route_path, route_body, route_headers, next) {
+const cookieMiddleware = function (route_method, route_path, route_body, route_headers, next) {
     // Find the cookies from the request
     if (route_headers.cookie) {
-        this.cookies = cookie.parse(route_headers.cookie);
+        this.cookies = cookie.parse(
+        // todo: hmm... Can we get an array of cookies? I don't think so... this handles it properly if we do though.
+        Array.isArray(route_headers.cookie) ? route_headers.cookie.join('; ') : route_headers.cookie);
     }
     else {
         this.cookies = {};
@@ -1375,7 +1360,9 @@ let cookieMiddleware = function (route_method, route_path, route_body, route_hea
         if (!this._cookie_values) {
             this._cookie_values = {};
         }
-        // todo: is this a bug? shouldn't this record an array of cookie values? I think calling this multiple times for the same value will set multiple cookie headers, yet only the most recent value in local memory
+        // todo: is this a bug? shouldn't this record an array of cookie values?
+        //		I think calling this multiple times for the same value will set multiple
+        //		cookie headers, yet only the most recent value in local memory
         // also I think this will be inconsistent with the initially set cookie data. not sure. needs research
         this._cookie_values[name] = {
             value: value
@@ -1402,16 +1389,16 @@ const url_module = require("url");
 /**
  * Any requests with trailing slashes will immediately return a Response object redirecting to a non-trailing-slash path
  */
-let killSlash = function (method, url, body, headers, next) {
-    let _self = this;
-    let parsedUrl = url_module.parse(url);
-    let parsedPath = parsedUrl.path;
+const killSlash = function (method, url, body, headers, next) {
+    // TODO: parse is deprecated
+    const parsedUrl = url_module.parse(url);
+    const parsedPath = parsedUrl.path;
     if (!parsedPath) {
         return next();
     }
     // kill trailing slash as long as we aren't at the root level
     if (parsedPath !== '/' && parsedPath[parsedPath.length - 1] === '/') {
-        return Promise.resolve(new _self.Response('', 302, {
+        return Promise.resolve(new this.Response('', 302, {
             location: parsedPath.substring(0, parsedPath.length - 1)
         }));
     }
@@ -1423,14 +1410,24 @@ exports.default = killSlash;
 "use strict";
 /**
  * parseBody.js
- * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * Exposes a single middleware function to help parse request bodies
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const content_type_module = require("content-type");
-const qs_module = require("querystring");
+const contentTypeModule = require("content-type");
+const qsModule = require("querystring");
+function getSingleHeader(headers, key) {
+    if (headers) {
+        // This is a little weirder than I would like, but it works better with typescript
+        const val = headers[key];
+        if (Array.isArray(val)) {
+            return val[0];
+        }
+        return val;
+    }
+}
 /**
  * Translate the request body into a usable value.
  *
@@ -1438,35 +1435,31 @@ const qs_module = require("querystring");
  * If application/x-www-form-urlencoded this will attempt to parse it as a query format
  * Otherwise this will return a string
  *
- * @param  {mixed} body - request body
+ * @param  {string} body - request body
  * @param  {string} content_type - media type of the body
  * @returns {(object|string)} parsed body
  * @todo Actually do something with the parameters, such as charset
  */
-function parseRequestBody(body, content_type) {
-    if (typeof (body) === "object" || Array.isArray(body) || !body) {
-        // no need to parse if it's already an object
-        return body;
+function parseRequestBody(body, contentType) {
+    if (contentType) {
+        const parsedContentType = contentTypeModule.parse(contentType);
+        if (parsedContentType.type === 'application/json') {
+            // parse json
+            return JSON.parse(body);
+        }
+        else if (parsedContentType.type === 'application/x-www-form-urlencoded') {
+            // parse form encoded
+            return qsModule.parse(body);
+        }
     }
-    let parsed_content_type = content_type_module.parse(content_type);
-    if (parsed_content_type.type === 'application/json') {
-        // parse json
-        return JSON.parse(body);
-    }
-    else if (parsed_content_type.type === 'application/x-www-form-urlencoded') {
-        // parse form encoded
-        return qs_module.parse(body);
-    }
-    else {
-        // maybe it's supposed to be literal 
-        return body;
-    }
+    // maybe it's supposed to be literal
+    return body;
 }
 /**
  * Attempts the parse the request body into a useful object
  */
-let parseBody = function (method, url, body, headers, next) {
-    this.body = parseRequestBody(body, headers ? headers['content-type'] : undefined);
+const parseBody = function (method, url, body, headers, next) {
+    this.body = parseRequestBody(body, getSingleHeader(headers, 'content-type'));
     return next();
 };
 exports.default = parseBody;
@@ -1475,7 +1468,7 @@ exports.default = parseBody;
 "use strict";
 /**
  * reroute.js
- * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * Exposes a method that allows you to bind additional roads to a road context. This allows you to manage multiple
@@ -1490,7 +1483,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * @return {function} The middleware function. This value should be passed to road.use(fn);
  */
 function default_1(key, road) {
-    let reroute = function (route_method, route_path, route_body, route_headers, next) {
+    const reroute = function (route_method, route_path, route_body, route_headers, next) {
         this[key] = function (method, path, body, headers) {
             if (!headers) {
                 headers = {};
@@ -1502,22 +1495,22 @@ function default_1(key, road) {
     return reroute;
 }
 exports.default = default_1;
-;
 
 },{}],15:[function(require,module,exports){
 "use strict";
 /**
  * setTitle.js
- * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * Exposes a single middleware function to help manage the page title. This is best used alongside the PJAX helper
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
- * Adds two simple functions to get and set a page title on the request context. This is very helpful for isomorphic js, since on the client, page titles aren't part of the rendered view data.
+ * Adds two simple functions to get and set a page title on the request context. This is very helpful for
+ * 		isomorphic js, since on the client, page titles aren't part of the rendered view data.
  */
-let setTitle = function (method, path, body, headers, next) {
+const setTitle = function (method, path, body, headers, next) {
     this._page_title = null;
     this.setTitle = (title) => {
         this._page_title = title ? title : '';
@@ -1530,7 +1523,7 @@ exports.default = setTitle;
 "use strict";
 /**
  * simpleRouter.js
- * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * Exposes the SimpleRouter class to be used with roads middleware.
@@ -1543,12 +1536,14 @@ const url_module = require("url");
  *
  * Templating is basic. Each URI is considered to be a series of "path parts" separated by slashes.
  * If a path part starts with a #, it is assumed to be a numeric variable. Non-numbers will not match this route
- * If a path part starts with a $, it is considered to be an alphanumeric variabe. All non-slash values will match this route.
+ * If a path part starts with a $, it is considered to be an alphanumeric variabe.
+ * 		All non-slash values will match this route.
  *
  * Any variables will be added to the route's request url object under the "args" object.
  *
  * e.g.
- * /users/#user_id will match /users/12345, not /users/abcde. If a request is made to /users/12345 the route's requestUrl object will contain { args: {user_id: 12345}} along with all other url object values
+ * /users/#user_id will match /users/12345, not /users/abcde. If a request is made to /users/12345
+ * 	 the route's requestUrl object will contain { args: {user_id: 12345}} along with all other url object values
  *
  * @name SimpleRouter
  */
@@ -1568,7 +1563,10 @@ class SimpleRouter {
      * @param  {Road} road - The road that will receive the SimpleRouter middleware
      */
     applyMiddleware(road) {
-        var _self = this;
+        // We need to alias because "this" for the middleware function must
+        //		be the this applied by road.use, not the simplerouter
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const _self = this;
         // We do this to ensure we have access to the SimpleRouter once we lose this due to road's context
         road.use((function (request_method, request_url, request_body, request_headers, next) {
             return _self._middleware.call(this, _self._routes, request_method, request_url, request_body, request_headers, next);
@@ -1583,12 +1581,11 @@ class SimpleRouter {
      * @param {function} fn - The function containing all of your route logic
      */
     addRoute(method, paths, fn) {
-        var context = this;
         if (!Array.isArray(paths)) {
             paths = [paths];
         }
         paths.forEach((path) => {
-            context._routes.push({
+            this._routes.push({
                 path: path,
                 method: method,
                 route: fn
@@ -1603,12 +1600,13 @@ class SimpleRouter {
      * In that object, each key should be an HTTP method, and the value should be your route function.
      *
      * @param {string} file_path - The file path
-     * @param {string} [prefix] - A string that will help namespace this file. e.g. if you call this on a file with a route of "/posts", and the prefix "/users", the route will be assigned to "/users/posts"
+     * @param {string} [prefix] - A string that will help namespace this file. e.g. if you call this on a file
+     * 		with a route of "/posts", and the prefix "/users", the route will be assigned to "/users/posts"
      */
     addRouteFile(file_path, prefix) {
         return Promise.resolve().then(() => require(file_path)).then(routes => {
-            for (var path in routes) {
-                for (var method in routes[path]) {
+            for (const path in routes) {
+                for (const method in routes[path]) {
                     this.addRoute(method, buildRouterPath(path, prefix), routes[path][method]);
                 }
             }
@@ -1622,14 +1620,13 @@ class SimpleRouter {
      * @todo there might be a better way to do this
      */
     _middleware(routes, request_method, request_url, request_body, request_headers, next) {
-        let context = this;
         let response = null;
         let hit = false;
-        let parsed_url = url_module.parse(request_url, true);
+        const parsed_url = url_module.parse(request_url, true);
         for (let i = 0; i < routes.length; i++) {
-            let route = routes[i];
+            const route = routes[i];
             if (compareRouteAndApplyArgs(route, parsed_url, request_method)) {
-                response = (route.route).call(context, parsed_url, request_body, request_headers, next);
+                response = (route.route).call(this, parsed_url, request_body, request_headers, next);
                 hit = true;
                 break;
             }
@@ -1641,7 +1638,6 @@ class SimpleRouter {
     }
 }
 exports.default = SimpleRouter;
-;
 /**
  * Checks to see if the route matches the request, and if true assigns any applicable url variables and returns the route
  *
@@ -1668,8 +1664,8 @@ function compareRouteAndApplyArgs(route, request_url, request_method) {
         return false;
     }
     for (let i = 0; i < template.length; i++) {
-        let actual_part = actual[i];
-        let template_part = template[i];
+        const actual_part = actual[i];
+        const template_part = template[i];
         // Process variables first
         if (template_part[0] === '#') {
             // # templates only accept numbers
@@ -1682,7 +1678,7 @@ function compareRouteAndApplyArgs(route, request_url, request_method) {
         if (template_part[0] === '$') {
             // $ templates accept any non-slash alphanumeric character
             applyArg(request_url, template_part.substring(1), String(actual_part));
-            // Continue so that 
+            // Continue so that
             continue;
         }
         // Process exact matches second
@@ -1701,11 +1697,13 @@ function compareRouteAndApplyArgs(route, request_url, request_method) {
  * @param {*} actual_part - The url value
  */
 function applyArg(request_url, template_part, actual_part) {
-    if (typeof (request_url.args) === "undefined") {
+    if (typeof (request_url.args) === 'undefined') {
         request_url.args = {};
     }
-    if (typeof request_url.args !== "object") {
-        throw new Error("The request url's args have already been defined as a " + typeof request_url.args + " and we expected an object. For safety we are throwing this error instead of overwriting your existing data. Please use a different field name in your code");
+    if (typeof request_url.args !== 'object') {
+        throw new Error(`The request url's args have already been defined as a ${typeof request_url.args}
+			and we expected an object. For safety we are throwing this error instead of overwriting your
+			existing data. Please use a different field name in your code`);
     }
     request_url.args[template_part] = actual_part;
 }

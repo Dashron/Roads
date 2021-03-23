@@ -1,24 +1,25 @@
 /**
  * road.js
- * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * Exposes the core Road class
  */
 import * as response_lib from './response';
 import Response from './response';
+export interface IncomingHeaders {
+    [x: string]: string | Array<string> | undefined;
+}
 export interface Middleware {
-    (this: Context, method: string, path: string, body: string, headers: {
-        [x: string]: any;
-    }, next: ResponseMiddleware): Promise<Response>;
+    (this: Context, method: string, path: string, body: string, headers: IncomingHeaders, next: NextCallback): Promise<Response | string> | Response | string;
+}
+export interface NextCallback {
+    (): Promise<Response | string>;
 }
 export interface Context {
-    request: Function;
+    request: Road['request'];
     Response: response_lib.ResponseConstructor;
-    [x: string]: any;
-}
-export interface ResponseMiddleware {
-    (): Promise<Response>;
+    [x: string]: unknown;
 }
 /**
  * See roadsjs.com for full docs.
@@ -36,7 +37,8 @@ export default class Road {
     /**
      * Add one or many custom functions to be executed along with every request.
      *
-     * The functions added will be executed in the order they were added. Each handler must execute the "next" parameter if it wants to continue executing the chain.
+     * The functions added will be executed in the order they were added. Each handler must
+     * 		execute the "next" parameter if it wants to continue executing the chain.
      *
      * name | type                                                                  | required | description
      * -----|-----------------------------------------------------------------------|----------|---------------
@@ -65,7 +67,10 @@ export default class Road {
      *
      * Execute the resource method associated with the request parameters.
      *
-     * This function will locate the appropriate [resource method](#resource-method) for the provided HTTP Method and URL, execute it and return a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A). The thenable will always resolve to a [Response](#roadsresponse) object.
+     * This function will locate the appropriate [resource method](#resource-method) for the
+     * 		provided HTTP Method and URL, execute it and return a
+     * 		[thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A).
+     * 		The thenable will always resolve to a [Response](#roadsresponse) object.
      *
      * @param {string} method - HTTP request method
      * @param {string} url - HTTP request url
@@ -73,7 +78,7 @@ export default class Road {
      * @param {object} [headers] - HTTP request headers
      * @returns {Promise} this promise will resolve to a Response object
      */
-    request(method: string, url: string, body?: string, headers?: object): Promise<Response>;
+    request(method: string, url: string, body?: string, headers?: IncomingHeaders): Promise<Response>;
     /**
      * Turn an HTTP request into an executable function with a useful request context. Will also incorporate the entire
      * request handler chain
@@ -85,12 +90,5 @@ export default class Road {
      * @param {Context} context - Request context
      * @returns {NextMiddleware} A function that will start (or continue) the request chain
      */
-    protected _buildNext(request_method: string, path: string, request_body: string | undefined, request_headers: object | undefined, context: Context): ResponseMiddleware;
-    /**
-     * Execute a resource method, and ensure that a promise is always returned
-     *
-     * @param {Function} route
-     * @returns {Promise<Response>}
-     */
-    protected _executeRoute(route: ResponseMiddleware): Promise<Response>;
+    protected _buildNext(request_method: string, path: string, request_body: string | undefined, request_headers: IncomingHeaders | undefined, context: Context): NextCallback;
 }

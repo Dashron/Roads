@@ -1,16 +1,17 @@
 /**
  * response.js
- * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * Provides a simple class to manage HTTP responses
  */
+export interface OutgoingHeaders {
+    [x: string]: string | Array<string> | undefined;
+}
 export default class Response {
     status: number;
     body: string;
-    headers: {
-        [x: string]: any;
-    };
+    headers: OutgoingHeaders;
     /**
      * Creates a new Response object.
      *
@@ -18,15 +19,15 @@ export default class Response {
      * @param {number} [status] - Your response status
      * @param {object} [headers] - Your response headers
      */
-    constructor(body: string, status?: number, headers?: object);
+    constructor(body: string, status?: number, headers?: OutgoingHeaders);
 }
 export interface ResponseConstructor {
-    new (body: string, status?: number, headers?: object): Response;
+    new (body: string, status?: number, headers?: OutgoingHeaders): Response;
 }
 /**
  * Wraps the return value of a promise in a Response object to ensure consistency.
  *
- * @param {Promise} promise
- * @returns {Promise}
+ * @param {Promise<Response | string>} promise
+ * @returns {Promise<unknown>}
  */
-export declare function wrap(promise: Promise<any>): Promise<any>;
+export declare function wrap(promise: Promise<Response | string>): Promise<Response>;

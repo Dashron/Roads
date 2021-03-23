@@ -16,17 +16,17 @@ export interface IncomingHeaders { [x: string]: string | Array<string> | undefin
 export interface Middleware {
 	(this: Context, method: string, path: string,
 		body: string, headers: IncomingHeaders,
-		next: ResponseMiddleware): Promise<Response | string> | Response | string
+		next: NextCallback): Promise<Response | string> | Response | string
+}
+
+export interface NextCallback {
+	(): Promise<Response | string>
 }
 
 export interface Context {
 	request: Road['request'],
 	Response: response_lib.ResponseConstructor,
 	[x: string]: unknown
-}
-
-export interface ResponseMiddleware {
-	(): Promise<Response | string>
 }
 
 /**
@@ -117,58 +117,24 @@ export default class Road {
 	 */
 	protected _buildNext (request_method: string, path: string, request_body: string | undefined,
 		request_headers: IncomingHeaders | undefined, context: Context
-	): ResponseMiddleware {
+	): NextCallback {
 
 		let progress = 0;
-		let route_fn: ResponseMiddleware;
-		const next: ResponseMiddleware = () => {
+		const next: NextCallback = async () => {
+
 			if (this._request_chain.length && this._request_chain[progress]) {
-				route_fn = this._request_chain[progress].bind(context,
-					request_method, path, request_body, request_headers,
-					() => {
+				return this._request_chain[progress].call(context,
+					request_method, path, request_body, request_headers, () => {
 						progress += 1;
 						return next();
 					});
-
-			} else {
-				// If next is called and there is nothing next, we should still return a promise,
-				//		it just shouldn't do anything
-				route_fn = () => {
-					return Promise.resolve(new Response('Page not found', 404));
-				};
 			}
 
-			return this._executeRoute(route_fn);
+			// If next is called and there is nothing next, we should still return a promise,
+			//		it just shouldn't do anything
+			return new Response('Page not found', 404);
 		};
 
 		return next;
-	}
-
-	/**
-	 * Execute a resource method, and ensure that a promise is always returned
-	 *
-	 * @param {Function} route
-	 * @returns {Promise<Response>}
-	 */
-	protected _executeRoute (route: ResponseMiddleware): Promise<Response> {
-		let result: Promise<Response> | Response;
-
-		// Handle errors properly
-		try {
-			result = route();
-		} catch (e) {
-			// this should never be reached if route is a coroutine. This will only be reached if
-			//		the route is function that throws an error.
-			return new Promise((resolve, reject) => {
-				reject(e);
-			});
-		}
-
-		// If the result isn't a promise already, make it one for consistency
-		if (!(result instanceof Promise)) {
-			result = Promise.resolve(result);
-		}
-
-		return result;
 	}
 }

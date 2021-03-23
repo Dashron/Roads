@@ -7,14 +7,14 @@
  */
 
 import * as url_module from 'url';
-import {IncomingHeaders, Middleware, ResponseMiddleware} from '../core/road';
+import {IncomingHeaders, Middleware, NextCallback} from '../core/road';
 import Road, {Context} from '../core/road';
 import Response from '../core/response';
 
 
 export interface Route {
 	(this: Context, path: SimpleRouterURL, body: string,
-		headers: IncomingHeaders, next: ResponseMiddleware): Promise<Response>
+		headers: IncomingHeaders, next: NextCallback): Promise<Response>
 }
 
 interface RouteDetails {
@@ -126,7 +126,7 @@ export default class SimpleRouter {
 	 * @todo there might be a better way to do this
 	 */
 	protected _middleware (routes: RouteDetails[], request_method: string, request_url: string, request_body: string,
-		request_headers: IncomingHeaders, next: ResponseMiddleware): Promise<Response> {
+		request_headers: IncomingHeaders, next: NextCallback): Promise<Response | string> {
 
 		let response = null;
 		let hit = false;

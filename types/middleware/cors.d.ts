@@ -1,11 +1,11 @@
 /**
  * cors.js
- * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * This exposes a function that helps you manage CORS in your roads service
  */
-import { Middleware } from "../core/road";
+import { Middleware } from '../core/road';
 /**
  * Apply proper cors headers
  *
@@ -22,12 +22,11 @@ import { Middleware } from "../core/road";
 export default function cors(options: {
     validOrigins?: string[];
     supportsCredentials?: boolean;
-    responseHeaders?: {
-        [x: string]: any;
-    };
-    requestHeaders?: {
-        [x: string]: any;
-    };
-    validMethods?: string[];
+    responseHeaders?: Array<string>;
+    requestHeaders?: Array<string>;
+    validMethods?: Array<string>;
     cacheMaxAge?: number;
+    logger?: {
+        log: (ley: string, data?: unknown) => void;
+    };
 }): Middleware;

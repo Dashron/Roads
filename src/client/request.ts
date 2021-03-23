@@ -1,5 +1,5 @@
 /**
- * request.js
+ * request.ts
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
@@ -8,6 +8,7 @@
  */
 
 import roadsRequest from 'roads-req';
+import { IncomingHeaders } from '../core/road';
 import Response from '../core/response';
 
 /**
@@ -47,7 +48,7 @@ export default class Request {
 	 * 		response status and the response body. If the response content-type is "application/json" the body
 	 * 		will be an object, otherwise it will resolve to a string
 	 */
-	async request (method: string, path: string, body?: string, headers?: {[x:string]: any}): Promise<Response> {
+	async request (method: string, path: string, body?: string, headers?: IncomingHeaders): Promise<Response> {
 		const response = await roadsRequest({
 			request: {
 				hostname: this._host,

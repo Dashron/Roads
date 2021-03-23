@@ -1,6 +1,6 @@
 /**
  * pjax.js
- * Copyright(c) 2020 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * This file exposes a PJAX class to help with client side rendering
@@ -8,12 +8,12 @@
 import Road from '../core/road';
 import Response from '../core/response';
 /**
- * This is a helper class to make PJAX easier. PJAX is a clean way of improving the performance of webpages
- * by progressively turning standard HTML links into AJAX requests for portions of a web page.
- *
- * @todo Form support
- * @todo tests
- */
+  * This is a helper class to make PJAX easier. PJAX is a clean way of improving the performance of webpages
+  * by progressively turning standard HTML links into AJAX requests for portions of a web page.
+  *
+  * @todo Form support
+  * @todo tests
+  */
 export default class RoadsPjax {
     protected _road: Road;
     protected _page_title?: string;
@@ -28,7 +28,9 @@ export default class RoadsPjax {
      */
     constructor(road: Road, container_element: HTMLElement, window: Window);
     /**
-     * Adds middleware to the assigned road whcih will adds setTitle to the PJAX object (as opposed to the request object like the setTitle middlweare does).
+     * Adds middleware to the assigned road whcih will adds setTitle to the PJAX
+     * 		object (as opposed to the request object like the setTitle middlweare does).
+     *
      * This allows you to easily update the page title.
      *
      * @returns {RoadsPjax} this, useful for chaining
