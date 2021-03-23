@@ -1,5 +1,5 @@
 /**
- * request.js
+ * request.ts
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *

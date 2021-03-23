@@ -15,7 +15,7 @@
   ],
   "homepage": "https://github.com/Dashron/roads",
   "scripts": {
-    "test": "tsc && node node_modules/eslint/bin/eslint.js ./ && node_modules/jest/bin/jest.js --config jest.config.js src/tests/ && node jsExample/build.js",
+    "test": "tsc && node node_modules/eslint/bin/eslint.js ./ && node_modules/jest/bin/jest.js --config jest.config.js src/tests/",
     "build": "tsc"
   },
   "bugs": {
