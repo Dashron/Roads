@@ -9,7 +9,7 @@
   "description": "Example for roads.js",
   "devDependencies": {},
   "dependencies": {
-    "roads": "6.5.0",
+    "roads": "../",
     "roads-server": "1.0.3",
     "brfs": "2.0.2"
   },
