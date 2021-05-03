@@ -7,41 +7,19 @@
  */
 
 import * as browserify from 'browserify';
-import * as babelify from 'babelify';
 import * as fs from 'fs';
 import * as watchify from 'watchify';
 
 /**
  * @param  {Object} [options.browserifyOptions] An object containing parameters to pass to browserify
- * @param  {Object} [options.babelifyOptions] An object containing parameters to pass to the babelify transform
  * @param  {Object} [options.watchifyOptions] An object containing parameters to pass to watchify
  * @param  {Array} [options.exclude] An array of files that should not be included in the build process.
  */
 interface RoadsBuildOptions {
 	browserifyOptions?: browserify.Options,
-	babelifyOptions?: babelify.BabelifyOptions,
 	watchifyOptions?: watchify.Options,
 	ignore?: string | Array<string>,
 	exclude?: string | Array<string>
-}
-
-/**
- * Applys some defaults and useful standards to the babel options
- *
- * @param {babelify.BabelifyOptions} babel_options - The options object that is passed to babel
- * @returns {babelify.BabelifyOptions} babel_options with defaults applied
- */
-function fixBabelify (babel_options?: babelify.BabelifyOptions): babelify.BabelifyOptions {
-	if (!babel_options) {
-		babel_options = {};
-	}
-
-	if (!Array.isArray(babel_options.presets)) {
-		babel_options.presets = [];
-	}
-
-	babel_options.presets.push('@babel/preset-env');
-	return babel_options;
 }
 
 /**
@@ -73,8 +51,7 @@ export default function build (
 			}
 		}
 
-		const builder = browserify(input_file, options.browserifyOptions)
-			.transform('babelify', fixBabelify(options.babelifyOptions));
+		const builder = browserify(input_file, options.browserifyOptions);
 
 		if (watch) {
 			builder.plugin('watchify', options.watchifyOptions);

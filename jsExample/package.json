@@ -1,6 +1,6 @@
 {
   "name": "roads-example",
-  "version": "6.1.1",
+  "version": "6.5.0",
   "author": {
     "name": "Aaron Hedges",
     "email": "aaron@dashron.com",
@@ -9,9 +9,8 @@
   "description": "Example for roads.js",
   "devDependencies": {},
   "dependencies": {
-    "roads": "6.1.2",
+    "roads": "6.5.0",
     "roads-server": "1.0.3",
-    "regenerator-runtime": "0.13.5",
     "brfs": "2.0.2"
   },
   "private": true,
