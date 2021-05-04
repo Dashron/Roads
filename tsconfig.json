@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "outDir": "./",
+        "outDir": "./dist/node",
         "target": "es2015",
         "module": "CommonJS",
         "moduleResolution": "node",
@@ -9,19 +9,13 @@
         "noImplicitThis": true,
         "alwaysStrict": true,
         "baseUrl": ".",
-        "paths": {
-            "*": [
-                "node_modules/*",
-                "src/types/*"
-            ]
-        },
         "allowSyntheticDefaultImports": true,
         "declaration": true,
         "declarationDir": "./types"
     },
     "exclude": [
         "./types",
-        "./jsExample"
+        "./example/js"
     ],
     "include": [
         "./src/**/*.ts"

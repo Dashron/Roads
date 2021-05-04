@@ -1,6 +1,6 @@
 {
   "name": "roads",
-  "version": "6.5.0",
+  "version": "7.0.0",
   "types": "./types/index.d.ts",
   "author": {
     "name": "Aaron Hedges",
@@ -16,7 +16,7 @@
   "homepage": "https://github.com/Dashron/roads",
   "scripts": {
     "test": "tsc && node node_modules/eslint/bin/eslint.js ./ && node_modules/jest/bin/jest.js --config jest.config.js src/tests/",
-    "build": "tsc"
+    "build": "tsc && node dist/node/buildForBrowser.js"
   },
   "bugs": {
     "url": "http://github.com/Dashron/roads/issues",
@@ -38,17 +38,17 @@
     "jest": "^26.6.3",
     "prettier": "^2.2.1",
     "ts-jest": "^26.5.4",
-    "typescript": "^4.2.3"
-  },
-  "dependencies": {
+    "typescript": "^4.2.3",
     "@types/browserify": "^12.0.36",
     "@types/watchify": "^3.11.0",
     "browserify": "^17.0.0",
+	"watchify": "^4.0.0"
+  },
+  "dependencies": {
     "content-type": "^1.0.4",
     "cookie": "^0.4.1",
-    "roads-req": "^0.4.6",
-    "watchify": "^4.0.0"
+    "roads-req": "^0.4.6"
   },
   "license": "MIT",
-  "browser": "./browser.js"
+  "browser": "./dist/browser/index.js"
 }

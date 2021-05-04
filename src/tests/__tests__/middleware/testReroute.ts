@@ -4,7 +4,7 @@ import { Middleware } from '../../../index';
 const reroute = Middleware.reroute;
 
 import { Road } from '../../../index';
-import { Middleware as MiddlewareType } from '../../../core/road';
+import { Context, Middleware as MiddlewareType } from '../../../core/road';
 import Response from '../../../core/response';
 
 describe('Reroute middleware tests', () => {
@@ -15,7 +15,7 @@ describe('Reroute middleware tests', () => {
 	test('test request method is bound to context key', () => {
 		expect.assertions(3);
 
-		const request: MiddlewareType = function (method, path, body, headers) {
+		const request: MiddlewareType<Context> = function (method, path, body, headers) {
 			return Promise.resolve(new Response('banana'));
 		};
 

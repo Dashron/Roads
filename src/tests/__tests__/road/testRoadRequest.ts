@@ -1,5 +1,5 @@
 import { Road } from '../../../index';
-import { Middleware } from '../../../core/road';
+import { Context, Middleware } from '../../../core/road';
 import { Response } from '../../../index';
 
 describe('road request', () => {
@@ -118,7 +118,7 @@ describe('road request', () => {
 		expect.assertions(1);
 		const road = new Road();
 
-		const middleware: Middleware = function (method, url, body, headers, next) {
+		const middleware: Middleware<Context> = function (method, url, body, headers, next) {
 			return next()
 				.catch(function (error: Error) {
 					return new Response(JSON.stringify({error : error.message}), 200);

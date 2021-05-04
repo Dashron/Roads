@@ -1,83 +1,41 @@
 import { Middleware } from '../../../index';
 const cookie = Middleware.cookie;
-import { CookieResponse } from '../../../middleware/cookie';
+import { CookieMiddleware } from '../../../middleware/cookie';
 import Response from '../../../core/response';
 
 describe('cookie tests', () => {
 	test('test cookie middleware parses cookies into context', () => {
-		expect.assertions(3);
+		expect.assertions(2);
 		const context: {[x:string]: any} = {
 			Response: Response
 		};
 
-		expect(typeof(cookie)).toEqual('function');
-
 		cookie.call(context, 'a', 'b', 'c', {
 			cookie: 'foo=bar;abc=def'
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
-		}, function () {});
+		}, function () { return Promise.resolve('test'); });
 
-		expect(context.cookies.foo).toEqual('bar');
-		expect(context.cookies.abc).toEqual('def');
+		expect(context.getCookies().foo).toEqual('bar');
+		expect(context.getCookies().abc).toEqual('def');
 	});
 
-	test('test cookie middleware can manipulate response cookies', () => {
-		expect.assertions(4);
+	test('test cookie middleware will update the response headers', () => {
+		expect.assertions(1);
 		const context = {
 			Response: Response
 		};
 
-		expect(typeof(cookie)).toEqual('function');
-
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
-		cookie.call(context, 'a', 'b', 'c', {}, function () {});
-
-		const resp: CookieResponse = new CookieResponse('');
-
-		expect(typeof(resp.setCookie)).toEqual('function');
-		resp.setCookie('foo', 'bar');
-		resp.setCookie('abc', 'def');
-
-		expect(typeof(resp.getCookies)).toEqual('function');
-		expect(resp.getCookies()).toEqual({
-			foo: {
-				value: 'bar'
-			},
-			abc: {
-				value: 'def'
-			}
-		});
-	});
-
-
-	/**
-	 * Test that the cookie middleware successfully updates the response headers
-	 */
-	test('test cookie middleware successfully updates the headers', () => {
-		expect.assertions(4);
-
-		const context: {[x: string]: any} = {
-			Response: Response
+		const next: (this: CookieMiddleware) => Promise<string> = function () {
+			this.setCookie('foo', 'bar');
+			return Promise.resolve('test');
 		};
 
-		expect(typeof(cookie)).toEqual('function');
-
 		// eslint-disable-next-line @typescript-eslint/no-empty-function
-		cookie.call(context, 'a', 'b', 'c', {}, function () {});
-
-		const resp = new context.Response();
-
-		expect(typeof(resp.setCookie)).toEqual('function');
-		resp.setCookie('foo', 'bar');
-		resp.setCookie('abc', 'def');
-
-		expect(typeof(resp.getCookies)).toEqual('function');
-
-		expect(resp.headers).toEqual({
-			'Set-Cookie': [
-				'foo=bar',
-				'abc=def'
-			]
-		});
+		expect(cookie.call(context, 'a', 'b', 'c', {}, next.bind(context))).resolves.toEqual(new Response('test', 200, {
+			'Set-Cookie': ['foo=bar']
+		}));
 	});
+
+	/*test('test that getCookies merges new and old cookies together', () => {
+
+	});*/
 });

@@ -1,5 +1,5 @@
 /**
- * cookie.js
+ * cookie.ts
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
@@ -30,60 +30,82 @@
  */
 
 import * as cookie from 'cookie';
-import { Middleware } from '../core/road';
+import { Context, Middleware } from '../core/road';
 import Response from '../core/response';
 
-export class CookieResponse extends Response {
-	setCookie: {
-		(name: string, value?: string, options?: cookie.CookieSerializeOptions): void
-	}
-
-	getCookies: {
-		(): {[x: string]: string}
-	}
-
+export interface CookieMiddleware extends Context {
+	setCookie: (name: string, value?: string, options?: cookie.CookieSerializeOptions) => void,
+	getCookies: () => {[x: string]: string}
 }
 
-const cookieMiddleware: Middleware = function (route_method, route_path, route_body, route_headers, next) {
-	// Find the cookies from the request
-	if (route_headers.cookie) {
-		this.cookies = cookie.parse(
-			// todo: hmm... Can we get an array of cookies? I don't think so... this handles it properly if we do though.
-			Array.isArray(route_headers.cookie) ? route_headers.cookie.join('; ') : route_headers.cookie);
-	} else {
-		this.cookies = {};
+interface SetCookies {[key: string]: string}
+interface NewCookies {[key: string]: {
+	value: string,
+	options: cookie.CookieSerializeOptions
+}}
+
+function getCookieValues(newCookies: NewCookies): SetCookies {
+	const cookies: SetCookies = {};
+
+	const cookieKeys = Object.keys(newCookies);
+
+	for (let i = 0; i < cookieKeys.length; i++) {
+		const newCookie = newCookies[cookieKeys[i]];
+		cookies[cookieKeys[i]] = newCookie.value;
 	}
 
-	// Add a cookie method to the response object. Allows you to set cookies like koa.js
-	this.Response.prototype.setCookie = function (name: string, value: string, options?: cookie.CookieSerializeOptions) {
-		if (!this._cookie_values) {
-			this._cookie_values = {};
-		}
+	return cookies;
+}
 
-		// todo: is this a bug? shouldn't this record an array of cookie values?
-		//		I think calling this multiple times for the same value will set multiple
-		//		cookie headers, yet only the most recent value in local memory
-		// also I think this will be inconsistent with the initially set cookie data. not sure. needs research
-		this._cookie_values[name] = {
-			value: value
+const cookieMiddleware: Middleware<CookieMiddleware> = function (route_method, route_path, route_body, route_headers, next) {
+	let cookies: SetCookies = {};
+	const newCookies: NewCookies = {};
+
+	// Find the cookies from the request and store them locally
+	if (route_headers.cookie) {
+		cookies = cookie.parse(
+			// todo: hmm... Can we get an array of cookies? I don't think so... this handles it properly if we do though.
+			Array.isArray(route_headers.cookie) ? route_headers.cookie.join('; ') : route_headers.cookie);
+	}
+
+	// Add a cookie method to the middleware context
+	this.setCookie = function (name, value, options?) {
+		newCookies[name] = {
+			value: value ? value : '',
+			options: options ? options : {}
 		};
-
-		if (options) {
-			this._cookie_values[name].options = options;
-		}
-
-		if (!this.headers['Set-Cookie']) {
-			this.headers['Set-Cookie'] = [];
-		}
-
-		this.headers['Set-Cookie'].push(cookie.serialize(name, value, options));
 	};
 
-	this.Response.prototype.getCookies = function () {
-		return this._cookie_values;
+	// Return the inital cookies with any new cookies merged on top.
+	this.getCookies = () => {
+		return {...cookies, ...getCookieValues(newCookies)};
 	};
 
-	return next();
+	// Apply the cookie headers to the response
+	return next().then((response) => {
+		const cookieKeys = Object.keys(newCookies);
+
+		// If there are new cookies to transmit
+		if (cookieKeys.length) {
+			// Ensure we're dealing with a response object and not a string
+			if (!(response instanceof Response)) {
+				response = new Response(response);
+			}
+
+			// Initalize the header
+			if (!response.headers['Set-Cookie']) {
+				response.headers['Set-Cookie'] = [];
+			}
+
+			// Apply all the cookies
+			for (let i = 0; i < cookieKeys.length; i++) {
+				(response.headers['Set-Cookie'] as Array<string>).push(
+					cookie.serialize(cookieKeys[i], newCookies[cookieKeys[i]].value, newCookies[cookieKeys[i]].options));
+			}
+		}
+
+		return response;
+	});
 };
 
 export default cookieMiddleware;

@@ -7,7 +7,7 @@ Roads is a web framework built for use with async functions. It's similar to Koa
 1. Roads can be attached to any node HTTP server, including Koa.js, Express.js, and the built in node HTTP server.
 2. Roads is isomorphic, meaning you can generate html on the server or in the browser with the same code.
 3. Roads lets you work without callbacks. It's built on top of promises and async functions.
-4. Roads can be run without ever attaching it to an HTTP server. This is great for writing tests, working with web sockets, or writing API first websites. 
+4. Roads can be run without ever attaching it to an HTTP server. This is great for writing tests, working with web sockets, or writing API first websites.
 
 
 # Build Status
@@ -32,12 +32,11 @@ Roads is a web framework built for use with async functions. It's similar to Koa
   - [parseBody](#parsebody)
   - [applyToContext](#applytocontext)
   - [reroute](#reroute)
-  - [setTitle](#settitle)
+  - [storeVals](#storeVals)
   - [SimpleRouter](#simplerouterroad-road)
     - [SimpleRouter.applyMiddleware(road)](#simplerouterapplymiddlewareroad-road)
     - [SimpleRouter.addRoute(*string* method, *string* path,*function* fn)](#simplerouteraddroutestring-method-string-path-function-fn)
     - [SimpleRouter.addRouteFile(*string* full_path)](#simplerouteraddroutefilestring-full_path)
-- [build(*string* input_file, *string* output_file, *object* options)](#buildstring-input_file-string-output_file-object-options)
 - [PJAX(*object* road, *DomElement* container_element, *object* window)](#pjaxobject-road-domelement-container_element-object-window)
   - [register()](#pjaxregister)
   - [PJAX Link Format](#pjax-link-format)
@@ -143,19 +142,7 @@ Building a project with roads is very straightforward.
         });
 	```
 
- - You can use browserify to compile everything for use in the browser. The following are the scripts necessary to compile the previous manual example, if it were saved as a file "client_index.js".
-
-     **TypeScript**
-    ```TypeScript
-    import { build } from 'roads';
-    build('client_index.js', __dirname + '/build/client.js', { use_sourcemaps: true });
-	```
-
-    **JavaScript**
-    ```JavaScript
-    const build = require('roads').build;
-    build('client_index.js', __dirname + '/build/client.js', { use_sourcemaps: true });
-	```
+ - You can also use browserify to compile everything for use in the browser. Check out the file example/js/build.js for more details.
 
 
 Now that you can use your road, continue reading the docs below for more information on [routers](#simplerouter), [error handling](#roadusefunction-fn), [PJAX support](#roadspjaxobject-road) and more!
@@ -169,7 +156,7 @@ A Road is a container that holds an array of functions called the *request chain
 ### new Road()
 **Create a Road.**
 
-Creates your Road object. 
+Creates your Road object.
 
 **TypeScript**
 ```TypeScript
@@ -187,15 +174,15 @@ let road = new roads.Road();
 ### Road.use(*Function* fn)
 **Add a custom function that will be executed with every request.**
 
-The use function can be called one or more times. Each time it is called, the function provided via the `fn` parameter will be added to the end of the request chain. The execution order will match the order the functions were added to the road. 
+The use function can be called one or more times. Each time it is called, the function provided via the `fn` parameter will be added to the end of the request chain. The execution order will match the order the functions were added to the road.
 
  name | type                                                                  | required | description
  -----|-----------------------------------------------------------------------|----------|---------------
  fn   | Function(*string* method, *string* url,*string* body,*object* headers,*function* next) | yes      | Adds this function to the request chain, which is executed any time a request is made on the object. See the [use callback](#roadusefunction-fn) below for more details on the function parameters.
- 
+
  **Note:** Each function in the request chain can choose to progress to the following function by calling and returning the `next` parameter. The `next` parameter is defined below as part of the use callback
- 
-#### use Callback 
+
+#### use Callback
 **function (*string* method,*string* url, *string* body, *Object* headers, *Function* next)**
 
 name     | type                               | description
@@ -209,7 +196,7 @@ name     | type                               | description
 If the callback does not return a [response](#roadsresponse) object, roads.request will turn the return value into the response body of a [response](#roadsresponse) object with the default status code of 200 and no headers.
 
 
-```JavaScript   
+```JavaScript
 // Simple example that sends a JSON response
 road.use(function (method, url, body, headers, next) {
     return JSON.stringify({
@@ -272,7 +259,7 @@ road.use(function (method, url, body, params, next) {
 You can picture the logic path like a U. The following example assumes two functions have been added to the request chain.
 
 ```
-First point for                  Second point for        
+First point for                  Second point for
 first middleware                 first middleware
           |                              / \
          \ /                              |
@@ -296,7 +283,7 @@ Make sure to listen for errors surfaced by the request promise!.
 ```JavaScript
 let promise = road.request('GET', '/users/dashron');
 
-promise.then((response) => {        
+promise.then((response) => {
     console.log(response);
 });
 
@@ -349,7 +336,7 @@ road.use(function (method, url, body, headers) {
 
 ## Response
 
-The response object contains all of the information you want to send to the client. This includes the body, status code and all applicable headers. 
+The response object contains all of the information you want to send to the client. This includes the body, status code and all applicable headers.
 
 
 ### new Response(*mixed* body, *number* status, *Object* headers)
@@ -361,7 +348,7 @@ name        | type                               | description
  status     | number                             | The HTTP Status code.
  headers    | object                             | Key value pairs of http headers.
 
-Create a response object. 
+Create a response object.
 
 ```JavaScript
 new Response({"uri": "..."}, 200, {"last-modified":"2014-04-27 00:00:00"});
@@ -403,34 +390,32 @@ Roads comes bundled with some common middleware. All bundled middleware can be a
 ### cookie()
 **Middleware to add some cookie management functions**
 
-When you use the cookie middleware, it adds one method to the request context and two methods to any response created from the request context.
+When you use the cookie middleware it adds two methods to the request context.
 
-`this.cookies`
-The cookies object on the request context will contain an object with all the parsed out cookie values sent by the client. Each key is the cookie name, each value is the cookie value.
-
-`setCookie(name, value, options)`
-Calling this function will set any necessary headers to create or update the cookie on the client. The values directly map to the [cookie](https://github.com/jshttp/cookie) module. 
+`this.setCookie(name, value, options)`
+Calling this function will store your new cookies. The parameters directly map to the [cookie](https://github.com/jshttp/cookie) module.
 
 To remove a cookie, set the value to null.
 
-`getCookies()`
-Returns an object with all the response cookies.
+These cookies will be automatically applied to the response after your request
+
+`this.getCookies()`
+Returns an object with all the cookies. It defaults to all the request cookies, but merges anything applied via setCookie on top (i.e. setCookie will override the request cookie)
 
 ```JavaScript
 road.use(Middleware.cookie);
 
 roads.use(function (method, url, body, headers) {
-	console.log(this.cookies);
-	
-	let response = new this.Response();
-	
-	response.setCookie('auth', 12345, {
+	console.log(this.getCookies());
+
+	this.setCookie('auth', 12345, {
 		domain: 'dashron.com'
 	});
-	
-	console.log(response.getCookies());
-	
-	return new this.Response(200, 'Hello!');
+
+	console.log(this.getCookies());
+
+	// The auth cookie will be automatically attached to this response AFTER this is returned.
+	return new this.Response('Hello!', 200);
 });
 ```
 
@@ -496,7 +481,7 @@ road.use(function (method, url, body, headers) {
 ### reroute
 **Middleware that offers a function in the request context that allows you to easily interact with a road**
 
-In the following exxample, road and APIRoad are two different Road objects.
+In the following example, road and APIRoad are two different Road objects.
 ```JavaScript
 road.use(Middleware.reroute('api', APIRoad));
 
@@ -511,8 +496,23 @@ road.use(function (method, url, body, headers) {
 });
 ```
 
-### setTitle
-**Middleware that helps you work with setting page titles. Used in conjunction with PJAX's setTitle**
+### storeVals
+**Middleware that helps you save arbitrary data inside of a request context**
+
+This middleware adds two functions, `setVal(key, val)` and `getVal(key)` for storing and retrieving arbitrary values.
+The middleware also exposes a `TITLE_KEY` value for use with PJAX for assigning a page title.
+
+```JavaScript
+import { TITLE_KEY }, storeValsMiddleware from 'roads/middleware/storeVals';
+
+road.use(function (method, url, body, headers, next) {
+	return next().then((response) => {
+		console.log(this.getVal(TITLE_KEY));
+	});
+});
+
+road.use(storeValsMiddleware);
+```
 
 See [PJAX](#pjaxobject-road-domelement-container_element-object-window) for more information about this middleware.
 
@@ -585,9 +585,9 @@ e.g. /users/#user_id will match /users/12345, not /users/abcde. If a request is 
 ```
 
 #### SimpleRouter.addRouteFile(*string* full_path)
-Add an entire file worth of routes. 
+Add an entire file worth of routes.
 
-The file should be a node module that exposes an object. 
+The file should be a node module that exposes an object.
 Each key should be an HTTP path, each value should be an object.
 In that object, each key should be an HTTP method, and the value should be your route function.
 
@@ -600,51 +600,6 @@ Example File:
         }
     }
 }
-```
-
-## build(*string* input_file, *string* output_file, *object* options, *boolean* watch)
-**Browserify function to convert your script to run in the browser**
-
-name                       | type                               | description
- --------------------------|------------------------------------|---------------
- input_file                | string                             | The source file that will be converted to use in the browser
- output_file               | string                             | The output file that will be accessible by your browser
- options                   | object                             | A set of options that can influence the build process. See all fields below
- options.browserifyOptions | object                             | Custom configuration settings to pass to browserify (https://github.com/browserify/browserify#browserifyfiles--opts)
- options.babelifyOptions   | object                             | Custom configuration settings to pass to babelify (https://github.com/babel/babelify#options)
- options.watchifyOptions   | object                             | Custom configuration settings to pass to watchify (https://github.com/browserify/watchify)
- options.exclude           | array                              | An array of files that should not be included in the build process. They will throw errors if required. See Browserify's "exclude"
- options.ignore            | array                              | An array of files that should not be included in the build process, but should not error when required. See Browserify's "ignore"
- watch                     | boolean                            | A flag that when enabled, causes the builder to remain active, monitoring the built files for any changes and automatically rebuilding
-
-```TypeScript
-    let build = require('roads').build;
-
-    build(__dirname + '/static/client.js', __dirname + '/static/client.brws.js', {
-        browserifyOptions: {
-            // standard browserify options
-        },
-	    babelifyOptions: {
-            // standard babelify options
-        },
-	    ignore: ["file/to/be/ignored", "ignored_module"],
-        exclude: ["file/to/be/excluded", "excluded_module"]
-    });
-```
-
-```JavaScript
-    import { build } from 'roads';
-
-    build(__dirname + '/static/client.js', __dirname + '/static/client.brws.js', {
-        browserifyOptions: {
-            // standard browserify options
-        },
-	    babelifyOptions: {
-            // standard babelify options
-        },
-	    ignore: ["file/to/be/ignored", "ignored_module"],
-        exclude: ["file/to/be/excluded", "excluded_module"]
-    });
 ```
 
 ## PJAX(*Object* road, *DomElement* container_element, *Object* window)
@@ -695,18 +650,9 @@ e.g.
 
 ### PJAX Page titles
 
-To handle page titles you will need to add matching middleware to your client and server roads. Roads already includes a simple form of this via the setTitle middleware, and the PJAX function addTitleMiddleware.
+To handle page titles you will need to add matching middleware to your client and server roads.
 
-Your server should include the following:
-
-```JavaScript
-var roads = require('roads');
-var Middleware = require('roads').Middleware;
-
-var road = ...; // Incomplete. See the getting started section for more information about creating a road
-road.use(Middleware.setTitle);
-```
-
+#### PJAX Example
 ```JavaScript
 var roads = require('roads');
 var road = ...; // Incomplete. See the getting started section for more information about creating a road
@@ -716,13 +662,18 @@ pjax.addTitleMiddleware();
 pjax.register(window, document.getElementById('container'));
 ```
 
+#### Server Example
+It's hard to provide a server example because everyones rendering style might be unique, but here's the basic idea (using `TITLE_KEY` from [the store vals middleware](#storevals).
+1. In your route call `this.setVal(TITLE_KEY);`
+2. In your layout populate the `<title>` tag via `this.getVal(TITLE_KEY)`
+
 ### Isomorphic PJAX tips
 
 There's a very easy pattern to follow to ensure sharing client and server code works successfully via PJAX. You can see this pattern in more detail in the examples folder
 
 1. Keep your backend only, and the mixed frontend-or-backend routes in separate files
 2. Have a "server" script that gets your backend server running, applying both backend and mixed routes
-3. Have a "build" script that compiles your frontend server, applying only the mixed routes.
+3. Have a build script that compiles your frontend server, applying only the mixed routes.
 4. Keep your page layout (headers, footers, body, meta tags, etc.) in the "backend only" section.
 5. Keep your DB calls in the "backend only" section
 6. Make sure the mixed frontend-or-backend routes only ever make HTTP requests, or render HTML

@@ -1,5 +1,5 @@
 /**
- * simpleRouter.js
+ * simpleRouter.ts
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
@@ -74,7 +74,7 @@ export default class SimpleRouter {
      */
     addRouteFile(file_path: string, prefix?: string): Promise<void>;
     /**
-     * Slightly non-standar roads middleware to execute the functions in this router when requests are received by the road
+     * Slightly non-standard roads middleware to execute the functions in this router when requests are received by the road
      * The first method is the routes to ensure that we can properly use this router once we loose the "this" value
      * from the roads context
      *

@@ -1,5 +1,5 @@
 /**
- * pjax.js
+ * pjax.ts
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
@@ -28,7 +28,7 @@ export default class RoadsPjax {
      */
     constructor(road: Road, container_element: HTMLElement, window: Window);
     /**
-     * Adds middleware to the assigned road whcih will adds setTitle to the PJAX
+     * Adds middleware to the assigned road which will adds storeVal and getVal to the PJAX
      * 		object (as opposed to the request object like the setTitle middlweare does).
      *
      * This allows you to easily update the page title.
@@ -36,13 +36,6 @@ export default class RoadsPjax {
      * @returns {RoadsPjax} this, useful for chaining
      */
     addTitleMiddleware(): RoadsPjax;
-    /**
-     * Assigns the cookie middlware to the road to properly handle cookies
-     *
-     * @param {Document} document - The pages document object to properly parse and set cookies
-     * @returns {RoadsPjax} this object, useful for chaining
-     */
-    addCookieMiddleware(document: Document): RoadsPjax;
     /**
      * Hooks up the PJAX functionality to the information provided via the constructor.
      */

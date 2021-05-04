@@ -1,5 +1,5 @@
 /**
- * cookie.js
+ * cookie.ts
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
@@ -28,17 +28,12 @@
  *
  */
 import * as cookie from 'cookie';
-import { Middleware } from '../core/road';
-import Response from '../core/response';
-export declare class CookieResponse extends Response {
-    setCookie: {
-        (name: string, value?: string, options?: cookie.CookieSerializeOptions): void;
-    };
-    getCookies: {
-        (): {
-            [x: string]: string;
-        };
+import { Context, Middleware } from '../core/road';
+export interface CookieMiddleware extends Context {
+    setCookie: (name: string, value?: string, options?: cookie.CookieSerializeOptions) => void;
+    getCookies: () => {
+        [x: string]: string;
     };
 }
-declare const cookieMiddleware: Middleware;
+declare const cookieMiddleware: Middleware<CookieMiddleware>;
 export default cookieMiddleware;

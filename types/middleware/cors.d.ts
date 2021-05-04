@@ -1,11 +1,11 @@
 /**
- * cors.js
+ * cors.ts
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * This exposes a function that helps you manage CORS in your roads service
  */
-import { Middleware } from '../core/road';
+import { Context, Middleware } from '../core/road';
 /**
  * Apply proper cors headers
  *
@@ -29,4 +29,4 @@ export default function cors(options: {
     logger?: {
         log: (ley: string, data?: unknown) => void;
     };
-}): Middleware;
+}): Middleware<Context>;

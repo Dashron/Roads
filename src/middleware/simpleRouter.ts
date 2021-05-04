@@ -1,5 +1,5 @@
 /**
- * simpleRouter.js
+ * simpleRouter.ts
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
@@ -7,7 +7,7 @@
  */
 
 import * as url_module from 'url';
-import {IncomingHeaders, Middleware, NextCallback} from '../core/road';
+import {IncomingHeaders, NextCallback} from '../core/road';
 import Road, {Context} from '../core/road';
 import Response from '../core/response';
 
@@ -72,7 +72,7 @@ export default class SimpleRouter {
 		road.use((function (request_method, request_url, request_body, request_headers, next) {
 			return _self._middleware.call(this, _self._routes, request_method, request_url,
 				request_body, request_headers, next);
-		}) as Middleware);
+		}));
 	}
 
 	/**
@@ -119,7 +119,7 @@ export default class SimpleRouter {
 	}
 
 	/**
-	 * Slightly non-standar roads middleware to execute the functions in this router when requests are received by the road
+	 * Slightly non-standard roads middleware to execute the functions in this router when requests are received by the road
 	 * The first method is the routes to ensure that we can properly use this router once we loose the "this" value
 	 * from the roads context
 	 *

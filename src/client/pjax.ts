@@ -1,15 +1,14 @@
 /**
- * pjax.js
+ * pjax.ts
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * This file exposes a PJAX class to help with client side rendering
  */
 
-import { Middleware } from '../core/road';
-import Road from '../core/road';
+import Road, { Middleware } from '../core/road';
 import Response from '../core/response';
-import * as cookie  from 'cookie';
+import { StoreValsContext, TITLE_KEY } from '../middleware/storeVals';
 
 /**
   * This is a helper class to make PJAX easier. PJAX is a clean way of improving the performance of webpages
@@ -39,7 +38,7 @@ export default class RoadsPjax {
 	}
 
 	/**
-	 * Adds middleware to the assigned road whcih will adds setTitle to the PJAX
+	 * Adds middleware to the assigned road which will adds storeVal and getVal to the PJAX
 	 * 		object (as opposed to the request object like the setTitle middlweare does).
 	 *
 	 * This allows you to easily update the page title.
@@ -47,37 +46,21 @@ export default class RoadsPjax {
 	 * @returns {RoadsPjax} this, useful for chaining
 	 */
 	addTitleMiddleware (): RoadsPjax {
-		const titleMiddleware: Middleware = function (method, url, body, headers, next) {
-			this.setTitle = (title?: string) => {
-				this._page_title = title;
-			};
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
+		const pjaxObj = this;
 
-			return next();
+		const titleMiddleware: Middleware<StoreValsContext> = function (method, url, body, headers, next) {
+
+			return next().then((response) => {
+				if (this.getVal) {
+					pjaxObj._page_title = this.getVal(TITLE_KEY) as string;
+				}
+
+				return response;
+			});
 		};
 
 		this._road.use(titleMiddleware);
-
-		return this;
-	}
-
-	/**
-	 * Assigns the cookie middlware to the road to properly handle cookies
-	 *
-	 * @param {Document} document - The pages document object to properly parse and set cookies
-	 * @returns {RoadsPjax} this object, useful for chaining
-	 */
-	addCookieMiddleware (document: Document): RoadsPjax {
-		const  cookieMiddleware: Middleware = function (method, url, body, headers, next) {
-			if (document.cookie) {
-				this.cookies = cookie.parse(document.cookie);
-			} else {
-				this.cookies = {};
-			}
-
-			return next();
-		};
-
-		this._road.use(cookieMiddleware);
 
 		return this;
 	}

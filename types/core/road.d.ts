@@ -1,5 +1,5 @@
 /**
- * road.js
+ * road.ts
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
@@ -10,8 +10,8 @@ import Response from './response';
 export interface IncomingHeaders {
     [x: string]: string | Array<string> | undefined;
 }
-export interface Middleware {
-    (this: Context, method: string, path: string, body: string, headers: IncomingHeaders, next: NextCallback): Promise<Response | string> | Response | string;
+export interface Middleware<MiddlewareContext extends Context> {
+    (this: MiddlewareContext, method: string, path: string, body: string, headers: IncomingHeaders, next: NextCallback): Promise<Response | string> | Response | string;
 }
 export interface NextCallback {
     (): Promise<Response | string>;
@@ -27,7 +27,7 @@ export interface Context {
  * @name Road
  */
 export default class Road {
-    protected _request_chain: Middleware[];
+    protected _request_chain: Middleware<Context>[];
     /**
      * Road Constructor
      *
@@ -62,7 +62,7 @@ export default class Road {
      * @param {Function} fn - A callback (function or async function) that will be executed every time a request is made.
      * @returns {Road} this road object. Useful for chaining use statements.
      */
-    use(fn: Middleware): Road;
+    use(fn: Middleware<Context>): Road;
     /**
      *
      * Execute the resource method associated with the request parameters.

@@ -1,14 +1,5 @@
 node_modules
-
 .vscode
-
-*.js
-*/*.js
-!src
-!jest.config.js
-!jsExample/*.js
-!jsExample/*/*.js
-jsExample/package-lock.json
-jsExample/node_modules
-
-!browser.js
+dist/*/*.js
+dist/*/*/*.js
+dist/*/*/*/*.js

@@ -1,12 +1,12 @@
 /**
- * cors.js
+ * cors.ts
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * This exposes a function that helps you manage CORS in your roads service
  */
 
-import { IncomingHeaders, Middleware } from '../core/road';
+import { Context, IncomingHeaders, Middleware } from '../core/road';
 import Response, { OutgoingHeaders } from '../core/response';
 
 function getSingleHeader(headers: IncomingHeaders | OutgoingHeaders, key: string): string | undefined {
@@ -43,7 +43,7 @@ export default function cors (options: {
 		validMethods?: Array<string>,
 		cacheMaxAge?: number,
 		logger?: {log: (ley: string, data?: unknown) => void}
-	}): Middleware {
+	}): Middleware<Context> {
 
 	const validOrigins = options.validOrigins || [];
 	const supportsCredentials = options.supportsCredentials || false;
@@ -57,7 +57,7 @@ export default function cors (options: {
 	/*
 	Note: the comments below are pulled from the spec https://www.w3.org/TR/cors/ to help development
 	*/
-	const corsMiddleware: Middleware = function (method, url, body, headers, next) {
+	const corsMiddleware: Middleware<Context> = function (method, url, body, headers, next) {
 		const corsResponseHeaders: { [x: string]: string } = {};
 		const preflight = method === 'OPTIONS' && headers['access-control-request-method'];
 

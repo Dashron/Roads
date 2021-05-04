@@ -1,7 +1,7 @@
 import { Middleware } from '../../../index';
 const parseBody = Middleware.parseBody;
 
-import { Middleware as MiddlewareType } from '../../../core/road';
+import { Context, Middleware as MiddlewareType } from '../../../core/road';
 import { Road } from '../../../index';
 import Response from '../../../core/response';
 
@@ -40,7 +40,7 @@ describe('Parse Request Body tests', () => {
 		road.use(parseBody);
 		const body = '{"hello": "there"}';
 
-		const middleware: MiddlewareType = function (method, url, request_body, headers) {
+		const middleware: MiddlewareType<Context> = function (method, url, request_body, headers) {
 			expect(this.body).toEqual({hello: 'there'});
 			return Promise.resolve(new Response(''));
 		};

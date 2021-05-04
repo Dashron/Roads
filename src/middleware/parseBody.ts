@@ -1,12 +1,12 @@
 /**
- * parseBody.js
+ * parseBody.ts
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * Exposes a single middleware function to help parse request bodies
  */
 
-import {IncomingHeaders, Middleware} from '../core/road';
+import {Context, IncomingHeaders, Middleware} from '../core/road';
 
 import * as contentTypeModule from 'content-type';
 import * as qsModule from 'querystring';
@@ -57,7 +57,7 @@ function parseRequestBody (body: string, contentType?: string): unknown {
 /**
  * Attempts the parse the request body into a useful object
  */
-const parseBody: Middleware = function (method, url, body, headers, next) {
+const parseBody: Middleware<Context> = function (method, url, body, headers, next) {
 	this.body = parseRequestBody(body, getSingleHeader(headers, 'content-type'));
 	return next();
 };
