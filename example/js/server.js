@@ -3,12 +3,12 @@
  * server.js
  * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
- * 
+ *
  * This file starts up the HTTP roads server
  */
 
 let roads = require('roads');
-let middleware = require('roads/middleware');
+let middleware = roads.Middleware;
 var road = new roads.Road();
 var Server = require('roads-server').Server;
 
@@ -20,7 +20,7 @@ road.use(function (method, url, body, headers, next) {
 road.use(middleware.killSlash);
 road.use(middleware.cookie);
 road.use(require('./middleware/addLayout.js'));
-road.use(middleware.setTitle);
+road.use(middleware.storeVals);
 road.use(middleware.parseBody);
 let router = new (middleware.SimpleRouter)(road);
 require('./routes/applyPublicRoutes.js')(router);

@@ -1,5 +1,4 @@
-import { Middleware } from '../../../index';
-const applyToContext = Middleware.applyToContext;
+import { applyToContextMiddleware } from '../../../index';
 
 describe('ApplyToContext tests', () => {
 	test('test apply to context applies context', () => {
@@ -8,7 +7,7 @@ describe('ApplyToContext tests', () => {
 		const val = 'bar';
 		const context: {[x: string]: any} = {};
 
-		const fn = applyToContext(key, val);
+		const fn = applyToContextMiddleware(key, val);
 		expect(typeof(fn)).toEqual('function');
 
 		// eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -23,7 +22,7 @@ describe('ApplyToContext tests', () => {
 		const val = 'bar';
 		const context = {};
 
-		const fn = applyToContext(key, val);
+		const fn = applyToContextMiddleware(key, val);
 		expect(typeof(fn)).toEqual('function');
 
 		const custom = fn.call(context, 'a', 'b', 'c', 'd', function () {

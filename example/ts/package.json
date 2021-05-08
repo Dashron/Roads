@@ -10,7 +10,7 @@
   "devDependencies": {},
   "dependencies": {
     "brfs": "2.0.2",
-    "roads": "file:roads-7.0.0-alpha.1.tgz",
+    "roads": "7.0.0-alpha.1",
     "roads-server": "1.0.3"
   },
   "private": true,

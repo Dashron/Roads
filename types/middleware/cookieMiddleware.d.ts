@@ -29,11 +29,12 @@
  */
 import * as cookie from 'cookie';
 import { Context, Middleware } from '../core/road';
-export interface CookieMiddleware extends Context {
+export interface CookieContext extends Context {
     setCookie: (name: string, value?: string, options?: cookie.CookieSerializeOptions) => void;
     getCookies: () => {
         [x: string]: string;
     };
 }
-declare const cookieMiddleware: Middleware<CookieMiddleware>;
+declare const cookieMiddleware: Middleware<CookieContext>;
+export declare const clientCookieMiddleware: (document: Document) => Middleware<CookieContext>;
 export default cookieMiddleware;

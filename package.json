@@ -1,7 +1,6 @@
 {
   "name": "roads",
-  "version": "7.0.0",
-  "types": "./types/index.d.ts",
+  "version": "7.0.0-alpha.1",
   "author": {
     "name": "Aaron Hedges",
     "email": "aaron@dashron.com",
@@ -13,10 +12,11 @@
     "framework",
     "isomorphic"
   ],
-  "homepage": "https://github.com/Dashron/roads",
+  "homepage": "https://roadsjs.com",
   "scripts": {
     "test": "tsc && node node_modules/eslint/bin/eslint.js ./ && node_modules/jest/bin/jest.js --config jest.config.js src/tests/",
-    "build": "tsc && node dist/node/buildForBrowser.js"
+    "build": "tsc && tsc --project tsconfig-frontend.json",
+    "prepack": "tsc && tsc --project tsconfig-frontend.json"
   },
   "bugs": {
     "url": "http://github.com/Dashron/roads/issues",
@@ -39,10 +39,7 @@
     "prettier": "^2.2.1",
     "ts-jest": "^26.5.4",
     "typescript": "^4.2.3",
-    "@types/browserify": "^12.0.36",
-    "@types/watchify": "^3.11.0",
-    "browserify": "^17.0.0",
-	"watchify": "^4.0.0"
+    "watchify": "^4.0.0"
   },
   "dependencies": {
     "content-type": "^1.0.4",
@@ -50,5 +47,10 @@
     "roads-req": "^0.4.6"
   },
   "license": "MIT",
-  "browser": "./dist/browser/index.js"
+  "main": "dist/index.js",
+  "types": "./types/index.d.ts",
+  "files": [
+    "dist",
+	"dist-frontend"
+  ]
 }

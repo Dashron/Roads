@@ -1,31 +1,270 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 "use strict";
+/**
+ * emptyTo404.js
+ * Copyright(c) 2019 Aaron Hedges <aaron@dashron.com>
+ * MIT Licensed
+ * 
+ * This file is an example of how to apply HTML layouts via a middleware system
+ */
 
-exports.Response = require("./core/response").default;
-exports.Road = require("./core/road").default;
-exports.RoadsPJAX = require("./client/pjax").default;
-exports.Request = require("./client/request").default;
 
-exports.Middleware = {
-    applyToContext: require("./middleware/applyToContext").default,
-    cookie: require("./middleware/cookie").default,
-    killSlash: require("./middleware/killSlash").default,
-    parseBody: require("./middleware/parseBody").default,
-    reroute: require("./middleware/reroute").default,
-    setTitle: require("./middleware/setTitle").default,
-    SimpleRouter: require("./middleware/simpleRouter").default
+/**
+ * This middleware translates missing responses into 404s
+ * 
+ * @param {string} method - HTTP request method
+ * @param {string} url - HTTP request url
+ * @param {string} body - HTTP request body
+ * @param {object} headers - HTTP request headers
+ * @param {function} next - When called, this function will execute the next step in the roads method chain
+ */
+module.exports = function (method, url, body, headers, next) {
+	return next()
+		.then((response) => {
+			if (!response) {
+                return new this.Response('Page not found', 404);
+            }
+
+			return response;
+		});
 };
-},{"./client/pjax":2,"./client/request":3,"./core/response":4,"./core/road":5,"./middleware/applyToContext":9,"./middleware/cookie":10,"./middleware/killSlash":11,"./middleware/parseBody":12,"./middleware/reroute":13,"./middleware/setTitle":14,"./middleware/simpleRouter":15}],2:[function(require,module,exports){
+
+
+},{}],2:[function(require,module,exports){
+/*!
+ * content-type
+ * Copyright(c) 2015 Douglas Christopher Wilson
+ * MIT Licensed
+ */
+
+'use strict'
+
+/**
+ * RegExp to match *( ";" parameter ) in RFC 7231 sec 3.1.1.1
+ *
+ * parameter     = token "=" ( token / quoted-string )
+ * token         = 1*tchar
+ * tchar         = "!" / "#" / "$" / "%" / "&" / "'" / "*"
+ *               / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~"
+ *               / DIGIT / ALPHA
+ *               ; any VCHAR, except delimiters
+ * quoted-string = DQUOTE *( qdtext / quoted-pair ) DQUOTE
+ * qdtext        = HTAB / SP / %x21 / %x23-5B / %x5D-7E / obs-text
+ * obs-text      = %x80-FF
+ * quoted-pair   = "\" ( HTAB / SP / VCHAR / obs-text )
+ */
+var PARAM_REGEXP = /; *([!#$%&'*+.^_`|~0-9A-Za-z-]+) *= *("(?:[\u000b\u0020\u0021\u0023-\u005b\u005d-\u007e\u0080-\u00ff]|\\[\u000b\u0020-\u00ff])*"|[!#$%&'*+.^_`|~0-9A-Za-z-]+) */g
+var TEXT_REGEXP = /^[\u000b\u0020-\u007e\u0080-\u00ff]+$/
+var TOKEN_REGEXP = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/
+
+/**
+ * RegExp to match quoted-pair in RFC 7230 sec 3.2.6
+ *
+ * quoted-pair = "\" ( HTAB / SP / VCHAR / obs-text )
+ * obs-text    = %x80-FF
+ */
+var QESC_REGEXP = /\\([\u000b\u0020-\u00ff])/g
+
+/**
+ * RegExp to match chars that must be quoted-pair in RFC 7230 sec 3.2.6
+ */
+var QUOTE_REGEXP = /([\\"])/g
+
+/**
+ * RegExp to match type in RFC 7231 sec 3.1.1.1
+ *
+ * media-type = type "/" subtype
+ * type       = token
+ * subtype    = token
+ */
+var TYPE_REGEXP = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+\/[!#$%&'*+.^_`|~0-9A-Za-z-]+$/
+
+/**
+ * Module exports.
+ * @public
+ */
+
+exports.format = format
+exports.parse = parse
+
+/**
+ * Format object to media type.
+ *
+ * @param {object} obj
+ * @return {string}
+ * @public
+ */
+
+function format (obj) {
+  if (!obj || typeof obj !== 'object') {
+    throw new TypeError('argument obj is required')
+  }
+
+  var parameters = obj.parameters
+  var type = obj.type
+
+  if (!type || !TYPE_REGEXP.test(type)) {
+    throw new TypeError('invalid type')
+  }
+
+  var string = type
+
+  // append parameters
+  if (parameters && typeof parameters === 'object') {
+    var param
+    var params = Object.keys(parameters).sort()
+
+    for (var i = 0; i < params.length; i++) {
+      param = params[i]
+
+      if (!TOKEN_REGEXP.test(param)) {
+        throw new TypeError('invalid parameter name')
+      }
+
+      string += '; ' + param + '=' + qstring(parameters[param])
+    }
+  }
+
+  return string
+}
+
+/**
+ * Parse media type to object.
+ *
+ * @param {string|object} string
+ * @return {Object}
+ * @public
+ */
+
+function parse (string) {
+  if (!string) {
+    throw new TypeError('argument string is required')
+  }
+
+  // support req/res-like objects as argument
+  var header = typeof string === 'object'
+    ? getcontenttype(string)
+    : string
+
+  if (typeof header !== 'string') {
+    throw new TypeError('argument string is required to be a string')
+  }
+
+  var index = header.indexOf(';')
+  var type = index !== -1
+    ? header.substr(0, index).trim()
+    : header.trim()
+
+  if (!TYPE_REGEXP.test(type)) {
+    throw new TypeError('invalid media type')
+  }
+
+  var obj = new ContentType(type.toLowerCase())
+
+  // parse parameters
+  if (index !== -1) {
+    var key
+    var match
+    var value
+
+    PARAM_REGEXP.lastIndex = index
+
+    while ((match = PARAM_REGEXP.exec(header))) {
+      if (match.index !== index) {
+        throw new TypeError('invalid parameter format')
+      }
+
+      index += match[0].length
+      key = match[1].toLowerCase()
+      value = match[2]
+
+      if (value[0] === '"') {
+        // remove quotes and escapes
+        value = value
+          .substr(1, value.length - 2)
+          .replace(QESC_REGEXP, '$1')
+      }
+
+      obj.parameters[key] = value
+    }
+
+    if (index !== header.length) {
+      throw new TypeError('invalid parameter format')
+    }
+  }
+
+  return obj
+}
+
+/**
+ * Get content-type from req/res objects.
+ *
+ * @param {object}
+ * @return {Object}
+ * @private
+ */
+
+function getcontenttype (obj) {
+  var header
+
+  if (typeof obj.getHeader === 'function') {
+    // res-like
+    header = obj.getHeader('content-type')
+  } else if (typeof obj.headers === 'object') {
+    // req-like
+    header = obj.headers && obj.headers['content-type']
+  }
+
+  if (typeof header !== 'string') {
+    throw new TypeError('content-type header is missing from object')
+  }
+
+  return header
+}
+
+/**
+ * Quote a string if necessary.
+ *
+ * @param {string} val
+ * @return {string}
+ * @private
+ */
+
+function qstring (val) {
+  var str = String(val)
+
+  // no need to quote tokens
+  if (TOKEN_REGEXP.test(str)) {
+    return str
+  }
+
+  if (str.length > 0 && !TEXT_REGEXP.test(str)) {
+    throw new TypeError('invalid parameter value')
+  }
+
+  return '"' + str.replace(QUOTE_REGEXP, '\\$1') + '"'
+}
+
+/**
+ * Class to represent a content type.
+ * @private
+ */
+function ContentType (type) {
+  this.parameters = Object.create(null)
+  this.type = type
+}
+
+},{}],3:[function(require,module,exports){
 "use strict";
 /**
- * pjax.js
+ * pjax.ts
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * This file exposes a PJAX class to help with client side rendering
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const cookie = require("cookie");
+const storeVals_1 = require("../middleware/storeVals");
 /**
   * This is a helper class to make PJAX easier. PJAX is a clean way of improving the performance of webpages
   * by progressively turning standard HTML links into AJAX requests for portions of a web page.
@@ -48,7 +287,7 @@ class RoadsPjax {
         this._container_element = container_element;
     }
     /**
-     * Adds middleware to the assigned road whcih will adds setTitle to the PJAX
+     * Adds middleware to the assigned road which will adds storeVal and getVal to the PJAX
      * 		object (as opposed to the request object like the setTitle middlweare does).
      *
      * This allows you to easily update the page title.
@@ -56,32 +295,17 @@ class RoadsPjax {
      * @returns {RoadsPjax} this, useful for chaining
      */
     addTitleMiddleware() {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const pjaxObj = this;
         const titleMiddleware = function (method, url, body, headers, next) {
-            this.setTitle = (title) => {
-                this._page_title = title;
-            };
-            return next();
+            return next().then((response) => {
+                if (this.getVal) {
+                    pjaxObj._page_title = this.getVal(storeVals_1.TITLE_KEY);
+                }
+                return response;
+            });
         };
         this._road.use(titleMiddleware);
-        return this;
-    }
-    /**
-     * Assigns the cookie middlware to the road to properly handle cookies
-     *
-     * @param {Document} document - The pages document object to properly parse and set cookies
-     * @returns {RoadsPjax} this object, useful for chaining
-     */
-    addCookieMiddleware(document) {
-        const cookieMiddleware = function (method, url, body, headers, next) {
-            if (document.cookie) {
-                this.cookies = cookie.parse(document.cookie);
-            }
-            else {
-                this.cookies = {};
-            }
-            return next();
-        };
-        this._road.use(cookieMiddleware);
         return this;
     }
     /**
@@ -209,7 +433,7 @@ class RoadsPjax {
 }
 exports.default = RoadsPjax;
 
-},{"cookie":21}],3:[function(require,module,exports){
+},{"../middleware/storeVals":15}],4:[function(require,module,exports){
 "use strict";
 /**
  * request.ts
@@ -286,10 +510,10 @@ class Request {
 }
 exports.default = Request;
 
-},{"../core/response":4,"roads-req":31}],4:[function(require,module,exports){
+},{"../core/response":5,"roads-req":17}],5:[function(require,module,exports){
 "use strict";
 /**
- * response.js
+ * response.ts
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
@@ -325,11 +549,11 @@ function wrap(promise) {
 }
 exports.wrap = wrap;
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 "use strict";
 /* eslint-disable max-len */
 /**
- * road.js
+ * road.ts
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
@@ -445,122 +669,42 @@ class Road {
 }
 exports.default = Road;
 
-},{"./response":4}],6:[function(require,module,exports){
+},{"./response":5}],7:[function(require,module,exports){
 "use strict";
-/**
- * emptyTo404.js
- * Copyright(c) 2019 Aaron Hedges <aaron@dashron.com>
- * MIT Licensed
- * 
- * This file is an example of how to apply HTML layouts via a middleware system
- */
-
-
-/**
- * This middleware translates missing responses into 404s
- * 
- * @param {string} method - HTTP request method
- * @param {string} url - HTTP request url
- * @param {string} body - HTTP request body
- * @param {object} headers - HTTP request headers
- * @param {function} next - When called, this function will execute the next step in the roads method chain
- */
-module.exports = function (method, url, body, headers, next) {
-	return next()
-		.then((response) => {
-			if (!response) {
-                return new this.Response('Page not found', 404);
-            }
-
-			return response;
-		});
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Middleware = exports.Request = exports.RoadsPJAX = exports.Road = exports.Response = void 0;
+var response_1 = require("./core/response");
+Object.defineProperty(exports, "Response", { enumerable: true, get: function () { return response_1.default; } });
+var road_1 = require("./core/road");
+Object.defineProperty(exports, "Road", { enumerable: true, get: function () { return road_1.default; } });
+var pjax_1 = require("./client/pjax");
+Object.defineProperty(exports, "RoadsPJAX", { enumerable: true, get: function () { return pjax_1.default; } });
+var request_1 = require("./client/request");
+Object.defineProperty(exports, "Request", { enumerable: true, get: function () { return request_1.default; } });
+const applyToContext_1 = require("./middleware/applyToContext");
+const cookie_1 = require("./middleware/cookie");
+const cors_1 = require("./middleware/cors");
+const killSlash_1 = require("./middleware/killSlash");
+const parseBody_1 = require("./middleware/parseBody");
+const reroute_1 = require("./middleware/reroute");
+const storeVals_1 = require("./middleware/storeVals");
+const simpleRouter_1 = require("./middleware/simpleRouter");
+const Middleware = {
+    applyToContext: applyToContext_1.default,
+    cookie: cookie_1.default,
+    cors: cors_1.default,
+    killSlash: killSlash_1.default,
+    parseBody: parseBody_1.default,
+    reroute: reroute_1.default,
+    storeVals: storeVals_1.default,
+    SimpleRouter: simpleRouter_1.default
 };
+exports.Middleware = Middleware;
 
-
-},{}],7:[function(require,module,exports){
+},{"./client/pjax":3,"./client/request":4,"./core/response":5,"./core/road":6,"./middleware/applyToContext":8,"./middleware/cookie":9,"./middleware/cors":10,"./middleware/killSlash":11,"./middleware/parseBody":12,"./middleware/reroute":13,"./middleware/simpleRouter":14,"./middleware/storeVals":15}],8:[function(require,module,exports){
 "use strict";
 /**
- * applyPublicRoutes.js
- * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
- * MIT Licensed
- * 
- * This file is an example of how to assign some public routes to a roads server
- */
-
- /**
-  * Before calling this function you should create your roads object and bind a SimpleRouter to that road.
-  * You then pass the road to this function to assign a collection of example routes that will be rendered
-  * on both the client and the server
-  * 
-  * @param {SimpleRouter} router - The router that the routes will be added to
-  */
-module.exports = function (router) {
-	router.addRoute('GET', '/', function () {
-		this.setTitle('Root Resource');
-
-		// In the real world the body of the response should be created from a template engine.
-		return new this.Response(`Hello!<br />
-		 Try the <a href="/public" data-roads-pjax="link">public test link</a>.
-		 It's available to the server and can be rendered from the client! Try clicking it for the client path, or control clicking for a real request to the server.<br />
-		 Try the <a href="/private">private test link</a>. Itt's available to the server, but is not build in the client! Check your console for proof of the network request!`);
-	});
-
-	router.addRoute('GET', '/public', function () {
-		this.setTitle('Public Resource');
-		console.log('Here are all cookies accessible to this code: ', this.cookies);
-		console.log("Cookies are not set until you access the private route.");
-		console.log("Notice that the http only cookies do not show in your browser's console.log");
-
-		let html = `Hello!<br />
-		 The page you are looking at can be renderd via server or client. 
-		 The landing page can too, so try going back <a href="/" data-roads-pjax="link">home</a>!
-		 <form method="POST" action="/postdata" data-roads-pjax="form">
-			Message: <input type="text" name="message">
-			<input type="submit" value="Send message" data-roads-pjax="submit">
-		 </form>`;
-
-		// todo: make a client request to /privateJSON and get { "private-success": true }
-
-		return new this.Response(html);
-	});
-
-	router.addRoute('POST', '/postdata', function (url, body, headers) {
-		console.log('You sent the message:' + this.body.message);
-		this.ignore_layout = true;
-		return new this.Response('', 302, { location: '/public' });
-	});
-};
-},{}],8:[function(require,module,exports){
-"use strict";
-/**
- * client.js
- * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
- * MIT Licensed
- *
- * This file is an example of using roads router in the client
- */
-
-var roads = require('roads');
-var road = new roads.Road();
-
-road.use(function (method, url, body, headers, next) {
-    console.log('fake ' + method + ' request to...', url);
-    return next();
-});
-
-var pjax = new roads.RoadsPJAX(road, document.getElementById('container'), window);
-pjax.addTitleMiddleware();
-road.use(require('../middleware/emptyTo404.js'));
-road.use(roads.Middleware.parseBody);
-pjax.addCookieMiddleware(document);
-pjax.register();
-pjax.registerAdditionalElement(document.getElementById('home'));
-let router = new roads.Middleware.SimpleRouter(road);
-require('../routes/applyPublicRoutes.js')(router);
-},{"../middleware/emptyTo404.js":6,"../routes/applyPublicRoutes.js":7,"roads":1}],9:[function(require,module,exports){
-"use strict";
-/**
- * applyToContext.js
+ * applyToContext.ts
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
@@ -570,6 +714,10 @@ require('../routes/applyPublicRoutes.js')(router);
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * Very simple middleware to apply a single value to the request context.
+ *
+ * TODO: Get better typing on this. I think we need to wait for https://github.com/Microsoft/TypeScript/pull/26797.
+ *		In the meanwhile anyone who uses this function should include key: Middleware<Context> to
+ *		their final request context type
  *
  * @param {string} key - The key that should store the value on the request context.
  * @param {any} val - The value to apply to the request context.
@@ -584,17 +732,16 @@ function applyToContext(key, val) {
 }
 exports.default = applyToContext;
 
-},{}],10:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 "use strict";
 /**
- * cookie.js
+ * cookie.ts
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * Exposes a single middleware function to help with cookies
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CookieResponse = void 0;
 /**
  * Middleware to make it easier for roads to work with cookies.
  *
@@ -619,47 +766,284 @@ exports.CookieResponse = void 0;
  */
 const cookie = require("cookie");
 const response_1 = require("../core/response");
-class CookieResponse extends response_1.default {
+function getCookieValues(newCookies) {
+    const cookies = {};
+    const cookieKeys = Object.keys(newCookies);
+    for (let i = 0; i < cookieKeys.length; i++) {
+        const newCookie = newCookies[cookieKeys[i]];
+        cookies[cookieKeys[i]] = newCookie.value;
+    }
+    return cookies;
 }
-exports.CookieResponse = CookieResponse;
 const cookieMiddleware = function (route_method, route_path, route_body, route_headers, next) {
-    // Find the cookies from the request
+    let cookies = {};
+    const newCookies = {};
+    // Find the cookies from the request and store them locally
     if (route_headers.cookie) {
-        this.cookies = cookie.parse(
+        cookies = cookie.parse(
         // todo: hmm... Can we get an array of cookies? I don't think so... this handles it properly if we do though.
         Array.isArray(route_headers.cookie) ? route_headers.cookie.join('; ') : route_headers.cookie);
     }
-    else {
-        this.cookies = {};
-    }
-    // Add a cookie method to the response object. Allows you to set cookies like koa.js
-    this.Response.prototype.setCookie = function (name, value, options) {
-        if (!this._cookie_values) {
-            this._cookie_values = {};
-        }
-        // todo: is this a bug? shouldn't this record an array of cookie values?
-        //		I think calling this multiple times for the same value will set multiple
-        //		cookie headers, yet only the most recent value in local memory
-        // also I think this will be inconsistent with the initially set cookie data. not sure. needs research
-        this._cookie_values[name] = {
-            value: value
+    // Add a cookie method to the middleware context
+    this.setCookie = function (name, value, options) {
+        newCookies[name] = {
+            value: value ? value : '',
+            options: options ? options : {}
         };
-        if (options) {
-            this._cookie_values[name].options = options;
-        }
-        if (!this.headers['Set-Cookie']) {
-            this.headers['Set-Cookie'] = [];
-        }
-        this.headers['Set-Cookie'].push(cookie.serialize(name, value, options));
     };
-    this.Response.prototype.getCookies = function () {
-        return this._cookie_values;
+    // Return the inital cookies with any new cookies merged on top.
+    this.getCookies = () => {
+        return Object.assign(Object.assign({}, cookies), getCookieValues(newCookies));
     };
-    return next();
+    // Apply the cookie headers to the response
+    return next().then((response) => {
+        const cookieKeys = Object.keys(newCookies);
+        // If there are new cookies to transmit
+        if (cookieKeys.length) {
+            // Ensure we're dealing with a response object and not a string
+            if (!(response instanceof response_1.default)) {
+                response = new response_1.default(response);
+            }
+            // Initalize the header
+            if (!response.headers['Set-Cookie']) {
+                response.headers['Set-Cookie'] = [];
+            }
+            // Apply all the cookies
+            for (let i = 0; i < cookieKeys.length; i++) {
+                response.headers['Set-Cookie'].push(cookie.serialize(cookieKeys[i], newCookies[cookieKeys[i]].value, newCookies[cookieKeys[i]].options));
+            }
+        }
+        return response;
+    });
 };
 exports.default = cookieMiddleware;
 
-},{"../core/response":4,"cookie":21}],11:[function(require,module,exports){
+},{"../core/response":5,"cookie":16}],10:[function(require,module,exports){
+"use strict";
+/**
+ * cors.ts
+ * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
+ * MIT Licensed
+ *
+ * This exposes a function that helps you manage CORS in your roads service
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+const response_1 = require("../core/response");
+function getSingleHeader(headers, key) {
+    if (headers) {
+        // This is a little weirder than I would like, but it works better with typescript
+        const val = headers[key];
+        if (Array.isArray(val)) {
+            return val[0];
+        }
+        return val;
+    }
+}
+/**
+ * Apply proper cors headers
+ *
+ * @param {object} [options] - A collection of different cors settings.
+ * @param {object} [options.validOrigins] - An array of origin urls that can send requests to this API
+ * @param {object} [options.supportsCredentials] - A boolean, true if you want this endpoint to receive cookies
+ * @param {object} [options.responseHeaders] - An array of valid HTTP response headers
+ * @param {object} [options.requestHeaders] - An array of valid HTTP request headers
+ * @param {object} [options.validMethods] - An array of valid HTTP methods
+ * @param {object} [options.cacheMaxAge] - The maximum age to cache the cors information
+ *
+ * @return {function} The middleware to bind to your road
+ */
+function cors(options) {
+    const validOrigins = options.validOrigins || [];
+    const supportsCredentials = options.supportsCredentials || false;
+    const responseHeaders = options.responseHeaders || [];
+    const requestHeaders = options.requestHeaders || [];
+    // todo: lowercase all valid methods
+    const validMethods = options.validMethods || [];
+    const cacheMaxAge = options.cacheMaxAge || null;
+    const logger = options.logger || { log: () => { } };
+    /*
+    Note: the comments below are pulled from the spec https://www.w3.org/TR/cors/ to help development
+    */
+    const corsMiddleware = function (method, url, body, headers, next) {
+        const corsResponseHeaders = {};
+        const preflight = method === 'OPTIONS' && headers['access-control-request-method'];
+        /*
+         * Terms
+         *	"list of origins" consisting of zero or more origins that are allowed access to the resource.
+         *		Note: This can include the origin of the resource itself though be aware that requests to
+         *		cross-origin resources can be redirected back to the resource.
+         *	"list of methods" consisting of zero or more methods that are supported by the resource.
+         *	"list of headers" consisting of zero or more header field names that are supported by the resource.
+         *	"list of exposed headers" consisting of zero or more header field names of headers other than
+         *		the simple response headers that the resource might use and can be exposed.
+         *	"supports credentials flag" that indicates whether the resource supports user credentials
+         *		in the request. It is true when the resource does and false otherwise.
+         *  "Simple Requests" If the Origin header is not present terminate this set of
+         * 		steps. The request is outside the scope of this specification. https://www.w3.org/TR/cors/#resource-requests
+         * 	"Actual Requests" https://www.w3.org/TR/cors/#resource-requests
+         *  "Preflight Requests":  If the Origin header is not present terminate this set of steps. The request is \
+         * 		outside the scope of this specification. https://www.w3.org/TR/cors/#resource-preflight-requests
+        */
+        if (!headers.origin) {
+            return next();
+        }
+        /* Simple:
+        If the value of the Origin header is not a case-sensitive match for any of the values in list of
+        origins do not set any additional headers and terminate this set of steps.
+
+        Note: Always matching is acceptable since the list of origins can be unbounded.
+        */
+        /* Preflight:
+        If the value of the Origin header is not a case-sensitive match for any of the values in list of
+        origins do not set any additional headers and terminate this set of steps.
+
+        Note: Always matching is acceptable since the list of origins can be unbounded.
+        Note: The Origin header can only contain a single origin as the user agent will not follow redirects.
+        Implementation Note: Resources that wish to enable themselves to be shared with multiple Origins but do not respond
+            uniformly with "*" must in practice generate the Access-Control-Allow-Origin header dynamically in response to
+            every request they wish to allow. As a consequence, authors of such resources should send a Vary: Origin HTTP
+            header or provide other appropriate control directives to prevent caching of such responses, which may be
+            inaccurate if re-used across-origins.
+        */
+        const originHeader = getSingleHeader(headers, 'origin');
+        if (validOrigins[0] !== '*' && originHeader && validOrigins.indexOf(originHeader) === -1) {
+            logger.log('CORS ERROR: bad origin', originHeader);
+            return next();
+        }
+        if (preflight) {
+            /*
+             *	Preflight
+             *	Let method be the value as result of parsing the Access-Control-Request-Method header.
+             *	If there is no Access-Control-Request-Method header or if parsing failed, do not set any additional headers
+             *	and terminate this set of steps. The request is outside the scope of this specification.
+            */
+            const corsMethod = getSingleHeader(headers, 'access-control-request-method');
+            /*
+            preflight
+            If method is not a case-sensitive match for any of the values in list of methods do not set any additional
+                headers and terminate this set of steps.
+
+            Note: Always matching is acceptable since the list of methods can be unbounded.
+            */
+            // todo: lowercase valid methods and cors method
+            if (corsMethod && validMethods.indexOf(corsMethod) === -1) {
+                logger.log('CORS Error: bad method', corsMethod);
+                return next();
+            }
+            /*
+             *	preflight
+             *	Let header field-names be the values as result of parsing the Access-Control-Request-Headers headers.
+             *
+             *	Note: If there are no Access-Control-Request-Headers headers let header field-names be the empty list.
+             *	Note: If parsing failed do not set any additional headers and terminate this set of steps. The request
+             *		is outside the scope of this specification.
+            */
+            let headerNames = undefined;
+            const acRequestHeaders = getSingleHeader(headers, 'access-control-request-headers');
+            try {
+                headerNames = acRequestHeaders ? acRequestHeaders.split(',') : [];
+            }
+            catch (e) {
+                logger.log('CORS Error: request headers parse fail');
+                return next();
+            }
+            /*
+            preflight
+            If any of the header field-names is not a ASCII case-insensitive match for any of the values in list of
+                headers do not set any additional headers and terminate this set of steps.
+
+            Note: Always matching is acceptable since the list of headers can be unbounded.
+            */
+            for (let i = 0; i < headerNames.length; i++) {
+                if (requestHeaders.indexOf(headerNames[i]) === -1) {
+                    logger.log('CORS Error: invalid header requested', headerNames[i]);
+                    return next();
+                }
+            }
+            /*
+             *	Preflight
+             *	Optionally add a single Access-Control-Max-Age header with as value the amount of seconds the user agent is
+             *	allowed to cache the result of the request.
+            */
+            if (typeof (cacheMaxAge) === 'number') {
+                corsResponseHeaders['access-control-max-age'] = String(cacheMaxAge);
+            }
+            /*
+             *	Preflight
+             *	If method is a simple method this step may be skipped.
+             *	Add one or more Access-Control-Allow-Methods headers consisting of (a subset of) the list of methods.
+             *	Note: If a method is a simple method it does not need to be listed, but this is not prohibited.
+             *	Note: Since the list of methods can be unbounded, simply returning the method indicated by
+             *		Access-Control-Request-Method (if supported) can be enough.
+            */
+            corsResponseHeaders['access-control-allow-methods'] = validMethods.join(', ');
+            /*
+             *	Preflight
+             *	If each of the header field-names is a simple header and none is Content-Type, this step may be skipped.
+             *	Add one or more Access-Control-Allow-Headers headers consisting of (a subset of) the list of headers.
+             *	Note: If a header field name is a simple header and is not Content-Type, it is not required to be listed.
+             *		Content-Type is to be listed as only a subset of its values makes it qualify as simple header.
+             *	Note: Since the list of headers can be unbounded, simply returning supported headers from
+             * 		Access-Control-Allow-Headers can be enough.
+            */
+            corsResponseHeaders['access-control-allow-headers'] = requestHeaders.join(', ');
+        }
+        else {
+            /*
+             *	Simple
+             *	If the list of exposed headers is not empty add one or more Access-Control-Expose-Headers headers,
+             *	with as values the header field names given in the list of exposed headers.
+             *
+             *	By not adding the appropriate headers resource can also clear the preflight result cache of all entries
+             *	where origin is a case-sensitive match for the value of the Origin header and url is a case-sensitive
+             *	match for the URL of the resource.
+            */
+            if (responseHeaders && responseHeaders.length) {
+                corsResponseHeaders['access-control-expose-headers'] = responseHeaders.join(', ');
+            }
+        }
+        /*
+         *	preflight
+         *	If the resource supports credentials add a single Access-Control-Allow-Origin header,
+         *	with the value of the Origin header as value, and add a single Access-Control-Allow-Credentials
+         *	header with the case-sensitive string "true" as value.
+         *
+         *	Note: Otherwise, add a single Access-Control-Allow-Origin header, with either the value of the Origin header or
+         *		the string "*" as value.
+         *	Note: The string "*" cannot be used for a resource that supports credentials.
+        */
+        /*
+         *	Simple
+         *	If the resource supports credentials add a single Access-Control-Allow-Origin header,
+         *	with the value of the Origin header as value, and add a single Access-Control-Allow-Credentials
+         *	header with the case-sensitive string "true" as value
+         *
+         *	Note: Otherwise, add a single Access-Control-Allow-Origin header, with either the value of the Origin header or
+         *		the string "*" as value.
+         *	Note: The string "*" cannot be used for a resource that supports credentials.
+        */
+        if (originHeader) {
+            corsResponseHeaders['access-control-allow-origin'] = originHeader;
+        }
+        if (supportsCredentials) {
+            corsResponseHeaders['access-control-allow-credentials'] = 'true';
+        }
+        if (preflight) {
+            return Promise.resolve(new response_1.default('', 200, corsResponseHeaders));
+        }
+        return next()
+            .then((response) => {
+            for (const key in corsResponseHeaders) {
+                response.headers[key] = corsResponseHeaders[key];
+            }
+            return response;
+        });
+    };
+    return corsMiddleware;
+}
+exports.default = cors;
+
+},{"../core/response":5}],11:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const url_module = require("url");
@@ -683,10 +1067,10 @@ const killSlash = function (method, url, body, headers, next) {
 };
 exports.default = killSlash;
 
-},{"url":53}],12:[function(require,module,exports){
+},{"url":54}],12:[function(require,module,exports){
 "use strict";
 /**
- * parseBody.js
+ * parseBody.ts
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
@@ -741,10 +1125,10 @@ const parseBody = function (method, url, body, headers, next) {
 };
 exports.default = parseBody;
 
-},{"content-type":20,"querystring":30}],13:[function(require,module,exports){
+},{"content-type":2,"querystring":32}],13:[function(require,module,exports){
 "use strict";
 /**
- * reroute.js
+ * reroute.ts
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
@@ -754,6 +1138,10 @@ exports.default = parseBody;
 Object.defineProperty(exports, "__esModule", { value: true });
 /**
  * Applies a method to the request context that allows you to make requests into another roads object
+ *
+ * TODO: Get better typing on this. I think we need to wait for https://github.com/Microsoft/TypeScript/pull/26797.
+ *     	In the meanwhile anyone who uses this function should include key: Middleware<Context> to
+ * 		their final request context type
  *
  * @param {string} key - The name of the key in the request context that will store the roads request.
  * @param  {road} road - The roads object that you will interact with.
@@ -776,30 +1164,7 @@ exports.default = default_1;
 },{}],14:[function(require,module,exports){
 "use strict";
 /**
- * setTitle.js
- * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
- * MIT Licensed
- *
- * Exposes a single middleware function to help manage the page title. This is best used alongside the PJAX helper
- */
-Object.defineProperty(exports, "__esModule", { value: true });
-/**
- * Adds two simple functions to get and set a page title on the request context. This is very helpful for
- * 		isomorphic js, since on the client, page titles aren't part of the rendered view data.
- */
-const setTitle = function (method, path, body, headers, next) {
-    this._page_title = null;
-    this.setTitle = (title) => {
-        this._page_title = title ? title : '';
-    };
-    return next();
-};
-exports.default = setTitle;
-
-},{}],15:[function(require,module,exports){
-"use strict";
-/**
- * simpleRouter.js
+ * simpleRouter.ts
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
@@ -890,7 +1255,7 @@ class SimpleRouter {
         });
     }
     /**
-     * Slightly non-standar roads middleware to execute the functions in this router when requests are received by the road
+     * Slightly non-standard roads middleware to execute the functions in this router when requests are received by the road
      * The first method is the routes to ensure that we can properly use this router once we loose the "this" value
      * from the roads context
      *
@@ -1002,7 +1367,404 @@ function buildRouterPath(path, prefix) {
     return prefix + path;
 }
 
-},{"url":53}],16:[function(require,module,exports){
+},{"url":54}],15:[function(require,module,exports){
+"use strict";
+/**
+ * storeVals.ts
+ * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
+ * MIT Licensed
+ *
+ * Exposes a single middleware function to help manage the page title. This is best used alongside the PJAX helper
+ */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TITLE_KEY = void 0;
+/*
+ * This is a convention used by pjax for storing and retrieving the page title, and placed here
+ *   for consistency with any server side rendering.
+ */
+exports.TITLE_KEY = 'pjax-page-title';
+/**
+ * Adds two simple functions to get and set a page title on the request context. This is very helpful for
+ * 		isomorphic js, since on the client, page titles aren't part of the rendered view data.
+ *  todo: Should we ask for the valid key:data type pairings be sent via a generic to storevalscontext?
+ * 		This would be nice for stricter typing
+ */
+const storeVals = function (method, path, body, headers, next) {
+    const storedVals = {};
+    this.storeVal = (field, val) => {
+        storedVals[field] = val;
+    };
+    this.getVal = (field) => {
+        return storedVals[field];
+    };
+    return next();
+};
+exports.default = storeVals;
+
+},{}],16:[function(require,module,exports){
+/*!
+ * cookie
+ * Copyright(c) 2012-2014 Roman Shtylman
+ * Copyright(c) 2015 Douglas Christopher Wilson
+ * MIT Licensed
+ */
+
+'use strict';
+
+/**
+ * Module exports.
+ * @public
+ */
+
+exports.parse = parse;
+exports.serialize = serialize;
+
+/**
+ * Module variables.
+ * @private
+ */
+
+var decode = decodeURIComponent;
+var encode = encodeURIComponent;
+var pairSplitRegExp = /; */;
+
+/**
+ * RegExp to match field-content in RFC 7230 sec 3.2
+ *
+ * field-content = field-vchar [ 1*( SP / HTAB ) field-vchar ]
+ * field-vchar   = VCHAR / obs-text
+ * obs-text      = %x80-FF
+ */
+
+var fieldContentRegExp = /^[\u0009\u0020-\u007e\u0080-\u00ff]+$/;
+
+/**
+ * Parse a cookie header.
+ *
+ * Parse the given cookie header string into an object
+ * The object has the various cookies as keys(names) => values
+ *
+ * @param {string} str
+ * @param {object} [options]
+ * @return {object}
+ * @public
+ */
+
+function parse(str, options) {
+  if (typeof str !== 'string') {
+    throw new TypeError('argument str must be a string');
+  }
+
+  var obj = {}
+  var opt = options || {};
+  var pairs = str.split(pairSplitRegExp);
+  var dec = opt.decode || decode;
+
+  for (var i = 0; i < pairs.length; i++) {
+    var pair = pairs[i];
+    var eq_idx = pair.indexOf('=');
+
+    // skip things that don't look like key=value
+    if (eq_idx < 0) {
+      continue;
+    }
+
+    var key = pair.substr(0, eq_idx).trim()
+    var val = pair.substr(++eq_idx, pair.length).trim();
+
+    // quoted values
+    if ('"' == val[0]) {
+      val = val.slice(1, -1);
+    }
+
+    // only assign once
+    if (undefined == obj[key]) {
+      obj[key] = tryDecode(val, dec);
+    }
+  }
+
+  return obj;
+}
+
+/**
+ * Serialize data into a cookie header.
+ *
+ * Serialize the a name value pair into a cookie string suitable for
+ * http headers. An optional options object specified cookie parameters.
+ *
+ * serialize('foo', 'bar', { httpOnly: true })
+ *   => "foo=bar; httpOnly"
+ *
+ * @param {string} name
+ * @param {string} val
+ * @param {object} [options]
+ * @return {string}
+ * @public
+ */
+
+function serialize(name, val, options) {
+  var opt = options || {};
+  var enc = opt.encode || encode;
+
+  if (typeof enc !== 'function') {
+    throw new TypeError('option encode is invalid');
+  }
+
+  if (!fieldContentRegExp.test(name)) {
+    throw new TypeError('argument name is invalid');
+  }
+
+  var value = enc(val);
+
+  if (value && !fieldContentRegExp.test(value)) {
+    throw new TypeError('argument val is invalid');
+  }
+
+  var str = name + '=' + value;
+
+  if (null != opt.maxAge) {
+    var maxAge = opt.maxAge - 0;
+
+    if (isNaN(maxAge) || !isFinite(maxAge)) {
+      throw new TypeError('option maxAge is invalid')
+    }
+
+    str += '; Max-Age=' + Math.floor(maxAge);
+  }
+
+  if (opt.domain) {
+    if (!fieldContentRegExp.test(opt.domain)) {
+      throw new TypeError('option domain is invalid');
+    }
+
+    str += '; Domain=' + opt.domain;
+  }
+
+  if (opt.path) {
+    if (!fieldContentRegExp.test(opt.path)) {
+      throw new TypeError('option path is invalid');
+    }
+
+    str += '; Path=' + opt.path;
+  }
+
+  if (opt.expires) {
+    if (typeof opt.expires.toUTCString !== 'function') {
+      throw new TypeError('option expires is invalid');
+    }
+
+    str += '; Expires=' + opt.expires.toUTCString();
+  }
+
+  if (opt.httpOnly) {
+    str += '; HttpOnly';
+  }
+
+  if (opt.secure) {
+    str += '; Secure';
+  }
+
+  if (opt.sameSite) {
+    var sameSite = typeof opt.sameSite === 'string'
+      ? opt.sameSite.toLowerCase() : opt.sameSite;
+
+    switch (sameSite) {
+      case true:
+        str += '; SameSite=Strict';
+        break;
+      case 'lax':
+        str += '; SameSite=Lax';
+        break;
+      case 'strict':
+        str += '; SameSite=Strict';
+        break;
+      case 'none':
+        str += '; SameSite=None';
+        break;
+      default:
+        throw new TypeError('option sameSite is invalid');
+    }
+  }
+
+  return str;
+}
+
+/**
+ * Try decoding a string using a decoding function.
+ *
+ * @param {string} str
+ * @param {function} decode
+ * @private
+ */
+
+function tryDecode(str, decode) {
+  try {
+    return decode(str);
+  } catch (e) {
+    return str;
+  }
+}
+
+},{}],17:[function(require,module,exports){
+(function (Buffer){(function (){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const http = require("http");
+const https = require("https");
+/**
+    Options can take four top level fields.
+    1. options.request contains all the HTTP request options (as defined in https://nodejs.org/api/http.html#http_http_request_options_callback)
+    2. options.response is an object with additional information about the response. Currently this only supports the subfield "encoding" for the response encoding
+    3. options.requestBody which is a static string containing the body to send with this request
+    4. options.basicAuth which is an object containing "un" and "pw" fields that will be translated into the proper basic auth header
+    5. options.followRedirects which is a boolean that states whether or not the client should immediately follow any HTTP redirects and return the value of the final request. This currently has NO protection against infinite redirects.
+ */
+function roadsRequest(options) {
+    _handleRequestBody(options);
+    _handleBasicAuth(options);
+    return new Promise((resolve, reject) => {
+        let httpLib = options.request.protocol === 'https' ? https : http;
+        delete options.request.protocol;
+        // Build the request body
+        let request = httpLib.request(options.request, (res) => {
+            res.setEncoding(options.response && options.response.encoding ? options.response.encoding : 'utf8');
+            let body = '';
+            // Receive response body data
+            res.on('data', (chunk) => {
+                body += chunk;
+            });
+            // Handle the end of the response body
+            res.on('end', () => {
+                // Handle redirects
+                if (options.followRedirects && [301, 302].indexOf(Number(res.statusCode)) != -1) {
+                    let newUrl = new URL(String(res.headers['location']));
+                    options.request.path = newUrl.pathname;
+                    return resolve(roadsRequest(options));
+                }
+                resolve({
+                    response: res,
+                    body: body
+                });
+            });
+        });
+        // Handle request errors
+        request.on('error', (e) => {
+            reject(e);
+        });
+        // Send the request body
+        if (options.requestBody) {
+            request.write(options.requestBody);
+        }
+        // End the request
+        request.end();
+    });
+}
+exports.default = roadsRequest;
+/**
+ *
+ * @param {object} options
+ * @param {function} fn
+ */
+function _handleRequestBody(options) {
+    if (typeof options.requestBody === "object") {
+        options.requestBody = JSON.stringify(options.requestBody);
+        if (typeof options.request.headers !== "object") {
+            options.request.headers = {};
+        }
+        options.request.headers['content-type'] = 'application/json';
+    }
+}
+function _handleBasicAuth(options) {
+    if (options.basicAuth) {
+        if (typeof options.request.headers !== "object") {
+            options.request.headers = {};
+        }
+        options.request.headers.authorization = 'Basic ' + Buffer.from(options.basicAuth.un + ':' + options.basicAuth.pw).toString('base64');
+    }
+}
+
+}).call(this)}).call(this,require("buffer").Buffer)
+},{"buffer":22,"http":33,"https":25}],18:[function(require,module,exports){
+"use strict";
+/**
+ * applyPublicRoutes.js
+ * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
+ * MIT Licensed
+ * 
+ * This file is an example of how to assign some public routes to a roads server
+ */
+
+ /**
+  * Before calling this function you should create your roads object and bind a SimpleRouter to that road.
+  * You then pass the road to this function to assign a collection of example routes that will be rendered
+  * on both the client and the server
+  * 
+  * @param {SimpleRouter} router - The router that the routes will be added to
+  */
+module.exports = function (router) {
+	router.addRoute('GET', '/', function () {
+		this.setTitle('Root Resource');
+
+		// In the real world the body of the response should be created from a template engine.
+		return new this.Response(`Hello!<br />
+		 Try the <a href="/public" data-roads-pjax="link">public test link</a>.
+		 It's available to the server and can be rendered from the client! Try clicking it for the client path, or control clicking for a real request to the server.<br />
+		 Try the <a href="/private">private test link</a>. Itt's available to the server, but is not build in the client! Check your console for proof of the network request!`);
+	});
+
+	router.addRoute('GET', '/public', function () {
+		this.setTitle('Public Resource');
+		console.log('Here are all cookies accessible to this code: ', this.cookies);
+		console.log("Cookies are not set until you access the private route.");
+		console.log("Notice that the http only cookies do not show in your browser's console.log");
+
+		let html = `Hello!<br />
+		 The page you are looking at can be renderd via server or client. 
+		 The landing page can too, so try going back <a href="/" data-roads-pjax="link">home</a>!
+		 <form method="POST" action="/postdata" data-roads-pjax="form">
+			Message: <input type="text" name="message">
+			<input type="submit" value="Send message" data-roads-pjax="submit">
+		 </form>`;
+
+		// todo: make a client request to /privateJSON and get { "private-success": true }
+
+		return new this.Response(html);
+	});
+
+	router.addRoute('POST', '/postdata', function (url, body, headers) {
+		console.log('You sent the message:' + this.body.message);
+		this.ignore_layout = true;
+		return new this.Response('', 302, { location: '/public' });
+	});
+};
+},{}],19:[function(require,module,exports){
+"use strict";
+/**
+ * client.js
+ * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
+ * MIT Licensed
+ *
+ * This file is an example of using roads router in the client
+ */
+
+var roads = require('roads');
+var road = new roads.Road();
+
+road.use(function (method, url, body, headers, next) {
+    console.log('fake ' + method + ' request to...', url);
+    return next();
+});
+
+var pjax = new roads.RoadsPJAX(road, document.getElementById('container'), window);
+pjax.addTitleMiddleware();
+road.use(require('../middleware/emptyTo404.js'));
+road.use(roads.Middleware.parseBody);
+pjax.addCookieMiddleware(document);
+pjax.register();
+pjax.registerAdditionalElement(document.getElementById('home'));
+let router = new roads.Middleware.SimpleRouter(road);
+require('../routes/applyPublicRoutes.js')(router);
+},{"../middleware/emptyTo404.js":1,"../routes/applyPublicRoutes.js":18,"roads":7}],20:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -1156,9 +1918,9 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],17:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 
-},{}],18:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 (function (Buffer){(function (){
 /*!
  * The buffer module from node.js, for the browser.
@@ -2939,7 +3701,7 @@ function numberIsNaN (obj) {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"base64-js":16,"buffer":18,"ieee754":24}],19:[function(require,module,exports){
+},{"base64-js":20,"buffer":22,"ieee754":26}],23:[function(require,module,exports){
 module.exports = {
   "100": "Continue",
   "101": "Switching Protocols",
@@ -3005,435 +3767,7 @@ module.exports = {
   "511": "Network Authentication Required"
 }
 
-},{}],20:[function(require,module,exports){
-/*!
- * content-type
- * Copyright(c) 2015 Douglas Christopher Wilson
- * MIT Licensed
- */
-
-'use strict'
-
-/**
- * RegExp to match *( ";" parameter ) in RFC 7231 sec 3.1.1.1
- *
- * parameter     = token "=" ( token / quoted-string )
- * token         = 1*tchar
- * tchar         = "!" / "#" / "$" / "%" / "&" / "'" / "*"
- *               / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~"
- *               / DIGIT / ALPHA
- *               ; any VCHAR, except delimiters
- * quoted-string = DQUOTE *( qdtext / quoted-pair ) DQUOTE
- * qdtext        = HTAB / SP / %x21 / %x23-5B / %x5D-7E / obs-text
- * obs-text      = %x80-FF
- * quoted-pair   = "\" ( HTAB / SP / VCHAR / obs-text )
- */
-var PARAM_REGEXP = /; *([!#$%&'*+.^_`|~0-9A-Za-z-]+) *= *("(?:[\u000b\u0020\u0021\u0023-\u005b\u005d-\u007e\u0080-\u00ff]|\\[\u000b\u0020-\u00ff])*"|[!#$%&'*+.^_`|~0-9A-Za-z-]+) */g
-var TEXT_REGEXP = /^[\u000b\u0020-\u007e\u0080-\u00ff]+$/
-var TOKEN_REGEXP = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/
-
-/**
- * RegExp to match quoted-pair in RFC 7230 sec 3.2.6
- *
- * quoted-pair = "\" ( HTAB / SP / VCHAR / obs-text )
- * obs-text    = %x80-FF
- */
-var QESC_REGEXP = /\\([\u000b\u0020-\u00ff])/g
-
-/**
- * RegExp to match chars that must be quoted-pair in RFC 7230 sec 3.2.6
- */
-var QUOTE_REGEXP = /([\\"])/g
-
-/**
- * RegExp to match type in RFC 7231 sec 3.1.1.1
- *
- * media-type = type "/" subtype
- * type       = token
- * subtype    = token
- */
-var TYPE_REGEXP = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+\/[!#$%&'*+.^_`|~0-9A-Za-z-]+$/
-
-/**
- * Module exports.
- * @public
- */
-
-exports.format = format
-exports.parse = parse
-
-/**
- * Format object to media type.
- *
- * @param {object} obj
- * @return {string}
- * @public
- */
-
-function format (obj) {
-  if (!obj || typeof obj !== 'object') {
-    throw new TypeError('argument obj is required')
-  }
-
-  var parameters = obj.parameters
-  var type = obj.type
-
-  if (!type || !TYPE_REGEXP.test(type)) {
-    throw new TypeError('invalid type')
-  }
-
-  var string = type
-
-  // append parameters
-  if (parameters && typeof parameters === 'object') {
-    var param
-    var params = Object.keys(parameters).sort()
-
-    for (var i = 0; i < params.length; i++) {
-      param = params[i]
-
-      if (!TOKEN_REGEXP.test(param)) {
-        throw new TypeError('invalid parameter name')
-      }
-
-      string += '; ' + param + '=' + qstring(parameters[param])
-    }
-  }
-
-  return string
-}
-
-/**
- * Parse media type to object.
- *
- * @param {string|object} string
- * @return {Object}
- * @public
- */
-
-function parse (string) {
-  if (!string) {
-    throw new TypeError('argument string is required')
-  }
-
-  // support req/res-like objects as argument
-  var header = typeof string === 'object'
-    ? getcontenttype(string)
-    : string
-
-  if (typeof header !== 'string') {
-    throw new TypeError('argument string is required to be a string')
-  }
-
-  var index = header.indexOf(';')
-  var type = index !== -1
-    ? header.substr(0, index).trim()
-    : header.trim()
-
-  if (!TYPE_REGEXP.test(type)) {
-    throw new TypeError('invalid media type')
-  }
-
-  var obj = new ContentType(type.toLowerCase())
-
-  // parse parameters
-  if (index !== -1) {
-    var key
-    var match
-    var value
-
-    PARAM_REGEXP.lastIndex = index
-
-    while ((match = PARAM_REGEXP.exec(header))) {
-      if (match.index !== index) {
-        throw new TypeError('invalid parameter format')
-      }
-
-      index += match[0].length
-      key = match[1].toLowerCase()
-      value = match[2]
-
-      if (value[0] === '"') {
-        // remove quotes and escapes
-        value = value
-          .substr(1, value.length - 2)
-          .replace(QESC_REGEXP, '$1')
-      }
-
-      obj.parameters[key] = value
-    }
-
-    if (index !== header.length) {
-      throw new TypeError('invalid parameter format')
-    }
-  }
-
-  return obj
-}
-
-/**
- * Get content-type from req/res objects.
- *
- * @param {object}
- * @return {Object}
- * @private
- */
-
-function getcontenttype (obj) {
-  var header
-
-  if (typeof obj.getHeader === 'function') {
-    // res-like
-    header = obj.getHeader('content-type')
-  } else if (typeof obj.headers === 'object') {
-    // req-like
-    header = obj.headers && obj.headers['content-type']
-  }
-
-  if (typeof header !== 'string') {
-    throw new TypeError('content-type header is missing from object')
-  }
-
-  return header
-}
-
-/**
- * Quote a string if necessary.
- *
- * @param {string} val
- * @return {string}
- * @private
- */
-
-function qstring (val) {
-  var str = String(val)
-
-  // no need to quote tokens
-  if (TOKEN_REGEXP.test(str)) {
-    return str
-  }
-
-  if (str.length > 0 && !TEXT_REGEXP.test(str)) {
-    throw new TypeError('invalid parameter value')
-  }
-
-  return '"' + str.replace(QUOTE_REGEXP, '\\$1') + '"'
-}
-
-/**
- * Class to represent a content type.
- * @private
- */
-function ContentType (type) {
-  this.parameters = Object.create(null)
-  this.type = type
-}
-
-},{}],21:[function(require,module,exports){
-/*!
- * cookie
- * Copyright(c) 2012-2014 Roman Shtylman
- * Copyright(c) 2015 Douglas Christopher Wilson
- * MIT Licensed
- */
-
-'use strict';
-
-/**
- * Module exports.
- * @public
- */
-
-exports.parse = parse;
-exports.serialize = serialize;
-
-/**
- * Module variables.
- * @private
- */
-
-var decode = decodeURIComponent;
-var encode = encodeURIComponent;
-var pairSplitRegExp = /; */;
-
-/**
- * RegExp to match field-content in RFC 7230 sec 3.2
- *
- * field-content = field-vchar [ 1*( SP / HTAB ) field-vchar ]
- * field-vchar   = VCHAR / obs-text
- * obs-text      = %x80-FF
- */
-
-var fieldContentRegExp = /^[\u0009\u0020-\u007e\u0080-\u00ff]+$/;
-
-/**
- * Parse a cookie header.
- *
- * Parse the given cookie header string into an object
- * The object has the various cookies as keys(names) => values
- *
- * @param {string} str
- * @param {object} [options]
- * @return {object}
- * @public
- */
-
-function parse(str, options) {
-  if (typeof str !== 'string') {
-    throw new TypeError('argument str must be a string');
-  }
-
-  var obj = {}
-  var opt = options || {};
-  var pairs = str.split(pairSplitRegExp);
-  var dec = opt.decode || decode;
-
-  for (var i = 0; i < pairs.length; i++) {
-    var pair = pairs[i];
-    var eq_idx = pair.indexOf('=');
-
-    // skip things that don't look like key=value
-    if (eq_idx < 0) {
-      continue;
-    }
-
-    var key = pair.substr(0, eq_idx).trim()
-    var val = pair.substr(++eq_idx, pair.length).trim();
-
-    // quoted values
-    if ('"' == val[0]) {
-      val = val.slice(1, -1);
-    }
-
-    // only assign once
-    if (undefined == obj[key]) {
-      obj[key] = tryDecode(val, dec);
-    }
-  }
-
-  return obj;
-}
-
-/**
- * Serialize data into a cookie header.
- *
- * Serialize the a name value pair into a cookie string suitable for
- * http headers. An optional options object specified cookie parameters.
- *
- * serialize('foo', 'bar', { httpOnly: true })
- *   => "foo=bar; httpOnly"
- *
- * @param {string} name
- * @param {string} val
- * @param {object} [options]
- * @return {string}
- * @public
- */
-
-function serialize(name, val, options) {
-  var opt = options || {};
-  var enc = opt.encode || encode;
-
-  if (typeof enc !== 'function') {
-    throw new TypeError('option encode is invalid');
-  }
-
-  if (!fieldContentRegExp.test(name)) {
-    throw new TypeError('argument name is invalid');
-  }
-
-  var value = enc(val);
-
-  if (value && !fieldContentRegExp.test(value)) {
-    throw new TypeError('argument val is invalid');
-  }
-
-  var str = name + '=' + value;
-
-  if (null != opt.maxAge) {
-    var maxAge = opt.maxAge - 0;
-
-    if (isNaN(maxAge) || !isFinite(maxAge)) {
-      throw new TypeError('option maxAge is invalid')
-    }
-
-    str += '; Max-Age=' + Math.floor(maxAge);
-  }
-
-  if (opt.domain) {
-    if (!fieldContentRegExp.test(opt.domain)) {
-      throw new TypeError('option domain is invalid');
-    }
-
-    str += '; Domain=' + opt.domain;
-  }
-
-  if (opt.path) {
-    if (!fieldContentRegExp.test(opt.path)) {
-      throw new TypeError('option path is invalid');
-    }
-
-    str += '; Path=' + opt.path;
-  }
-
-  if (opt.expires) {
-    if (typeof opt.expires.toUTCString !== 'function') {
-      throw new TypeError('option expires is invalid');
-    }
-
-    str += '; Expires=' + opt.expires.toUTCString();
-  }
-
-  if (opt.httpOnly) {
-    str += '; HttpOnly';
-  }
-
-  if (opt.secure) {
-    str += '; Secure';
-  }
-
-  if (opt.sameSite) {
-    var sameSite = typeof opt.sameSite === 'string'
-      ? opt.sameSite.toLowerCase() : opt.sameSite;
-
-    switch (sameSite) {
-      case true:
-        str += '; SameSite=Strict';
-        break;
-      case 'lax':
-        str += '; SameSite=Lax';
-        break;
-      case 'strict':
-        str += '; SameSite=Strict';
-        break;
-      case 'none':
-        str += '; SameSite=None';
-        break;
-      default:
-        throw new TypeError('option sameSite is invalid');
-    }
-  }
-
-  return str;
-}
-
-/**
- * Try decoding a string using a decoding function.
- *
- * @param {string} str
- * @param {function} decode
- * @private
- */
-
-function tryDecode(str, decode) {
-  try {
-    return decode(str);
-  } catch (e) {
-    return str;
-  }
-}
-
-},{}],22:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -3911,7 +4245,7 @@ function once(emitter, name) {
   });
 }
 
-},{}],23:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 var http = require('http')
 var url = require('url')
 
@@ -3944,7 +4278,7 @@ function validateParams (params) {
   return params
 }
 
-},{"http":32,"url":53}],24:[function(require,module,exports){
+},{"http":33,"url":54}],26:[function(require,module,exports){
 /*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
@@ -4031,7 +4365,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],25:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -4060,7 +4394,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],26:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -4246,7 +4580,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],27:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 (function (global){(function (){
 /*! https://mths.be/punycode v1.4.1 by @mathias */
 ;(function(root) {
@@ -4783,7 +5117,7 @@ process.umask = function() { return 0; };
 }(this));
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],28:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -4869,7 +5203,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],29:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -4956,92 +5290,13 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],30:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":28,"./encode":29}],31:[function(require,module,exports){
-(function (Buffer){(function (){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const http = require("http");
-const https = require("https");
-/**
-    Options can take four top level fields.
-    1. options.request contains all the HTTP request options (as defined in https://nodejs.org/api/http.html#http_http_request_options_callback)
-    2. options.response is an object with additional information about the response. Currently this only supports the subfield "encoding" for the response encoding
-    3. options.requestBody which is a static string containing the body to send with this request
-    4. options.basicAuth which is an object containing "un" and "pw" fields that will be translated into the proper basic auth header
-    5. options.followRedirects which is a boolean that states whether or not the client should immediately follow any HTTP redirects and return the value of the final request. This currently has NO protection against infinite redirects.
- */
-function roadsRequest(options) {
-    _handleRequestBody(options);
-    _handleBasicAuth(options);
-    return new Promise((resolve, reject) => {
-        let httpLib = options.request.protocol === 'https' ? https : http;
-        delete options.request.protocol;
-        // Build the request body
-        let request = httpLib.request(options.request, (res) => {
-            res.setEncoding(options.response && options.response.encoding ? options.response.encoding : 'utf8');
-            let body = '';
-            // Receive response body data
-            res.on('data', (chunk) => {
-                body += chunk;
-            });
-            // Handle the end of the response body
-            res.on('end', () => {
-                // Handle redirects
-                if (options.followRedirects && [301, 302].indexOf(Number(res.statusCode)) != -1) {
-                    let newUrl = new URL(String(res.headers['location']));
-                    options.request.path = newUrl.pathname;
-                    return resolve(roadsRequest(options));
-                }
-                resolve({
-                    response: res,
-                    body: body
-                });
-            });
-        });
-        // Handle request errors
-        request.on('error', (e) => {
-            reject(e);
-        });
-        // Send the request body
-        if (options.requestBody) {
-            request.write(options.requestBody);
-        }
-        // End the request
-        request.end();
-    });
-}
-exports.default = roadsRequest;
-/**
- *
- * @param {object} options
- * @param {function} fn
- */
-function _handleRequestBody(options) {
-    if (typeof options.requestBody === "object") {
-        options.requestBody = JSON.stringify(options.requestBody);
-        if (typeof options.request.headers !== "object") {
-            options.request.headers = {};
-        }
-        options.request.headers['content-type'] = 'application/json';
-    }
-}
-function _handleBasicAuth(options) {
-    if (options.basicAuth) {
-        if (typeof options.request.headers !== "object") {
-            options.request.headers = {};
-        }
-        options.request.headers.authorization = 'Basic ' + Buffer.from(options.basicAuth.un + ':' + options.basicAuth.pw).toString('base64');
-    }
-}
-
-}).call(this)}).call(this,require("buffer").Buffer)
-},{"buffer":18,"http":32,"https":23}],32:[function(require,module,exports){
+},{"./decode":30,"./encode":31}],33:[function(require,module,exports){
 (function (global){(function (){
 var ClientRequest = require('./lib/request')
 var response = require('./lib/response')
@@ -5129,7 +5384,7 @@ http.METHODS = [
 	'UNSUBSCRIBE'
 ]
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./lib/request":34,"./lib/response":35,"builtin-status-codes":19,"url":53,"xtend":56}],33:[function(require,module,exports){
+},{"./lib/request":35,"./lib/response":36,"builtin-status-codes":23,"url":54,"xtend":57}],34:[function(require,module,exports){
 (function (global){(function (){
 exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableStream)
 
@@ -5192,7 +5447,7 @@ function isFunction (value) {
 xhr = null // Help gc
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 (function (process,global,Buffer){(function (){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -5510,7 +5765,7 @@ var unsafeHeaders = [
 ]
 
 }).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":33,"./response":35,"_process":26,"buffer":18,"inherits":25,"readable-stream":50}],35:[function(require,module,exports){
+},{"./capability":34,"./response":36,"_process":28,"buffer":22,"inherits":27,"readable-stream":51}],36:[function(require,module,exports){
 (function (process,global,Buffer){(function (){
 var capability = require('./capability')
 var inherits = require('inherits')
@@ -5721,7 +5976,7 @@ IncomingMessage.prototype._onXHRProgress = function () {
 }
 
 }).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
-},{"./capability":33,"_process":26,"buffer":18,"inherits":25,"readable-stream":50}],36:[function(require,module,exports){
+},{"./capability":34,"_process":28,"buffer":22,"inherits":27,"readable-stream":51}],37:[function(require,module,exports){
 'use strict';
 
 function _inheritsLoose(subClass, superClass) { subClass.prototype = Object.create(superClass.prototype); subClass.prototype.constructor = subClass; subClass.__proto__ = superClass; }
@@ -5850,7 +6105,7 @@ createErrorType('ERR_UNKNOWN_ENCODING', function (arg) {
 createErrorType('ERR_STREAM_UNSHIFT_AFTER_END_EVENT', 'stream.unshift() after end event');
 module.exports.codes = codes;
 
-},{}],37:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 (function (process){(function (){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -5992,7 +6247,7 @@ Object.defineProperty(Duplex.prototype, 'destroyed', {
   }
 });
 }).call(this)}).call(this,require('_process'))
-},{"./_stream_readable":39,"./_stream_writable":41,"_process":26,"inherits":25}],38:[function(require,module,exports){
+},{"./_stream_readable":40,"./_stream_writable":42,"_process":28,"inherits":27}],39:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -6032,7 +6287,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":40,"inherits":25}],39:[function(require,module,exports){
+},{"./_stream_transform":41,"inherits":27}],40:[function(require,module,exports){
 (function (process,global){(function (){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -7159,7 +7414,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../errors":36,"./_stream_duplex":37,"./internal/streams/async_iterator":42,"./internal/streams/buffer_list":43,"./internal/streams/destroy":44,"./internal/streams/from":46,"./internal/streams/state":48,"./internal/streams/stream":49,"_process":26,"buffer":18,"events":22,"inherits":25,"string_decoder/":51,"util":17}],40:[function(require,module,exports){
+},{"../errors":37,"./_stream_duplex":38,"./internal/streams/async_iterator":43,"./internal/streams/buffer_list":44,"./internal/streams/destroy":45,"./internal/streams/from":47,"./internal/streams/state":49,"./internal/streams/stream":50,"_process":28,"buffer":22,"events":24,"inherits":27,"string_decoder/":52,"util":21}],41:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -7361,7 +7616,7 @@ function done(stream, er, data) {
   if (stream._transformState.transforming) throw new ERR_TRANSFORM_ALREADY_TRANSFORMING();
   return stream.push(null);
 }
-},{"../errors":36,"./_stream_duplex":37,"inherits":25}],41:[function(require,module,exports){
+},{"../errors":37,"./_stream_duplex":38,"inherits":27}],42:[function(require,module,exports){
 (function (process,global){(function (){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -8061,7 +8316,7 @@ Writable.prototype._destroy = function (err, cb) {
   cb(err);
 };
 }).call(this)}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../errors":36,"./_stream_duplex":37,"./internal/streams/destroy":44,"./internal/streams/state":48,"./internal/streams/stream":49,"_process":26,"buffer":18,"inherits":25,"util-deprecate":55}],42:[function(require,module,exports){
+},{"../errors":37,"./_stream_duplex":38,"./internal/streams/destroy":45,"./internal/streams/state":49,"./internal/streams/stream":50,"_process":28,"buffer":22,"inherits":27,"util-deprecate":56}],43:[function(require,module,exports){
 (function (process){(function (){
 'use strict';
 
@@ -8271,7 +8526,7 @@ var createReadableStreamAsyncIterator = function createReadableStreamAsyncIterat
 
 module.exports = createReadableStreamAsyncIterator;
 }).call(this)}).call(this,require('_process'))
-},{"./end-of-stream":45,"_process":26}],43:[function(require,module,exports){
+},{"./end-of-stream":46,"_process":28}],44:[function(require,module,exports){
 'use strict';
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
@@ -8482,7 +8737,7 @@ function () {
 
   return BufferList;
 }();
-},{"buffer":18,"util":17}],44:[function(require,module,exports){
+},{"buffer":22,"util":21}],45:[function(require,module,exports){
 (function (process){(function (){
 'use strict'; // undocumented cb() API, needed for core, not for public API
 
@@ -8590,7 +8845,7 @@ module.exports = {
   errorOrDestroy: errorOrDestroy
 };
 }).call(this)}).call(this,require('_process'))
-},{"_process":26}],45:[function(require,module,exports){
+},{"_process":28}],46:[function(require,module,exports){
 // Ported from https://github.com/mafintosh/end-of-stream with
 // permission from the author, Mathias Buus (@mafintosh).
 'use strict';
@@ -8695,12 +8950,12 @@ function eos(stream, opts, callback) {
 }
 
 module.exports = eos;
-},{"../../../errors":36}],46:[function(require,module,exports){
+},{"../../../errors":37}],47:[function(require,module,exports){
 module.exports = function () {
   throw new Error('Readable.from is not available in the browser')
 };
 
-},{}],47:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 // Ported from https://github.com/mafintosh/pump with
 // permission from the author, Mathias Buus (@mafintosh).
 'use strict';
@@ -8798,7 +9053,7 @@ function pipeline() {
 }
 
 module.exports = pipeline;
-},{"../../../errors":36,"./end-of-stream":45}],48:[function(require,module,exports){
+},{"../../../errors":37,"./end-of-stream":46}],49:[function(require,module,exports){
 'use strict';
 
 var ERR_INVALID_OPT_VALUE = require('../../../errors').codes.ERR_INVALID_OPT_VALUE;
@@ -8826,10 +9081,10 @@ function getHighWaterMark(state, options, duplexKey, isDuplex) {
 module.exports = {
   getHighWaterMark: getHighWaterMark
 };
-},{"../../../errors":36}],49:[function(require,module,exports){
+},{"../../../errors":37}],50:[function(require,module,exports){
 module.exports = require('events').EventEmitter;
 
-},{"events":22}],50:[function(require,module,exports){
+},{"events":24}],51:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = exports;
 exports.Readable = exports;
@@ -8840,7 +9095,7 @@ exports.PassThrough = require('./lib/_stream_passthrough.js');
 exports.finished = require('./lib/internal/streams/end-of-stream.js');
 exports.pipeline = require('./lib/internal/streams/pipeline.js');
 
-},{"./lib/_stream_duplex.js":37,"./lib/_stream_passthrough.js":38,"./lib/_stream_readable.js":39,"./lib/_stream_transform.js":40,"./lib/_stream_writable.js":41,"./lib/internal/streams/end-of-stream.js":45,"./lib/internal/streams/pipeline.js":47}],51:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":38,"./lib/_stream_passthrough.js":39,"./lib/_stream_readable.js":40,"./lib/_stream_transform.js":41,"./lib/_stream_writable.js":42,"./lib/internal/streams/end-of-stream.js":46,"./lib/internal/streams/pipeline.js":48}],52:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -9137,7 +9392,7 @@ function simpleWrite(buf) {
 function simpleEnd(buf) {
   return buf && buf.length ? this.write(buf) : '';
 }
-},{"safe-buffer":52}],52:[function(require,module,exports){
+},{"safe-buffer":53}],53:[function(require,module,exports){
 /*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 /* eslint-disable node/no-deprecated-api */
 var buffer = require('buffer')
@@ -9204,7 +9459,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
   return buffer.SlowBuffer(size)
 }
 
-},{"buffer":18}],53:[function(require,module,exports){
+},{"buffer":22}],54:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -9938,7 +10193,7 @@ Url.prototype.parseHost = function() {
   if (host) this.hostname = host;
 };
 
-},{"./util":54,"punycode":27,"querystring":30}],54:[function(require,module,exports){
+},{"./util":55,"punycode":29,"querystring":32}],55:[function(require,module,exports){
 'use strict';
 
 module.exports = {
@@ -9956,7 +10211,7 @@ module.exports = {
   }
 };
 
-},{}],55:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 (function (global){(function (){
 
 /**
@@ -10027,7 +10282,7 @@ function config (name) {
 }
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],56:[function(require,module,exports){
+},{}],57:[function(require,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -10048,4 +10303,4 @@ function extend() {
     return target
 }
 
-},{}]},{},[8]);
+},{}]},{},[19]);

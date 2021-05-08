@@ -10,11 +10,11 @@ import * as url_module from 'url';
 import { IncomingHeaders, NextCallback } from '../core/road';
 import Road, { Context } from '../core/road';
 import Response from '../core/response';
-export interface Route {
-    (this: Context, path: SimpleRouterURL, body: string, headers: IncomingHeaders, next: NextCallback): Promise<Response>;
+export interface Route<ContextType extends Context> {
+    (this: ContextType, path: SimpleRouterURL, body: string, headers: IncomingHeaders, next: NextCallback): Promise<Response>;
 }
 interface RouteDetails {
-    route: Route;
+    route: Route<Context>;
     path: string;
     method: string;
 }
@@ -60,7 +60,7 @@ export default class SimpleRouter {
      * @param {(string|array)} paths - One or many URL paths that will trigger the provided function
      * @param {function} fn - The function containing all of your route logic
      */
-    addRoute(method: string, paths: string | string[], fn: Route): void;
+    addRoute<ContextType extends Context>(method: string, paths: string | string[], fn: Route<ContextType>): void;
     /**
      * Add an entire file worth of routes.
      *

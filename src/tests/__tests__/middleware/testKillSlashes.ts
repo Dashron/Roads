@@ -1,5 +1,4 @@
-import { Middleware } from '../../../index';
-const killSlash = Middleware.killSlash;
+import { killSlashMiddleware } from '../../../index';
 
 import Response from '../../../core/response';
 
@@ -18,7 +17,7 @@ describe('KillSlashes tests', () => {
 			});
 		};
 
-		return expect(killSlash.call({}, method, url, body, headers, next)).resolves.toEqual(contents);
+		return expect(killSlashMiddleware.call({}, method, url, body, headers, next)).resolves.toEqual(contents);
 	});
 
 	/**
@@ -38,7 +37,7 @@ describe('KillSlashes tests', () => {
 			});
 		};
 
-		return expect(killSlash.call({
+		return expect(killSlashMiddleware.call({
 			// the redirection needs the Response context
 			Response : Response
 		}, method, url, body, headers, next)).resolves.toEqual({
@@ -68,6 +67,6 @@ describe('KillSlashes tests', () => {
 			});
 		};
 
-		return expect(killSlash.call({}, method, url, body, headers, next)).resolves.toEqual(contents);
+		return expect(killSlashMiddleware.call({}, method, url, body, headers, next)).resolves.toEqual(contents);
 	});
 });

@@ -1,10 +1,9 @@
-import { Middleware } from '../../../index';
-const cors = Middleware.cors;
+import { corsMiddleware } from '../../../index';
 
 describe('Cors tests', () => {
 	test('test kill slash doesn\'t break normal', () => {
 		expect.assertions(1);
-		return expect(cors({})).toBeInstanceOf(Function);
+		return expect(corsMiddleware({})).toBeInstanceOf(Function);
 	});
 
 	/* test.skip('old cors tests. need to update these', () => {

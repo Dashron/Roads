@@ -1,6 +1,6 @@
-import { Middleware } from '../../../index';
-const cookie = Middleware.cookie;
-import { CookieMiddleware } from '../../../middleware/cookie';
+import { cookieMiddleware } from '../../../index';
+
+import { CookieContext } from '../../../middleware/cookieMiddleware';
 import Response from '../../../core/response';
 
 describe('cookie tests', () => {
@@ -10,7 +10,7 @@ describe('cookie tests', () => {
 			Response: Response
 		};
 
-		cookie.call(context, 'a', 'b', 'c', {
+		cookieMiddleware.call(context, 'a', 'b', 'c', {
 			cookie: 'foo=bar;abc=def'
 		}, function () { return Promise.resolve('test'); });
 
@@ -24,15 +24,17 @@ describe('cookie tests', () => {
 			Response: Response
 		};
 
-		const next: (this: CookieMiddleware) => Promise<string> = function () {
+		const next: (this: CookieContext) => Promise<string> = function () {
 			this.setCookie('foo', 'bar');
 			return Promise.resolve('test');
 		};
 
 		// eslint-disable-next-line @typescript-eslint/no-empty-function
-		expect(cookie.call(context, 'a', 'b', 'c', {}, next.bind(context))).resolves.toEqual(new Response('test', 200, {
-			'Set-Cookie': ['foo=bar']
-		}));
+		expect(cookieMiddleware.call(context, 'a', 'b', 'c', {}, next.bind(context)))
+			.resolves.toEqual(new Response('test', 200, {
+
+				'Set-Cookie': ['foo=bar']
+			}));
 	});
 
 	/*test('test that getCookies merges new and old cookies together', () => {

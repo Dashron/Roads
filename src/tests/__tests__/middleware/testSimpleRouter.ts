@@ -1,11 +1,10 @@
 import * as url_module from 'url';
 
-import { Middleware } from '../../../index';
-const SimpleRouter = Middleware.SimpleRouter;
+import { SimpleRouter } from '../../../index';
 
 import { Route, SimpleRouterURL } from '../../../middleware/simpleRouter';
 import { Response, Road } from '../../../index';
-import { NextCallback } from '../../../core/road';
+import { Context, NextCallback } from '../../../core/road';
 
 const router_file_test_path = `${__dirname  }/../../resources/_router_file_test.js`;
 
@@ -19,7 +18,7 @@ describe('Simple Router Tests', () => {
 		const router = new SimpleRouter();
 		const path = '/';
 		const method = 'GET';
-		const fn: Route = () => { return Promise.resolve(new Response(''));};
+		const fn: Route<Context> = () => { return Promise.resolve(new Response(''));};
 
 		router.addRoute(method, path, fn);
 		expect({
@@ -160,7 +159,7 @@ describe('Simple Router Tests', () => {
 		const body = '{"harvey": "birdman"}';
 		const headers = {bojack: 'horseman'};
 
-		const route: Route =  (request_url, request_body, request_headers) => {
+		const route: Route<Context> = (request_url, request_body, request_headers) => {
 			// parsed url
 			expect(request_url).toEqual(url_module.parse(path, true));
 			// passthrough request body
@@ -190,7 +189,7 @@ describe('Simple Router Tests', () => {
 		const body = '{"harvey": "birdman"}';
 		const headers = {bojack: 'horseman'};
 
-		const route: Route = (request_url, request_body, request_headers, next) => {
+		const route: Route<Context> = (request_url, request_body, request_headers, next) => {
 			// parsed url
 			const parsed_url: SimpleRouterURL = url_module.parse(req_path, true);
 			parsed_url.args = {numeric: 12345};
@@ -222,7 +221,7 @@ describe('Simple Router Tests', () => {
 		const body = '{"harvey": "birdman"}';
 		const headers = {bojack: 'horseman'};
 
-		const route: Route = (request_url, request_body, request_headers) => {
+		const route: Route<Context> = (request_url, request_body, request_headers) => {
 			// parsed url
 			const parsed_url: SimpleRouterURL = url_module.parse(req_path, true);
 			parsed_url.args = {string: 'hello'};
@@ -270,7 +269,7 @@ describe('Simple Router Tests', () => {
 		const router = new SimpleRouter();
 		const path = '/';
 		const method = 'GET';
-		const fn: Route = () => {
+		const fn: Route<Context> = () => {
 			return Promise.resolve(new Response('route'));
 		};
 
@@ -291,7 +290,7 @@ describe('Simple Router Tests', () => {
 		const router = new SimpleRouter();
 		const path = '/';
 		const method = 'GET';
-		const fn: Route = () => {
+		const fn: Route<Context> = () => {
 			return Promise.resolve(new Response('true'));
 		};
 
@@ -319,7 +318,7 @@ describe('Simple Router Tests', () => {
 		const path = '/';
 		const method = 'GET';
 		let route_hit = '';
-		const fn: Route = () => {
+		const fn: Route<Context> = () => {
 			route_hit = 'route';
 			return Promise.resolve(new Response(''));
 		};
@@ -343,7 +342,7 @@ describe('Simple Router Tests', () => {
 		const path = '/';
 		const method = 'GET';
 		let route_hit = '';
-		const fn: Route = () => {
+		const fn: Route<Context> = () => {
 			route_hit = 'route';
 			return Promise.resolve(new Response(''));
 		};

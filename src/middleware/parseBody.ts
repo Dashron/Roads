@@ -12,6 +12,10 @@ import * as contentTypeModule from 'content-type';
 import * as qsModule from 'querystring';
 import { OutgoingHeaders } from '../core/response';
 
+export interface ParseBodyContext<BodyType> extends Context {
+	body: BodyType
+}
+
 function getSingleHeader(headers: IncomingHeaders | OutgoingHeaders, key: string): string | undefined {
 	if (headers) {
 		// This is a little weirder than I would like, but it works better with typescript

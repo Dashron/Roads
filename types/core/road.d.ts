@@ -62,7 +62,7 @@ export default class Road {
      * @param {Function} fn - A callback (function or async function) that will be executed every time a request is made.
      * @returns {Road} this road object. Useful for chaining use statements.
      */
-    use(fn: Middleware<Context>): Road;
+    use<ContextType extends Context>(fn: Middleware<ContextType>): Road;
     /**
      *
      * Execute the resource method associated with the request parameters.

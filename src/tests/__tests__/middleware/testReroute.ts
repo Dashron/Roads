@@ -1,7 +1,6 @@
 'use strict';
 
-import { Middleware } from '../../../index';
-const reroute = Middleware.reroute;
+import { rerouteMiddleware } from '../../../index';
 
 import { Road } from '../../../index';
 import { Context, Middleware as MiddlewareType } from '../../../core/road';
@@ -24,7 +23,7 @@ describe('Reroute middleware tests', () => {
 		};
 		const key = 'foo';
 		const context: { [x: string ]: any } = {};
-		const middleware = reroute(key, mockRoad as Road);
+		const middleware = rerouteMiddleware(key, mockRoad as Road);
 
 		expect(typeof(middleware)).toEqual('function');
 

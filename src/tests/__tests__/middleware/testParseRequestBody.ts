@@ -1,5 +1,4 @@
-import { Middleware } from '../../../index';
-const parseBody = Middleware.parseBody;
+import { parseBodyMiddleware } from '../../../index';
 
 import { Context, Middleware as MiddlewareType } from '../../../core/road';
 import { Road } from '../../../index';
@@ -12,7 +11,7 @@ describe('Parse Request Body tests', () => {
 		const body = '{"hello": "there"}';
 
 		// eslint-disable-next-line @typescript-eslint/no-empty-function
-		parseBody.call(context, '', '', body, {'content-type': 'application/json'}, () => {});
+		parseBodyMiddleware.call(context, '', '', body, {'content-type': 'application/json'}, () => {});
 		expect(context.body).toEqual({hello: 'there'});
 	});
 
@@ -26,7 +25,7 @@ describe('Parse Request Body tests', () => {
 
 		return expect(() => {
 			// eslint-disable-next-line @typescript-eslint/no-empty-function
-			return parseBody.call(context, '', '', body, {'content-type': 'application/json'}, () => {});
+			return parseBodyMiddleware.call(context, '', '', body, {'content-type': 'application/json'}, () => {});
 		}).toThrowError();
 	});
 
@@ -37,7 +36,7 @@ describe('Parse Request Body tests', () => {
 		expect.assertions(1);
 
 		const road = new Road();
-		road.use(parseBody);
+		road.use(parseBodyMiddleware);
 		const body = '{"hello": "there"}';
 
 		const middleware: MiddlewareType<Context> = function (method, url, request_body, headers) {
@@ -58,7 +57,7 @@ describe('Parse Request Body tests', () => {
 	test('test used request with invalid json body', () => {
 		expect.assertions(1);
 		const road = new Road();
-		road.use(parseBody);
+		road.use(parseBodyMiddleware);
 		const body = '{hello there';
 
 		return expect(road.request('', '', body, {
@@ -76,7 +75,7 @@ describe('Parse Request Body tests', () => {
 		const body = '{"hello": "there"}';
 
 		// eslint-disable-next-line @typescript-eslint/no-empty-function
-		parseBody.call(context, '', '', body, {'content-type': 'application/json; charset=utf-8'}, () => {});
+		parseBodyMiddleware.call(context, '', '', body, {'content-type': 'application/json; charset=utf-8'}, () => {});
 		expect(context.body).toEqual({hello: 'there'});
 	});
 });

@@ -28,12 +28,11 @@
  * - firstPartyOnly
  *
  */
-
 import * as cookie from 'cookie';
 import { Context, Middleware } from '../core/road';
 import Response from '../core/response';
 
-export interface CookieMiddleware extends Context {
+export interface CookieContext extends Context {
 	setCookie: (name: string, value?: string, options?: cookie.CookieSerializeOptions) => void,
 	getCookies: () => {[x: string]: string}
 }
@@ -57,7 +56,7 @@ function getCookieValues(newCookies: NewCookies): SetCookies {
 	return cookies;
 }
 
-const cookieMiddleware: Middleware<CookieMiddleware> = function (route_method, route_path, route_body, route_headers, next) {
+const cookieMiddleware: Middleware<CookieContext> = function (route_method, route_path, route_body, route_headers, next) {
 	let cookies: SetCookies = {};
 	const newCookies: NewCookies = {};
 
@@ -106,6 +105,13 @@ const cookieMiddleware: Middleware<CookieMiddleware> = function (route_method, r
 
 		return response;
 	});
+};
+
+export const clientCookieMiddleware: (document: Document) => Middleware<CookieContext> = (document) => {
+	return function (route_method, route_path, route_body, route_headers, next) {
+		// TODO: Finalize this
+		return next();
+	};
 };
 
 export default cookieMiddleware;

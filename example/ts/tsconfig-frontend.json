@@ -1,9 +1,9 @@
 {
     "compilerOptions": {
-        "outDir": "./dist/node",
         "target": "es2015",
-        "module": "CommonJS",
-        "moduleResolution": "node",
+        "module": "AMD",
+		"moduleResolution": "Node",
+		"outFile": "./dist-frontend/roads.js",
         "noImplicitAny": true,
         "strictNullChecks": true,
         "noImplicitThis": true,
@@ -11,13 +11,8 @@
         "baseUrl": ".",
         "allowSyntheticDefaultImports": true,
         "declaration": true,
-        "declarationDir": "./types"
     },
-    "exclude": [
-        "./types",
-        "./example"
-    ],
     "include": [
-        "./src/**/*.ts"
+        "static/client.js"
     ]
 }

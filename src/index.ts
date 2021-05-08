@@ -3,25 +3,11 @@ export { default as Road } from './core/road';
 export { default as RoadsPJAX } from './client/pjax';
 export { default as Request } from './client/request';
 
-import applyToContext from './middleware/applyToContext';
-import cookie from './middleware/cookie';
-import cors from './middleware/cors';
-import killSlash from './middleware/killSlash';
-import parseBody from './middleware/parseBody';
-import reroute from './middleware/reroute';
-import storeVals from './middleware/storeVals';
-import SimpleRouter from './middleware/simpleRouter';
-
-
-const Middleware = {
-	applyToContext,
-	cookie,
-	cors,
-	killSlash,
-	parseBody,
-	reroute,
-	storeVals,
-	SimpleRouter
-};
-
-export { Middleware };
+export { default as applyToContextMiddleware } from './middleware/applyToContext';
+export { default as cookieMiddleware } from './middleware/cookieMiddleware';
+export { default as corsMiddleware } from './middleware/cors';
+export { default as killSlashMiddleware } from './middleware/killSlash';
+export { default as parseBodyMiddleware } from './middleware/parseBody';
+export { default as rerouteMiddleware } from './middleware/reroute';
+export { default as storeValsMiddleware } from './middleware/storeVals';
+export { default as SimpleRouter } from './middleware/simpleRouter';

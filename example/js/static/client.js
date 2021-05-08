@@ -19,7 +19,8 @@ var pjax = new roads.RoadsPJAX(road, document.getElementById('container'), windo
 pjax.addTitleMiddleware();
 road.use(require('../middleware/emptyTo404.js'));
 road.use(roads.Middleware.parseBody);
-pjax.addCookieMiddleware(document);
+// Todo: get this set up properly, then check cokie and stor val on the server
+pjax.use(roads.Middleware.clientCookie(document));
 pjax.register();
 pjax.registerAdditionalElement(document.getElementById('home'));
 let router = new roads.Middleware.SimpleRouter(road);
