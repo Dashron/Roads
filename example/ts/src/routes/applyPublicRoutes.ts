@@ -11,7 +11,7 @@ import { SimpleRouter } from 'roads';
 import { ParseBodyContext } from 'roads/types/middleware/parseBody';
 
 interface ExampleRequestBody {
-	message: string
+	message?: string
 }
 
 /**

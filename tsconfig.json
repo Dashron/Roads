@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "outDir": "./dist/node",
+        "outDir": "./dist",
         "target": "es2015",
         "module": "CommonJS",
         "moduleResolution": "node",

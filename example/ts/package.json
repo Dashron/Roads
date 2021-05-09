@@ -14,5 +14,8 @@
     "roads-server": "1.0.3"
   },
   "private": true,
+  "scripts": {
+	"start": "tsc && tsc --project tsconfig-frontend.json && node dist/node/server.js"
+  },
   "license": "MIT"
 }

@@ -3,7 +3,7 @@
         "target": "es2015",
         "module": "AMD",
 		"moduleResolution": "Node",
-		"outFile": "./dist-frontend/roads.js",
+		"outFile": "./dist/browser/client.js",
         "noImplicitAny": true,
         "strictNullChecks": true,
         "noImplicitThis": true,
@@ -13,6 +13,6 @@
         "declaration": true,
     },
     "include": [
-        "static/client.js"
+        "src/client.ts"
     ]
 }

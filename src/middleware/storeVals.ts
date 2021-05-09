@@ -16,7 +16,8 @@ export const TITLE_KEY = 'pjax-page-title';
 
 export interface StoreValsContext extends Context {
 	storeVal: (field: string, val: unknown) => void,
-	getVal: (field: string) => unknown
+	getVal: (field: string) => unknown,
+	getAllVals: () => { [key: string]: unknown }
 }
 
 /**
@@ -34,6 +35,10 @@ const storeVals: Middleware<StoreValsContext> = function (method, path, body, he
 
 	this.getVal = (field) => {
 		return storedVals[field];
+	};
+
+	this.getAllVals = () => {
+		return storedVals;
 	};
 
 	return next();

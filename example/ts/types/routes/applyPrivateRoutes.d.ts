@@ -13,4 +13,4 @@ import { SimpleRouter } from 'roads';
   *
   * @param {SimpleRouter} router - The router that the routes will be added to
   */
-export default function applyPublicRotues(router: SimpleRouter): void;
+export default function applyPrivateRotues(router: SimpleRouter): void;

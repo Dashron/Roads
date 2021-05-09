@@ -6,8 +6,9 @@
  * This file is an example of how to apply HTML layouts via a middleware system
  */
 
-import { Context, Middleware } from 'roads/types/core/road';
-import { Response } from '../../../../types';
+import { Middleware } from 'roads/types/core/road';
+import { Response } from 'roads';
+import { StoreValsContext } from 'roads/types/middleware/storeVals';
 
 /**
   * Example function to wrap an HTML body in the required surrounding HTML tags (commonly called a layout)
@@ -16,18 +17,22 @@ import { Response } from '../../../../types';
   * @param {string} title - The page title
   * @param {boolean} ignore_layout - If true, the layout is not used, and we return the body as is
   */
-function wrapLayout(body, title, ignore_layout) {
-	if (ignore_layout) {
+function wrapLayout(body: string, vals: {
+	title?: string,
+	ignoreLayout?: boolean
+}) {
+
+	if (vals.ignoreLayout) {
 		return body;
 	}
 
 	return `<!DOCTYPE html>
 <html>
-<head><title>${title}</title></head>
+<head><title>${vals.title}</title></head>
 <body>
 	<a id="home" data-roads-pjax="link" href="/">Home</a>
 	<div id="container">${body}
-		<script src="/client.brws.js"></script>
+		<script src="/client.js"></script>
     </div>
 </body>
 </html>`;
@@ -44,18 +49,20 @@ function wrapLayout(body, title, ignore_layout) {
  * @param {object} headers - HTTP request headers
  * @param {function} next - When called, this function will execute the next step in the roads method chain
  */
-const addLayoutMiddleware: Middleware<Context> = function addLayoutMiddleware (method, url, body, headers, next) {
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
-	const _self = this;
-
+const addLayoutMiddleware: Middleware<StoreValsContext> = function addLayoutMiddleware (method, url, body, headers, next) {
 	return next()
 		.then((response) => {
 			if (!(response instanceof Response)) {
 				response = new Response(response);
 			}
 
-			response.body = wrapLayout(response.body, _self._page_title ? _self._page_title : '',
-				_self.ignore_layout ? true : false);
+			let layoutData = {};
+
+			if (this.getAllVals) {
+				layoutData = this.getAllVals();
+			}
+
+			response.body = wrapLayout(response.body, layoutData);
 			return response;
 		});
 };

@@ -5,7 +5,8 @@
  *
  * This file is an example of how to apply HTML layouts via a middleware system
  */
-import { Context, Middleware } from 'roads/types/core/road';
+import { Middleware } from 'roads/types/core/road';
+import { StoreValsContext } from 'roads/types/middleware/storeVals';
 /**
  * This middleware wraps the response in a standard HTML layout. It looks for three fields in the request context.
  * - _page_title - The title of the page
@@ -17,5 +18,5 @@ import { Context, Middleware } from 'roads/types/core/road';
  * @param {object} headers - HTTP request headers
  * @param {function} next - When called, this function will execute the next step in the roads method chain
  */
-declare const addLayoutMiddleware: Middleware<Context>;
+declare const addLayoutMiddleware: Middleware<StoreValsContext>;
 export default addLayoutMiddleware;

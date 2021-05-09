@@ -16,13 +16,9 @@ import { CookieContext } from 'roads/types/middleware/cookieMiddleware';
   *
   * @param {SimpleRouter} router - The router that the routes will be added to
   */
-export default function applyPublicRotues(router: SimpleRouter): void {
+export default function applyPrivateRotues(router: SimpleRouter): void {
 	router.addRoute('GET', '/private', async function (this: CookieContext) {
 		// this.setTitle('Private Resource');
-		const response = new this.Response(
-			`This is a private resource. It's available to the server, but is not build in the client!
-			The landing page can be rendered via the client though, so try going back
-			<a href="/" data-roads="link">home</a>!<br />`);
 		this.setCookie('private_cookie', 'foo', {
 			httpOnly: true
 		});
@@ -31,7 +27,10 @@ export default function applyPublicRotues(router: SimpleRouter): void {
 			httpOnly: false
 		});
 
-		return response;
+		return new this.Response(
+			`This is a private resource. It's available to the server, but is not build in the client!
+			The landing page can be rendered via the client though, so try going back
+			<a href="/" data-roads="link">home</a>!<br />`);
 	});
 
 	router.addRoute('GET', '/privateJSON', async function () {
@@ -41,7 +40,7 @@ export default function applyPublicRotues(router: SimpleRouter): void {
 	router.addRoute('GET', 'client.js', async function (url, body, headers) {
 		this.ignore_layout = true;
 		// In the real world the body of the response should be created from a template engine.
-		return new this.Response(fs.readFileSync(`${__dirname  }/../dist/client.js`).toString('utf-8'), 200, {
+		return new this.Response(fs.readFileSync(`${__dirname  }/../../browser/client.js`).toString('utf-8'), 200, {
 			'Content-Type': 'application/javascript; charset=UTF-8'
 		});
 	});
@@ -49,7 +48,7 @@ export default function applyPublicRotues(router: SimpleRouter): void {
 	router.addRoute('GET', 'roads.js', async function (url, body, headers) {
 		this.ignore_layout = true;
 		// In the real world the body of the response should be created from a template engine.
-		return new this.Response(fs.readFileSync(`${__dirname  }/node_modules/roads/dist-frontend/roads.js`)
+		return new this.Response(fs.readFileSync(`${__dirname}/../../node_modules/roads/dist-frontend/roads.js`)
 			.toString('utf-8'), 200, {
 
 			'Content-Type': 'application/javascript; charset=UTF-8'

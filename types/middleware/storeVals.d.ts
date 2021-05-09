@@ -10,6 +10,9 @@ export declare const TITLE_KEY = "pjax-page-title";
 export interface StoreValsContext extends Context {
     storeVal: (field: string, val: unknown) => void;
     getVal: (field: string) => unknown;
+    getAllVals: () => {
+        [key: string]: unknown;
+    };
 }
 /**
  * Adds two simple functions to get and set a page title on the request context. This is very helpful for
