@@ -5,6 +5,7 @@ export { default as Request } from './client/request';
 
 export { default as applyToContextMiddleware } from './middleware/applyToContext';
 export { default as cookieMiddleware } from './middleware/cookieMiddleware';
+export { clientCookieMiddleware } from './middleware/cookieMiddleware';
 export { default as corsMiddleware } from './middleware/cors';
 export { default as killSlashMiddleware } from './middleware/killSlash';
 export { default as parseBodyMiddleware } from './middleware/parseBody';

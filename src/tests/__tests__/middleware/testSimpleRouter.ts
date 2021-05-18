@@ -189,7 +189,7 @@ describe('Simple Router Tests', () => {
 		const body = '{"harvey": "birdman"}';
 		const headers = {bojack: 'horseman'};
 
-		const route: Route<Context> = (request_url, request_body, request_headers, next) => {
+		const route: Route<Context> = (request_url, request_body, request_headers) => {
 			// parsed url
 			const parsed_url: SimpleRouterURL = url_module.parse(req_path, true);
 			parsed_url.args = {numeric: 12345};

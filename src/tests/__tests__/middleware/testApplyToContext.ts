@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { applyToContextMiddleware } from '../../../index';
 
 describe('ApplyToContext tests', () => {

@@ -53,6 +53,7 @@ export default function applyPublicRotues(router: SimpleRouter): void {
 		return new this.Response(html);
 	});
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	router.addRoute('POST', '/postdata', async function (this: ParseBodyContext<ExampleRequestBody>, url, body, headers) {
 		console.log(`You sent the message:${this.body.message}`);
 		this.ignore_layout = true;

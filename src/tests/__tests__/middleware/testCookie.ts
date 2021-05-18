@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { cookieMiddleware } from '../../../index';
 
 import { CookieContext } from '../../../middleware/cookieMiddleware';

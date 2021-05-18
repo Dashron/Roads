@@ -9,6 +9,7 @@
 import * as fs from 'fs';
 import { SimpleRouter } from 'roads';
 import { CookieContext } from 'roads/types/middleware/cookieMiddleware';
+import { StoreValsContext } from '../../../../types/middleware/storeVals';
 /**
   * Before calling this function you should create your roads object and bind a SimpleRouter to that road.
   * You then pass the road to this function to assign a collection of example routes that should only
@@ -33,20 +34,23 @@ export default function applyPrivateRotues(router: SimpleRouter): void {
 			<a href="/" data-roads="link">home</a>!<br />`);
 	});
 
-	router.addRoute('GET', '/privateJSON', async function () {
+	router.addRoute('GET', '/privateJSON', async function (this: StoreValsContext, ) {
+		this.storeVal('ignoreLayout', true);
 		return new this.Response(JSON.stringify({'private-success': true}));
 	});
 
-	router.addRoute('GET', 'client.js', async function (url, body, headers) {
-		this.ignore_layout = true;
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	router.addRoute('GET', 'client.js', async function (this: StoreValsContext, url, body, headers) {
+		this.storeVal('ignoreLayout', true);
 		// In the real world the body of the response should be created from a template engine.
 		return new this.Response(fs.readFileSync(`${__dirname  }/../../browser/client.js`).toString('utf-8'), 200, {
 			'Content-Type': 'application/javascript; charset=UTF-8'
 		});
 	});
 
-	router.addRoute('GET', 'roads.js', async function (url, body, headers) {
-		this.ignore_layout = true;
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	router.addRoute('GET', 'roads.js', async function (this: StoreValsContext, url, body, headers) {
+		this.storeVal('ignoreLayout', true);
 		// In the real world the body of the response should be created from a template engine.
 		return new this.Response(fs.readFileSync(`${__dirname}/../../node_modules/roads/dist-frontend/roads.js`)
 			.toString('utf-8'), 200, {

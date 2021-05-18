@@ -12,7 +12,7 @@ describe('KillSlashes tests', () => {
 		const headers = {};
 		const contents = 'fooo';
 		const next = function () {
-			return new Promise(function (accept, reject) {
+			return new Promise(function (accept) {
 				accept(contents);
 			});
 		};
@@ -32,7 +32,7 @@ describe('KillSlashes tests', () => {
 		const headers = {};
 		const contents = 'fooo';
 		const next = function () {
-			return new Promise(function (accept, reject) {
+			return new Promise(function (accept) {
 				accept(contents);
 			});
 		};
@@ -62,7 +62,7 @@ describe('KillSlashes tests', () => {
 		const headers = {};
 		const contents = 'fooo';
 		const next = function () {
-			return new Promise(function (accept, reject) {
+			return new Promise(function (accept) {
 				accept(contents);
 			});
 		};

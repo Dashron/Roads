@@ -66,7 +66,7 @@ describe('road request', () => {
 			return next();
 		});
 
-		return road.request('GET', '/').then(function (response) {
+		return road.request('GET', '/').then(function () {
 			expect(step1).toEqual(true);
 			expect(step2).toEqual(true);
 		});

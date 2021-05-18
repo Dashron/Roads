@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { parseBodyMiddleware } from '../../../index';
 
 import { Context, Middleware as MiddlewareType } from '../../../core/road';
@@ -39,7 +40,7 @@ describe('Parse Request Body tests', () => {
 		road.use(parseBodyMiddleware);
 		const body = '{"hello": "there"}';
 
-		const middleware: MiddlewareType<Context> = function (method, url, request_body, headers) {
+		const middleware: MiddlewareType<Context> = function () {
 			expect(this.body).toEqual({hello: 'there'});
 			return Promise.resolve(new Response(''));
 		};

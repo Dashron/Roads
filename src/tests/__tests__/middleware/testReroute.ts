@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict';
 
 import { rerouteMiddleware } from '../../../index';
@@ -14,7 +15,7 @@ describe('Reroute middleware tests', () => {
 	test('test request method is bound to context key', () => {
 		expect.assertions(3);
 
-		const request: MiddlewareType<Context> = function (method, path, body, headers) {
+		const request: MiddlewareType<Context> = function () {
 			return Promise.resolve(new Response('banana'));
 		};
 

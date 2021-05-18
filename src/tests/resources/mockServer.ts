@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as http from 'http';
 import {Server} from 'http';
 

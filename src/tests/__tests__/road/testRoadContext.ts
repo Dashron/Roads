@@ -16,7 +16,7 @@ describe('Road Context', () => {
 		const response_string = 'blahblahwhatwhatwhat';
 		const road = new Road();
 
-		road.use(async function (method, url, body, headers) {
+		road.use(async function (method) {
 			switch (method) {
 				case 'GET':
 					return this.request('POST', '/');
@@ -51,7 +51,7 @@ describe('Road Context', () => {
 			return next();
 		});
 
-		road.use(function (this: Context & confirmContext, method, url, body, headers, next) {
+		road.use(function (this: Context & confirmContext) {
 			return this.confirmString();
 		});
 
@@ -80,7 +80,7 @@ describe('Road Context', () => {
 			return await next();
 		});
 
-		road.use(function (this: Context & confirmContext, method, url, body, headers, next) {
+		road.use(function (this: Context & confirmContext) {
 			return this.confirmString();
 		});
 

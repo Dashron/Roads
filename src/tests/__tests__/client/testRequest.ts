@@ -55,7 +55,7 @@ describe('request', () => {
 		expect.assertions(2);
 		const client = new Client(false, '127.0.0.1', port);
 
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve) => {
 			resolve(client.request('POST', '/', '{"yeah": "what"}', {
 				three : 'four'
 			}).then(function (response: Response) {
