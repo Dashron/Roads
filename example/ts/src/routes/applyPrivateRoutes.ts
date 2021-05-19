@@ -40,21 +40,10 @@ export default function applyPrivateRotues(router: SimpleRouter): void {
 	});
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	router.addRoute('GET', 'client.js', async function (this: StoreValsContext, url, body, headers) {
+	router.addRoute('GET', 'client.brws.js', async function (this: StoreValsContext, url, body, headers) {
 		this.storeVal('ignoreLayout', true);
 		// In the real world the body of the response should be created from a template engine.
-		return new this.Response(fs.readFileSync(`${__dirname  }/../../browser/client.js`).toString('utf-8'), 200, {
-			'Content-Type': 'application/javascript; charset=UTF-8'
-		});
-	});
-
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	router.addRoute('GET', 'roads.js', async function (this: StoreValsContext, url, body, headers) {
-		this.storeVal('ignoreLayout', true);
-		// In the real world the body of the response should be created from a template engine.
-		return new this.Response(fs.readFileSync(`${__dirname}/../../node_modules/roads/dist-frontend/roads.js`)
-			.toString('utf-8'), 200, {
-
+		return new this.Response(fs.readFileSync(`${__dirname  }/../../browser/client.brws.js`).toString('utf-8'), 200, {
 			'Content-Type': 'application/javascript; charset=UTF-8'
 		});
 	});

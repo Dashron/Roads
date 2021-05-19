@@ -70,7 +70,7 @@ const cookieMiddleware: Middleware<CookieContext> = function (route_method, rout
 	// Add a cookie method to the middleware context
 	this.setCookie = function (name, value, options?) {
 		newCookies[name] = {
-			value: value ? value : '',
+			value: value ?? '',
 			options: options ? options : {}
 		};
 	};
@@ -109,7 +109,18 @@ const cookieMiddleware: Middleware<CookieContext> = function (route_method, rout
 
 export const clientCookieMiddleware: (document: Document) => Middleware<CookieContext> = (document) => {
 	return function (route_method, route_path, route_body, route_headers, next) {
-		// TODO: Finalize this
+		this.getCookies = () => {
+			if (document.cookie) {
+				return cookie.parse(document.cookie);
+			}
+
+			return {};
+		};
+
+		this.setCookie = (name, value, options) => {
+			document.cookie = cookie.serialize(name, value ?? '', options);
+		};
+
 		return next();
 	};
 };

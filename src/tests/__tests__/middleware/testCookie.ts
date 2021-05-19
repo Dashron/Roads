@@ -38,7 +38,15 @@ describe('cookie tests', () => {
 			}));
 	});
 
-	/*test('test that getCookies merges new and old cookies together', () => {
+	test.todo('test that getCookies merges new and old cookies together', () => {
+		// todo
+	});
 
-	});*/
+	test.todo('test that getCookies still works with clientCookies', () => {
+		// todo
+	});
+
+	test.todo('test that setCookies still works with clientCookies', () => {
+		// todo
+	});
 });

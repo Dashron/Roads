@@ -32,7 +32,7 @@ function wrapLayout(body: string, vals: {
 <body>
 	<a id="home" data-roads-pjax="link" href="/">Home</a>
 	<div id="container">${body}
-		<script src="/client.js"></script>
+		<script src="/client.brws.js"></script>
     </div>
 </body>
 </html>`;
