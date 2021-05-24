@@ -38,10 +38,9 @@ export default class RoadsPjax {
 	}
 
 	/**
-	 * Adds middleware to the assigned road which will adds storeVal and getVal to the PJAX
-	 * 		object (as opposed to the request object like the setTitle middlweare does).
+	 * Adds middleware to set the page title.
 	 *
-	 * This allows you to easily update the page title.
+	 * This adds the storeVal middleware, and after the middleware chain is complete sets the TITLE_KEY to the title
 	 *
 	 * @returns {RoadsPjax} this, useful for chaining
 	 */

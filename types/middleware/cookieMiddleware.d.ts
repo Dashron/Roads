@@ -34,7 +34,14 @@ export interface CookieContext extends Context {
     getCookies: () => {
         [x: string]: string;
     };
+    newCookies: NewCookies;
+}
+interface NewCookies {
+    [key: string]: {
+        value: string;
+        options: cookie.CookieSerializeOptions;
+    };
 }
 declare const cookieMiddleware: Middleware<CookieContext>;
-export declare const clientCookieMiddleware: (document: Document) => Middleware<CookieContext>;
+export declare const clientCookieMiddleware: (pageDocument: Document) => Middleware<CookieContext>;
 export default cookieMiddleware;

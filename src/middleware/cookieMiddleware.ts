@@ -35,6 +35,7 @@ import Response from '../core/response';
 export interface CookieContext extends Context {
 	setCookie: (name: string, value?: string, options?: cookie.CookieSerializeOptions) => void,
 	getCookies: () => {[x: string]: string}
+	newCookies: NewCookies
 }
 
 interface SetCookies {[key: string]: string}
@@ -58,7 +59,7 @@ function getCookieValues(newCookies: NewCookies): SetCookies {
 
 const cookieMiddleware: Middleware<CookieContext> = function (route_method, route_path, route_body, route_headers, next) {
 	let cookies: SetCookies = {};
-	const newCookies: NewCookies = {};
+	this.newCookies = {};
 
 	// Find the cookies from the request and store them locally
 	if (route_headers.cookie) {
@@ -69,7 +70,7 @@ const cookieMiddleware: Middleware<CookieContext> = function (route_method, rout
 
 	// Add a cookie method to the middleware context
 	this.setCookie = function (name, value, options?) {
-		newCookies[name] = {
+		this.newCookies[name] = {
 			value: value ?? '',
 			options: options ? options : {}
 		};
@@ -77,12 +78,12 @@ const cookieMiddleware: Middleware<CookieContext> = function (route_method, rout
 
 	// Return the inital cookies with any new cookies merged on top.
 	this.getCookies = () => {
-		return {...cookies, ...getCookieValues(newCookies)};
+		return {...cookies, ...getCookieValues(this.newCookies)};
 	};
 
 	// Apply the cookie headers to the response
 	return next().then((response) => {
-		const cookieKeys = Object.keys(newCookies);
+		const cookieKeys = Object.keys(this.newCookies);
 
 		// If there are new cookies to transmit
 		if (cookieKeys.length) {
@@ -99,7 +100,8 @@ const cookieMiddleware: Middleware<CookieContext> = function (route_method, rout
 			// Apply all the cookies
 			for (let i = 0; i < cookieKeys.length; i++) {
 				(response.headers['Set-Cookie'] as Array<string>).push(
-					cookie.serialize(cookieKeys[i], newCookies[cookieKeys[i]].value, newCookies[cookieKeys[i]].options));
+					cookie.serialize(cookieKeys[i],
+						this.newCookies[cookieKeys[i]].value, this.newCookies[cookieKeys[i]].options));
 			}
 		}
 
@@ -107,21 +109,22 @@ const cookieMiddleware: Middleware<CookieContext> = function (route_method, rout
 	});
 };
 
-export const clientCookieMiddleware: (document: Document) => Middleware<CookieContext> = (document) => {
+export const clientCookieMiddleware: (pageDocument: Document) => Middleware<CookieContext> = (pageDocument) => {
+
 	return function (route_method, route_path, route_body, route_headers, next) {
-		this.getCookies = () => {
-			if (document.cookie) {
-				return cookie.parse(document.cookie);
-			}
 
-			return {};
-		};
+		// Reuse the cookie middleware, but automatically inject and extract cookies from the document
+		return cookieMiddleware.call(this, route_method, route_path, route_body, {
+			...route_headers, cookie: pageDocument.cookie
+		}, next)
+			.then((response: Response) => {
 
-		this.setCookie = (name, value, options) => {
-			document.cookie = cookie.serialize(name, value ?? '', options);
-		};
+				Object.keys(this.newCookies).forEach((key) => {
+					pageDocument.cookie = cookie.serialize(key, this.newCookies[key].value, this.newCookies[key].options);
+				});
 
-		return next();
+				return response;
+			});
 	};
 };
 

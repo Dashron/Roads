@@ -6,7 +6,7 @@
  * Exposes a single middleware function to help manage the page title. This is best used alongside the PJAX helper
  */
 
-import {Context, Middleware} from '../core/road';
+import { Context, Middleware } from '../core/road';
 
 /*
  * This is a convention used by pjax for storing and retrieving the page title, and placed here

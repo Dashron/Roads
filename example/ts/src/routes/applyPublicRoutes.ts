@@ -1,6 +1,5 @@
-'use strict';
 /**
- * applyPublicRoutes.js
+ * applyPublicRoutes.ts
  * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
@@ -9,6 +8,8 @@
 
 import { SimpleRouter } from 'roads';
 import { ParseBodyContext } from 'roads/types/middleware/parseBody';
+import { StoreValsContext } from 'roads/types/middleware/storeVals';
+import { TITLE_KEY } from 'roads/src/middleware/storeVals';
 
 interface ExampleRequestBody {
 	message?: string
@@ -22,8 +23,8 @@ interface ExampleRequestBody {
   * @param {SimpleRouter} router - The router that the routes will be added to
   */
 export default function applyPublicRotues(router: SimpleRouter): void {
-	router.addRoute('GET', '/', async function () {
-		// this.setTitle('Root Resource');
+	router.addRoute('GET', '/', async function (this: StoreValsContext) {
+		this.storeVal(TITLE_KEY, 'Root Resource');
 
 		// In the real world the body of the response should be created from a template engine.
 		return new this.Response(`Hello!<br />
@@ -34,8 +35,8 @@ export default function applyPublicRotues(router: SimpleRouter): void {
 		 Check your console for proof of the network request!`);
 	});
 
-	router.addRoute('GET', '/public', async function () {
-		// this.setTitle('Public Resource');
+	router.addRoute('GET', '/public', async function (this: StoreValsContext) {
+		this.storeVal(TITLE_KEY, 'Public Resource');
 		console.log('Here are all cookies accessible to this code: ', this.cookies);
 		console.log('Cookies are not set until you access the private route.');
 		console.log('Notice that the http only cookies do not show in your browser\'s console.log');
