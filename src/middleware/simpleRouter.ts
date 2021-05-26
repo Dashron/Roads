@@ -43,7 +43,7 @@ export interface SimpleRouterURL extends url_module.UrlWithParsedQuery {
  *
  * @name SimpleRouter
  */
-export default class SimpleRouter {
+export class SimpleRouter {
 	protected _routes: RouteDetails[];
 
 	/**

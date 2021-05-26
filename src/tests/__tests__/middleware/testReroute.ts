@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { rerouteMiddleware } from '../../../index';
-
-import { Road } from '../../../index';
+import { buildRerouteMiddleware } from '../../../middleware/reroute';
+import Road from '../../../core/road';
 import { Context, Middleware as MiddlewareType } from '../../../core/road';
 import Response from '../../../core/response';
 
@@ -23,7 +22,7 @@ describe('Reroute middleware tests', () => {
 		};
 		const key = 'foo';
 		const context: { [x: string ]: any } = {};
-		const middleware = rerouteMiddleware(key, mockRoad as Road);
+		const middleware = buildRerouteMiddleware(key, mockRoad as Road);
 
 		expect(typeof(middleware)).toEqual('function');
 

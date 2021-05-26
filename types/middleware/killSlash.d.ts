@@ -10,5 +10,4 @@ import { Context, Middleware } from '../core/road';
 /**
  * Any requests with trailing slashes will immediately return a Response object redirecting to a non-trailing-slash path
  */
-declare const killSlash: Middleware<Context>;
-export default killSlash;
+export declare const killSlashMiddleware: Middleware<Context>;

@@ -20,5 +20,4 @@ export interface StoreValsContext extends Context {
  *  todo: Should we ask for the valid key:data type pairings be sent via a generic to storevalscontext?
  * 		This would be nice for stricter typing
  */
-declare const storeVals: Middleware<StoreValsContext>;
-export default storeVals;
+export declare const storeValsMiddleware: Middleware<StoreValsContext>;

@@ -57,7 +57,8 @@ function getCookieValues(newCookies: NewCookies): SetCookies {
 	return cookies;
 }
 
-const cookieMiddleware: Middleware<CookieContext> = function (route_method, route_path, route_body, route_headers, next) {
+export const cookieMiddleware: Middleware<CookieContext> =
+function (route_method, route_path, route_body, route_headers, next) {
 	let cookies: SetCookies = {};
 	this.newCookies = {};
 
@@ -127,5 +128,3 @@ export const clientCookieMiddleware: (pageDocument: Document) => Middleware<Cook
 			});
 	};
 };
-
-export default cookieMiddleware;

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { cookieMiddleware, clientCookieMiddleware } from '../../../index';
+import { cookieMiddleware, clientCookieMiddleware } from '../../../middleware/cookieMiddleware';
 
 import { CookieContext } from '../../../middleware/cookieMiddleware';
 import Response from '../../../core/response';

@@ -19,7 +19,7 @@ import { Context, Middleware } from '../core/road';
  *
  * @return {function} The middleware to bind to your road
  */
-export default function cors(options: {
+export declare function corsMiddleware(options: {
     validOrigins?: string[];
     supportsCredentials?: boolean;
     responseHeaders?: Array<string>;

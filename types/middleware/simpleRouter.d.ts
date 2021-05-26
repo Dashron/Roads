@@ -40,7 +40,7 @@ export interface SimpleRouterURL extends url_module.UrlWithParsedQuery {
  *
  * @name SimpleRouter
  */
-export default class SimpleRouter {
+export declare class SimpleRouter {
     protected _routes: RouteDetails[];
     /**
      * @param {Road} [road] - The road that will receive the SimpleRouter middleware

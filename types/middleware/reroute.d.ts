@@ -19,4 +19,4 @@ import Road from '../core/road';
  * @param  {road} road - The roads object that you will interact with.
  * @return {function} The middleware function. This value should be passed to road.use(fn);
  */
-export default function (key: string, road: Road): Middleware<Context>;
+export declare function buildRerouteMiddleware(key: string, road: Road): Middleware<Context>;

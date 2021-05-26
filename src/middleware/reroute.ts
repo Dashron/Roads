@@ -7,7 +7,7 @@
  * client side or server side road objects at once
  */
 
-import {Context, IncomingHeaders, Middleware} from '../core/road';
+import { Context, IncomingHeaders, Middleware } from '../core/road';
 import Road from '../core/road';
 
 /**
@@ -21,7 +21,7 @@ import Road from '../core/road';
  * @param  {road} road - The roads object that you will interact with.
  * @return {function} The middleware function. This value should be passed to road.use(fn);
  */
-export default function (key: string, road: Road): Middleware<Context> {
+export function buildRerouteMiddleware (key: string, road: Road): Middleware<Context> {
 	const reroute: Middleware<Context> = function (route_method, route_path, route_body, route_headers, next) {
 		this[key] = function (method: string, path: string, body?: string, headers?: IncomingHeaders) {
 			if (!headers) {

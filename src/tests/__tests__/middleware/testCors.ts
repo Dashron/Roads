@@ -1,4 +1,4 @@
-import { corsMiddleware } from '../../../index';
+import { corsMiddleware } from '../../../middleware/cors';
 
 describe('Cors tests', () => {
 	test('test kill slash doesn\'t break normal', () => {

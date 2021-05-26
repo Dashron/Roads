@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { storeValsMiddleware } from '../../../index';
+import { storeValsMiddleware } from '../../../middleware/storeVals';
 
 
 describe('Store Values', () => {

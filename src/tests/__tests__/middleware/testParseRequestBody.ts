@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { parseBodyMiddleware } from '../../../index';
+import { parseBodyMiddleware } from '../../../middleware/parseBody';
 
 import { Context, Middleware as MiddlewareType } from '../../../core/road';
 import { Road } from '../../../index';

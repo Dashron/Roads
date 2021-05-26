@@ -18,4 +18,4 @@ import { Context, Middleware } from '../core/road';
  * @param {any} val - The value to apply to the request context.
  * @returns {Middleware} The middleware function to apply to the road.use(fn) method.
  */
-export default function applyToContext(key: string, val: unknown): Middleware<Context>;
+export declare function buildApplyToContextMiddleware(key: string, val: unknown): Middleware<Context>;

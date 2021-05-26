@@ -1,4 +1,4 @@
-import { killSlashMiddleware } from '../../../index';
+import { killSlashMiddleware } from '../../../middleware/killSlash';
 
 import Response from '../../../core/response';
 
