@@ -19,7 +19,8 @@
   },
   "private": true,
   "scripts": {
-    "start": "tsc && node dist/node/server.js"
+    "start": "tsc && node dist/node/server.js",
+	"build": "tsc && node dist/node/buildClient.js"
   },
   "license": "MIT"
 }

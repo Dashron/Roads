@@ -6,8 +6,8 @@
  * This file starts up the HTTP roads server
  */
 
-import { Road, Response, killSlashMiddleware, cookieMiddleware,
-	storeValsMiddleware, parseBodyMiddleware, SimpleRouter } from 'roads';
+import { Road, Response, KillSlashMiddleware, CookieMiddleware,
+	StoreValsMiddleware, ParseBodyMiddleware, SimpleRouterMiddleware } from 'roads';
 
 import { Server } from 'roads-server';
 import addLayout from './middleware/addLayout';
@@ -23,13 +23,13 @@ road.use(function (method, url, body, headers, next) {
 	return next();
 } as Middleware<Context>);
 
-road.use(killSlashMiddleware);
-road.use(cookieMiddleware);
+road.use(KillSlashMiddleware.killSlashMiddleware);
+road.use(CookieMiddleware.cookieMiddleware);
 road.use(addLayout);
-road.use(storeValsMiddleware);
-road.use(parseBodyMiddleware);
+road.use(StoreValsMiddleware.storeValsMiddleware);
+road.use(ParseBodyMiddleware.parseBodyMiddleware);
 
-const router = new SimpleRouter(road);
+const router = new SimpleRouterMiddleware.SimpleRouter(road);
 applyPublicRotues(router);
 applyPrivateRoutes(router);
 road.use(emptyTo404);

@@ -6,10 +6,11 @@
  * This file is an example of how to assign some public routes to a roads server
  */
 
-import { SimpleRouter } from 'roads';
+import { SimpleRouterMiddleware, StoreValsMiddleware } from 'roads';
+const { TITLE_KEY } = StoreValsMiddleware;
+
 import { ParseBodyContext } from 'roads/types/middleware/parseBody';
 import { StoreValsContext } from 'roads/types/middleware/storeVals';
-import { TITLE_KEY } from 'roads/src/middleware/storeVals';
 
 interface ExampleRequestBody {
 	message?: string
@@ -22,7 +23,7 @@ interface ExampleRequestBody {
   *
   * @param {SimpleRouter} router - The router that the routes will be added to
   */
-export default function applyPublicRotues(router: SimpleRouter): void {
+export default function applyPublicRotues(router: SimpleRouterMiddleware.SimpleRouter): void {
 	router.addRoute('GET', '/', async function (this: StoreValsContext) {
 		this.storeVal(TITLE_KEY, 'Root Resource');
 
