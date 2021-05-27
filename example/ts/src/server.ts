@@ -25,8 +25,8 @@ road.use(function (method, url, body, headers, next) {
 
 road.use(KillSlashMiddleware.killSlashMiddleware);
 road.use(CookieMiddleware.cookieMiddleware);
-road.use(addLayout);
 road.use(StoreValsMiddleware.storeValsMiddleware);
+road.use(addLayout);
 road.use(ParseBodyMiddleware.parseBodyMiddleware);
 
 const router = new SimpleRouterMiddleware.SimpleRouter(road);

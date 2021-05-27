@@ -8,7 +8,7 @@
 
 import Road, { Middleware } from '../core/road';
 import Response from '../core/response';
-import { StoreValsContext, TITLE_KEY } from '../middleware/storeVals';
+import { StoreValsContext, TITLE_KEY, storeValsMiddleware } from '../middleware/storeVals';
 
 /**
   * This is a helper class to make PJAX easier. PJAX is a clean way of improving the performance of webpages
@@ -59,6 +59,7 @@ export default class RoadsPjax {
 			});
 		};
 
+		this._road.use(storeValsMiddleware);
 		this._road.use(titleMiddleware);
 
 		return this;

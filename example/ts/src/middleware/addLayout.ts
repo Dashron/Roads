@@ -7,7 +7,8 @@
  */
 
 import { Middleware } from 'roads/types/core/road';
-import { Response } from 'roads';
+import { Response, StoreValsMiddleware } from 'roads';
+const { TITLE_KEY } = StoreValsMiddleware;
 import { StoreValsContext } from 'roads/types/middleware/storeVals';
 
 /**
@@ -18,7 +19,7 @@ import { StoreValsContext } from 'roads/types/middleware/storeVals';
   * @param {boolean} ignore_layout - If true, the layout is not used, and we return the body as is
   */
 function wrapLayout(body: string, vals: {
-	title?: string,
+	[TITLE_KEY]?: string,
 	ignoreLayout?: boolean
 }) {
 
@@ -28,7 +29,7 @@ function wrapLayout(body: string, vals: {
 
 	return `<!DOCTYPE html>
 <html>
-<head><title>${vals.title}</title></head>
+<head><title>${vals[TITLE_KEY]}</title></head>
 <body>
 	<a id="home" data-roads-pjax="link" href="/">Home</a>
 	<div id="container">${body}
