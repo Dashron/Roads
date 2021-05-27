@@ -11,7 +11,7 @@ const { TITLE_KEY } = StoreValsMiddleware;
 
 import { ParseBodyContext } from 'roads/types/middleware/parseBody';
 import { StoreValsContext } from 'roads/types/middleware/storeVals';
-import { CookieContext } from '../../../../types/middleware/cookieMiddleware';
+import { CookieContext } from 'roads/types/middleware/cookieMiddleware';
 
 interface ExampleRequestBody {
 	message?: string
