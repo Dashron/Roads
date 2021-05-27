@@ -14,14 +14,13 @@ import addLayout from './middleware/addLayout';
 import applyPublicRotues from './routes/applyPublicRoutes';
 import applyPrivateRoutes from './routes/applyPrivateRoutes';
 import emptyTo404 from './middleware/emptyTo404';
-import { Middleware, Context } from 'roads/types/core/road';
 
 const road = new Road();
 
 road.use(function (method, url, body, headers, next) {
 	console.log(`${method} ${url}`);
 	return next();
-} as Middleware<Context>);
+});
 
 road.use(KillSlashMiddleware.killSlashMiddleware);
 road.use(CookieMiddleware.cookieMiddleware);

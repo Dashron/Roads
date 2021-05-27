@@ -193,12 +193,14 @@ function compareRouteAndApplyArgs (route: {method: string, path: string}, reques
 				return false;
 			}
 
+			// TODO: get rid of this `as`
 			applyArg(request_url as SimpleRouterURL, template_part.substring(1), Number(actual_part));
 			continue;
 		}
 
 		if (template_part[0] === '$') {
 			// $ templates accept any non-slash alphanumeric character
+			// TODO: get rid of this `as`
 			applyArg(request_url as SimpleRouterURL, template_part.substring(1), String(actual_part));
 			// Continue so that
 			continue;

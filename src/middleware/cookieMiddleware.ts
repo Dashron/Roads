@@ -100,6 +100,7 @@ function (route_method, route_path, route_body, route_headers, next) {
 
 			// Apply all the cookies
 			for (let i = 0; i < cookieKeys.length; i++) {
+				// TODO: Don't have this "as"
 				(response.headers['Set-Cookie'] as Array<string>).push(
 					cookie.serialize(cookieKeys[i],
 						this.newCookies[cookieKeys[i]].value, this.newCookies[cookieKeys[i]].options));
