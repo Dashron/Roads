@@ -11,6 +11,7 @@ const { TITLE_KEY } = StoreValsMiddleware;
 
 import { ParseBodyContext } from 'roads/types/middleware/parseBody';
 import { StoreValsContext } from 'roads/types/middleware/storeVals';
+import { CookieContext } from '../../../../types/middleware/cookieMiddleware';
 
 interface ExampleRequestBody {
 	message?: string
@@ -36,9 +37,9 @@ export default function applyPublicRotues(router: SimpleRouterMiddleware.SimpleR
 		 Check your console for proof of the network request!`);
 	});
 
-	router.addRoute('GET', '/public', async function (this: StoreValsContext) {
+	router.addRoute('GET', '/public', async function (this: StoreValsContext & CookieContext) {
 		this.storeVal(TITLE_KEY, 'Public Resource');
-		console.log('Here are all cookies accessible to this code: ', this.cookies);
+		console.log('Here are all cookies accessible to this code: ', this.getCookies());
 		console.log('Cookies are not set until you access the private route.');
 		console.log('Notice that the http only cookies do not show in your browser\'s console.log');
 
