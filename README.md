@@ -5,8 +5,7 @@ Roads is a web framework built for use with async functions. It's similar to Koa
 # Why should I use Roads?
 
 1. Roads can be attached to any node HTTP server, including Koa.js, Express.js, and the built in node HTTP server.
-2. Roads is isomorphic, meaning you can generate html on the server or in the browser with the same code.
-3. Roads lets you work without callbacks. It's built on top of promises and async functions.
+2. Roads is isomorphic, meaning your pages can be run in the browser or server using the exact same code
 4. Roads can be run without ever attaching it to an HTTP server. This is great for writing tests, working with web sockets, or writing API first websites.
 
 
@@ -26,13 +25,13 @@ Roads is a web framework built for use with async functions. It's similar to Koa
   - [status](#status)
   - [headers](#headers)
 - [Middleware](#middleware)
-  - [cookie()](#cookie)
-  - [cors(*object* options)](#corsobject-options)
-  - [killSlash()](#killslash)
-  - [parseBody](#parsebody)
-  - [applyToContext](#applytocontext)
-  - [reroute](#reroute)
-  - [storeVals](#storeVals)
+  - [cookieMiddleware()](#cookiemiddleware)
+  - [buidCorsMiddleware(*object* options)](#buildcorsmiddlewareobject-options)
+  - [killSlashMiddleware()](#killslashmiddleware)
+  - [parseBodyMiddleware()](#parsebodymiddleware)
+  - [buildApplyToContextMiddleware(key: *string* , val: *unknown*)](#buildapplytocontextmiddlewarestring-key-unknown-val))
+  - [buildRerouteMiddleware()](#buildreroutemiddleware)
+  - [storeValsMiddleware()](#storevalsmiddleware)
   - [SimpleRouter](#simplerouterroad-road)
     - [SimpleRouter.applyMiddleware(road)](#simplerouterapplymiddlewareroad-road)
     - [SimpleRouter.addRoute(*string* method, *string* path,*function* fn)](#simplerouteraddroutestring-method-string-path-function-fn)
