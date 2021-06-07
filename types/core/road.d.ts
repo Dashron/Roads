@@ -5,7 +5,6 @@
  *
  * Exposes the core Road class
  */
-import * as response_lib from './response';
 import Response from './response';
 export interface IncomingHeaders {
     [x: string]: string | Array<string> | undefined;
@@ -17,8 +16,6 @@ export interface NextCallback {
     (): Promise<Response | string>;
 }
 export interface Context {
-    request: Road['request'];
-    Response: response_lib.ResponseConstructor;
     [x: string]: unknown;
 }
 /**

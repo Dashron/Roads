@@ -24,8 +24,6 @@ export interface NextCallback {
 }
 
 export interface Context {
-	request: Road['request'],
-	Response: response_lib.ResponseConstructor,
 	[x: string]: unknown
 }
 
@@ -98,10 +96,7 @@ export default class Road {
 	 * @returns {Promise} this promise will resolve to a Response object
 	 */
 	request (method: string, url: string, body?: string, headers?: IncomingHeaders): Promise<Response> {
-		return response_lib.wrap(this._buildNext(method, url, body, headers, {
-			request: this.request.bind(this),
-			Response
-		})());
+		return response_lib.wrap(this._buildNext(method, url, body, headers, { })());
 	}
 
 	/**

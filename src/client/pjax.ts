@@ -27,14 +27,14 @@ export default class RoadsPjax {
 	 * Creates a new RoadsPjax instance. The road provided to this constructor will be the backbone of your PJAX requests.
 	 *
 	 * @param {Road} road - The road that will turn your pjax requests into HTML
-	 * @param {HTMLElement} container_element - The element that will be filled with your roads output
+	 * @param {HTMLElement} containerElement - The element that will be filled with your roads output
 	 * @param {Window} window - The pages window object to help set page title and other items
 	 */
-	constructor(road: Road, container_element: HTMLElement, window: Window) {
+	constructor(road: Road, containerElement: HTMLElement, window: Window) {
 		this._road = road;
 		this._page_title = undefined;
 		this._window = window;
-		this._container_element = container_element;
+		this._container_element = containerElement;
 	}
 
 	/**

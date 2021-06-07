@@ -104,12 +104,12 @@ export class SimpleRouter {
 	 * Each key should be an HTTP path, each value should be an object.
 	 * In that object, each key should be an HTTP method, and the value should be your route function.
 	 *
-	 * @param {string} file_path - The file path
+	 * @param {string} filePath - The file path
 	 * @param {string} [prefix] - A string that will help namespace this file. e.g. if you call this on a file
 	 * 		with a route of "/posts", and the prefix "/users", the route will be assigned to "/users/posts"
 	 */
-	addRouteFile (file_path: string, prefix?: string): Promise<void> {
-		return import(file_path).then(routes => {
+	addRouteFile (filePath: string, prefix?: string): Promise<void> {
+		return import(filePath).then(routes => {
 			for (const path in routes) {
 				for (const method in routes[path]) {
 					this.addRoute(method, buildRouterPath(path, prefix), routes[path][method]);

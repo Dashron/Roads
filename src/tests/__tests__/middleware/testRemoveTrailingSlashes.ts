@@ -1,9 +1,9 @@
-import { killSlashMiddleware } from '../../../middleware/killSlash';
+import { removeTrailingSlashMiddleware } from '../../../middleware/removeTrailingSlash';
 
 import Response from '../../../core/response';
 
 describe('KillSlashes tests', () => {
-	test('test kill slash doesn\'t break normal', () => {
+	test('test remove slash doesn\'t break normal', () => {
 		expect.assertions(1);
 
 		const method = 'GET';
@@ -17,7 +17,7 @@ describe('KillSlashes tests', () => {
 			});
 		};
 
-		return expect(killSlashMiddleware.call({}, method, url, body, headers, next)).resolves.toEqual(contents);
+		return expect(removeTrailingSlashMiddleware.call({}, method, url, body, headers, next)).resolves.toEqual(contents);
 	});
 
 	/**
@@ -37,7 +37,7 @@ describe('KillSlashes tests', () => {
 			});
 		};
 
-		return expect(killSlashMiddleware.call({
+		return expect(removeTrailingSlashMiddleware.call({
 			// the redirection needs the Response context
 			Response : Response
 		}, method, url, body, headers, next)).resolves.toEqual({
@@ -54,7 +54,7 @@ describe('KillSlashes tests', () => {
 	 * Test that a request with slash fixing on a request to the root endpoint isn't messed up.
 	 * Technically it's a trailing slash, so I added this test to test the edge case
 	 */
-	test('test kill slash not breaking on root', () => {
+	test('test remove slash not breaking on root', () => {
 		expect.assertions(1);
 		const method = 'GET';
 		const url = '/';
@@ -67,6 +67,6 @@ describe('KillSlashes tests', () => {
 			});
 		};
 
-		return expect(killSlashMiddleware.call({}, method, url, body, headers, next)).resolves.toEqual(contents);
+		return expect(removeTrailingSlashMiddleware.call({}, method, url, body, headers, next)).resolves.toEqual(contents);
 	});
 });

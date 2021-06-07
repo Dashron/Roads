@@ -10,33 +10,6 @@ describe('Road Context', () => {
 	/**
 	 * Ensure that the request context is the context provided in the Road constructor
 	 */
-	test('Road Context Contains Request Method', () => {
-		expect.assertions(1);
-
-		const response_string = 'blahblahwhatwhatwhat';
-		const road = new Road();
-
-		road.use(async function (method) {
-			switch (method) {
-				case 'GET':
-					return this.request('POST', '/');
-				case 'POST':
-					return response_string;
-				default:
-					throw new Error('not supposed to happen');
-			}
-		});
-
-		return expect(road.request('GET', '/')).resolves.toEqual({
-			status: 200,
-			body: response_string,
-			headers: {}
-		});
-	});
-
-	/**
-	 * Ensure that the request context is the context provided in the Road constructor
-	 */
 	test('Road Context Persists', () => {
 		expect.assertions(1);
 		const response_string = 'blahblahwhatwhatwhat';

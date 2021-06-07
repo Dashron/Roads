@@ -1,12 +1,12 @@
 # The Roads.js isomorphic web framework
 
-Roads is a web framework built for use with async functions. It's similar to Koa.js, but can be used both in the browser and on the server.
+Roads is a simple web framework. It's similar to Express.js, but has some very intentional design differences.
 
 # Why should I use Roads?
 
-1. Roads can be attached to any node HTTP server, including Koa.js, Express.js, and the built in node HTTP server.
-2. Roads is isomorphic, meaning your pages can be run in the browser or server using the exact same code
-4. Roads can be run without ever attaching it to an HTTP server. This is great for writing tests, working with web sockets, or writing API first websites.
+1. Roads is isomorphic, meaning your pages can trivially be run in the browser or server using the exact same code.
+2. Roads can be attached to any node HTTP server, including the standard node HTTP server or Express.js.
+3. Roads can be run without being attaching to an HTTP server. This is great for writing tests, working with web sockets, or writing API first websites.
 
 
 # Build Status
@@ -17,26 +17,29 @@ Roads is a web framework built for use with async functions. It's similar to Koa
 - [Getting Started](#getting-started)
 - [Road](#road)
   - [new Road()](#new-road)
-  - [use(*function* fn)](#roadusefunction-fn)
-  - [request(*string* method, *string* url, *dynamic* body, *object* headers)](#roadrequeststring-method-string-url-dynamic-body-object-headers)
+  - [use(fn: *function*)](#roadusefn-function)
+    - [Middleware](#middleware)
+    - [How do I control the order of my middleware?](#how-do-i-control-the-order-of-my-middleware)
+  - [request(method: *string*, url: *string*, body?: *string*, headers?: *object*)](#roadrequestmethod-string-url-string-body-string-headers-object)
 - [Response](#response)
-  - [new Response(*mixed* body, *number* status, *object* headers)](#new-responsemixed-body-number-status-object-headers)
+  - [new Response(body: *string*, status?: *number*, headers?: *object*)](#new-responsebody-string-status-number-headers-object)
   - [body](#body)
   - [status](#status)
   - [headers](#headers)
 - [Middleware](#middleware)
-  - [cookieMiddleware()](#cookiemiddleware)
-  - [buidCorsMiddleware(*object* options)](#buildcorsmiddlewareobject-options)
-  - [killSlashMiddleware()](#killslashmiddleware)
-  - [parseBodyMiddleware()](#parsebodymiddleware)
-  - [buildApplyToContextMiddleware(key: *string* , val: *unknown*)](#buildapplytocontextmiddlewarestring-key-unknown-val))
-  - [buildRerouteMiddleware()](#buildreroutemiddleware)
-  - [storeValsMiddleware()](#storevalsmiddleware)
-  - [SimpleRouter](#simplerouterroad-road)
-    - [SimpleRouter.applyMiddleware(road)](#simplerouterapplymiddlewareroad-road)
-    - [SimpleRouter.addRoute(*string* method, *string* path,*function* fn)](#simplerouteraddroutestring-method-string-path-function-fn)
-    - [SimpleRouter.addRouteFile(*string* full_path)](#simplerouteraddroutefilestring-full_path)
-- [PJAX(*object* road, *DomElement* container_element, *object* window)](#pjaxobject-road-domelement-container_element-object-window)
+  - [Cookies](#cookies)
+  - [CORS](#cors)
+  - [Parsing request bodies](#parsing-request-bodies)
+  - [Remove trailing slash](#remove-trailing-slash)
+  - [Simple router](#simple-router)
+    - [applyMiddleware(road: *Road*)](#applymiddlewareroad-road)
+    - [addRoute(method: *string*, path: *string*, fn: *function*)](#addroutemethod-string-path-string-fn-function)
+    - [addRouteFile(filePath: *string*)](#addroutefilefull_path-string)
+  - [Middleware helpers](#middleware-helpers)
+  	- [buildApplyToContextMiddleware(key: *string* , val: *unknown*)](#buildapplytocontextmiddlewarekey-string-val-unknown))
+  	- [buildRerouteMiddleware(key: *string*, road: *Road*)](#buildreroutemiddlewarekey-sring-road-road)
+  	- [storeValsMiddleware()](#storevalsmiddleware)
+- [PJAX(road: *Road*, containerElement *DomElement*, window: *Window*)](#pjaxroad-road-container_element-domelement-window-window))
   - [register()](#pjaxregister)
   - [PJAX Link Format](#pjax-link-format)
   - [PJAX Form Format](#pjax-form-format)
@@ -51,22 +54,22 @@ Building a project with roads is very straightforward.
 
     **TypeScript**
     ```TypeScript
-    import * as roads from 'roads';
-    let road = new roads.Road();
+    import { Road } from 'roads';
+    let road = new Road();
 	```
 
     **JavaScript**
     ```JavaScript
-    const roads = require('roads');
-    let road = new roads.Road();
+    const { Road } = require('roads');
+    let road = new Road();
 	```
 
 2. Add code to the road
 
     **TypeScript**
     ```TypeScript
-    import * as roads from 'roads';
-    let road = new roads.Road();
+    import { Road } from 'roads';
+    let road = new Road();
 
     road.use(function (method, path, body, headers) {
         console.log('A ' + method + ' request was made to ' + path);
@@ -75,8 +78,8 @@ Building a project with roads is very straightforward.
 
     **JavaScript**
     ```JavaScript
-    const roads = require('roads');
-    let road = new roads.Road();
+    const { Road } = require('roads');
+    let road = new Road();
 
     road.use(function (method, path, body, headers) {
         console.log('A ' + method + ' request was made to ' + path);
@@ -84,43 +87,31 @@ Building a project with roads is very straightforward.
 	```
 
 5. Run your code.
-
- - roads-server helps you attach your road to the standard node HTTP server. Feel free to use other http servers. roads-server is documented below.
+	- **HTTP**: The following examples show how easy it is to hook up an HTTP server with roads and roads-server, but you can easily connect it to express.js or any other http server.
 
      **TypeScript**
     ```TypeScript
-    import * as roads from 'roads';
     import { Server } from 'roads-server';
 
-    let road = ...; // See steps 1 and 2 for road construction
-    let server = new Server(road, function (error) {
-        console.log('roads encountered an error', error);
-    });
-
+    const road = ...; // See steps 1 and 2 for road construction
+    const server = new Server(road);
     server.listen(8080);
 	```
 
     **JavaScript**
     ```JavaScript
-    const roads = require('roads');
-    const Server = require('roads-server').Server;
+    const { Server } = require('roads-server');
 
-    let road = ...; // See steps 1 and 2 for road construction
-    let server = new Server(road, function (error) {
-        console.log('roads encountered an error', error);
-    });
-
+    const road = ...; // See steps 1 and 2 for road construction
+    const server = new Server(road);
     server.listen(8080);
 	```
 
- - You can manually interact with the road
+ - **Direct requests**: The following examples show how you can manually trigger roads.
 
      **TypeScript**
     ```TypeScript
-    import * as roads from 'roads';
-    import { Server } from 'roads-server';
-
-    let road = ...; // See steps 1 and 2 for road construction
+    const road = ...; // See steps 1 and 2 for road construction
     // Call directly
     road.request('GET', '/users', {page: 2})
         .then(function (response) {
@@ -130,10 +121,7 @@ Building a project with roads is very straightforward.
 
     **JavaScript**
     ```JavaScript
-    const roads = require('roads');
-    const Server = require('roads-server').Server;
-
-    let road = ...; // See steps 1 and 2 for road construction
+    const road = ...; // See steps 1 and 2 for road construction
     // Call directly
     road.request('GET', '/users', {page: 2})
         .then(function (response) {
@@ -141,16 +129,16 @@ Building a project with roads is very straightforward.
         });
 	```
 
- - You can also use browserify to compile everything for use in the browser. Check out the file example/js/build.js for more details.
+ - You can also use browserify to compile everything for use in the browser. Check out the file example/ts/build.ts for more details.
 
 
-Now that you can use your road, continue reading the docs below for more information on [routers](#simplerouter), [error handling](#roadusefunction-fn), [PJAX support](#roadspjaxobject-road) and more!
+Now that you can interact with your ROad, continue reading the docs below for more information on [routers](#simplerouter), [error handling](#roadusefn-function), [PJAX support](#pjaxroad-road) and more!
 
 
 
 ## Road
 
-A Road is a container that holds an array of functions called the *request chain*. The request chain generally holds your routing logic, and any pre or post processing instructions. You interact with your road primarily via the [use](#roadusefunction-fn) method, which assigns new functions to the request chain, or the [request](#requeststring-method-string-url-dynamic-body-object-headers) method which executes all functions in the request chain.
+A Road is a container that holds an array of functions called the *request chain*. The *request chain* generally holds your routing logic and any pre or post processing instructions. You add to the *request chain* via the [use](#roadusefn-function) method, and execute the request chain with the [request](#requestmethod-string-url-string-body-string-headers-object) method.
 
 ### new Road()
 **Create a Road.**
@@ -159,55 +147,56 @@ Creates your Road object.
 
 **TypeScript**
 ```TypeScript
-import * as roads from 'roads';
-let road = new roads.Road();
+import { Road }from 'roads';
+let road = new Road();
 ```
 
 **JavaScript**
 ```JavaScript
-const roads = require('roads');
-let road = new roads.Road();
+const { Road } = require('roads');
+let road = new Road();
 ```
 
 
-### Road.use(*Function* fn)
+### Road.use(fn *Function*)
 **Add a custom function that will be executed with every request.**
 
-The use function can be called one or more times. Each time it is called, the function provided via the `fn` parameter will be added to the end of the request chain. The execution order will match the order the functions were added to the road.
+The use function can be called one or more times. Each time it is called, the function provided via the `fn` parameter will be added to the end of the *request chain* which is executed when you call `request`.
 
  name | type                                                                  | required | description
  -----|-----------------------------------------------------------------------|----------|---------------
- fn   | Function(*string* method, *string* url,*string* body,*object* headers,*function* next) | yes      | Adds this function to the request chain, which is executed any time a request is made on the object. See the [use callback](#roadusefunction-fn) below for more details on the function parameters.
+ fn   | Function(method: *string*, url: *string*, body: *string*, headers: *object*, next: *function*) | yes      | This is the function that will be added to the end of the *request chain*. See the [Middleware](#middleware) below for more details on the function parameters.
 
- **Note:** Each function in the request chain can choose to progress to the following function by calling and returning the `next` parameter. The `next` parameter is defined below as part of the use callback
+#### Middleware
 
-#### use Callback
-**function (*string* method,*string* url, *string* body, *Object* headers, *Function* next)**
+Each function in the request chain is called middleware. Each middleware function must match the following function signature.
 
-name     | type                               | description
- --------|------------------------------------|---------------
- method  | string                             | The HTTP method that was provided to the request
- url     | string                             | The URL that was provided to the request. To have separate code for each url, see the SimpleRouter middleware
- body    | string                             | The body that was provided to the request. To parse this see the parseBody middleware.
- headers | object                             | The headers that were provided to the request
- next    | function                           | The next step of the handler chain. If there are no more custom handlers assigned, next will resolve to the [resource method](#resource-method) that the router located. This method will always return a promise.
+**function (method: *string*, url: *string*, body: *string*, headers: *object*, next: *next*): Promise<Response | string>**
 
-If the callback does not return a [response](#roadsresponse) object, roads.request will turn the return value into the response body of a [response](#roadsresponse) object with the default status code of 200 and no headers.
+Parameters
+name     | type                                   | description
+ --------|----------------------------------------|---------------
+ method  | string                                 | The request's HTTP method
+ url     | string                                 | The request's URL. The `SimpleRouter` is included to help run different code for different URLs.
+ body    | string                                 | The request's body (as a string). To parse this check out the `parseBodyMiddleware`
+ headers | object                                 | The request's headers. This is an object of strings or arrays of strings.
+ next    | function(): Promise<Response | String> | The next step of the *request chain*. If there are no more steps in the *request chain* this does nothing. This method will always return a promise, which resolves to a `Response` object, or a string.
+
+Each middleware function must return a promise that resolves to a [Response](#response) object or a string. If you return a string it will be transformed into a response object using the default status code (200) and no headers.
 
 
 ```JavaScript
-// Simple example that sends a JSON response
+// Simple example that sends a JSON response and doesn't continue through the request chain
 road.use(function (method, url, body, headers, next) {
     return JSON.stringify({
         method: method,
         url: url,
         body: body,
-        headers: headers,
-        next: next
+        headers: headers
     });
 });
 
-// Simple async example that sends a JSON response
+// Simple async example that sends a JSON response and doesn't continue through the request chain
 road.use(async function (method, url, body, headers, next) {
     let db_record = await myPromiseReturningDBCall();
 
@@ -215,10 +204,9 @@ road.use(async function (method, url, body, headers, next) {
 })
 
 
-// Example of a request handler that kills trailing slashes (This is code is provided for you at middleware.skillSlash!)
-// The logic will happen before any other middleware because it's before you call next
+// Example of middleware that redirects the user if their url has a trailing slash, otherwise it
+//	continues through the request chain
 road.use(function (method, url, body, headers, next) {
-	// kill trailing slash as long as we aren't at the root level
     if (url.path != '/' && url.path[url.path.length - 1] === '/') {
         return new roads.Response(null, 302, {
             location: url.path.substring(0, url.path.length - 1)
@@ -228,55 +216,53 @@ road.use(function (method, url, body, headers, next) {
     return next();
 });
 
-// Example of a request handler that catches errors and returns Response objects
-// The logic will happen after any other middleware because it's in response to the promise result of next();
+// Example of middleware that catches errors and returns a 500 status code
 road.use(function (method, url, body, headers, next) {
-    // execute the actual resource method, and return the response
+    // Continue down the request chain, and only execute this middleware logic afterwards
     return next()
         // Catch any errors that are thrown by the resources
         .catch ((err) => {
-            // Wrap the errors in response objects. There might be some javascript errors worth translating into different response status codes
-            return new roads.Response(unknownRepresentation(err), 500);
+			console.err(err);
+            // Wrap the errors in response objects.
+            return new roads.Response('Unknown error', 500);
         });
 });
 ```
 
-**How do I control the order of my middleware?**
+#### How do I control the order of my middleware?
 
-Let's say you have assigned a middlewawre function via `use`. Each function has two places you can put your logic. I have described them in the example below.
+Within your middleware function you can add logic that happens before you continue down the request chain, and after the request chain has finished executing.
 
 ```JavaScript
 road.use(function (method, url, body, params, next) {
-	// This is the first point. This code will be executed first.
+	console.log('This happens at the start of a request, before we continue down the request chain');
 	return next()
-	.then((response) => {
-		// This is the second point. This code will be executed after all subsequent middleware have executed both their first and second mount points.
-	});
+		.then((response) => {
+			console.log('This happens later, after the request chain resolves');
+		});
 });
 ```
 
 You can picture the logic path like a U. The following example assumes two functions have been added to the request chain.
 
 ```
-First point for                  Second point for
-first middleware                 first middleware
-          |                              / \
-         \ /                              |
-First point for       ____ \     Second mount for
-second middleware          /     second middleware
+Start of request for                End of request for
+the first middleware                the first middleware
+          |                                 / \
+         \ /                                 |
+Start of request for      ____ \    End of request for
+the second middleware          /    the second middleware
 ```
 
-As you add more functions to the request chain, it lengthens each side of the U.
+As you add more functions to the request chain, it lengthens each arm of the U.
 
-
-
-### Road.request(*string* method, *string* url, *dynamic* body, *Object* headers)
+### request(method: *string*, url: *string*, body?: *string*, headers?: *object*)
 **Locate and execute the resource method associated with the request parameters.**
 
 
-This function will execute all of the functions assigned via [use](#roadusefunction-fn) in the order they were assigned and return a [thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A). The thenable will always resolve to a [Response](#roadsresponse) object.
+This function will execute the *request chain* in the order they were assigned via  [use](#roadusefunction-fn) and return a Promise that resolves to a [Response](#response)
 
-Make sure to listen for errors surfaced by the request promise!.
+Make sure to catch any errors in the promise!
 
 
 ```JavaScript
@@ -292,34 +278,23 @@ promise.catch((error) => {
 ```
 
 ##### Context
-Each middleware function has access to a request context through ```this```. Each ```this``` will be unique to the request and will be reused for each request handler (assigned via `use`). The context is pre-loaded with two variables, listed below.
+Each middleware function has access to a request context through `this`. This context will be different for each request, but identical for each middleware in a *request chain*.
 
-name             | type     | description
- ----------------|----------|---------------
-request          | function | An alias for [Road.request](#roadrequeststring-method-string-url-dynamic-body-object-headers). If you need to make a roads request from within middleware, it is recommended to use this instead of `Road.request`.
-Response         | Response | The Response constructor. Every request *should* return a `Response`, so this is provided to simplify the process. If you are constructing a `Response` from within middleware it is recommended that you use this instead of `Roads.Response`.
-
-**Note:** Do not use arrow functions if you want to interact with `this`. JavaScript is unable to transmit the custom `this` object into arrow functions.
+**Note:** Do not use arrow functions if you want to interact with `this`. You will not have access to the context if you use arrow functions, and it may have unintended side effects.
 
 ```JavaScript
-var road = new Road();
-
 road.use(function (method, url, body, headers, next) {
     this.extraInfo = 'hello!';
     return next();
 });
 
 road.use(function (method, url, body, headers) {
-    // true because the middleware persists to this context
-    console.log(this.extraInfo === 'hello!');
-
-
-    // Easy access to the response object
-    return new this.Response('hello world', 200);
+    return new Response(this.extraInfo, 200);
 });
 
 road.request('GET', '/me').then((response) => {
-    console.log(response);
+	// This will log "hello!"
+    console.log(response.body);
 });
 ```
 
@@ -329,28 +304,30 @@ eg:
 ```JavaScript
 var road = new Road();
 road.use(function (method, url, body, headers) {
-    this.context.my_project.require_authentication = true;
+    this.myProject_requireAuthentication = true;
 });
 ```
+
+You can also use the [StoreValsMiddleware](#storevalsmiddleware) to ensure you don't have conflicts with other middleware.
 
 ## Response
 
 The response object contains all of the information you want to send to the client. This includes the body, status code and all applicable headers.
 
 
-### new Response(*mixed* body, *number* status, *Object* headers)
+### new Response(body: *string*, status: *number*, headers: *object*)
 **Constructor**
-
-name        | type                               | description
- -----------|------------------------------------|---------------
- body       | mixed                              | The body of the response.
- status     | number                             | The HTTP Status code.
- headers    | object                             | Key value pairs of http headers.
-
 Create a response object.
 
+name        | type    | description
+ -----------|---------|---------------
+ body       | string  | The body of the response.
+ status     | number  | The HTTP Status code.
+ headers    | object  | All the headers. The value may be a string or an array of strings
+
+
 ```JavaScript
-new Response({"uri": "..."}, 200, {"last-modified":"2014-04-27 00:00:00"});
+new Response("Hello!", 200, {"last-modified":"2014-04-27 00:00:00"});
 ```
 
 ### Body
@@ -368,7 +345,7 @@ console.log(response.status);
 ```
 
 ### Headers
-**A JavaScript object of all response headers**
+**A JavaScript object of all response headers. The value might be a string or an array of strings**
 
 ```JavaScript
 console.log(response.headers);
@@ -376,17 +353,9 @@ console.log(response.headers);
 
 ## Middleware
 
-Roads comes bundled with some common middleware. All bundled middleware can be acccessed via the `roads` package.
+Roads comes bundled with a handfull of middleware functions.
 
-```TypeScript
-    import { Middleware } from 'roads';
-```
-
-```JavaScript
-    let Middleware = require('roads').Middleware;
-```
-
-### cookie()
+### Cookies
 **Middleware to add some cookie management functions**
 
 When you use the cookie middleware it adds two methods to the request context.
@@ -418,7 +387,7 @@ roads.use(function (method, url, body, headers) {
 });
 ```
 
-### cors(*object* options)
+### CORS
 **Middleware to Apply proper cors headers**
 
 Sets up the proper preflight, and standard repsonse headers so that browsers can make proper CORS requests.
@@ -441,16 +410,7 @@ road.use(Middleware.cors({
 }));
 ```
 
-### killSlash()
-**Middleware to kill the trailing slash on http requests**
-
-If used, any url that ends with a trailing slash will return a response object redirecting the client to the same url without the trailing slash (302 redirect with Location: [url_without_slash])
-
-```JavaScript
-road.use(Middleware.killSlash);
-```
-
-### parseBody
+### Parsing request bodies
 **Middleware to parse the request body**
 
 This middleware looks at the Content-Type header, and uses that information to attempt to parse the incoming request body string. The body will be applied to the context field `body`
@@ -466,56 +426,16 @@ road.use(function (method, url, body, headers) {
 road.request('POST', '/users', '{"name":"dashron"}', {"content-type": "application/json"});
 ```
 
-### applyToContext
-**Middleware to apply a predefined value to the request context**
+### Remove trailing slash
+**Middleware to kill the trailing slash on http requests**
+
+If used, any url that ends with a trailing slash will return a response object redirecting the client to the same url without the trailing slash (302 redirect with Location: [url_without_slash])
 
 ```JavaScript
-road.use(Middleware.applyToContext('example', 'test'));
-
-road.use(function (method, url, body, headers) {
-    console.log(this.example); // test
-});
+road.use(Middleware.killSlash);
 ```
 
-### reroute
-**Middleware that offers a function in the request context that allows you to easily interact with a road**
-
-In the following example, road and APIRoad are two different Road objects.
-```JavaScript
-road.use(Middleware.reroute('api', APIRoad));
-
-road.use(function (method, url, body, headers) {
-    this.api('GET', '/users')
-        .then((response) => {
-            console.log(response);
-        })
-        .catch((error) => {
-            console.log(error);
-        });
-});
-```
-
-### storeVals
-**Middleware that helps you save arbitrary data inside of a request context**
-
-This middleware adds two functions, `setVal(key, val)` and `getVal(key)` for storing and retrieving arbitrary values.
-The middleware also exposes a `TITLE_KEY` value for use with PJAX for assigning a page title.
-
-```JavaScript
-import { TITLE_KEY }, storeValsMiddleware from 'roads/middleware/storeVals';
-
-road.use(function (method, url, body, headers, next) {
-	return next().then((response) => {
-		console.log(this.getVal(TITLE_KEY));
-	});
-});
-
-road.use(storeValsMiddleware);
-```
-
-See [PJAX](#pjaxobject-road-domelement-container_element-object-window) for more information about this middleware.
-
-### SimpleRouter(*Road* road)
+### Simple router
 This is a simple router middleware for roads. To use it, you have to take a couple of steps.
 
 1. Create your road (see [Getting Started](#getting-started) step 1)
@@ -549,10 +469,10 @@ This is a simple router middleware for roads. To use it, you have to take a coup
 
 You can assign functions to url paths, and those paths can have some very basic variable templating. See addRoute for more details.
 
-#### SimpleRouter.applyMiddleware(*Road* road)
+#### applyMiddleware(road: *road*)
 If you don't provide a road to the SimpleRouter constructor, the router will not be used. This function allows you to assign the router to the road middleware.
 
-#### SimpleRouter.addRoute(*string* method, *string* path, *function* fn)
+#### addRoute(method: *string*, path: *string*, fn: *function*)
 
 This assigns a function to an HTTP Method and Path combination. When roads middleware uses the Simple Router, incoming requests will execute the appropriate function for the incoming method and path.
 
@@ -583,7 +503,9 @@ e.g. /users/#user_id will match /users/12345, not /users/abcde. If a request is 
     });
 ```
 
-#### SimpleRouter.addRouteFile(*string* full_path)
+TODO: More details on typescript request context. In the meanwhile check out example/ts/src/routes/applyPublicRoutes.ts for an example.
+
+#### addRouteFile(filePath: *string*)
 Add an entire file worth of routes.
 
 The file should be a node module that exposes an object.
@@ -601,7 +523,56 @@ Example File:
 }
 ```
 
-## PJAX(*Object* road, *DomElement* container_element, *Object* window)
+### Middleware helpers
+#### applyToContext
+**Middleware to apply a predefined value to the request context**
+
+```JavaScript
+road.use(Middleware.applyToContext('example', 'test'));
+
+road.use(function (method, url, body, headers) {
+    console.log(this.example); // test
+});
+```
+
+#### reroute
+**Middleware that offers a function in the request context that allows you to easily interact with a road**
+
+In the following example, road and APIRoad are two different Road objects.
+```JavaScript
+road.use(Middleware.reroute('api', APIRoad));
+
+road.use(function (method, url, body, headers) {
+    this.api('GET', '/users')
+        .then((response) => {
+            console.log(response);
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+});
+```
+
+#### storeVals
+**Middleware that helps you save arbitrary data inside of a request context**
+
+This middleware adds two functions, `setVal(key, val)` and `getVal(key)` for storing and retrieving arbitrary values.
+The middleware also exposes a `TITLE_KEY` value for use with PJAX for assigning a page title.
+
+```JavaScript
+import { TITLE_KEY }, storeValsMiddleware from 'roads/middleware/storeVals';
+
+road.use(function (method, url, body, headers, next) {
+	return next().then((response) => {
+		console.log(this.getVal(TITLE_KEY));
+	});
+});
+
+road.use(storeValsMiddleware);
+```
+
+
+## PJAX(road: *Road*, containerElement: *DomElement*, window: *Window*)
 **A helper object to easily enable PJAX on your website using roads**
 
 PJAX stands for pushState + AJAX. PJAX a technique for speeding up webpages by replacing certain links on the page with AJAX calls. To enable PJAX, you must create a PJAX object and call the register method. Until you call register, PJAX links will not be handled properly.
@@ -676,3 +647,8 @@ There's a very easy pattern to follow to ensure sharing client and server code w
 4. Keep your page layout (headers, footers, body, meta tags, etc.) in the "backend only" section.
 5. Keep your DB calls in the "backend only" section
 6. Make sure the mixed frontend-or-backend routes only ever make HTTP requests, or render HTML
+
+### FAQ
+
+**Why is this called roads?**
+The name Roads fit well with some of the earlier architectural decisions, and some of the more advanced ways of using this feature. Over time those features have become less prominent, but we kept the name. If you really want it to make sense, we can force a backronym. Let's say it means Requests organized and dispatched simply.
