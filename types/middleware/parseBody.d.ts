@@ -12,4 +12,4 @@ export interface ParseBodyContext<BodyType> extends Context {
 /**
  * Attempts the parse the request body into a useful object
  */
-export declare const parseBodyMiddleware: Middleware<Context>;
+export declare const middleware: Middleware<Context>;

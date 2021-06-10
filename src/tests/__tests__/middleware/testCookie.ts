@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { cookieMiddleware, clientCookieMiddleware } from '../../../middleware/cookieMiddleware';
+import { serverMiddleware, clientMiddleware } from '../../../middleware/cookieMiddleware';
 
 import { CookieContext } from '../../../middleware/cookieMiddleware';
 import Response from '../../../core/response';
@@ -11,7 +11,7 @@ describe('cookie tests', () => {
 			Response: Response
 		};
 
-		cookieMiddleware.call(context, 'a', 'b', 'c', {
+		serverMiddleware.call(context, 'a', 'b', 'c', {
 			cookie: 'foo=bar;abc=def'
 		}, function () { return Promise.resolve('test'); });
 
@@ -31,7 +31,7 @@ describe('cookie tests', () => {
 		};
 
 		// eslint-disable-next-line @typescript-eslint/no-empty-function
-		expect(cookieMiddleware.call(context, 'a', 'b', 'c', {}, next.bind(context)))
+		expect(serverMiddleware.call(context, 'a', 'b', 'c', {}, next.bind(context)))
 			.resolves.toEqual(new Response('test', 200, {
 
 				'Set-Cookie': ['foo=bar']
@@ -54,7 +54,7 @@ describe('cookie tests', () => {
 			return Promise.resolve('test');
 		};
 
-		expect(cookieMiddleware.call(context, 'a', 'b', 'c', {
+		expect(serverMiddleware.call(context, 'a', 'b', 'c', {
 			cookie: 'abc=def'
 		}, next.bind(context)))
 			.resolves.toEqual(new Response('test', 200, {
@@ -73,7 +73,7 @@ describe('cookie tests', () => {
 			cookie: 'foo=bar;abc=def'
 		};
 
-		clientCookieMiddleware(testDocument as Document).call(context, 'a', 'b', 'c', {
+		clientMiddleware(testDocument as Document).call(context, 'a', 'b', 'c', {
 
 		}, function () { return Promise.resolve('test'); });
 
@@ -96,7 +96,7 @@ describe('cookie tests', () => {
 			return Promise.resolve('test');
 		};
 
-		await clientCookieMiddleware(testDocument as Document).call(context, 'a', 'b', 'c', {}, next.bind(context));
+		await clientMiddleware(testDocument as Document).call(context, 'a', 'b', 'c', {}, next.bind(context));
 
 		expect(testDocument.cookie).toEqual('foo=bar');
 	});
@@ -121,7 +121,7 @@ describe('cookie tests', () => {
 			cookie: 'abc=def'
 		};
 
-		await clientCookieMiddleware(testDocument as Document).call(context, 'a', 'b', 'c', {
+		await clientMiddleware(testDocument as Document).call(context, 'a', 'b', 'c', {
 			// This is overridden by the document cookies. I think we want this? :shrug:. easy to fix in the future if not
 			cookie: 'ignored=andDropped'
 		}, next.bind(context));

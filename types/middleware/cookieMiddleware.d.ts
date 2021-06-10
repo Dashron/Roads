@@ -42,6 +42,6 @@ interface NewCookies {
         options: cookie.CookieSerializeOptions;
     };
 }
-export declare const cookieMiddleware: Middleware<CookieContext>;
-export declare const clientCookieMiddleware: (pageDocument: Document) => Middleware<CookieContext>;
+export declare const serverMiddleware: Middleware<CookieContext>;
+export declare const clientMiddleware: (pageDocument: Document) => Middleware<CookieContext>;
 export {};

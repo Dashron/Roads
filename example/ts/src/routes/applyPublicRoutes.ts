@@ -6,7 +6,7 @@
  * This file is an example of how to assign some public routes to a roads server
  */
 
-import { SimpleRouterMiddleware, StoreValsMiddleware } from 'roads';
+import { Response, SimpleRouterMiddleware, StoreValsMiddleware } from 'roads';
 const { TITLE_KEY } = StoreValsMiddleware;
 
 import { ParseBodyContext } from 'roads/types/middleware/parseBody';
@@ -29,7 +29,7 @@ export default function applyPublicRotues(router: SimpleRouterMiddleware.SimpleR
 		this.storeVal(TITLE_KEY, 'Root Resource');
 
 		// In the real world the body of the response should be created from a template engine.
-		return new this.Response(`Hello!<br />
+		return new Response(`Hello!<br />
 		 Try the <a href="/public" data-roads-pjax="link">public test link</a>.
 		 It's available to the server and can be rendered from the client! Try clicking it for the client path,
 		 or control clicking for a real request to the server.<br />
@@ -53,13 +53,13 @@ export default function applyPublicRotues(router: SimpleRouterMiddleware.SimpleR
 
 		// todo: make a client request to /privateJSON and get { "private-success": true }
 
-		return new this.Response(html);
+		return new Response(html);
 	});
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	router.addRoute('POST', '/postdata', async function (this: ParseBodyContext<ExampleRequestBody>, url, body, headers) {
 		console.log(`You sent the message:${this.body.message}`);
 		this.ignore_layout = true;
-		return new this.Response('', 302, { location: '/public' });
+		return new Response('', 302, { location: '/public' });
 	});
 }

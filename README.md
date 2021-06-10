@@ -4,7 +4,7 @@ Roads is a simple web framework. It's similar to Express.js, but has some very i
 
 # Why should I use Roads?
 
-1. Roads is isomorphic, meaning your pages can trivially be run in the browser or server using the exact same code.
+1. Roads is isomorphic, which means your code can trivially be run server side or in the browser with the exact same code.
 2. Roads can be attached to any node HTTP server, including the standard node HTTP server or Express.js.
 3. Roads can be run without being attaching to an HTTP server. This is great for writing tests, working with web sockets, or writing API first websites.
 
@@ -20,13 +20,13 @@ Roads is a simple web framework. It's similar to Express.js, but has some very i
   - [use(fn: *function*)](#roadusefn-function)
     - [Middleware](#middleware)
     - [How do I control the order of my middleware?](#how-do-i-control-the-order-of-my-middleware)
-  - [request(method: *string*, url: *string*, body?: *string*, headers?: *object*)](#roadrequestmethod-string-url-string-body-string-headers-object)
+  - [request(method: *string*, url: *string*, body?: *string*, headers?: *object*)](#requestmethod-string-url-string-body-string-headers-object)
 - [Response](#response)
   - [new Response(body: *string*, status?: *number*, headers?: *object*)](#new-responsebody-string-status-number-headers-object)
   - [body](#body)
   - [status](#status)
   - [headers](#headers)
-- [Middleware](#middleware)
+- [Bundled Middleware](#bundled-middleware)
   - [Cookies](#cookies)
   - [CORS](#cors)
   - [Parsing request bodies](#parsing-request-bodies)
@@ -86,8 +86,8 @@ Building a project with roads is very straightforward.
     });
 	```
 
-5. Run your code.
-	- **HTTP**: The following examples show how easy it is to hook up an HTTP server with roads and roads-server, but you can easily connect it to express.js or any other http server.
+3. Run your code.
+	- **HTTP**: The following examples show how easy it is to hook up an HTTP server with roads and roads-server, but you can also connect it to express.js or any other http server.
 
      **TypeScript**
     ```TypeScript
@@ -167,7 +167,7 @@ The use function can be called one or more times. Each time it is called, the fu
  -----|-----------------------------------------------------------------------|----------|---------------
  fn   | Function(method: *string*, url: *string*, body: *string*, headers: *object*, next: *function*) | yes      | This is the function that will be added to the end of the *request chain*. See the [Middleware](#middleware) below for more details on the function parameters.
 
-#### Middleware
+#### BMiddleware
 
 Each function in the request chain is called middleware. Each middleware function must match the following function signature.
 
@@ -370,10 +370,17 @@ These cookies will be automatically applied to the response after your request
 `this.getCookies()`
 Returns an object with all the cookies. It defaults to all the request cookies, but merges anything applied via setCookie on top (i.e. setCookie will override the request cookie)
 
-```JavaScript
-road.use(Middleware.cookie);
+`CookieContext`
+If you use the CookieContext (as shown in the example below) it will ensure that typescript is aware of the `setCookie` and `getCookie` methods on the request context.
 
-roads.use(function (method, url, body, headers) {
+```JavaScript
+import { CookieContext } from 'roads/types/middleware/cookieMiddleware';
+import { CookieMiddleware, Response, Road } from 'roads';
+
+var road = new Road();
+road.use(CookieMiddleware.serverMiddleware);
+
+road.use<CookieContext>(function (method, path, body, headers, next) {
 	console.log(this.getCookies());
 
 	this.setCookie('auth', 12345, {
@@ -382,29 +389,32 @@ roads.use(function (method, url, body, headers) {
 
 	console.log(this.getCookies());
 
-	// The auth cookie will be automatically attached to this response AFTER this is returned.
-	return new this.Response('Hello!', 200);
+	// The cookie middleware will automatically apply the Set-Cookies header to this response
+	return new Response('Hello!', 200);
 });
 ```
 
 ### CORS
 **Middleware to Apply proper cors headers**
 
-Sets up the proper preflight, and standard repsonse headers so that browsers can make proper CORS requests.
+Sets up everything you need for your server to properly respond to CORS requests.
 
-The options object spports the following keys
+The options object supports the following properties.
 
-name            | type                               | description
----------------|------------------------------------|---------------
-validOrigins  | array                      | An array of origin urls that can send requests to this API
-supportsCredentials  | boolean                       | A boolean, true if you want this endpoint to receive cookies
-responseHeaders  | array                       | An array of valid HTTP response headers
-requestHeaders  | array                       | An array of valid HTTP request headers
-validMethods  | array                       | An array of valid HTTP methods
-cacheMaxAge  | number                       | The maximum age to cache the cors information
+name                 | type                               | description
+---------------------|------------------------------------|---------------
+validOrigins         | array                              | An array of origin urls that can send requests to this API
+supportsCredentials  | boolean                            | A boolean, true if you want this endpoint to receive cookies
+responseHeaders      | array                              | An array of valid HTTP response headers
+requestHeaders       | array                              | An array of valid HTTP request headers
+validMethods         | array                              | An array of valid HTTP methods
+cacheMaxAge          | number                             | The maximum age to cache the cors information
 
 ```JavaScript
-road.use(Middleware.cors({
+import { CorsMiddleware, Road } from 'roads';
+
+var road = new Road();
+road.use(CorsMiddleware.buildMiddleware({
     validOrigins: ['http://localhost:8080'],
     responseHeaders: ['content-type']
 }));
@@ -415,12 +425,23 @@ road.use(Middleware.cors({
 
 This middleware looks at the Content-Type header, and uses that information to attempt to parse the incoming request body string. The body will be applied to the context field `body`
 
-```JavaScript
-road.use(Middleware.parseBody);
+`ParseBodyContext<BodyType>`
+This context ensures that
 
-road.use(function (method, url, body, headers) {
-    console.log(body); // The string '{"name":"dashron"}'
-    console.log(this.body); // The parsed object { name : "dashron" }
+```JavaScript
+import { ParseBodyContext } from 'roads/types/middleware/parseBody';
+import { ParseBodyMiddleware, Response, Road } from 'roads';
+
+var road = new Road();
+road.use(ParseBodyMiddleware.middleware);
+
+road.use<ParseBodyContext<{
+	name: string,
+	description?: string
+}>>(function (method, url, body, headers) {
+    // body === string representation of the input. In this example, '{"name":"dashron"}'
+	// this.body === parsed version of that representation. In this example, {"name": "dashron"}
+	// this.body.name will be properly identified by typescript due to the generic BodyType passed to ParseBodyContext. In this example, "dashron"
 });
 
 road.request('POST', '/users', '{"name":"dashron"}', {"content-type": "application/json"});
@@ -432,7 +453,10 @@ road.request('POST', '/users', '{"name":"dashron"}', {"content-type": "applicati
 If used, any url that ends with a trailing slash will return a response object redirecting the client to the same url without the trailing slash (302 redirect with Location: [url_without_slash])
 
 ```JavaScript
-road.use(Middleware.killSlash);
+import { RemoveTrailingSlashMiddleware, Response, Road } from 'roads';
+
+var road = new Road();
+road.use(RemoveTrailingSlashMiddleware.middleware);
 ```
 
 ### Simple router
@@ -523,7 +547,10 @@ Example File:
 }
 ```
 
-### Middleware helpers
+### Bundled Middleware
+
+The documentation below covers additional generic middleware that is useful for a variety of reasons.
+
 #### applyToContext
 **Middleware to apply a predefined value to the request context**
 

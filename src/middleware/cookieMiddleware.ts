@@ -57,7 +57,7 @@ function getCookieValues(newCookies: NewCookies): SetCookies {
 	return cookies;
 }
 
-export const cookieMiddleware: Middleware<CookieContext> =
+export const serverMiddleware: Middleware<CookieContext> =
 function (route_method, route_path, route_body, route_headers, next) {
 	let cookies: SetCookies = {};
 	this.newCookies = {};
@@ -111,12 +111,12 @@ function (route_method, route_path, route_body, route_headers, next) {
 	});
 };
 
-export const clientCookieMiddleware: (pageDocument: Document) => Middleware<CookieContext> = (pageDocument) => {
+export const clientMiddleware: (pageDocument: Document) => Middleware<CookieContext> = (pageDocument) => {
 
 	return function (route_method, route_path, route_body, route_headers, next) {
 
 		// Reuse the cookie middleware, but automatically inject and extract cookies from the document
-		return cookieMiddleware.call(this, route_method, route_path, route_body, {
+		return serverMiddleware.call(this, route_method, route_path, route_body, {
 			...route_headers, cookie: pageDocument.cookie
 		}, next)
 			.then((response: Response) => {

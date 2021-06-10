@@ -61,7 +61,7 @@ function parseRequestBody (body: string, contentType?: string): unknown {
 /**
  * Attempts the parse the request body into a useful object
  */
-export const parseBodyMiddleware: Middleware<Context> = function (method, url, body, headers, next) {
+export const middleware: Middleware<Context> = function (method, url, body, headers, next) {
 	this.body = parseRequestBody(body, getSingleHeader(headers, 'content-type'));
 	return next();
 };

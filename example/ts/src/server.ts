@@ -6,7 +6,7 @@
  * This file starts up the HTTP roads server
  */
 
-import { Road, Response, KillSlashMiddleware, CookieMiddleware,
+import { Road, Response, RemoveTrailingSlashMiddleware, CookieMiddleware,
 	StoreValsMiddleware, ParseBodyMiddleware, SimpleRouterMiddleware } from 'roads';
 
 import { Server } from 'roads-server';
@@ -22,7 +22,7 @@ road.use(function (method, url, body, headers, next) {
 	return next();
 });
 
-road.use(KillSlashMiddleware.killSlashMiddleware);
+road.use(RemoveTrailingSlashMiddleware.removeTrailingSlashMiddleware);
 road.use(CookieMiddleware.cookieMiddleware);
 road.use(StoreValsMiddleware.storeValsMiddleware);
 road.use(addLayout);

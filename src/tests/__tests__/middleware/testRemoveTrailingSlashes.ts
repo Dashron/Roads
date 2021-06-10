@@ -1,4 +1,4 @@
-import { removeTrailingSlashMiddleware } from '../../../middleware/removeTrailingSlash';
+import { middleware } from '../../../middleware/removeTrailingSlash';
 
 import Response from '../../../core/response';
 
@@ -17,7 +17,7 @@ describe('KillSlashes tests', () => {
 			});
 		};
 
-		return expect(removeTrailingSlashMiddleware.call({}, method, url, body, headers, next)).resolves.toEqual(contents);
+		return expect(middleware.call({}, method, url, body, headers, next)).resolves.toEqual(contents);
 	});
 
 	/**
@@ -37,7 +37,7 @@ describe('KillSlashes tests', () => {
 			});
 		};
 
-		return expect(removeTrailingSlashMiddleware.call({
+		return expect(middleware.call({
 			// the redirection needs the Response context
 			Response : Response
 		}, method, url, body, headers, next)).resolves.toEqual({
@@ -67,6 +67,6 @@ describe('KillSlashes tests', () => {
 			});
 		};
 
-		return expect(removeTrailingSlashMiddleware.call({}, method, url, body, headers, next)).resolves.toEqual(contents);
+		return expect(middleware.call({}, method, url, body, headers, next)).resolves.toEqual(contents);
 	});
 });
