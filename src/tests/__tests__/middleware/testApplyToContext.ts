@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { buildApplyToContextMiddleware } from '../../../middleware/applyToContext';
+import { build } from '../../../middleware/applyToContext';
 
 describe('ApplyToContext tests', () => {
 	test('test apply to context applies context', () => {
@@ -8,7 +8,7 @@ describe('ApplyToContext tests', () => {
 		const val = 'bar';
 		const context: {[x: string]: any} = {};
 
-		const fn = buildApplyToContextMiddleware(key, val);
+		const fn = build(key, val);
 		expect(typeof(fn)).toEqual('function');
 
 		// eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -23,7 +23,7 @@ describe('ApplyToContext tests', () => {
 		const val = 'bar';
 		const context = {};
 
-		const fn = buildApplyToContextMiddleware(key, val);
+		const fn = build(key, val);
 		expect(typeof(fn)).toEqual('function');
 
 		const custom = fn.call(context, 'a', 'b', 'c', 'd', function () {

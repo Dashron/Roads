@@ -35,7 +35,7 @@ function getSingleHeader(headers: IncomingHeaders | OutgoingHeaders, key: string
  *
  * @return {function} The middleware to bind to your road
  */
-export function buildMiddleware (options: {
+export function build (options: {
 		validOrigins?: string[],
 		supportsCredentials?: boolean,
 		responseHeaders?: Array<string>,

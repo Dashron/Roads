@@ -22,11 +22,11 @@ road.use(function (method, url, body, headers, next) {
 	return next();
 });
 
-road.use(RemoveTrailingSlashMiddleware.removeTrailingSlashMiddleware);
-road.use(CookieMiddleware.cookieMiddleware);
-road.use(StoreValsMiddleware.storeValsMiddleware);
+road.use(RemoveTrailingSlashMiddleware.middleware);
+road.use(CookieMiddleware.serverMiddleware);
+road.use(StoreValsMiddleware.middleware);
 road.use(addLayout);
-road.use(ParseBodyMiddleware.parseBodyMiddleware);
+road.use(ParseBodyMiddleware.middleware);
 
 const router = new SimpleRouterMiddleware.SimpleRouter(road);
 applyPublicRotues(router);

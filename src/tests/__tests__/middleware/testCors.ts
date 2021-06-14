@@ -1,9 +1,9 @@
-import { buildMiddleware } from '../../../middleware/cors';
+import { build } from '../../../middleware/cors';
 
 describe('Cors tests', () => {
 	test('test cors middleware doesn\'t break normal', () => {
 		expect.assertions(1);
-		return expect(buildMiddleware({})).toBeInstanceOf(Function);
+		return expect(build({})).toBeInstanceOf(Function);
 	});
 
 	/* test.skip('old cors tests. need to update these', () => {

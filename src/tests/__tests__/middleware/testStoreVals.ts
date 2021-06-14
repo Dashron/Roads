@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { storeValsMiddleware } from '../../../middleware/storeVals';
+import { middleware } from '../../../middleware/storeVals';
 
 
 describe('Store Values', () => {
@@ -10,7 +10,7 @@ describe('Store Values', () => {
 		const context: {[x: string]: any} = {};
 
 		// eslint-disable-next-line @typescript-eslint/no-empty-function
-		storeValsMiddleware.call(context, 'a', 'b', 'c', {}, function () {});
+		middleware.call(context, 'a', 'b', 'c', {}, function () {});
 
 		expect(typeof(context.storeVal)).toEqual('function');
 		expect(typeof(context.getVal)).toEqual('function');
@@ -25,7 +25,7 @@ describe('Store Values', () => {
 		const context: {[x: string]: any} = {};
 
 		// eslint-disable-next-line @typescript-eslint/no-empty-function
-		storeValsMiddleware.call(context, 'a', 'b', 'c', {}, function () {});
+		middleware.call(context, 'a', 'b', 'c', {}, function () {});
 		context.storeVal('foo', 'bar');
 
 		expect(context.getVal('foo')).toEqual('bar');

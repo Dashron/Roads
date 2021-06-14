@@ -20,7 +20,7 @@ import { Context, Middleware } from '../core/road';
  * @param {any} val - The value to apply to the request context.
  * @returns {Middleware} The middleware function to apply to the road.use(fn) method.
  */
-export function buildApplyToContextMiddleware (key: string, val: unknown): Middleware<Context> {
+export function build (key: string, val: unknown): Middleware<Context> {
 	const applyToContext: Middleware<Context> = function (method, url, body, headers, next) {
 		this[key] = val;
 		return next();

@@ -8,7 +8,7 @@
 
 import Road, { Middleware } from '../core/road';
 import Response from '../core/response';
-import { StoreValsContext, TITLE_KEY, storeValsMiddleware } from '../middleware/storeVals';
+import { StoreValsContext, TITLE_KEY, middleware as storeValsMiddleware} from '../middleware/storeVals';
 
 /**
   * This is a helper class to make PJAX easier. PJAX is a clean way of improving the performance of webpages
@@ -52,6 +52,7 @@ export default class RoadsPjax {
 
 			return next().then((response) => {
 				if (this.getVal) {
+					// TODO: I'm not sure I like title key in here. Maybe we should have it passed in?
 					pjaxObj._page_title = this.getVal(TITLE_KEY) as string;
 				}
 

@@ -36,9 +36,9 @@ Roads is a simple web framework. It's similar to Express.js, but has some very i
     - [addRoute(method: *string*, path: *string*, fn: *function*)](#addroutemethod-string-path-string-fn-function)
     - [addRouteFile(filePath: *string*)](#addroutefilefull_path-string)
   - [Middleware helpers](#middleware-helpers)
-  	- [buildApplyToContextMiddleware(key: *string* , val: *unknown*)](#buildapplytocontextmiddlewarekey-string-val-unknown))
-  	- [buildRerouteMiddleware(key: *string*, road: *Road*)](#buildreroutemiddlewarekey-sring-road-road)
-  	- [storeValsMiddleware()](#storevalsmiddleware)
+  	- [Apply To Context](#applytocontextmiddleware)
+  	- [Reroute](#reroute)
+  	- [Store Vals](#storevals)
 - [PJAX(road: *Road*, containerElement *DomElement*, window: *Window*)](#pjaxroad-road-container_element-domelement-window-window))
   - [register()](#pjaxregister)
   - [PJAX Link Format](#pjax-link-format)
@@ -167,7 +167,7 @@ The use function can be called one or more times. Each time it is called, the fu
  -----|-----------------------------------------------------------------------|----------|---------------
  fn   | Function(method: *string*, url: *string*, body: *string*, headers: *object*, next: *function*) | yes      | This is the function that will be added to the end of the *request chain*. See the [Middleware](#middleware) below for more details on the function parameters.
 
-#### BMiddleware
+#### Middleware
 
 Each function in the request chain is called middleware. Each middleware function must match the following function signature.
 
@@ -351,7 +351,7 @@ console.log(response.status);
 console.log(response.headers);
 ```
 
-## Middleware
+## Bundled Middleware
 
 Roads comes bundled with a handfull of middleware functions.
 
@@ -414,7 +414,7 @@ cacheMaxAge          | number                             | The maximum age to c
 import { CorsMiddleware, Road } from 'roads';
 
 var road = new Road();
-road.use(CorsMiddleware.buildMiddleware({
+road.use(CorsMiddleware.build({
     validOrigins: ['http://localhost:8080'],
     responseHeaders: ['content-type']
 }));
@@ -460,20 +460,22 @@ road.use(RemoveTrailingSlashMiddleware.middleware);
 ```
 
 ### Simple router
-This is a simple router middleware for roads. To use it, you have to take a couple of steps.
+This is a simple router middleware for roads. It allows you to easily attach functionality to HTTP methods and paths.
+
+Here's how you use it.
 
 1. Create your road (see [Getting Started](#getting-started) step 1)
-2. Load the Middleware (see [Middleware](#middleware))
-3. Create your Router
+2. Create your Router
 
 ```JavaScript
-    let router = new Middleware.SimpleRouter(road);
+	import { SimpleRouterMiddleware } from 'roads';
+    let router = new SimpleRouterMiddleware.SimpleRouter(road);
 ```
 
 3. Assign routes to the router
 
 ```JavaScript
-    // This is a simple route with no URI variables
+    // This is a simple route with no path variables
     router.addRoute('GET', '/posts', (url, body, headers) => {
         // url, body and headers are all identical to the values sent to functions in roads.use
     });
@@ -491,22 +493,21 @@ This is a simple router middleware for roads. To use it, you have to take a coup
     });
 ```
 
-You can assign functions to url paths, and those paths can have some very basic variable templating. See addRoute for more details.
-
 #### applyMiddleware(road: *road*)
-If you don't provide a road to the SimpleRouter constructor, the router will not be used. This function allows you to assign the router to the road middleware.
+If you don't provide a road to the SimpleRouter constructor, your routes will not be executed. If you have reason not to assign the road off the bat, you can assign it later with this function.
 
 #### addRoute(method: *string*, path: *string*, fn: *function*)
 
-This assigns a function to an HTTP Method and Path combination. When roads middleware uses the Simple Router, incoming requests will execute the appropriate function for the incoming method and path.
+This is where you want to write the majority of your webservice. The `fn` parameter should contain the actions you want to perform when a certain `path` and HTTP `method` are accessed via the `road` object.
 
-When assigning a function, you can use a simple templating language in your path. In these templates each URI is considered to be a series of "path parts" separated by slashes.
+The path supports a very basic templating system. The values inbetween each slash can be interpreted in one of three ways
  - If a path part starts with a #, it is assumed to be a numeric variable. Non-numbers will not match this route
  - If a path part starts with a $, it is considered to be an alphanumeric variabe. All non-slash values will match this route.
+ - If a path starts with anything but a # or a $, it is assumed to be a literal. Only that value will match this route.
+
+e.g. /users/#userId will match /users/12345, not /users/abcde. If a request is made to /users/12345 the route's requestUrl object will include the key value pair of `args: { userId: 12345 }`
 
 Any variables will be added to the route's request url object under the "args" object.
-
-e.g. /users/#user_id will match /users/12345, not /users/abcde. If a request is made to /users/12345 the route's requestUrl object will contain { args: {user_id: 12345}} along with all other url object values
 
 ```JavaScript
     // This is a simple route with no URI variables
@@ -515,15 +516,15 @@ e.g. /users/#user_id will match /users/12345, not /users/abcde. If a request is 
     });
 
     // This route supports numeric variables
-    router.addRoute('GET', '/posts/#post_id', (url, body, headers) => {
-        // url.args.post_id will contain the integer from the URL.
-        // e.g. GET /posts/12345 will have url.args.post_id === 12345
+    router.addRoute('GET', '/posts/#postId', (url, body, headers) => {
+        // url.args.postId will contain the integer from the URL.
+        // e.g. GET /posts/12345 will have url.args.postId === 12345
     });
 
     // This route supports any variable
-    router.addRoute('GET', '/posts/$post_slug', (url, body, headers) => {
-        // url.args.post_slug will contain the value from the URL.
-        // e.g. GET /posts/my-post will have url.args.post_slug === 'my-ost'
+    router.addRoute('GET', '/posts/$postSlug', (url, body, headers) => {
+        // url.args.postSlug will contain the value from the URL.
+        // e.g. GET /posts/my-post will have url.args.postSlug === 'my-ost'
     });
 ```
 
@@ -532,9 +533,9 @@ TODO: More details on typescript request context. In the meanwhile check out exa
 #### addRouteFile(filePath: *string*)
 Add an entire file worth of routes.
 
-The file should be a node module that exposes an object.
-Each key should be an HTTP path, each value should be an object.
-In that object, each key should be an HTTP method, and the value should be your route function.
+- The file should be a node module that exposes an object.
+- Each key should be an HTTP path, each value should be an object.
+- In that object, each key should be an HTTP method, and the value should be your route function.
 
 Example File:
 ```JavaScript
@@ -547,27 +548,29 @@ Example File:
 }
 ```
 
-### Bundled Middleware
+### Middleware helpers
 
-The documentation below covers additional generic middleware that is useful for a variety of reasons.
+The documentation below covers additional generic middleware that are useful when creating new middleware, or other advanced topics.
 
-#### applyToContext
+#### ApplyToContext
 **Middleware to apply a predefined value to the request context**
 
 ```JavaScript
-road.use(Middleware.applyToContext('example', 'test'));
+import { ApplyToContext } from 'roads';
+road.use(ApplyToContext.build('example', 'test'));
 
 road.use(function (method, url, body, headers) {
     console.log(this.example); // test
 });
 ```
 
-#### reroute
+#### Reroute
 **Middleware that offers a function in the request context that allows you to easily interact with a road**
 
 In the following example, road and APIRoad are two different Road objects.
 ```JavaScript
-road.use(Middleware.reroute('api', APIRoad));
+import { RerouteMiddleware } from 'roads';
+road.use(RerouteMiddleware.build('api', APIRoad));
 
 road.use(function (method, url, body, headers) {
     this.api('GET', '/users')
@@ -587,7 +590,7 @@ This middleware adds two functions, `setVal(key, val)` and `getVal(key)` for sto
 The middleware also exposes a `TITLE_KEY` value for use with PJAX for assigning a page title.
 
 ```JavaScript
-import { TITLE_KEY }, storeValsMiddleware from 'roads/middleware/storeVals';
+import { TITLE_KEY }, StoreValsMiddleware from 'roads/middleware/storeVals';
 
 road.use(function (method, url, body, headers, next) {
 	return next().then((response) => {
@@ -595,7 +598,7 @@ road.use(function (method, url, body, headers, next) {
 	});
 });
 
-road.use(storeValsMiddleware);
+road.use(StoreValsMiddleware.middleware);
 ```
 
 

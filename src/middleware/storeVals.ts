@@ -26,7 +26,7 @@ export interface StoreValsContext extends Context {
  *  todo: Should we ask for the valid key:data type pairings be sent via a generic to storevalscontext?
  * 		This would be nice for stricter typing
  */
-export const storeValsMiddleware: Middleware<StoreValsContext> = function (method, path, body, headers, next) {
+export const middleware: Middleware<StoreValsContext> = function (method, path, body, headers, next) {
 	const storedVals: {[key: string]: unknown} = {};
 
 	this.storeVal = (field, val) => {

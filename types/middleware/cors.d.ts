@@ -19,7 +19,7 @@ import { Context, Middleware } from '../core/road';
  *
  * @return {function} The middleware to bind to your road
  */
-export declare function buildMiddleware(options: {
+export declare function build(options: {
     validOrigins?: string[];
     supportsCredentials?: boolean;
     responseHeaders?: Array<string>;
