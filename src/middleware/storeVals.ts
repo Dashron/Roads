@@ -8,12 +8,6 @@
 
 import { Context, Middleware } from '../core/road';
 
-/*
- * This is a convention used by pjax for storing and retrieving the page title, and placed here
- *   for consistency with any server side rendering.
- */
-export const TITLE_KEY = 'pjax-page-title';
-
 export interface StoreValsContext extends Context {
 	storeVal: (field: string, val: unknown) => void,
 	getVal: (field: string) => unknown,

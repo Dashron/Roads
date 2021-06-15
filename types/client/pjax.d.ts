@@ -30,11 +30,13 @@ export default class RoadsPjax {
     /**
      * Adds middleware to set the page title.
      *
-     * This adds the storeVal middleware, and after the middleware chain is complete sets the TITLE_KEY to the title
+     * This adds the storeVal middleware, and after the middleware chain is complete sets the page title to
+     * 	the value of titleKey
      *
-     * @returns {RoadsPjax} this, useful for chaining
+     * @param {titleKey} string - The key of the title as stored in the "storeVals" middleware.
+     * @returns {RoadsPjax} Returns the PJAX object. This is provided to allow for easy function chaining.
      */
-    addTitleMiddleware(): RoadsPjax;
+    addTitleMiddleware(titleKey: string): RoadsPjax;
     /**
      * Hooks up the PJAX functionality to the information provided via the constructor.
      */

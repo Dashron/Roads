@@ -8,7 +8,7 @@
 
 import Road, { Middleware } from '../core/road';
 import Response from '../core/response';
-import { StoreValsContext, TITLE_KEY, middleware as storeValsMiddleware} from '../middleware/storeVals';
+import { StoreValsContext, middleware as storeValsMiddleware} from '../middleware/storeVals';
 
 /**
   * This is a helper class to make PJAX easier. PJAX is a clean way of improving the performance of webpages
@@ -40,11 +40,13 @@ export default class RoadsPjax {
 	/**
 	 * Adds middleware to set the page title.
 	 *
-	 * This adds the storeVal middleware, and after the middleware chain is complete sets the TITLE_KEY to the title
+	 * This adds the storeVal middleware, and after the middleware chain is complete sets the page title to
+	 * 	the value of titleKey
 	 *
-	 * @returns {RoadsPjax} this, useful for chaining
+	 * @param {titleKey} string - The key of the title as stored in the "storeVals" middleware.
+	 * @returns {RoadsPjax} Returns the PJAX object. This is provided to allow for easy function chaining.
 	 */
-	addTitleMiddleware (): RoadsPjax {
+	addTitleMiddleware (titleKey: string): RoadsPjax {
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		const pjaxObj = this;
 
@@ -53,7 +55,7 @@ export default class RoadsPjax {
 			return next().then((response) => {
 				if (this.getVal) {
 					// TODO: I'm not sure I like title key in here. Maybe we should have it passed in?
-					pjaxObj._page_title = this.getVal(TITLE_KEY) as string;
+					pjaxObj._page_title = this.getVal(titleKey) as string;
 				}
 
 				return response;

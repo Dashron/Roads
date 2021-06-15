@@ -605,23 +605,48 @@ road.use(StoreValsMiddleware.middleware);
 ## PJAX(road: *Road*, containerElement: *DomElement*, window: *Window*)
 **A helper object to easily enable PJAX on your website using roads**
 
-PJAX stands for pushState + AJAX. PJAX a technique for speeding up webpages by replacing certain links on the page with AJAX calls. To enable PJAX, you must create a PJAX object and call the register method. Until you call register, PJAX links will not be handled properly.
+PJAX is a technique for speeding up webpages by automatically replacing links or form submission with AJAX calls. This allows for clean, quick page refreshes via JavaScript, with a simple fallback if JavaScript is disabled.
 
-### PJAX.register()
+PJAX looks at the href of any link with the `data-roads-pjax="link"` attribute and turns it from a link that navigates to a new page into a link that checks a Road object and renders the response into a container.
 
-On page load, you will need to construct and register your PJAX handler. When you click certain links in the container element, PJAX will intercept the action and instead use roads to generate the new page content. Once the new html is ready, it will replace the innerHTML of the container_element.
-
-This allows for clean, quick page refreshes via JavaScript, with a safe, JavaScript free fallback (the links will still work as normal without JavaScript!).
-
+```HTML
+<div id="container"></div>
 ```
+
+```JavaScript
 var road = ...; // Incomplete. See the getting started section for more information about creating a road
 var pjax = new require('roads').PJAX(road, document.getElementById('container'), window);
 pjax.register();
 ```
 
+### PJAX.register()
+
+This function call enables PJAX on the current page.
+
+```JavaScript
+pjax.register();
+```
+
+### PJAX.registerAdditionalElement(element: *HTMLAnchorElement*)
+
+If you would like PJAX to work on links that are not within the container you must call this function. Additionally this function must be called before `register`
+
+```HTML
+<div id="container"></div>
+<a id="external-link" href="...">link</a>
+```
+
+```JavaScript
+var road = ...; // Incomplete. See the getting started section for more information about creating a road
+var pjax = new require('roads').PJAX(road, document.getElementById('container'), window);
+pjax.registerAdditionalElement(document.getElementById("external-link"));
+pjax.register();
+```
+
+
 ### PJAX Link Format
 
-If you would like a link to run via PJAX instead of a new page load, simply add the following data attribute
+If you would like a link to run via PJAX instead of a new page load, add the following data attribute to that link.
 
 `data-roads-pjax="link"`
 
@@ -629,9 +654,11 @@ e.g.
 
 `<a href="/home" data-roads-pjax="link">Home</a>`
 
+Note: The link must be within the container for this to work. If you want links outside the container to work you should use [registerAdditionalElement](#pjaxregisteradditionalelementelement-htmlanchorelement)
+
 ### PJAX Form Format
 
-If you would like a form to run via PJAX instead of a new page load, simply add the following data attributes
+If you would like a form to run via PJAX instead of a new page load, add the following data attributes to the relevant elements.
 
 Form attributes
 - `data-roads-pjax="form"`
@@ -650,35 +677,43 @@ e.g.
 
 ### PJAX Page titles
 
-To handle page titles you will need to add matching middleware to your client and server roads.
+There are a couple of steps required to get page titles working properly with PJAX.
+
+First you must use the `storeVals` middleware to manage your page title. In the following example we are storing a page title of `"Homepage"`.
+
+```JavaScript
+this.setVal('page-title', 'Homepage');
+```
+
+Second you should have your server-side rendering put this value into the `<title>` element of your layout. Check the typescript example for how that could work with the Handlebars templating engine.
+
+Third you need to create your `RoadsPJAX` object and configure it to look for your `page-title` value.
+
 
 #### PJAX Example
 ```JavaScript
-var roads = require('roads');
-var road = ...; // Incomplete. See the getting started section for more information about creating a road
+import { Road, RoadsPJAX } from 'roads';
 
-var pjax = new roads.RoadsPJAX(road);
-pjax.addTitleMiddleware();
+const road = ...; // Incomplete. See the getting started section for more information about creating a road
+
+const pjax = new RoadsPJAX(road);
+pjax.addTitleMiddleware('page-title');
 pjax.register(window, document.getElementById('container'));
 ```
 
-#### Server Example
-It's hard to provide a server example because everyones rendering style might be unique, but here's the basic idea (using `TITLE_KEY` from [the store vals middleware](#storevals).
-1. In your route call `this.setVal(TITLE_KEY);`
-2. In your layout populate the `<title>` tag via `this.getVal(TITLE_KEY)`
 
 ### Isomorphic PJAX tips
 
 There's a very easy pattern to follow to ensure sharing client and server code works successfully via PJAX. You can see this pattern in more detail in the examples folder
 
-1. Keep your backend only, and the mixed frontend-or-backend routes in separate files
-2. Have a "server" script that gets your backend server running, applying both backend and mixed routes
-3. Have a build script that compiles your frontend server, applying only the mixed routes.
-4. Keep your page layout (headers, footers, body, meta tags, etc.) in the "backend only" section.
-5. Keep your DB calls in the "backend only" section
-6. Make sure the mixed frontend-or-backend routes only ever make HTTP requests, or render HTML
+1. Any route that is unsafe to be run in the browser should be kept in separate files from the rest.
+2. Create two initalization scripts. One for starting the server, and one that will be compiled and loaded in the browser.
+3. Compile the browser script to be run in the browser. Currently I recommend Browserify, and that's how the typescript example works.
+4. Load the browser script on any server side page that should enable PJAX.
 
 ### FAQ
 
 **Why is this called roads?**
-The name Roads fit well with some of the earlier architectural decisions, and some of the more advanced ways of using this feature. Over time those features have become less prominent, but we kept the name. If you really want it to make sense, we can force a backronym. Let's say it means Requests organized and dispatched simply.
+The name Roads fit well with some of the earlier architectural decisions and some of the more advanced ways of using this feature. Over time those features have become less prominent but we kept the name.
+
+Not good enough for you? Fine, I'll make an awkward backronym. How about Requests Organized And Dispatched Simply. Ugh.

@@ -1,10 +1,9 @@
 
--1.2 Ensure the docs are correct (I left off at PJAX)
--1.3 Maybe rethink TITLE_KEY as something that is passed in.
--1.4 Ensure the doc blocks match the readme
--1.5 Explain how the typescript context works
--1.6 Document the build script thoroughly since the docs tell you to look at that. (Also link to the right file!!)
--1.7 Add javascript examples for every typescript example
+-1.1 Ensure the doc blocks match the readme
+-1.2 Explain how the typescript context works
+-1.3 Document the build script thoroughly since the docs tell you to look at that. (Also link to the right file!!)
+-1.4 Add javascript examples for every typescript example
+-1.5 Ensure the example still works with all the recent changes!!!
 1. See if we should pull anything over from this bootstrap (https://www.matuzo.at/blog/html-boilerplate/) or this boilerplate (https://html5boilerplate.com/) or vitejs.com
 2. Improve the client-build docs
 3. Fix server.ts "as {type}" by testing peer dependencies in roads server
