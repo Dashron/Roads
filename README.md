@@ -12,20 +12,20 @@ Roads is a simple web framework. It's similar to Express.js, but has some very i
 # Build Status
 ![Build status](https://travis-ci.org/Dashron/roads.svg?branch=master)
 
-# Index
-
+# Table of Contents
 - [Getting Started](#getting-started)
 - [Road](#road)
   - [new Road()](#new-road)
-  - [use(fn: *function*)](#roadusefn-function)
+  - [use(fn *Function*)](#usefn-function)
     - [Middleware](#middleware)
     - [How do I control the order of my middleware?](#how-do-i-control-the-order-of-my-middleware)
   - [request(method: *string*, url: *string*, body?: *string*, headers?: *object*)](#requestmethod-string-url-string-body-string-headers-object)
+    - [Context](#context)
 - [Response](#response)
   - [new Response(body: *string*, status?: *number*, headers?: *object*)](#new-responsebody-string-status-number-headers-object)
-  - [body](#body)
-  - [status](#status)
-  - [headers](#headers)
+  - [Body](#body)
+  - [Status](#status)
+  - [Headers](#headers)
 - [Bundled Middleware](#bundled-middleware)
   - [Cookies](#cookies)
   - [CORS](#cors)
@@ -34,19 +34,23 @@ Roads is a simple web framework. It's similar to Express.js, but has some very i
   - [Simple router](#simple-router)
     - [applyMiddleware(road: *Road*)](#applymiddlewareroad-road)
     - [addRoute(method: *string*, path: *string*, fn: *function*)](#addroutemethod-string-path-string-fn-function)
-    - [addRouteFile(filePath: *string*)](#addroutefilefull_path-string)
-  - [Middleware helpers](#middleware-helpers)
-  	- [Apply To Context](#applytocontextmiddleware)
-  	- [Reroute](#reroute)
-  	- [Store Vals](#storevals)
-- [PJAX(road: *Road*, containerElement *DomElement*, window: *Window*)](#pjaxroad-road-container_element-domelement-window-window))
-  - [register()](#pjaxregister)
+    - [addRouteFile(filePath: *string*)](#addroutefilefilepath-string)
+- [Middleware helpers](#middleware-helpers)
+  - [Apply To Context](#apply-to-context)
+  - [Reroute](#reroute)
+  - [Store Values](#store-values)
+- [PJAX(road: *Road*, containerElement: *DomElement*, window: *Window*)](#pjaxroad-road-containerelement-domelement-window-window)
+  - [PJAX.register()](#pjaxregister)
+  - [PJAX.registerAdditionalElement(element: *HTMLAnchorElement*)](#pjaxregisteradditionalelementelement-htmlanchorelement)
   - [PJAX Link Format](#pjax-link-format)
   - [PJAX Form Format](#pjax-form-format)
   - [PJAX Page titles](#pjax-page-titles)
-  - [Isomorphic PJAX tips](#isomorphic-pjax-tips)
+    - [PJAX Page Title Example](#pjax-page-title-example)
+- [Isomorphic PJAX tips](#isomorphic-pjax-tips)
+- [FAQ](#faq)
 
-## Getting Started
+
+# Getting Started
 
 Building a project with roads is very straightforward.
 
@@ -56,13 +60,13 @@ Building a project with roads is very straightforward.
     ```TypeScript
     import { Road } from 'roads';
     let road = new Road();
-	```
+    ```
 
     **JavaScript**
     ```JavaScript
     const { Road } = require('roads');
     let road = new Road();
-	```
+    ```
 
 2. Add code to the road
 
@@ -74,7 +78,7 @@ Building a project with roads is very straightforward.
     road.use(function (method, path, body, headers) {
         console.log('A ' + method + ' request was made to ' + path);
     });
-	```
+    ```
 
     **JavaScript**
     ```JavaScript
@@ -84,10 +88,10 @@ Building a project with roads is very straightforward.
     road.use(function (method, path, body, headers) {
         console.log('A ' + method + ' request was made to ' + path);
     });
-	```
+    ```
 
 3. Run your code.
-	- **HTTP**: The following examples show how easy it is to hook up an HTTP server with roads and roads-server, but you can also connect it to express.js or any other http server.
+    - **HTTP**: The following examples show how easy it is to hook up an HTTP server with roads and roads-server, but you can also connect it to express.js or any other http server.
 
      **TypeScript**
     ```TypeScript
@@ -96,7 +100,7 @@ Building a project with roads is very straightforward.
     const road = ...; // See steps 1 and 2 for road construction
     const server = new Server(road);
     server.listen(8080);
-	```
+    ```
 
     **JavaScript**
     ```JavaScript
@@ -105,7 +109,7 @@ Building a project with roads is very straightforward.
     const road = ...; // See steps 1 and 2 for road construction
     const server = new Server(road);
     server.listen(8080);
-	```
+    ```
 
  - **Direct requests**: The following examples show how you can manually trigger roads.
 
@@ -117,7 +121,7 @@ Building a project with roads is very straightforward.
         .then(function (response) {
             console.log(response);
         });
-	```
+    ```
 
     **JavaScript**
     ```JavaScript
@@ -127,7 +131,7 @@ Building a project with roads is very straightforward.
         .then(function (response) {
             console.log(response);
         });
-	```
+    ```
 
  - You can also use browserify to compile everything for use in the browser. Check out the file example/ts/build.ts for more details.
 
@@ -136,11 +140,11 @@ Now that you can interact with your ROad, continue reading the docs below for mo
 
 
 
-## Road
+# Road
 
 A Road is a container that holds an array of functions called the *request chain*. The *request chain* generally holds your routing logic and any pre or post processing instructions. You add to the *request chain* via the [use](#roadusefn-function) method, and execute the request chain with the [request](#requestmethod-string-url-string-body-string-headers-object) method.
 
-### new Road()
+## new Road()
 **Create a Road.**
 
 Creates your Road object.
@@ -158,7 +162,7 @@ let road = new Road();
 ```
 
 
-### Road.use(fn *Function*)
+## use(fn *Function*)
 **Add a custom function that will be executed with every request.**
 
 The use function can be called one or more times. Each time it is called, the function provided via the `fn` parameter will be added to the end of the *request chain* which is executed when you call `request`.
@@ -167,7 +171,7 @@ The use function can be called one or more times. Each time it is called, the fu
  -----|-----------------------------------------------------------------------|----------|---------------
  fn   | Function(method: *string*, url: *string*, body: *string*, headers: *object*, next: *function*) | yes      | This is the function that will be added to the end of the *request chain*. See the [Middleware](#middleware) below for more details on the function parameters.
 
-#### Middleware
+### Middleware
 
 Each function in the request chain is called middleware. Each middleware function must match the following function signature.
 
@@ -222,24 +226,24 @@ road.use(function (method, url, body, headers, next) {
     return next()
         // Catch any errors that are thrown by the resources
         .catch ((err) => {
-			console.err(err);
+            console.err(err);
             // Wrap the errors in response objects.
             return new roads.Response('Unknown error', 500);
         });
 });
 ```
 
-#### How do I control the order of my middleware?
+### How do I control the order of my middleware?
 
 Within your middleware function you can add logic that happens before you continue down the request chain, and after the request chain has finished executing.
 
 ```JavaScript
 road.use(function (method, url, body, params, next) {
-	console.log('This happens at the start of a request, before we continue down the request chain');
-	return next()
-		.then((response) => {
-			console.log('This happens later, after the request chain resolves');
-		});
+    console.log('This happens at the start of a request, before we continue down the request chain');
+    return next()
+        .then((response) => {
+            console.log('This happens later, after the request chain resolves');
+        });
 });
 ```
 
@@ -256,7 +260,7 @@ the second middleware          /    the second middleware
 
 As you add more functions to the request chain, it lengthens each arm of the U.
 
-### request(method: *string*, url: *string*, body?: *string*, headers?: *object*)
+## request(method: *string*, url: *string*, body?: *string*, headers?: *object*)
 **Locate and execute the resource method associated with the request parameters.**
 
 
@@ -277,7 +281,7 @@ promise.catch((error) => {
 });
 ```
 
-##### Context
+### Context
 Each middleware function has access to a request context through `this`. This context will be different for each request, but identical for each middleware in a *request chain*.
 
 **Note:** Do not use arrow functions if you want to interact with `this`. You will not have access to the context if you use arrow functions, and it may have unintended side effects.
@@ -293,7 +297,7 @@ road.use(function (method, url, body, headers) {
 });
 
 road.request('GET', '/me').then((response) => {
-	// This will log "hello!"
+    // This will log "hello!"
     console.log(response.body);
 });
 ```
@@ -310,12 +314,12 @@ road.use(function (method, url, body, headers) {
 
 You can also use the [StoreValsMiddleware](#storevalsmiddleware) to ensure you don't have conflicts with other middleware.
 
-## Response
+# Response
 
 The response object contains all of the information you want to send to the client. This includes the body, status code and all applicable headers.
 
 
-### new Response(body: *string*, status: *number*, headers: *object*)
+## new Response(body: *string*, status?: *number*, headers?: *object*)
 **Constructor**
 Create a response object.
 
@@ -330,32 +334,32 @@ name        | type    | description
 new Response("Hello!", 200, {"last-modified":"2014-04-27 00:00:00"});
 ```
 
-### Body
+## Body
 **The raw JavaScript object returned by the request**
 
 ```JavaScript
 console.log(response.body);
 ```
 
-### Status
+## Status
 **The HTTP status returned by the request**
 
 ```JavaScript
 console.log(response.status);
 ```
 
-### Headers
+## Headers
 **A JavaScript object of all response headers. The value might be a string or an array of strings**
 
 ```JavaScript
 console.log(response.headers);
 ```
 
-## Bundled Middleware
+# Bundled Middleware
 
 Roads comes bundled with a handfull of middleware functions.
 
-### Cookies
+## Cookies
 **Middleware to add some cookie management functions**
 
 When you use the cookie middleware it adds two methods to the request context.
@@ -381,20 +385,20 @@ var road = new Road();
 road.use(CookieMiddleware.serverMiddleware);
 
 road.use<CookieContext>(function (method, path, body, headers, next) {
-	console.log(this.getCookies());
+    console.log(this.getCookies());
 
-	this.setCookie('auth', 12345, {
-		domain: 'dashron.com'
-	});
+    this.setCookie('auth', 12345, {
+        domain: 'dashron.com'
+    });
 
-	console.log(this.getCookies());
+    console.log(this.getCookies());
 
-	// The cookie middleware will automatically apply the Set-Cookies header to this response
-	return new Response('Hello!', 200);
+    // The cookie middleware will automatically apply the Set-Cookies header to this response
+    return new Response('Hello!', 200);
 });
 ```
 
-### CORS
+## CORS
 **Middleware to Apply proper cors headers**
 
 Sets up everything you need for your server to properly respond to CORS requests.
@@ -420,7 +424,7 @@ road.use(CorsMiddleware.build({
 }));
 ```
 
-### Parsing request bodies
+## Parsing request bodies
 **Middleware to parse the request body**
 
 This middleware looks at the Content-Type header, and uses that information to attempt to parse the incoming request body string. The body will be applied to the context field `body`
@@ -436,18 +440,18 @@ var road = new Road();
 road.use(ParseBodyMiddleware.middleware);
 
 road.use<ParseBodyContext<{
-	name: string,
-	description?: string
+    name: string,
+    description?: string
 }>>(function (method, url, body, headers) {
     // body === string representation of the input. In this example, '{"name":"dashron"}'
-	// this.body === parsed version of that representation. In this example, {"name": "dashron"}
-	// this.body.name will be properly identified by typescript due to the generic BodyType passed to ParseBodyContext. In this example, "dashron"
+    // this.body === parsed version of that representation. In this example, {"name": "dashron"}
+    // this.body.name will be properly identified by typescript due to the generic BodyType passed to ParseBodyContext. In this example, "dashron"
 });
 
 road.request('POST', '/users', '{"name":"dashron"}', {"content-type": "application/json"});
 ```
 
-### Remove trailing slash
+## Remove trailing slash
 **Middleware to kill the trailing slash on http requests**
 
 If used, any url that ends with a trailing slash will return a response object redirecting the client to the same url without the trailing slash (302 redirect with Location: [url_without_slash])
@@ -459,7 +463,7 @@ var road = new Road();
 road.use(RemoveTrailingSlashMiddleware.middleware);
 ```
 
-### Simple router
+## Simple router
 This is a simple router middleware for roads. It allows you to easily attach functionality to HTTP methods and paths.
 
 Here's how you use it.
@@ -468,7 +472,7 @@ Here's how you use it.
 2. Create your Router
 
 ```JavaScript
-	import { SimpleRouterMiddleware } from 'roads';
+    import { SimpleRouterMiddleware } from 'roads';
     let router = new SimpleRouterMiddleware.SimpleRouter(road);
 ```
 
@@ -493,10 +497,10 @@ Here's how you use it.
     });
 ```
 
-#### applyMiddleware(road: *road*)
+### applyMiddleware(road: *Road*)
 If you don't provide a road to the SimpleRouter constructor, your routes will not be executed. If you have reason not to assign the road off the bat, you can assign it later with this function.
 
-#### addRoute(method: *string*, path: *string*, fn: *function*)
+### addRoute(method: *string*, path: *string*, fn: *function*)
 
 This is where you want to write the majority of your webservice. The `fn` parameter should contain the actions you want to perform when a certain `path` and HTTP `method` are accessed via the `road` object.
 
@@ -530,7 +534,7 @@ Any variables will be added to the route's request url object under the "args" o
 
 TODO: More details on typescript request context. In the meanwhile check out example/ts/src/routes/applyPublicRoutes.ts for an example.
 
-#### addRouteFile(filePath: *string*)
+### addRouteFile(filePath: *string*)
 Add an entire file worth of routes.
 
 - The file should be a node module that exposes an object.
@@ -548,11 +552,11 @@ Example File:
 }
 ```
 
-### Middleware helpers
+# Middleware helpers
 
 The documentation below covers additional generic middleware that are useful when creating new middleware, or other advanced topics.
 
-#### ApplyToContext
+## Apply To Context
 **Middleware to apply a predefined value to the request context**
 
 ```JavaScript
@@ -564,7 +568,7 @@ road.use(function (method, url, body, headers) {
 });
 ```
 
-#### Reroute
+## Reroute
 **Middleware that offers a function in the request context that allows you to easily interact with a road**
 
 In the following example, road and APIRoad are two different Road objects.
@@ -583,7 +587,7 @@ road.use(function (method, url, body, headers) {
 });
 ```
 
-#### storeVals
+## Store Values
 **Middleware that helps you save arbitrary data inside of a request context**
 
 This middleware adds two functions, `setVal(key, val)` and `getVal(key)` for storing and retrieving arbitrary values.
@@ -593,16 +597,16 @@ The middleware also exposes a `TITLE_KEY` value for use with PJAX for assigning 
 import { TITLE_KEY }, StoreValsMiddleware from 'roads/middleware/storeVals';
 
 road.use(function (method, url, body, headers, next) {
-	return next().then((response) => {
-		console.log(this.getVal(TITLE_KEY));
-	});
+    return next().then((response) => {
+        console.log(this.getVal(TITLE_KEY));
+    });
 });
 
 road.use(StoreValsMiddleware.middleware);
 ```
 
 
-## PJAX(road: *Road*, containerElement: *DomElement*, window: *Window*)
+# PJAX(road: *Road*, containerElement: *DomElement*, window: *Window*)
 **A helper object to easily enable PJAX on your website using roads**
 
 PJAX is a technique for speeding up webpages by automatically replacing links or form submission with AJAX calls. This allows for clean, quick page refreshes via JavaScript, with a simple fallback if JavaScript is disabled.
@@ -619,7 +623,7 @@ var pjax = new require('roads').PJAX(road, document.getElementById('container'),
 pjax.register();
 ```
 
-### PJAX.register()
+## PJAX.register()
 
 This function call enables PJAX on the current page.
 
@@ -627,7 +631,7 @@ This function call enables PJAX on the current page.
 pjax.register();
 ```
 
-### PJAX.registerAdditionalElement(element: *HTMLAnchorElement*)
+## PJAX.registerAdditionalElement(element: *HTMLAnchorElement*)
 
 If you would like PJAX to work on links that are not within the container you must call this function. Additionally this function must be called before `register`
 
@@ -644,7 +648,7 @@ pjax.register();
 ```
 
 
-### PJAX Link Format
+## PJAX Link Format
 
 If you would like a link to run via PJAX instead of a new page load, add the following data attribute to that link.
 
@@ -656,7 +660,7 @@ e.g.
 
 Note: The link must be within the container for this to work. If you want links outside the container to work you should use [registerAdditionalElement](#pjaxregisteradditionalelementelement-htmlanchorelement)
 
-### PJAX Form Format
+## PJAX Form Format
 
 If you would like a form to run via PJAX instead of a new page load, add the following data attributes to the relevant elements.
 
@@ -675,7 +679,7 @@ e.g.
     </form>
 ```
 
-### PJAX Page titles
+## PJAX Page titles
 
 There are a couple of steps required to get page titles working properly with PJAX.
 
@@ -690,7 +694,7 @@ Second you should have your server-side rendering put this value into the `<titl
 Third you need to create your `RoadsPJAX` object and configure it to look for your `page-title` value.
 
 
-#### PJAX Example
+### PJAX Page Title Example
 ```JavaScript
 import { Road, RoadsPJAX } from 'roads';
 
@@ -702,7 +706,7 @@ pjax.register(window, document.getElementById('container'));
 ```
 
 
-### Isomorphic PJAX tips
+# Isomorphic PJAX tips
 
 There's a very easy pattern to follow to ensure sharing client and server code works successfully via PJAX. You can see this pattern in more detail in the examples folder
 
@@ -711,7 +715,7 @@ There's a very easy pattern to follow to ensure sharing client and server code w
 3. Compile the browser script to be run in the browser. Currently I recommend Browserify, and that's how the typescript example works.
 4. Load the browser script on any server side page that should enable PJAX.
 
-### FAQ
+# FAQ
 
 **Why is this called roads?**
 The name Roads fit well with some of the earlier architectural decisions and some of the more advanced ways of using this feature. Over time those features have become less prominent but we kept the name.
