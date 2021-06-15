@@ -147,7 +147,7 @@ A Road is a container that holds an array of functions called the *request chain
 ## new Road()
 **Create a Road.**
 
-Creates your Road object.
+Creates a new Road object.
 
 **TypeScript**
 ```TypeScript
@@ -167,9 +167,9 @@ let road = new Road();
 
 The use function can be called one or more times. Each time it is called, the function provided via the `fn` parameter will be added to the end of the *request chain* which is executed when you call `request`.
 
- name | type                                                                  | required | description
- -----|-----------------------------------------------------------------------|----------|---------------
- fn   | Function(method: *string*, url: *string*, body: *string*, headers: *object*, next: *function*) | yes      | This is the function that will be added to the end of the *request chain*. See the [Middleware](#middleware) below for more details on the function parameters.
+ | name | type                                                                                           | required | description                                                                                                                                                     |
+ | ---- | ---------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+ | fn   | Function(method: *string*, url: *string*, body: *string*, headers: *object*, next: *function*) | yes      | This is the function that will be added to the end of the *request chain*. See the [Middleware](#middleware) below for more details on the function parameters. |
 
 ### Middleware
 
@@ -178,13 +178,13 @@ Each function in the request chain is called middleware. Each middleware functio
 **function (method: *string*, url: *string*, body: *string*, headers: *object*, next: *next*): Promise<Response | string>**
 
 Parameters
-name     | type                                   | description
- --------|----------------------------------------|---------------
- method  | string                                 | The request's HTTP method
- url     | string                                 | The request's URL. The `SimpleRouter` is included to help run different code for different URLs.
- body    | string                                 | The request's body (as a string). To parse this check out the `parseBodyMiddleware`
- headers | object                                 | The request's headers. This is an object of strings or arrays of strings.
- next    | function(): Promise<Response | String> | The next step of the *request chain*. If there are no more steps in the *request chain* this does nothing. This method will always return a promise, which resolves to a `Response` object, or a string.
+| name    | type                         | description                                                                                      |
+| ------- | ---------------------------- | ------------------------------------------------------------------------------------------------ |
+| method  | string                       | The request's HTTP method                                                                        |
+| url     | string                       | The request's URL. The `SimpleRouter` is included to help run different code for different URLs. |
+| body    | string                       | The request's body (as a string). To parse this check out the `parseBodyMiddleware`              |
+| headers | object                       | The request's headers. This is an object of strings or arrays of strings.                        |
+| next    | function(): Promise<Response | String>                                                                                          | The next step of the *request chain*. If there are no more steps in the *request chain* this does nothing. This method will always return a promise, which resolves to a `Response` object, or a string. |
 
 Each middleware function must return a promise that resolves to a [Response](#response) object or a string. If you return a string it will be transformed into a response object using the default status code (200) and no headers.
 
@@ -323,11 +323,11 @@ The response object contains all of the information you want to send to the clie
 **Constructor**
 Create a response object.
 
-name        | type    | description
- -----------|---------|---------------
- body       | string  | The body of the response.
- status     | number  | The HTTP Status code.
- headers    | object  | All the headers. The value may be a string or an array of strings
+| name    | type   | description                                                       |
+| ------- | ------ | ----------------------------------------------------------------- |
+| body    | string | The body of the response.                                         |
+| status  | number | The HTTP Status code.                                             |
+| headers | object | All the headers. The value may be a string or an array of strings |
 
 
 ```JavaScript
@@ -405,14 +405,14 @@ Sets up everything you need for your server to properly respond to CORS requests
 
 The options object supports the following properties.
 
-name                 | type                               | description
----------------------|------------------------------------|---------------
-validOrigins         | array                              | An array of origin urls that can send requests to this API
-supportsCredentials  | boolean                            | A boolean, true if you want this endpoint to receive cookies
-responseHeaders      | array                              | An array of valid HTTP response headers
-requestHeaders       | array                              | An array of valid HTTP request headers
-validMethods         | array                              | An array of valid HTTP methods
-cacheMaxAge          | number                             | The maximum age to cache the cors information
+| name                | type    | description                                                  |
+| ------------------- | ------- | ------------------------------------------------------------ |
+| validOrigins        | array   | An array of origin urls that can send requests to this API   |
+| supportsCredentials | boolean | A boolean, true if you want this endpoint to receive cookies |
+| responseHeaders     | array   | An array of valid HTTP response headers                      |
+| requestHeaders      | array   | An array of valid HTTP request headers                       |
+| validMethods        | array   | An array of valid HTTP methods                               |
+| cacheMaxAge         | number  | The maximum age to cache the cors information                |
 
 ```JavaScript
 import { CorsMiddleware, Road } from 'roads';

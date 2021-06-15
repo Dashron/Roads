@@ -38,36 +38,36 @@ export default class Road {
 	/**
 	 * Road Constructor
 	 *
-	 * Creates a new Road class. This function does not accept any parameters!
+	 * Creates a new Road object
 	 */
 	constructor () {
 		this._request_chain = [];
 	}
 
 	/**
-	 * Add one or many custom functions to be executed along with every request.
+	 * The use function can be called one or more times. Each time it is called, the function provided via the `fn` parameter will be added to the end of the *request chain* which is executed when you call `request`.
 	 *
-	 * The functions added will be executed in the order they were added. Each handler must
-	 * 		execute the "next" parameter if it wants to continue executing the chain.
+	 *  | name | type                                                                                           | required | description                                                                                                                                                     |
+	 *  | ---- | ---------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+	 *  | fn   | Function(method: *string*, url: *string*, body: *string*, headers: *object*, next: *function*) | yes      | This is the function that will be added to the end of the *request chain*. See the [Middleware](#middleware) below for more details on the function parameters. |
 	 *
-	 * name | type                                                                  | required | description
-	 * -----|-----------------------------------------------------------------------|----------|---------------
-	 * fn   | Function(*string* method, *string* url,*string* body,*object* headers,*function* next) | yes      | Will be called any time a request is made on the object.
+	 * *Middleware*
+	 * Each function in the request chain is called middleware. Each middleware function must match the following function signature.
 	 *
-	 * This will be called for every request, even for routes that do not exist. The callback will be executed with the following five parameters :
+	 * **function (method: *string*, url: *string*, body: *string*, headers: *object*, next: *next*): Promise<Response | string>**
 	 *
-	 * Callback
-	 * **function (*string* method, *string* url, *string* body, *Object* headers, *Function* next)**
+	 * Parameters
+	 * | name    | type                         | description                                                                                      |
+	 * | ------- | ---------------------------- | ------------------------------------------------------------------------------------------------ |
+	 * | method  | string                       | The request's HTTP method                                                                        |
+	 * | url     | string                       | The request's URL. The `SimpleRouter` is included to help run different code for different URLs. |
+	 * | body    | string                       | The request's body (as a string). To parse this check out the `parseBodyMiddleware`              |
+	 * | headers | object                       | The request's headers. This is an object of strings or arrays of strings.                        |
+	 * | next    | function(): Promise<Response | String>                                                                                          | The next step of the *request chain*. If there are no more steps in the *request chain* this does nothing. This method will always return a promise, which resolves to a `Response` object, or a string. |
 	 *
-	 * name     | type                               | description
-	 * --------|------------------------------------|---------------
-	 * method  | string                             | The HTTP method that was provided to the request
-	 * url     | string                             | The URL that was provided to the request
-	 * body    | string                             | The body that was provided to the request
-	 * headers | object                             | The headers that were provided to the request
-	 * next    | function                           | The next step of the handler chain. If there are no more custom handlers assigned, next will resolve to the [resource method](#resource-method) that the router located. This method will always return a promise.
+	 * Each middleware function must return a promise that resolves to a [Response](#response) object or a string. If you return a string it will be transformed into a response object using the default status code (200) and no headers.
 	 *
-	 * If the callback does not return a [response](#roadsresponse) object, it will be wrapped in a [response](#roadsresponse) object with the default status code of 200.
+	 * *See the readme for more information*
 	 *
 	 * @param {Function} fn - A callback (function or async function) that will be executed every time a request is made.
 	 * @returns {Road} this road object. Useful for chaining use statements.
