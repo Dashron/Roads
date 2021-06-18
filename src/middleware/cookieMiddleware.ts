@@ -3,37 +3,32 @@
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
- * Exposes a single middleware function to help with cookies
- */
-
-/**
- * Middleware to make it easier for roads to work with cookies.
- *
- * Any parsed cookies from the request header are added as key value pairs on the
- * request context under the "cookie" property.
- *
- * If you want to set new cookies, helper methods have been added onto the request context's
- * Response object. If you create a new Response object using new this.Response, it will receive
- * a `setCookie` method for updating cookies, and a `getCookieHeader` method for retrieval.
- *
- * The `setCookie` method uses the [cookie module[(https://github.com/jshttp/cookie). This module
- * accepts the following cookie options
- *
- * - path
- * - expires
- * - maxAge
- * - domain
- * - secure
- * - httpOnly
- * - firstPartyOnly
- *
+ * Middleware for managing cookies
  */
 import * as cookie from 'cookie';
 import { Context, Middleware } from '../core/road';
 import Response from '../core/response';
 
+/**
+ * The Cookie Context represents the request context when either the
+ * 	server or client middleware are used. This context includes two functions.
+ *
+ * When you're using typescript you can pass this context to one of
+ * 	the middleware or route's generics to get proper typing on the request context.
+ *
+ * See the readme for examples.
+ */
 export interface CookieContext extends Context {
+	/**
+	 * Calling this function will store your new cookies.
+	 * 	The parameters directly map to the [cookie](https://github.com/jshttp/cookie) module.
+	 */
 	setCookie: (name: string, value?: string, options?: cookie.CookieSerializeOptions) => void,
+	/**
+	 * Returns an object with all the cookies. It defaults to
+	 * 	all the request cookies, but merges anything applied via
+  	 * 	setCookie on top (i.e. setCookie will override the request cookie)
+	 */
 	getCookies: () => {[x: string]: string}
 	newCookies: NewCookies
 }
@@ -44,6 +39,14 @@ interface NewCookies {[key: string]: {
 	options: cookie.CookieSerializeOptions
 }}
 
+/**
+ * Translates all the cookies that have been set during this
+ * 	request into a collection of key:value pairs. All the additional
+ * 	metadata will be dropped.
+ *
+ * @param newCookies
+ * @returns
+ */
 function getCookieValues(newCookies: NewCookies): SetCookies {
 	const cookies: SetCookies = {};
 
@@ -57,6 +60,18 @@ function getCookieValues(newCookies: NewCookies): SetCookies {
 	return cookies;
 }
 
+/**
+ * Middleware to attach to your road via `road.use`.
+ * 	This middleware will add any new cookies to the response object
+ * 	and thus is most useful server-side
+ *
+ * @param route_method
+ * @param route_path
+ * @param route_body
+ * @param route_headers
+ * @param next
+ * @returns
+ */
 export const serverMiddleware: Middleware<CookieContext> =
 function (route_method, route_path, route_body, route_headers, next) {
 	let cookies: SetCookies = {};
@@ -69,7 +84,7 @@ function (route_method, route_path, route_body, route_headers, next) {
 			Array.isArray(route_headers.cookie) ? route_headers.cookie.join('; ') : route_headers.cookie);
 	}
 
-	// Add a cookie method to the middleware context
+	// Add a setCookie method to the middleware context
 	this.setCookie = function (name, value, options?) {
 		this.newCookies[name] = {
 			value: value ?? '',
@@ -77,7 +92,7 @@ function (route_method, route_path, route_body, route_headers, next) {
 		};
 	};
 
-	// Return the inital cookies with any new cookies merged on top.
+	// adds a getCookies method to the middleware context
 	this.getCookies = () => {
 		return {...cookies, ...getCookieValues(this.newCookies)};
 	};
@@ -111,6 +126,14 @@ function (route_method, route_path, route_body, route_headers, next) {
 	});
 };
 
+/**
+ * Creates a middleware function to attach to your road via `road.use`.
+ * 	This middleware will add the cookie to document.cookie,
+ * 	so it's most useful to be used client side
+ *
+ * @param pageDocument The pages Document object
+ * @returns Middleware
+ */
 export const buildClientMiddleware: (pageDocument: Document) => Middleware<CookieContext> = (pageDocument) => {
 
 	return function (route_method, route_path, route_body, route_headers, next) {

@@ -12,6 +12,13 @@ import * as contentTypeModule from 'content-type';
 import * as qsModule from 'querystring';
 import { OutgoingHeaders } from '../core/response';
 
+/**
+ * When using typescript you can pass this when adding middleware or
+ * 	routes to see proper typing on `this`.
+ *
+ * This context specifically adds one variable `body` which will match
+ * 	the structure passed to `BodyType`.
+ */
 export interface ParseBodyContext<BodyType> extends Context {
 	body: BodyType
 }

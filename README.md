@@ -35,6 +35,7 @@ Roads is a simple web framework. It's similar to Express.js, but has some very i
 			- [getCookies()](#getcookies)
 	- [CORS](#cors)
 	- [Parsing request bodies](#parsing-request-bodies)
+		- [Parse Body Context](#parse-body-context)
 	- [Remove trailing slash](#remove-trailing-slash)
 	- [Simple router](#simple-router)
 		- [applyMiddleware(road: *Road*)](#applymiddlewareroad-road)
@@ -372,6 +373,9 @@ Roads comes bundled with a handfull of middleware functions.
 The cookie middleware object has three important exported functions
 
 ### serverMiddleware
+Middleware to attach to your road via `road.use`.
+
+This middleware will add any new cookies to the response object and thus is most useful server-side.
 
 ```JavaScript
 import { CookieMiddleware, Response, Road } from 'roads';
@@ -381,16 +385,19 @@ road.use(CookieMiddleware.serverMiddleware);
 ```
 
 ### buildClientMiddleware(pageDocumenet: *Document*)
+Creates a middleware function to attach to your road via `road.use`. This middleware will add the cookie to document.cookie, so it's most useful to be used client side
 
 ```JavaScript
 import { CookieMiddleware, Response, Road } from 'roads';
 
 var road = new Road();
-road.use(CookieMiddleware.buildClientMiddleware(document));
+road.use(CookieMiddleware.buildClientMiddleware(Document));
 ```
 
 ### Cookie Context
-The cookie middleware adds two functions to the request context context.
+The Cookie Context represents the request context when either the server or client middleware are used. This context includes two functions.
+
+When you're using typescript you can pass this context to one of the middleware or route's generics to get proper typing on the request context.
 
 #### setCookie(name: *string*, value?: *string*, options?: *object*)
 Calling this function will store your new cookies. The parameters directly map to the [cookie](https://github.com/jshttp/cookie) module.
@@ -463,10 +470,23 @@ road.use(CorsMiddleware.build({
 ## Parsing request bodies
 **Middleware to parse the request body**
 
-This middleware looks at the Content-Type header, and uses that information to attempt to parse the incoming request body string. The body will be applied to the context field `body`
+This middleware looks at the Content-Type header and uses that information to attempt to parse the incoming request body string. The body will be applied to the context field `body`.
+
+```JavaScript
+import { ParseBodyContext } from 'roads/types/middleware/parseBody';
+import { ParseBodyMiddleware, Response, Road } from 'roads';
+
+var road = new Road();
+road.use(ParseBodyMiddleware.middleware);
+```
+
+
+### Parse Body Context
 
 `ParseBodyContext<BodyType>`
-This context ensures that
+When using typescript you can pass this when adding middleware or routes to see proper typing on `this`.
+
+This context specifically adds one variable `body` which will match the structure passed to the `ParseBodyContext` via the `BodyType` generic.
 
 ```JavaScript
 import { ParseBodyContext } from 'roads/types/middleware/parseBody';
