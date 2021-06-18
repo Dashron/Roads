@@ -84,10 +84,10 @@ export default class Road {
 	 *
 	 * Execute the resource method associated with the request parameters.
 	 *
-	 * This function will locate the appropriate [resource method](#resource-method) for the
-	 * 		provided HTTP Method and URL, execute it and return a
-	 * 		[thenable (Promises/A compatible promise)](http://wiki.commonjs.org/wiki/Promises/A).
-	 * 		The thenable will always resolve to a [Response](#roadsresponse) object.
+	 * This function will execute the *request chain* in the order they were assigned via
+	 * 	[use](#roadusefunction-fn) and return a Promise that resolves to a [Response](#response)
+	 *
+	 * Make sure to catch any errors in the promise!
 	 *
 	 * @param {string} method - HTTP request method
 	 * @param {string} url - HTTP request url

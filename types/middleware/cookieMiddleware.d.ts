@@ -43,5 +43,5 @@ interface NewCookies {
     };
 }
 export declare const serverMiddleware: Middleware<CookieContext>;
-export declare const clientMiddleware: (pageDocument: Document) => Middleware<CookieContext>;
+export declare const buildClientMiddleware: (pageDocument: Document) => Middleware<CookieContext>;
 export {};

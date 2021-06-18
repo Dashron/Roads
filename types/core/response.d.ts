@@ -3,7 +3,8 @@
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
- * Provides a simple class to manage HTTP responses
+ * The response object contains all of the information you want to send to the client.
+ * 	This includes the body, status code and all applicable headers.
  */
 export interface OutgoingHeaders {
     [x: string]: string | Array<string> | undefined;

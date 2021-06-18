@@ -19,8 +19,8 @@ Roads is a simple web framework. It's similar to Express.js, but has some very i
 	- [use(fn *Function*)](#usefn-function)
 		- [Middleware](#middleware)
 		- [How do I control the order of my middleware?](#how-do-i-control-the-order-of-my-middleware)
-	- [request(method: *string*, url: *string*, body?: *string*, headers?: *object*)](#requestmethod-string-url-string-body-string-headers-object)
 		- [Context](#context)
+	- [request(method: *string*, url: *string*, body?: *string*, headers?: *object*)](#requestmethod-string-url-string-body-string-headers-object)
 - [Response](#response)
 	- [new Response(body: *string*, status?: *number*, headers?: *object*)](#new-responsebody-string-status-number-headers-object)
 	- [Body](#body)
@@ -28,6 +28,11 @@ Roads is a simple web framework. It's similar to Express.js, but has some very i
 	- [Headers](#headers)
 - [Bundled Middleware](#bundled-middleware)
 	- [Cookies](#cookies)
+		- [serverMiddleware](#servermiddleware)
+		- [buildClientMiddleware(pageDocumenet: *Document*)](#buildclientmiddlewarepagedocumenet-document)
+		- [Cookie Context](#cookie-context)
+			- [setCookie(name: *string*, value?: *string*, options?: *object*)](#setcookiename-string-value-string-options-object)
+			- [getCookies()](#getcookies)
 	- [CORS](#cors)
 	- [Parsing request bodies](#parsing-request-bodies)
 	- [Remove trailing slash](#remove-trailing-slash)
@@ -260,26 +265,6 @@ the second middleware          /    the second middleware
 
 As you add more functions to the request chain, it lengthens each arm of the U.
 
-## request(method: *string*, url: *string*, body?: *string*, headers?: *object*)
-**Locate and execute the resource method associated with the request parameters.**
-
-
-This function will execute the *request chain* in the order they were assigned via  [use](#roadusefunction-fn) and return a Promise that resolves to a [Response](#response)
-
-Make sure to catch any errors in the promise!
-
-
-```JavaScript
-let promise = road.request('GET', '/users/dashron');
-
-promise.then((response) => {
-    console.log(response);
-});
-
-promise.catch((error) => {
-    // handle errors
-});
-```
 
 ### Context
 Each middleware function has access to a request context through `this`. This context will be different for each request, but identical for each middleware in a *request chain*.
@@ -313,6 +298,28 @@ road.use(function (method, url, body, headers) {
 ```
 
 You can also use the [StoreValsMiddleware](#storevalsmiddleware) to ensure you don't have conflicts with other middleware.
+
+## request(method: *string*, url: *string*, body?: *string*, headers?: *object*)
+**Locate and execute the resource method associated with the request parameters.**
+
+This function will execute the *request chain* in the order they were assigned via  [use](#roadusefunction-fn) and return a Promise that resolves to a [Response](#response)
+
+The parameters are all the standard HTTP request parameters.
+
+Make sure to catch any errors in the promise!
+
+
+```JavaScript
+let promise = road.request('GET', '/users/dashron');
+
+promise.then((response) => {
+    console.log(response);
+});
+
+promise.catch((error) => {
+    // handle errors
+});
+```
 
 # Response
 
@@ -362,20 +369,35 @@ Roads comes bundled with a handfull of middleware functions.
 ## Cookies
 **Middleware to add some cookie management functions**
 
-When you use the cookie middleware it adds two methods to the request context.
+The cookie middleware object has three important exported functions
 
-`this.setCookie(name, value, options)`
+### serverMiddleware
+
+```JavaScript
+import { CookieMiddleware, Response, Road } from 'roads';
+
+var road = new Road();
+road.use(CookieMiddleware.serverMiddleware);
+```
+
+### buildClientMiddleware(pageDocumenet: *Document*)
+
+```JavaScript
+import { CookieMiddleware, Response, Road } from 'roads';
+
+var road = new Road();
+road.use(CookieMiddleware.buildClientMiddleware(document));
+```
+
+### Cookie Context
+The cookie middleware adds two functions to the request context context.
+
+#### setCookie(name: *string*, value?: *string*, options?: *object*)
 Calling this function will store your new cookies. The parameters directly map to the [cookie](https://github.com/jshttp/cookie) module.
 
 To remove a cookie, set the value to null.
 
 These cookies will be automatically applied to the response after your request
-
-`this.getCookies()`
-Returns an object with all the cookies. It defaults to all the request cookies, but merges anything applied via setCookie on top (i.e. setCookie will override the request cookie)
-
-`CookieContext`
-If you use the CookieContext (as shown in the example below) it will ensure that typescript is aware of the `setCookie` and `getCookie` methods on the request context.
 
 ```JavaScript
 import { CookieContext } from 'roads/types/middleware/cookieMiddleware';
@@ -391,10 +413,24 @@ road.use<CookieContext>(function (method, path, body, headers, next) {
         domain: 'dashron.com'
     });
 
-    console.log(this.getCookies());
-
     // The cookie middleware will automatically apply the Set-Cookies header to this response
     return new Response('Hello!', 200);
+});
+```
+
+
+#### getCookies()
+Returns an object with all the cookies. It defaults to all the request cookies, but merges anything applied via setCookie on top (i.e. setCookie will override the request cookie)
+
+```JavaScript
+import { CookieContext } from 'roads/types/middleware/cookieMiddleware';
+import { CookieMiddleware, Response, Road } from 'roads';
+
+var road = new Road();
+road.use(CookieMiddleware.serverMiddleware);
+
+road.use<CookieContext>(function (method, path, body, headers, next) {
+    console.log(this.getCookies());
 });
 ```
 

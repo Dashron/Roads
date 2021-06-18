@@ -18,11 +18,11 @@ road.use(function (method, url, body, headers, next) {
 });
 
 const pjax = new RoadsPJAX(road, document.getElementById('container') as HTMLAnchorElement, window);
-pjax.addTitleMiddleware();
+pjax.addTitleMiddleware('roads-title');
 road.use(emptyTo404);
-road.use(ParseBodyMiddleware.parseBodyMiddleware);
+road.use(ParseBodyMiddleware.middleware);
 // Todo: get this set up properly, then check cokie and stor val on the server
-road.use(CookieMiddleware.clientCookieMiddleware(document));
+road.use(CookieMiddleware.buildClientMiddleware(document));
 pjax.register();
 pjax.registerAdditionalElement(document.getElementById('home') as HTMLAnchorElement);
 const router = new SimpleRouterMiddleware.SimpleRouter(road);

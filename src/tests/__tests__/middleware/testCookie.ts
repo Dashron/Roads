@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { serverMiddleware, clientMiddleware } from '../../../middleware/cookieMiddleware';
+import { serverMiddleware, buildClientMiddleware } from '../../../middleware/cookieMiddleware';
 
 import { CookieContext } from '../../../middleware/cookieMiddleware';
 import Response from '../../../core/response';
@@ -73,7 +73,7 @@ describe('cookie tests', () => {
 			cookie: 'foo=bar;abc=def'
 		};
 
-		clientMiddleware(testDocument as Document).call(context, 'a', 'b', 'c', {
+		buildClientMiddleware(testDocument as Document).call(context, 'a', 'b', 'c', {
 
 		}, function () { return Promise.resolve('test'); });
 
@@ -96,7 +96,7 @@ describe('cookie tests', () => {
 			return Promise.resolve('test');
 		};
 
-		await clientMiddleware(testDocument as Document).call(context, 'a', 'b', 'c', {}, next.bind(context));
+		await buildClientMiddleware(testDocument as Document).call(context, 'a', 'b', 'c', {}, next.bind(context));
 
 		expect(testDocument.cookie).toEqual('foo=bar');
 	});
@@ -121,7 +121,7 @@ describe('cookie tests', () => {
 			cookie: 'abc=def'
 		};
 
-		await clientMiddleware(testDocument as Document).call(context, 'a', 'b', 'c', {
+		await buildClientMiddleware(testDocument as Document).call(context, 'a', 'b', 'c', {
 			// This is overridden by the document cookies. I think we want this? :shrug:. easy to fix in the future if not
 			cookie: 'ignored=andDropped'
 		}, next.bind(context));

@@ -111,7 +111,7 @@ function (route_method, route_path, route_body, route_headers, next) {
 	});
 };
 
-export const clientMiddleware: (pageDocument: Document) => Middleware<CookieContext> = (pageDocument) => {
+export const buildClientMiddleware: (pageDocument: Document) => Middleware<CookieContext> = (pageDocument) => {
 
 	return function (route_method, route_path, route_body, route_headers, next) {
 

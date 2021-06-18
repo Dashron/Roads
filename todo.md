@@ -1,5 +1,5 @@
 
--1.1 Ensure the doc blocks match the readme (Continue from roads.request)
+-1.1 Ensure the doc blocks match the readme (Continue from CORS)
 -1.2 Explain how the typescript context works
 -1.3 Document the build script thoroughly since the docs tell you to look at that. (Also link to the right file!!)
 -1.4 Add javascript examples for every typescript example
