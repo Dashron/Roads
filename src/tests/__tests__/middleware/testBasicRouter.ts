@@ -1,20 +1,20 @@
 import * as url_module from 'url';
 
-import { SimpleRouter, Route, SimpleRouterURL } from '../../../middleware/simpleRouter';
+import { BasicRouter, Route, BasicRouterURL } from '../../../middleware/basicRouter';
 import Road from '../../../core/road';
 import Response from '../../../core/response';
 import { Context, NextCallback } from '../../../core/road';
 
 const router_file_test_path = `${__dirname  }/../../resources/_router_file_test.js`;
 
-describe('Simple Router Tests', () => {
+describe('Basic Router Tests', () => {
 	/**
 	 *
 	 */
 	test('test addRoute adds values to the list of routes in the right format', () => {
 		expect.assertions(1);
 
-		const router = new SimpleRouter();
+		const router = new BasicRouter();
 		const path = '/';
 		const method = 'GET';
 		const fn: Route<Context> = () => { return Promise.resolve(new Response(''));};
@@ -34,7 +34,7 @@ describe('Simple Router Tests', () => {
 		expect.assertions(1);
 
 		const road = new Road();
-		const router = new SimpleRouter();
+		const router = new BasicRouter();
 		router.applyMiddleware(road);
 
 		expect(road['_request_chain'].length).toEqual(1);
@@ -46,7 +46,7 @@ describe('Simple Router Tests', () => {
 	test('test middleware function routes successfully to successful routes', () => {
 		expect.assertions(1);
 
-		const router = new SimpleRouter();
+		const router = new BasicRouter();
 		const path = '/';
 		const method = 'GET';
 		let route_hit = false;
@@ -71,7 +71,7 @@ describe('Simple Router Tests', () => {
 	test(`test middleware function routes successfully to successful routes
 	only once when there may be more than one route`, () => {
 		expect.assertions(1);
-		const router = new SimpleRouter();
+		const router = new BasicRouter();
 		const path = '/';
 		const method = 'GET';
 		let route_hit = false;
@@ -101,7 +101,7 @@ describe('Simple Router Tests', () => {
 	 */
 	test('test middleware function routes to next  on a missed url', () => {
 		expect.assertions(2);
-		const router = new SimpleRouter();
+		const router = new BasicRouter();
 		const path = '/';
 		const method = 'GET';
 		let route_hit = false;
@@ -126,7 +126,7 @@ describe('Simple Router Tests', () => {
 	 */
 	test('test middleware function routes to next on a missed http method but matching url', () => {
 		expect.assertions(2);
-		const router = new SimpleRouter();
+		const router = new BasicRouter();
 		const path = '/';
 		const method = 'GET';
 		let route_hit = false;
@@ -152,7 +152,7 @@ describe('Simple Router Tests', () => {
 	test('test route function with no template gets the proper context and arguments', () => {
 		expect.assertions(3);
 
-		const router = new SimpleRouter();
+		const router = new BasicRouter();
 		const path = '/';
 		const method = 'GET';
 		const body = '{"harvey": "birdman"}';
@@ -181,7 +181,7 @@ describe('Simple Router Tests', () => {
 	 */
 	test('test route function with numeric template gets the proper context and arguments', () => {
 		expect.assertions(3);
-		const router = new SimpleRouter();
+		const router = new BasicRouter();
 		const path = '/#numeric';
 		const req_path = '/12345';
 		const method = 'GET';
@@ -190,7 +190,7 @@ describe('Simple Router Tests', () => {
 
 		const route: Route<Context> = (request_url, request_body, request_headers) => {
 			// parsed url
-			const parsed_url: SimpleRouterURL = url_module.parse(req_path, true);
+			const parsed_url: BasicRouterURL = url_module.parse(req_path, true);
 			parsed_url.args = {numeric: 12345};
 			expect(request_url).toEqual(parsed_url);
 			// passthrough request body
@@ -213,7 +213,7 @@ describe('Simple Router Tests', () => {
 	 */
 	test('test route function with string template gets the proper context and arguments', () => {
 		expect.assertions(3);
-		const router = new SimpleRouter();
+		const router = new BasicRouter();
 		const path = '/$string';
 		const req_path = '/hello';
 		const method = 'GET';
@@ -222,7 +222,7 @@ describe('Simple Router Tests', () => {
 
 		const route: Route<Context> = (request_url, request_body, request_headers) => {
 			// parsed url
-			const parsed_url: SimpleRouterURL = url_module.parse(req_path, true);
+			const parsed_url: BasicRouterURL = url_module.parse(req_path, true);
 			parsed_url.args = {string: 'hello'};
 			expect(request_url).toEqual(parsed_url);
 			// passthrough request body
@@ -244,7 +244,7 @@ describe('Simple Router Tests', () => {
 	 */
 	test('test route that throws an exception is handled properly', () => {
 		expect.assertions(1);
-		const router = new SimpleRouter();
+		const router = new BasicRouter();
 		const path = '/';
 		const method = 'GET';
 		const error_message = 'blah blah blah';
@@ -265,7 +265,7 @@ describe('Simple Router Tests', () => {
 	 */
 	test('test route successfully returns value out of the middleware', () => {
 		expect.assertions(1);
-		const router = new SimpleRouter();
+		const router = new BasicRouter();
 		const path = '/';
 		const method = 'GET';
 		const fn: Route<Context> = () => {
@@ -286,7 +286,7 @@ describe('Simple Router Tests', () => {
 	 *
 	 */
 	test('test next successfully returns value out of the middleware', () => {
-		const router = new SimpleRouter();
+		const router = new BasicRouter();
 		const path = '/';
 		const method = 'GET';
 		const fn: Route<Context> = () => {
@@ -311,7 +311,7 @@ describe('Simple Router Tests', () => {
 		expect.assertions(1);
 
 		const road = new Road();
-		const router = new SimpleRouter();
+		const router = new BasicRouter();
 		router.applyMiddleware(road);
 
 		const path = '/';
@@ -335,7 +335,7 @@ describe('Simple Router Tests', () => {
 		expect.assertions(1);
 
 		const road = new Road();
-		const router = new SimpleRouter();
+		const router = new BasicRouter();
 		router.applyMiddleware(road);
 
 		const path = '/';
@@ -356,7 +356,7 @@ describe('Simple Router Tests', () => {
 		expect.assertions(5);
 
 		const road = new Road();
-		const router = new SimpleRouter();
+		const router = new BasicRouter();
 		router.applyMiddleware(road);
 
 		return router.addRouteFile(router_file_test_path)
@@ -385,7 +385,7 @@ describe('Simple Router Tests', () => {
 	test('test routes loaded from a file with prefix', () => {
 		expect.assertions(5);
 		const road = new Road();
-		const router = new SimpleRouter();
+		const router = new BasicRouter();
 		router.applyMiddleware(road);
 
 		return router.addRouteFile(router_file_test_path, '/test_prefix')

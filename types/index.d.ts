@@ -9,4 +9,4 @@ export * as RemoveTrailingSlashMiddleware from './middleware/removeTrailingSlash
 export * as ParseBodyMiddleware from './middleware/parseBody';
 export * as RerouteMiddleware from './middleware/reroute';
 export * as StoreValsMiddleware from './middleware/storeVals';
-export * as SimpleRouterMiddleware from './middleware/simpleRouter';
+export * as SimpleRouterMiddleware from './middleware/basicRouter';

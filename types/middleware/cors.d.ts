@@ -7,7 +7,7 @@
  */
 import { Context, Middleware } from '../core/road';
 /**
- * Apply proper cors headers
+ * Sets up everything you need for your server to properly respond to CORS requests.
  *
  * @param {object} [options] - A collection of different cors settings.
  * @param {object} [options.validOrigins] - An array of origin urls that can send requests to this API

@@ -37,10 +37,10 @@ Roads is a simple web framework. It's similar to Express.js, but has some very i
 	- [Parsing request bodies](#parsing-request-bodies)
 		- [Parse Body Context](#parse-body-context)
 	- [Remove trailing slash](#remove-trailing-slash)
-	- [Simple router](#simple-router)
+	- [Basic router](#basic-router)
 		- [applyMiddleware(road: *Road*)](#applymiddlewareroad-road)
 		- [addRoute(method: *string*, path: *string*, fn: *function*)](#addroutemethod-string-path-string-fn-function)
-		- [addRouteFile(filePath: *string*)](#addroutefilefilepath-string)
+		- [addRouteFile(filePath: *string*, prefix?: *string*)](#addroutefilefilepath-string-prefix-string)
 - [Middleware helpers](#middleware-helpers)
 	- [Apply To Context](#apply-to-context)
 	- [Reroute](#reroute)
@@ -510,7 +510,9 @@ road.request('POST', '/users', '{"name":"dashron"}', {"content-type": "applicati
 ## Remove trailing slash
 **Middleware to kill the trailing slash on http requests**
 
-If used, any url that ends with a trailing slash will return a response object redirecting the client to the same url without the trailing slash (302 redirect with Location: [url_without_slash])
+Exposes a single middleware function to remove trailing slashes in HTTP requests. This is done by redirecting the end user to the same route without the trailing slash.
+
+When used, any url that ends with a trailing slash will immediately return a response object redirecting the client to the same url without the trailing slash (302 redirect with Location: [url_without_slash])
 
 ```JavaScript
 import { RemoveTrailingSlashMiddleware, Response, Road } from 'roads';
@@ -519,8 +521,8 @@ var road = new Road();
 road.use(RemoveTrailingSlashMiddleware.middleware);
 ```
 
-## Simple router
-This is a simple router middleware for roads. It allows you to easily attach functionality to HTTP methods and paths.
+## Basic router
+This is a basic router middleware for roads. It allows you to easily attach functionality to HTTP methods and paths.
 
 Here's how you use it.
 
@@ -529,6 +531,7 @@ Here's how you use it.
 
 ```JavaScript
     import { SimpleRouterMiddleware } from 'roads';
+	let road = // see getting started
     let router = new SimpleRouterMiddleware.SimpleRouter(road);
 ```
 
@@ -560,6 +563,9 @@ If you don't provide a road to the SimpleRouter constructor, your routes will no
 
 This is where you want to write the majority of your webservice. The `fn` parameter should contain the actions you want to perform when a certain `path` and HTTP `method` are accessed via the `road` object.
 
+**Note:** The function must not be an arrow function! If you use an arrow function you will not have access to the request context.
+
+
 The path supports a very basic templating system. The values inbetween each slash can be interpreted in one of three ways
  - If a path part starts with a #, it is assumed to be a numeric variable. Non-numbers will not match this route
  - If a path part starts with a $, it is considered to be an alphanumeric variabe. All non-slash values will match this route.
@@ -571,27 +577,39 @@ Any variables will be added to the route's request url object under the "args" o
 
 ```JavaScript
     // This is a simple route with no URI variables
-    router.addRoute('GET', '/posts', (url, body, headers) => {
+    router.addRoute('GET', '/posts', function (url, body, headers) {
         // url, body and headers are all identical to the values sent to functions in roads.use
     });
 
     // This route supports numeric variables
-    router.addRoute('GET', '/posts/#postId', (url, body, headers) => {
+    router.addRoute('GET', '/posts/#postId', function (url, body, headers) {
         // url.args.postId will contain the integer from the URL.
         // e.g. GET /posts/12345 will have url.args.postId === 12345
     });
 
     // This route supports any variable
-    router.addRoute('GET', '/posts/$postSlug', (url, body, headers) => {
+    router.addRoute('GET', '/posts/$postSlug', function (url, body, headers) {
         // url.args.postSlug will contain the value from the URL.
         // e.g. GET /posts/my-post will have url.args.postSlug === 'my-ost'
     });
 ```
 
-TODO: More details on typescript request context. In the meanwhile check out example/ts/src/routes/applyPublicRoutes.ts for an example.
+Add route also supports the same context generics as `road.use`.
 
-### addRouteFile(filePath: *string*)
+```JavaScript
+	router.addRoute<CookieContext>('GET', '/posts/$postSlug', function (url, boddy, headers) {
+		console.log(this.getCookies());
+	});
+```
+
+
+### addRouteFile(filePath: *string*, prefix?: *string*)
 Add an entire file worth of routes.
+
+| Parameter | Type   | Description                                               |
+| --------- | ------ | --------------------------------------------------------- |
+| filePath  | string | the path of the file to load                              |
+| prefix    | string | the URL path prefix that these routes will be attached to |
 
 - The file should be a node module that exposes an object.
 - Each key should be an HTTP path, each value should be an object.
@@ -606,6 +624,13 @@ Example File:
         }
     }
 }
+```
+
+```JavaScript
+import { SimpleRouterMiddleware } from 'roads';
+let road = // see getting started
+let router = new SimpleRouterMiddleware.SimpleRouter(road);
+router.addRouteFile('routes.js', '/users/');
 ```
 
 # Middleware helpers
