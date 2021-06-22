@@ -640,11 +640,15 @@ The documentation below covers additional generic middleware that are useful whe
 ## Apply To Context
 **Middleware to apply a predefined value to the request context**
 
+This middleware is a one liner to assign a value to the context. It's useful for making values easily available to each request, such as an api library.
+
+In the future I hope to have automatic typing for this context, but I'm still thinking through how to pull that off. In the meanwhile you should create your own Context types.
+
 ```JavaScript
 import { ApplyToContext } from 'roads';
 road.use(ApplyToContext.build('example', 'test'));
 
-road.use(function (method, url, body, headers) {
+road.use<{ example: 'test' }>(function (method, url, body, headers) {
     console.log(this.example); // test
 });
 ```
@@ -653,11 +657,12 @@ road.use(function (method, url, body, headers) {
 **Middleware that offers a function in the request context that allows you to easily interact with a road**
 
 In the following example, road and APIRoad are two different Road objects.
+
 ```JavaScript
-import { RerouteMiddleware } from 'roads';
+import { RerouteMiddleware, Road } from 'roads';
 road.use(RerouteMiddleware.build('api', APIRoad));
 
-road.use(function (method, url, body, headers) {
+road.use<{ api: Road['request'] }>(function (method, url, body, headers) {
     this.api('GET', '/users')
         .then((response) => {
             console.log(response);
@@ -672,14 +677,14 @@ road.use(function (method, url, body, headers) {
 **Middleware that helps you save arbitrary data inside of a request context**
 
 This middleware adds two functions, `setVal(key, val)` and `getVal(key)` for storing and retrieving arbitrary values.
-The middleware also exposes a `TITLE_KEY` value for use with PJAX for assigning a page title.
 
 ```JavaScript
-import { TITLE_KEY }, StoreValsMiddleware from 'roads/middleware/storeVals';
+import StoreValsMiddleware from 'roads/middleware/storeVals';
+road.use(StoreValsMiddleware.middleware);
 
 road.use(function (method, url, body, headers, next) {
     return next().then((response) => {
-        console.log(this.getVal(TITLE_KEY));
+        console.log(this.getVal('page-title'));
     });
 });
 
@@ -692,7 +697,13 @@ road.use(StoreValsMiddleware.middleware);
 
 PJAX is a technique for speeding up webpages by automatically replacing links or form submission with AJAX calls. This allows for clean, quick page refreshes via JavaScript, with a simple fallback if JavaScript is disabled.
 
-PJAX looks at the href of any link with the `data-roads-pjax="link"` attribute and turns it from a link that navigates to a new page into a link that checks a Road object and renders the response into a container.
+PJAX looks in the containerElement at each anchor tag with the  `data-roads-pjax="link"` attribute and changes it from a normal link into a link that uses the road.
+
+| Name        | Type             | Description                                                     |
+| ----------- | ---------------- | --------------------------------------------------------------- |
+| Road        | road             | The road that will be used when clicking links                  |
+| HTMLElement | containerElement | The element that will be filled with your roads output          |
+| Window      | window           | The page's window object to help set page title and url |
 
 ```HTML
 <div id="container"></div>

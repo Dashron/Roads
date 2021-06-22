@@ -3,18 +3,17 @@
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
- * Exposes a single function to be used with roads middleware. It makes it easy to assign
- * static values to a roads context.
+ * This middleware is a one liner to assign a value to the context.
+ * It's useful for making values easily available to each request, such as an api library
  */
 
 import { Context, Middleware } from '../core/road';
 
 /**
- * Very simple middleware to apply a single value to the request context.
+ * This is a very simple middleware to apply a single value to the request context with a single line of code.
  *
  * TODO: Get better typing on this. I think we need to wait for https://github.com/Microsoft/TypeScript/pull/26797.
- *		In the meanwhile anyone who uses this function should include key: Middleware<Context> to
- *		their final request context type
+ *		In the meanwhile if you use this middleware you should create your own context.
  *
  * @param {string} key - The key that should store the value on the request context.
  * @param {any} val - The value to apply to the request context.

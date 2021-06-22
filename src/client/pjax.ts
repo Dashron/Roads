@@ -3,7 +3,16 @@
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
- * This file exposes a PJAX class to help with client side rendering
+ * PJAX is a technique for speeding up webpages by automatically replacing links or
+ * form submission with AJAX calls. This allows for clean, quick page refreshes via
+ * JavaScript, with a simple fallback if JavaScript is disabled.
+ *
+ * PJAX looks at the href of any link with the `data-roads-pjax="link"` attribute and
+ * turns it from a link that navigates to a new page into a link that checks a Road
+ * object and renders the response into a container.
+ *
+ * See the readme for examples and more documentation
+ *
  */
 
 import Road, { Middleware } from '../core/road';
@@ -24,11 +33,13 @@ export default class RoadsPjax {
 	protected _container_element: HTMLElement;
 
 	/**
-	 * Creates a new RoadsPjax instance. The road provided to this constructor will be the backbone of your PJAX requests.
+	 * Creates a new RoadsPjax instance. PJAX looks in the containerElement at each
+	 * anchor tag with the  `data-roads-pjax="link"` attribute and changes it from a
+	 * normal link into a link that uses the road.
 	 *
-	 * @param {Road} road - The road that will turn your pjax requests into HTML
+	 * @param {Road} road - The road that will be used when clicking links
 	 * @param {HTMLElement} containerElement - The element that will be filled with your roads output
-	 * @param {Window} window - The pages window object to help set page title and other items
+	 * @param {Window} window - The page's window object to help set page title url
 	 */
 	constructor(road: Road, containerElement: HTMLElement, window: Window) {
 		this._road = road;
@@ -38,10 +49,18 @@ export default class RoadsPjax {
 	}
 
 	/**
-	 * Adds middleware to set the page title.
+	 * There are a couple of steps required to get page titles working properly with
+	 * 	PJAX.
 	 *
-	 * This adds the storeVal middleware, and after the middleware chain is complete sets the page title to
-	 * 	the value of titleKey
+	 * First you must use the `storeVals` middleware to manage your page title. In
+	 * 	the following example we are storing a page title of `"Homepage"`.
+	 *
+	 * Second you should have your server-side rendering put this value into the
+	 * 	`<title>` element of your layout. Check the typescript example for how that
+	 * 	could work with the Handlebars templating engine.
+	 *
+	 * Third you need to create your `RoadsPJAX` object and configure it to look for
+	 *  your `page-title` value.
 	 *
 	 * @param {titleKey} string - The key of the title as stored in the "storeVals" middleware.
 	 * @returns {RoadsPjax} Returns the PJAX object. This is provided to allow for easy function chaining.
@@ -69,7 +88,7 @@ export default class RoadsPjax {
 	}
 
 	/**
-	 * Hooks up the PJAX functionality to the information provided via the constructor.
+	 * This function call enables PJAX on the current page.
 	 */
 	register (): void {
 		// Handle navigation changes besides pushState. TODO: don' blow out existing onpopstate's
@@ -104,6 +123,9 @@ export default class RoadsPjax {
 	}
 
 	/**
+	 * If you would like PJAX to work on links that are not within the container
+	 * 	you must call this function. Additionally this function must be called
+	 * 	before `register`
 	 *
 	 * @param {HTMLAnchorElement} element
 	 */
@@ -112,7 +134,7 @@ export default class RoadsPjax {
 	}
 
 	/**
-	 * The response from the roads request
+	 * Renders the response into the container
 	 *
 	 * @param {Response} response_object
 	 */
@@ -126,6 +148,7 @@ export default class RoadsPjax {
 
 	/**
 	 * Handles all click events, and directs
+	 *
 	 * @param {MouseEvent} event
 	 */
 	protected _pjaxEventMonitor (event: MouseEvent): void {
