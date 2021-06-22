@@ -3,20 +3,19 @@
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
- * Exposes a method that allows you to bind additional roads to a road context. This allows you to manage multiple
- * client side or server side road objects at once
+ * Applies a method to the request context that allows you to make requests into another roads object.
+ * This is useful when you're running two servers locally. One example is a webserver and a separate API server.
  */
 import { Context, Middleware } from '../core/road';
 import Road from '../core/road';
 /**
- * Applies a method to the request context that allows you to make requests into another roads object
+ * Applies a method to the request context that allows you to make requests into another roads object.
+ * This is useful when you're running two servers locally. One example is a webserver and a separate API server.
  *
- * TODO: Get better typing on this. I think we need to wait for https://github.com/Microsoft/TypeScript/pull/26797.
- *     	In the meanwhile anyone who uses this function should include key: Middleware<Context> to
- * 		their final request context type
+ * TODO: Should this just use applytocontext?
  *
  * @param {string} key - The name of the key in the request context that will store the roads request.
  * @param  {road} road - The roads object that you will interact with.
  * @return {function} The middleware function. This value should be passed to road.use(fn);
  */
-export declare function buildRerouteMiddleware(key: string, road: Road): Middleware<Context>;
+export declare function build(key: string, road: Road): Middleware<Context>;

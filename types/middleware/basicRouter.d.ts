@@ -48,14 +48,28 @@ export declare class BasicRouter {
      */
     constructor(road?: Road);
     /**
-     * Assigns the middleware to the provided road
+     * If you don't provide a road to the SimpleRouter constructor, your routes will not be executed.
+     * 	If you have reason not to assign the road off the bat, you can assign it later with this function.
      *
      * @param  {Road} road - The road that will receive the BasicRouter middleware
      */
     applyMiddleware(road: Road): void;
     /**
-     * Adds a route to this router. The route is a function that will match the standard roads request signature.
-     * It will be associated with one HTTP method, and one or many HTTP paths
+     * This is where you want to write the majority of your webservice. The `fn` parameter should contain
+     * 	the actions you want to perform when a certain `path` and HTTP `method` are accessed via the `road` object.
+     *
+     * The path supports a very basic templating system. The values inbetween each slash can be interpreted
+     * 	in one of three ways
+     *  - If a path part starts with a #, it is assumed to be a numeric variable. Non-numbers will not match this route
+     *  - If a path part starts with a $, it is considered to be an alphanumeric variabe. All non-slash values
+     * 		will match this route.
+     *  - If a path starts with anything but a # or a $, it is assumed to be a literal. Only that value will match
+     * 		this route.
+     *
+     * 		e.g. /users/#userId will match /users/12345, not /users/abcde. If a request is made to /users/12345 the
+     * 			route's requestUrl object will include the key value pair of `args: { userId: 12345 }`
+     * Any variables will be added to the route's request url object under the "args" object.
+     *
      *
      * @param {string} method - The HTTP method that will trigger the provided function
      * @param {(string|array)} paths - One or many URL paths that will trigger the provided function
