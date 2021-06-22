@@ -1,6 +1,6 @@
 {
   "name": "roads",
-  "version": "7.0.0-alpha.1",
+  "version": "7.0.0-alpha.2",
   "author": {
     "name": "Aaron Hedges",
     "email": "aaron@dashron.com",
@@ -47,6 +47,7 @@
   "main": "dist/index.js",
   "types": "./types/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "types"
   ]
 }
