@@ -5,7 +5,7 @@
  *
  * This file is an example of how to assign some public routes to a roads server
  */
-import { SimpleRouterMiddleware } from 'roads';
+import { BasicRouterMiddleware } from 'roads';
 /**
   * Before calling this function you should create your roads object and bind a SimpleRouter to that road.
   * You then pass the road to this function to assign a collection of example routes that will be rendered
@@ -13,4 +13,4 @@ import { SimpleRouterMiddleware } from 'roads';
   *
   * @param {SimpleRouter} router - The router that the routes will be added to
   */
-export default function applyPublicRotues(router: SimpleRouterMiddleware.SimpleRouter): void;
+export default function applyPublicRotues(router: BasicRouterMiddleware.BasicRouter): void;

@@ -7,6 +7,7 @@
  */
 
 import { Middleware, Context } from 'roads/types/core/road';
+import { Response } from 'roads';
 
 /**
  * This middleware translates missing responses into 404s
@@ -21,7 +22,7 @@ const emptyTo404: Middleware<Context> = function (method, url, body, headers, ne
 	return next()
 		.then((response) => {
 			if (!response) {
-				return new this.Response('Page not found', 404);
+				return new Response('Page not found', 404);
 			}
 
 			return response;

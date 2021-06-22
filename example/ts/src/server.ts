@@ -7,7 +7,7 @@
  */
 
 import { Road, Response, RemoveTrailingSlashMiddleware, CookieMiddleware,
-	StoreValsMiddleware, ParseBodyMiddleware, SimpleRouterMiddleware } from 'roads';
+	StoreValsMiddleware, ParseBodyMiddleware, BasicRouterMiddleware } from 'roads';
 
 import { Server } from 'roads-server';
 import addLayout from './middleware/addLayout';
@@ -28,7 +28,7 @@ road.use(StoreValsMiddleware.middleware);
 road.use(addLayout);
 road.use(ParseBodyMiddleware.middleware);
 
-const router = new SimpleRouterMiddleware.SimpleRouter(road);
+const router = new BasicRouterMiddleware.BasicRouter(road);
 applyPublicRotues(router);
 applyPrivateRoutes(router);
 road.use(emptyTo404);

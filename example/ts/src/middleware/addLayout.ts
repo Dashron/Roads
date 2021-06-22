@@ -7,8 +7,8 @@
  */
 
 import { Middleware } from 'roads/types/core/road';
-import { Response, StoreValsMiddleware } from 'roads';
-const { TITLE_KEY } = StoreValsMiddleware;
+import { Response } from 'roads';
+const TITLE_KEY = 'page-title';
 import { StoreValsContext } from 'roads/types/middleware/storeVals';
 
 /**
