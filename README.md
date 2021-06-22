@@ -21,6 +21,7 @@ Roads is a simple web framework. It's similar to Express.js, but has some very i
 		- [How do I control the order of my middleware?](#how-do-i-control-the-order-of-my-middleware)
 		- [Context](#context)
 			- [Typing your context](#typing-your-context)
+	- [request(method: *string*, url: *string*, body?: *string*, headers?: *object*)](#requestmethod-string-url-string-body-string-headers-object)
 - [Response](#response)
 	- [new Response(body: *string*, status?: *number*, headers?: *object*)](#new-responsebody-string-status-number-headers-object)
 	- [Body](#body)
@@ -316,6 +317,7 @@ road.use<StoreValsContext & CookieContext>(function (method, url, body, headers)
 	console.log(this.getCookies());
 	console.log(this.getAllVals());
 });
+```
 
 ## request(method: *string*, url: *string*, body?: *string*, headers?: *object*)
 **Locate and execute the resource method associated with the request parameters.**
