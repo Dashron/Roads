@@ -4,8 +4,8 @@ Roads is a simple web framework. It's similar to Express.js, but has some very i
 
 # Why should I use Roads?
 
-1. Roads is isomorphic, which means your code can trivially be run server side or in the browser with the exact same code.
-2. Roads can be attached to any node HTTP server, including the standard node HTTP server or Express.js.
+1. Roads is isomorphic, which means you write code once and run it on a server or in a browser.
+2. Roads can be attached to any node HTTP server including the standard node HTTP server or Express.js.
 3. Roads can be run without being attaching to an HTTP server. This is great for writing tests, working with web sockets, or writing API first websites.
 
 
