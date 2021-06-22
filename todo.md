@@ -1,5 +1,5 @@
 
--1 Ensure the example still works with all the recent changes!!!
+-1. Have the package-lock automatically updated pre-commit
 1. Ensure we have JS and Typescript examples for everything.
 2. See if we should pull anything over from this bootstrap (https://www.matuzo.at/blog/html-boilerplate/) or this boilerplate (https://html5boilerplate.com/) or vitejs.com
 3. Improve the client-build docs
