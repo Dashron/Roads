@@ -310,7 +310,7 @@ road.use<{ hello: string }>(function (method, url, body, headers) {
 });
 ```
 
-Many of the bundled middleware include thier contexts, and you can merge them together with `&`.
+Many of the bundled middleware include their contexts, and you can merge them together with `&`.
 
 ```JavaScript
 road.use<StoreValsContext & CookieContext>(function (method, url, body, headers) {
