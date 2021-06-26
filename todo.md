@@ -1,4 +1,5 @@
 
+-2. Add a "this request only" request chain to the simple router, allowing you to bind a series of functions to a single url. Have it work like the request chain in road.
 -1. Have the package-lock automatically updated pre-commit
 1. Ensure we have JS and Typescript examples for everything.
 2. See if we should pull anything over from this bootstrap (https://www.matuzo.at/blog/html-boilerplate/) or this boilerplate (https://html5boilerplate.com/) or vitejs.com

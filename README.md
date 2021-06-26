@@ -785,7 +785,7 @@ e.g.
 
 ```html
     <form method="POST" action="/users/12345" data-roads-pjax="form">
-        {{your form elements}{}
+        <!-- your form elements go here -->
         <input type="submit" value="Send message" data-roads-pjax="submit">
     </form>
 ```
