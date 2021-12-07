@@ -21,7 +21,7 @@ describe('Reroute middleware tests', () => {
 			request: request
 		};
 		const key = 'foo';
-		const context: { [x: string ]: any } = {};
+		const context: Record<string, any> = {};
 		const middleware = build(key, mockRoad as Road);
 
 		expect(typeof(middleware)).toEqual('function');

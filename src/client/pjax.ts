@@ -140,7 +140,8 @@ export default class RoadsPjax {
 	 */
 	render (response_object: Response): void {
 		if (response_object.body !== undefined) {
-			this._container_element.innerHTML = response_object.body;
+			// response.body will never be a buffer here, because it's on the client
+			this._container_element.innerHTML = response_object.body as string;
 		} else {
 			this._container_element.innerHTML = '';
 		}

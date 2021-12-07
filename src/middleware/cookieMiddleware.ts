@@ -29,7 +29,7 @@ export interface CookieContext extends Context {
 	 * 	all the request cookies, but merges anything applied via
   	 * 	setCookie on top (i.e. setCookie will override the request cookie)
 	 */
-	getCookies: () => {[x: string]: string}
+	getCookies: () => Record<string, string>
 	newCookies: NewCookies
 }
 

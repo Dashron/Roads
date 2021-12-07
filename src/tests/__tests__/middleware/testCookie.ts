@@ -7,7 +7,7 @@ import Response from '../../../core/response';
 describe('cookie tests', () => {
 	test('test cookie middleware parses cookies into context', () => {
 		expect.assertions(2);
-		const context: {[x:string]: any} = {
+		const context: Record<string, any> = {
 			Response: Response
 		};
 
@@ -65,7 +65,7 @@ describe('cookie tests', () => {
 
 	test('test that getCookies still works with clientCookies', () => {
 		expect.assertions(2);
-		const context: {[x:string]: any} = {
+		const context: Record<string, any> = {
 			Response: Response
 		};
 

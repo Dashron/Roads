@@ -7,7 +7,7 @@ describe('Store Values', () => {
 	test('test storeVal and getVal functions are properly applied to middleware', () => {
 		expect.assertions(2);
 
-		const context: {[x: string]: any} = {};
+		const context: Record<string, any> = {};
 
 		// eslint-disable-next-line @typescript-eslint/no-empty-function
 		middleware.call(context, 'a', 'b', 'c', {}, function () {});
@@ -22,7 +22,7 @@ describe('Store Values', () => {
 	test('test storeVal and getVal work as expected', () => {
 		expect.assertions(1);
 
-		const context: {[x: string]: any} = {};
+		const context: Record<string, any> = {};
 
 		// eslint-disable-next-line @typescript-eslint/no-empty-function
 		middleware.call(context, 'a', 'b', 'c', {}, function () {});

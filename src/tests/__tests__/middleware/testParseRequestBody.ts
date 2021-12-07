@@ -8,7 +8,7 @@ import Response from '../../../core/response';
 describe('Parse Request Body tests', () => {
 	test('test request with valid json body', () => {
 		expect.assertions(1);
-		const context: {[X: string]: any} = {};
+		const context: Record<string, any> = {};
 		const body = '{"hello": "there"}';
 
 		// eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -72,7 +72,7 @@ describe('Parse Request Body tests', () => {
      */
 	test('test content type with parameters', () => {
 		expect.assertions(1);
-		const context: {[X: string]: any} = {};
+		const context: Record<string, any> = {};
 		const body = '{"hello": "there"}';
 
 		// eslint-disable-next-line @typescript-eslint/no-empty-function

@@ -6,12 +6,12 @@
  * The response object contains all of the information you want to send to the client.
  * 	This includes the body, status code and all applicable headers.
  */
-export interface OutgoingHeaders {
-    [x: string]: string | Array<string> | undefined;
+/// <reference types="node" />
+export interface OutgoingHeaders extends Record<string, string | Array<string> | undefined> {
 }
 export default class Response {
     status: number;
-    body: string;
+    body: string | Buffer;
     headers: OutgoingHeaders;
     /**
      * Creates a new Response object.

@@ -18,11 +18,11 @@ interface RouteDetails {
     path: string;
     method: string;
 }
+
 export interface SimpleRouterURL extends url_module.UrlWithParsedQuery {
-    args?: {
-        [x: string]: string | number;
-    };
+    args?: Record<string, string | number>
 }
+
 /**
  * This is a simple router middleware for roads.
  * You can assign functions to url paths, and those paths can have some very basic variable templating

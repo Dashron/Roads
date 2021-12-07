@@ -58,7 +58,7 @@ export function build (options: {
 	Note: the comments below are pulled from the spec https://www.w3.org/TR/cors/ to help development
 	*/
 	const corsMiddleware: Middleware<Context> = function (method, url, body, headers, next) {
-		const corsResponseHeaders: { [x: string]: string } = {};
+		const corsResponseHeaders: Record<string, string> = {};
 		const preflight = method === 'OPTIONS' && headers['access-control-request-method'];
 
 		/*

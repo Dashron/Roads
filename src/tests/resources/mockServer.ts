@@ -30,7 +30,7 @@ export default function createServer(): Promise<Server> {
 					body = undefined;
 				}
 
-				const routerResponse = router(request.method, request.url)(body, request.headers);
+				const routerResponse = router(request.method as string, request.url as string)(body, request.headers);
 				response.writeHead(routerResponse.status, routerResponse.headers ? routerResponse.headers : {});
 
 				if (typeof routerResponse.body !== 'undefined') {
@@ -59,12 +59,12 @@ export default function createServer(): Promise<Server> {
 
 interface MockResponse {
     status: number,
-    headers?: {[x: string]: any},
+    headers?: Record<string, any>,
     body?: string
 }
 
 // Formatting help for building the responses interpreted by this test http server
-function buildResponse(status: number, headers?: {[x: string]: any}, body?: string): MockResponse {
+function buildResponse(status: number, headers?: Record<string, any>, body?: string): MockResponse {
 	return {
 		status: status,
 		headers: headers,
@@ -75,9 +75,9 @@ function buildResponse(status: number, headers?: {[x: string]: any}, body?: stri
 /**
  * List of all test routes
  */
-const routes: {[x: string]: { [x: string]: {
-    (body: string | undefined, headers: {[x: string]: any}): MockResponse
-}}} = {
+const routes: Record<string, Record<string, {
+    (body: string | undefined, headers: Record<string, any>): MockResponse
+}>> = {
 	'/': {
 		GET: (body, headers) => {
 			return {

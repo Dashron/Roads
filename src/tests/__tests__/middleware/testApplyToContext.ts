@@ -6,7 +6,7 @@ describe('ApplyToContext tests', () => {
 		expect.assertions(2);
 		const key = 'foo';
 		const val = 'bar';
-		const context: {[x: string]: any} = {};
+		const context: Record<string, any> = {};
 
 		const fn = build(key, val);
 		expect(typeof(fn)).toEqual('function');

@@ -23,9 +23,7 @@ export interface StoreValsContext extends Context {
     /**
      * Retrieves all values
      */
-    getAllVals: () => {
-        [key: string]: unknown;
-    };
+    getAllVals: () => Record<string, unknown>;
 }
 /**
  * Exposes two functions on the context that allow you to store and retrieve values.

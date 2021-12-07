@@ -6,8 +6,7 @@
  * Exposes the core Road class
  */
 import Response from './response';
-export interface IncomingHeaders {
-    [x: string]: string | Array<string> | undefined;
+export interface IncomingHeaders extends Record<string, string | Array<string> | undefined> {
 }
 export interface Middleware<MiddlewareContext extends Context> {
     (this: MiddlewareContext, method: string, path: string, body: string, headers: IncomingHeaders, next: NextCallback): Promise<Response | string> | Response | string;
@@ -15,8 +14,7 @@ export interface Middleware<MiddlewareContext extends Context> {
 export interface NextCallback {
     (): Promise<Response | string>;
 }
-export interface Context {
-    [x: string]: unknown;
+export interface Context extends Record<string, unknown> {
 }
 /**
  * See roadsjs.com for full docs.

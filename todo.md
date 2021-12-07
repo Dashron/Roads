@@ -1,4 +1,5 @@
 
+-3. Kill roads request usage in favor of fetch. Keep the middleware as is, but point to fetch. Figure out how to make this isomorphic
 -2. Add a "this request only" request chain to the simple router, allowing you to bind a series of functions to a single url. Have it work like the request chain in road.
 -1. Have the package-lock automatically updated pre-commit
 1. Ensure we have JS and Typescript examples for everything.

@@ -20,9 +20,7 @@ interface RouteDetails {
     method: string;
 }
 export interface BasicRouterURL extends url_module.UrlWithParsedQuery {
-    args?: {
-        [x: string]: string | number;
-    };
+    args?: Record<string, string | number>;
 }
 /**
  * This is a basic router middleware for roads.

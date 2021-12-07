@@ -7,11 +7,11 @@
  * 	This includes the body, status code and all applicable headers.
  */
 
-export interface OutgoingHeaders { [x: string]: string | Array<string> | undefined }
+export interface OutgoingHeaders extends Record<string, string | Array<string> | undefined> {}
 
 export default class Response {
 	status: number;
-	body: string;
+	body: string | Buffer;
 	headers: OutgoingHeaders;
 
 	/**
