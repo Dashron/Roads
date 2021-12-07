@@ -11,7 +11,7 @@ jobs:
       matrix:
         # 8.x and lower not supported due to lack of URL object
         # 10.x not supported with the current version of EJS. If you need it, it will probably run fine
-        node-version: [12.x, 13.x, 14.x]
+        node-version: [12.x, 13.x, 14.x, 15.x, 16.x]
 
     steps:
     - uses: actions/checkout@v1
