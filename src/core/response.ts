@@ -17,11 +17,11 @@ export default class Response {
 	/**
 	 * Creates a new Response object.
 	 *
-	 * @param {string} body - Your response body
+	 * @param {string | Buffer} body - Your response body
 	 * @param {number} [status] - Your response status
 	 * @param {object} [headers] - Your response headers
 	 */
-	constructor (body: string, status?: number, headers?: OutgoingHeaders) {
+	constructor (body: string | Buffer, status?: number, headers?: OutgoingHeaders) {
 		this.body = body;
 		this.status = status || 200;
 		this.headers = headers || {};

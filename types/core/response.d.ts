@@ -16,11 +16,11 @@ export default class Response {
     /**
      * Creates a new Response object.
      *
-     * @param {string} body - Your response body
+     * @param {string | Buffer} body - Your response body
      * @param {number} [status] - Your response status
      * @param {object} [headers] - Your response headers
      */
-    constructor(body: string, status?: number, headers?: OutgoingHeaders);
+    constructor(body: string | Buffer, status?: number, headers?: OutgoingHeaders);
 }
 export interface ResponseConstructor {
     new (body: string, status?: number, headers?: OutgoingHeaders): Response;
