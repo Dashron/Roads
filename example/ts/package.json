@@ -1,6 +1,6 @@
 {
   "name": "roads-example",
-  "version": "7.0.0",
+  "version": "7.0.2",
   "author": {
     "name": "Aaron Hedges",
     "email": "aaron@dashron.com",
@@ -9,12 +9,12 @@
   "description": "Example for roads.js",
   "devDependencies": {},
   "dependencies": {
-    "@types/browserify": "^12.0.36",
-    "@types/watchify": "^3.11.0",
+    "@types/browserify": "^12.0.37",
+    "@types/watchify": "^3.11.1",
     "brfs": "2.0.2",
     "browserify": "^17.0.0",
-    "roads": "7.0.0-alpha.1",
-    "roads-server": "1.0.3",
+    "roads": "7.0.2",
+    "roads-server": "1.0.5",
     "watchify": "^4.0.0"
   },
   "private": true,

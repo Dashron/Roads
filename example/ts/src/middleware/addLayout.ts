@@ -18,7 +18,7 @@ import { StoreValsContext } from 'roads/types/middleware/storeVals';
   * @param {string} title - The page title
   * @param {boolean} ignore_layout - If true, the layout is not used, and we return the body as is
   */
-function wrapLayout(body: string, vals: {
+function wrapLayout(body: string | Buffer, vals: {
 	[TITLE_KEY]?: string,
 	ignoreLayout?: boolean
 }) {
