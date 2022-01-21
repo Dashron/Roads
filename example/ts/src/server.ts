@@ -33,9 +33,7 @@ applyPublicRotues(router);
 applyPrivateRoutes(router);
 road.use(emptyTo404);
 
-// TODO: I think we need to make this a peer dependency?
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const server = new Server(road as any, function (err: Error) {
+const server = new Server(road, function (err: Error) {
 	console.log(err.stack);
 	return new Response('Unknown Error', 500);
 });

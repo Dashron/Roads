@@ -6,7 +6,7 @@
  * This file is an example of using roads router in the client
  */
 
-import { Road, RoadsPJAX, ParseBodyMiddleware, BasicRouterMiddleware, CookieMiddleware } from 'roads';
+import { Road, RoadsPJAX, ParseBodyMiddleware, BasicRouterMiddleware, CookieMiddleware, Request } from 'roads';
 import applyPublicRotues from './routes/applyPublicRoutes';
 import emptyTo404 from './middleware/emptyTo404';
 
@@ -27,3 +27,8 @@ pjax.register();
 pjax.registerAdditionalElement(document.getElementById('home') as HTMLAnchorElement);
 const router = new BasicRouterMiddleware.BasicRouter(road);
 applyPublicRotues(router);
+
+const testRequest = new Request(false, 'localhost', 8081);
+testRequest.request('GET', '/').then(response => {
+	console.log('root request test', response);
+});

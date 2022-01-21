@@ -7,7 +7,6 @@
  * the roads.request method
  */
 
-import roadsRequest from 'roads-req';
 import { IncomingHeaders } from '../core/road';
 import Response from '../core/response';
 
@@ -19,9 +18,9 @@ import Response from '../core/response';
  * @todo tests
  */
 export default class Request {
-	protected _secure: boolean;
-	protected _host: string;
-	protected _port: number;
+	protected secure: boolean;
+	protected host: string;
+	protected port: number;
 
 	/**
 	 * @todo: port should just be part of the host
@@ -31,9 +30,9 @@ export default class Request {
 	 * @param {number} port - The post of all requests made by this function
 	 */
 	constructor (secure: boolean, host: string, port: number) {
-		this._secure = secure;
-		this._host = host;
-		this._port = port;
+		this.secure = secure;
+		this.host = host;
+		this.port = port;
 	}
 
 	/**
@@ -49,22 +48,51 @@ export default class Request {
 	 * 		will be an object, otherwise it will resolve to a string
 	 */
 	async request (method: string, path: string, body?: string, headers?: IncomingHeaders): Promise<Response> {
-		const response = await roadsRequest({
-			request: {
-				hostname: this._host,
-				port: this._port,
-				path: path,
-				method: method,
-				headers: headers,
-				// does this really work here? The goal is to have it sent when compiled
-				// 		into a client request with browserify
-				// withCredentials: true,
-				protocol: this._secure ? 'https' : 'http'
-			},
-			requestBody: body,
-			followRedirects: false
+		const newHeaders = new Headers();
+
+		// Build proper header object for fetch interface
+		if (headers) {
+			Object.keys(headers).forEach(key => {
+				const val = headers[key];
+				if (!val) {
+					return;
+				}
+
+				if (Array.isArray(val)) {
+					val.forEach(value => newHeaders.append(key, value));
+				} else {
+					newHeaders.append(key, val);
+				}
+			});
+		}
+
+		const protocol = this.secure ? 'https://' : 'http://';
+		const port = this.port ? `:${this.port}` : '';
+
+		const response = await fetch(`${protocol}${this.host}${port}${path}`, {
+			method,
+			mode: 'cors',
+			credentials: 'same-origin',
+			headers: newHeaders,
+			redirect: 'manual',
+			referrerPolicy: 'no-referrer',
+
+			// TODO: What should we do with these?
+			//   origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+			body
 		});
 
-		return new Response(response.body, response.response.statusCode, response.response.headers);
+		const responseHeaders: IncomingHeaders = {};
+
+		// convert response headers into the roads header format
+		if (response.headers) {
+			response.headers.forEach((value, key) => {
+				// Duplicates seem to come in as a comma separated single string in my tests for node-fetch
+				// https://github.com/node-fetch/node-fetch/issues/771, and my tests in firefox with the example project
+				responseHeaders[key] = value;
+			});
+		}
+
+		return new Response(await response.text(), response.status, responseHeaders);
 	}
 }

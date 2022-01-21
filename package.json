@@ -1,6 +1,6 @@
 {
   "name": "roads",
-  "version": "7.0.2",
+  "version": "7.1.0",
   "author": {
     "name": "Aaron Hedges",
     "email": "aaron@dashron.com",
@@ -30,18 +30,19 @@
     "@types/content-type": "^1.1.5",
     "@types/jest": "^27.0.3",
     "@types/node": "^16.4.0",
+    "@types/node-fetch": "^2.5.12",
     "@typescript-eslint/eslint-plugin": "^5.6.0",
     "@typescript-eslint/parser": "^5.6.0",
     "eslint": "^8.4.1",
     "jest": "^27.4.3",
+    "node-fetch": "^2.6.7",
     "ts-jest": "^27.1.0",
     "typescript": "^4.5.2"
   },
   "dependencies": {
     "@types/cookie": "^0.4.1",
     "content-type": "^1.0.4",
-    "cookie": "^0.4.1",
-    "roads-req": "^0.4.6"
+    "cookie": "^0.4.1"
   },
   "license": "MIT",
   "main": "dist/index.js",

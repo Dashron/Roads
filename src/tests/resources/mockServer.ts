@@ -110,6 +110,24 @@ const routes: Record<string, Record<string, {
 				})
 			};
 		}
+	},
+	'/headers': {
+		GET: (body, headers) => {
+			return {
+				status: 200,
+				headers: {
+					'cache-control': ['no-cache', 'no-store'],
+					'content-type': 'application/json'
+				},
+				body: JSON.stringify({
+					url: '/',
+					method: 'GET',
+					body: body,
+					headers: headers,
+					message: 'hello!'
+				})
+			};
+		}
 	}
 };
 

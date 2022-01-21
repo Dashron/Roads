@@ -1,6 +1,6 @@
 {
   "name": "roads-example",
-  "version": "7.0.2",
+  "version": "7.1.0",
   "author": {
     "name": "Aaron Hedges",
     "email": "aaron@dashron.com",
@@ -13,14 +13,14 @@
     "@types/watchify": "^3.11.1",
     "brfs": "2.0.2",
     "browserify": "^17.0.0",
-    "roads": "7.0.2",
+    "roads": "file:../../",
     "roads-server": "1.0.5",
     "watchify": "^4.0.0"
   },
   "private": true,
   "scripts": {
     "start": "tsc && node dist/node/server.js",
-	"build": "tsc && node dist/node/buildClient.js"
+	"build": "npm install && tsc && node dist/node/buildClient.js"
   },
   "license": "MIT"
 }

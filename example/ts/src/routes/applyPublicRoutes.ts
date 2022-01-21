@@ -34,7 +34,9 @@ export default function applyPublicRotues(router: BasicRouterMiddleware.BasicRou
 		 It's available to the server and can be rendered from the client! Try clicking it for the client path,
 		 or control clicking for a real request to the server.<br />
 		 Try the <a href="/private">private test link</a>. Itt's available to the server, but is not build in the client!
-		 Check your console for proof of the network request!`);
+		 Check your console for proof of the network request!`, 200, {
+			duplicateHeaders: ['first', 'second']
+		});
 	});
 
 	router.addRoute('GET', '/public', async function (this: StoreValsContext & CookieContext) {
