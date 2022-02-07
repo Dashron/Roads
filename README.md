@@ -42,6 +42,9 @@ Roads is a simple web framework. It's similar to Express.js, but has some very i
 		- [applyMiddleware(road: *Road*)](#applymiddlewareroad-road)
 		- [addRoute(method: *string*, path: *string*, fn: *function*)](#addroutemethod-string-path-string-fn-function)
 		- [addRouteFile(filePath: *string*, prefix?: *string*)](#addroutefilefilepath-string-prefix-string)
+	- [If-Modified-Since caching](#if-modified-since-caching)
+		- [checkModifiedSince(date: string | Date)](#checkmodifiedsincedate-string--date)
+		- [buildNotModifiedResponse()](#buildnotmodifiedresponse)
 - [Middleware helpers](#middleware-helpers)
 	- [Apply To Context](#apply-to-context)
 	- [Reroute](#reroute)
@@ -463,7 +466,7 @@ road.use<CookieContext>(function (method, path, body, headers, next) {
 ## CORS
 **Middleware to Apply proper cors headers**
 
-Sets up everything you need for your server to properly respond to CORS requests.
+This middleware sets up everything you need for your server to properly respond to CORS requests.
 
 The options object supports the following properties.
 
@@ -651,6 +654,40 @@ let road = // see getting started
 let router = new SimpleRouterMiddleware.SimpleRouter(road);
 router.addRouteFile('routes.js', '/users/');
 ```
+
+## If-Modified-Since caching
+**Middleware to easily manage caching via if-modified-since headers**
+
+Browsers automatically support a conditional caching mechanism via the `if-modified-since` header. It works as follows.
+
+1. When a browser loads a page the server has the option to send a `last-modified` header indicating the last time this page changed.
+2. If the `last-modified` header exists, the browser stores the contents of the page alongside the value of `last-modified`.
+3. The next time the browser loads that page it sends the `last-modified` time via the `if-modified-since` header.
+4. The server then compares the provided `if-modified-since`  header to the time this page was last changed.
+5. If the `if-modified-since` header is newer than the last time the page was changed, the server returns a `304` status code with no body. This tells the browser to load the same contents it loaded last time.
+6. If the `if-modified-since` header is older than the last time the page was schanged, the server returns the page as expected.
+
+You can read more on [MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-Modified-Since).
+
+This style of caching is most useful for static files such as your JavaScript or CSS files.
+
+To implement this in your code you just need to add the following three lines in a route.
+
+```JavaScript
+if (this.checkModifiedSince(date)) { // `date` is the last time the page changed. For a file on the filesystem this means fs.statSync(filePath).mtime.
+	return this.buildNotModifiedResponse();
+}
+```
+
+The middleware will automatically return a `last-modified` header equal to the `date` value passed to `checkModifiedSince`.
+
+### checkModifiedSince(date: string | Date)
+This function returns true if the date provideed is greater than the date in the `if-modified-since` header. False otherwise.
+
+If `date` is a string, it should be a value that can be passed to the `Date(string)` constructor. See [If-Modified-Since caching](#if-modified-since-caching) for an example of how to use this function.
+
+### buildNotModifiedResponse()
+This function returns a `304` Response with no body. This is the proper response when the document has not been modified since the `if-modified-since` header. See [If-Modified-Since caching](#if-modified-since-caching) for an example of how to use this function.
 
 # Middleware helpers
 
