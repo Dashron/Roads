@@ -671,12 +671,24 @@ You can read more on [MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Hea
 
 This style of caching is most useful for static files such as your JavaScript or CSS files.
 
-To implement this in your code you just need to add the following three lines in a route.
+To use this middleware, add the following code.
 
 ```JavaScript
-if (this.checkModifiedSince(date)) { // `date` is the last time the page changed. For a file on the filesystem this means fs.statSync(filePath).mtime.
-	return this.buildNotModifiedResponse();
-}
+import { ModifiedSinceMiddleware, Road } from 'roads';
+
+var road = new Road();
+road.use(ModifiedSinceMiddleware.middleware);
+
+```
+
+To get it working in your route, add the `ModifiedSinceContext` and the following couple of lines to your middleware or route.
+
+```JavaScript
+road.use<ModifiedSinceMiddleware.ModifiedSinceContext>(function (method, url, body, headers) {
+	const date = ...// `date` is the last time the page changed. For a file on the filesystem this means fs.statSync(filePath).mtime.
+	if (this.checkModifiedSince(date)) {
+		return this.buildNotModifiedResponse();
+	}
 ```
 
 The middleware will automatically return a `last-modified` header equal to the `date` value passed to `checkModifiedSince`.

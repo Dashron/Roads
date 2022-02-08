@@ -10,4 +10,5 @@ export * as RemoveTrailingSlashMiddleware from './middleware/removeTrailingSlash
 export * as ParseBodyMiddleware from './middleware/parseBody';
 export * as RerouteMiddleware from './middleware/reroute';
 export * as StoreValsMiddleware from './middleware/storeVals';
+export * as ModifiedSinceMiddleware from './middleware/modifiedSince';
 export * as BasicRouterMiddleware from './middleware/basicRouter';
