@@ -65,6 +65,111 @@ describe('Basic Router Tests', () => {
 		expect(route_hit).toEqual(true);
 	});
 
+	test('test middleware function routes successfully to successful routes with x-http-method-override header', () => {
+		expect.assertions(1);
+
+		const router = new BasicRouter();
+		const path = '/';
+		const method = 'POST';
+		let route_hit = false;
+		const fn = () => {
+			route_hit = true;
+			return Promise.resolve(new Response('{"route_hit": true}'));
+		};
+
+		const next: NextCallback = () => {
+			return Promise.resolve(new Response(''));
+		};
+
+		router.addRoute('PUT', path, fn);
+		router.addRoute('POST', path, () => {
+			fail('POST route should not run');
+		});
+		router['_middleware'](router['_routes'], method, path, '', {
+			'x-http-method-override': 'PUT'
+		}, next);
+
+		expect(route_hit).toEqual(true);
+	});
+
+	test('test middleware function routes ignores x-http-method-override header on GET requests', () => {
+		expect.assertions(1);
+
+		const router = new BasicRouter();
+		const path = '/';
+		const method = 'GET';
+		let route_hit = false;
+		const fn = () => {
+			route_hit = true;
+			return Promise.resolve(new Response('{"route_hit": true}'));
+		};
+
+		const next: NextCallback = () => {
+			return Promise.resolve(new Response(''));
+		};
+
+		router.addRoute('GET', path, fn);
+		router.addRoute('PUT', path, () => {
+			fail('PUT route should not run');
+		});
+		router['_middleware'](router['_routes'], method, path, '', {
+			'x-http-method-override': 'PUT'
+		}, next);
+
+		expect(route_hit).toEqual(true);
+	});
+
+	test('test middleware function routes successfully to successful routes with _method query param', () => {
+		expect.assertions(1);
+
+		const router = new BasicRouter();
+		const path = '/';
+		const method = 'POST';
+		let route_hit = false;
+		const fn = () => {
+			route_hit = true;
+			return Promise.resolve(new Response('{"route_hit": true}'));
+		};
+
+		const next: NextCallback = () => {
+			return Promise.resolve(new Response(''));
+		};
+
+		router.addRoute('PUT', path, fn);
+		router.addRoute('POST', path, () => {
+			fail('POST route should not run');
+		});
+		router['_middleware'](router['_routes'], method, `${path}?_method=PUT`, '', {}, next);
+
+		expect(route_hit).toEqual(true);
+	});
+
+	test('test middleware function routes successfully ignores _method query param on GET requests', () => {
+		expect.assertions(1);
+
+		const router = new BasicRouter();
+		const path = '/';
+		const method = 'GET';
+		let route_hit = false;
+		const fn = () => {
+			route_hit = true;
+			return Promise.resolve(new Response('{"route_hit": true}'));
+		};
+
+		const next: NextCallback = () => {
+			return Promise.resolve(new Response(''));
+		};
+
+		router.addRoute('GET', path, fn);
+		router.addRoute('PUT', path, () => {
+			fail('PUT route should not run');
+		});
+
+		router['_middleware'](router['_routes'], method, `${path}?_method=PUT`, '', {}, next);
+
+		expect(route_hit).toEqual(true);
+	});
+
 	/**
 	 *
 	 */
@@ -264,7 +369,7 @@ describe('Basic Router Tests', () => {
 	 *
 	 */
 	test('test route successfully returns value out of the middleware', () => {
-		expect.assertions(1);
+		expect.assertions(2);
 		const router = new BasicRouter();
 		const path = '/';
 		const method = 'GET';
@@ -277,8 +382,9 @@ describe('Basic Router Tests', () => {
 			return Promise.resolve(new Response(''));
 		});
 
-		route_hit.then((response: Response) => {
-			expect(response.body).toEqual('route');
+		route_hit.then((response: Response | string) => {
+			expect(response).toBeInstanceOf(Response);
+			expect((response as Response).body).toEqual('route');
 		});
 	});
 
@@ -286,6 +392,7 @@ describe('Basic Router Tests', () => {
 	 *
 	 */
 	test('test next successfully returns value out of the middleware', () => {
+		expect.assertions(2);
 		const router = new BasicRouter();
 		const path = '/';
 		const method = 'GET';
@@ -298,8 +405,9 @@ describe('Basic Router Tests', () => {
 			return Promise.resolve(new Response('next'));
 		});
 
-		route_hit.then((response: Response) => {
-			expect(response.body).toEqual('next');
+		route_hit.then((response: Response | string) => {
+			expect(response).toBeInstanceOf(Response);
+			expect((response as Response).body).toEqual('next');
 		});
 
 	});

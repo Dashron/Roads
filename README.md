@@ -578,6 +578,8 @@ Here's how you use it.
     });
 ```
 
+**Note:** This router supports the `x-http-method-override` header and `_method` query parameter on `POST` requests, which allow you to route to a different HTTP method than `POST`.
+
 ### applyMiddleware(road: *Road*)
 If you don't provide a road to the SimpleRouter constructor, your routes will not be executed. If you have reason not to assign the road off the bat, you can assign it later with this function.
 

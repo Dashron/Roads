@@ -143,15 +143,29 @@ export class BasicRouter {
 	protected _middleware (routes: RouteDetails[], request_method: string, request_url: string, request_body: string,
 		request_headers: IncomingHeaders, next: NextCallback): Promise<Response | string> {
 
+		let realMethod = request_method;
+
 		let response = null;
 		let hit = false;
 
 		const parsed_url = url_module.parse(request_url, true);
 
+		// Only override on POST methods
+		if (realMethod === 'POST') {
+			const methodOverrideHeader = request_headers?.['x-http-method-override'];
+			const methodOverrideQuery = parsed_url.query?.['_method'];
+
+			if (methodOverrideHeader) {
+				realMethod = Array.isArray(methodOverrideHeader) ? methodOverrideHeader.join('') : methodOverrideHeader ;
+			} else if (methodOverrideQuery) {
+				realMethod = Array.isArray(methodOverrideQuery) ? methodOverrideQuery.join('') : methodOverrideQuery ;
+			}
+		}
+
 		for (let i = 0; i < routes.length; i++) {
 			const route = routes[i];
 
-			if (compareRouteAndApplyArgs(route, parsed_url, request_method)) {
+			if (compareRouteAndApplyArgs(route, parsed_url, realMethod)) {
 				response = (route.route).call(this, parsed_url, request_body, request_headers, next);
 				hit = true;
 				break;
