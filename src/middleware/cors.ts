@@ -59,8 +59,6 @@ export function build (options: {
 	*/
 	const corsMiddleware: Middleware<Context> = function (method, url, body, headers, next) {
 		const corsResponseHeaders: Record<string, string> = {};
-		const preflight = method === 'OPTIONS' && headers['access-control-request-method'];
-
 		/*
 		 * Terms
 		 *	"list of origins" consisting of zero or more origins that are allowed access to the resource.
@@ -78,9 +76,12 @@ export function build (options: {
 		 *  "Preflight Requests":  If the Origin header is not present terminate this set of steps. The request is \
 		 * 		outside the scope of this specification. https://www.w3.org/TR/cors/#resource-preflight-requests
 		*/
-		if (!headers.origin) {
+		if (!headers || !headers.origin) {
 			return next();
 		}
+
+		const preflight = method === 'OPTIONS' && headers['access-control-request-method'];
+
 
 		/* Simple:
 		If the value of the Origin header is not a case-sensitive match for any of the values in list of

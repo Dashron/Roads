@@ -12,9 +12,9 @@ describe('road buildNext test', () => {
 		expect.assertions(1);
 
 		const road = new Road();
-		return expect(road['_buildNext']('GET', '/', '', {}, {
+		return expect(road['_buildNext']({
 			request: function() { return Promise.resolve(new Response('')); },
 			Response: Response
-		})()).resolves.toEqual(new Response('Page not found', 404, {}));
+		}, 'GET', '/', '', {}, )()).resolves.toEqual(new Response('Page not found', 404, {}));
 	});
 });

@@ -10,7 +10,7 @@ import { Context, IncomingHeaders, Middleware } from '../core/road';
 
 import * as contentTypeModule from 'content-type';
 import * as qsModule from 'querystring';
-import { OutgoingHeaders } from '../core/response';
+import Response, { OutgoingHeaders } from '../core/response';
 
 /**
  * When using typescript you can pass this when adding middleware or
@@ -20,20 +20,18 @@ import { OutgoingHeaders } from '../core/response';
  * 	the structure passed to `BodyType`.
  */
 export interface ParseBodyContext<BodyType> extends Context {
-	body: BodyType
+	body?: BodyType
 }
 
 function getSingleHeader(headers: IncomingHeaders | OutgoingHeaders, key: string): string | undefined {
-	if (headers) {
-		// This is a little weirder than I would like, but it works better with typescript
-		const val = headers[key];
+	// This is a little weirder than I would like, but it works better with typescript
+	const val = headers[key];
 
-		if (Array.isArray(val)) {
-			return val[0];
-		}
-
-		return val;
+	if (Array.isArray(val)) {
+		return val[0];
 	}
+
+	return val;
 }
 
 /**
@@ -48,8 +46,8 @@ function getSingleHeader(headers: IncomingHeaders | OutgoingHeaders, key: string
  * @returns {(object|string)} parsed body
  * @todo Actually do something with the parameters, such as charset
  */
-function parseRequestBody (body: string, contentType?: string): unknown {
-	if (contentType) {
+function parseRequestBody (body: string | undefined, contentType?: string): unknown {
+	if (contentType && body) {
 		const parsedContentType = contentTypeModule.parse(contentType);
 
 		if (parsedContentType.type === 'application/json') {
@@ -69,6 +67,11 @@ function parseRequestBody (body: string, contentType?: string): unknown {
  * Attempts the parse the request body into a useful object
  */
 export const middleware: Middleware<Context> = function (method, url, body, headers, next) {
-	this.body = parseRequestBody(body, getSingleHeader(headers, 'content-type'));
+	try {
+		this.body = parseRequestBody(body, headers ? getSingleHeader(headers, 'content-type') : undefined);
+	} catch (e) {
+		console.error(e);
+		return new Response('Invalid request body', 400);
+	}
 	return next();
 };

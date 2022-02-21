@@ -15,7 +15,7 @@ export interface IncomingHeaders extends Record<string, string | Array<string> |
 
 export interface Middleware<MiddlewareContext extends Context> {
 	(this: MiddlewareContext, method: string, path: string,
-		body: string, headers: IncomingHeaders,
+		body: string | undefined, headers: IncomingHeaders | undefined,
 		next: NextCallback): Promise<Response | string> | Response | string
 }
 
@@ -94,22 +94,22 @@ export default class Road {
 	 * @returns {Promise} this promise will resolve to a Response object
 	 */
 	request (method: string, url: string, body?: string, headers?: IncomingHeaders): Promise<Response> {
-		return response_lib.wrap(this._buildNext(method, url, body, headers, { })());
+		return response_lib.wrap(this._buildNext({}, method, url, body, headers)());
 	}
 
 	/**
 	 * Turn an HTTP request into an executable function with a useful request context. Will also incorporate the entire
 	 * request handler chain
 	 *
+	 * @param {Context} context - Request context
 	 * @param {string} request_method - HTTP request method
 	 * @param {string} path - HTTP request path
 	 * @param {string} request_body - HTTP request body
 	 * @param {object} request_headers - HTTP request headers
-	 * @param {Context} context - Request context
 	 * @returns {NextMiddleware} A function that will start (or continue) the request chain
 	 */
-	protected _buildNext (request_method: string, path: string, request_body: string | undefined,
-		request_headers: IncomingHeaders | undefined, context: Context
+	protected _buildNext (context: Context, request_method: string, path: string, request_body?: string,
+		request_headers?: IncomingHeaders
 	): NextCallback {
 
 		let progress = 0;

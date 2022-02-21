@@ -60,7 +60,7 @@ export default function applyPublicRotues(router: BasicRouterMiddleware.BasicRou
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	router.addRoute('POST', '/postdata', async function (this: ParseBodyContext<ExampleRequestBody>, url, body, headers) {
-		console.log(`You sent the message:${this.body.message}`);
+		console.log(`You sent the message:${this.body?.message}`);
 		this.ignore_layout = true;
 		return new Response('', 302, { location: '/public' });
 	});

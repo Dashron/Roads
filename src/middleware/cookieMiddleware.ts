@@ -78,7 +78,7 @@ function (route_method, route_path, route_body, route_headers, next) {
 	this.newCookies = {};
 
 	// Find the cookies from the request and store them locally
-	if (route_headers.cookie) {
+	if (route_headers && route_headers.cookie) {
 		cookies = cookie.parse(
 			// todo: hmm... Can we get an array of cookies? I don't think so... this handles it properly if we do though.
 			Array.isArray(route_headers.cookie) ? route_headers.cookie.join('; ') : route_headers.cookie);

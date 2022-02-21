@@ -20,14 +20,21 @@ describe('Parse Request Body tests', () => {
      * Test that valid json parsing works as expected
      */
 	test('test request with invalid json body', () => {
-		expect.assertions(1);
-		const context = {};
+		expect.assertions(2);
+		const context: Record<string, any> = {};
 		const body = '{hello ';
 
-		return expect(() => {
-			// eslint-disable-next-line @typescript-eslint/no-empty-function
-			return middleware.call(context, '', '', body, {'content-type': 'application/json'}, () => {});
-		}).toThrowError();
+		// eslint-disable-next-line @typescript-eslint/no-empty-function
+		const response = middleware.call(context, '', '', body, {'content-type': 'application/json'}, () => {
+			fail('Next should not be called if the request body can not be parsed');
+		});
+
+		expect(context.body).toBe(undefined);
+		expect(response).toEqual({
+			status: 400,
+			headers: {},
+			body: 'Invalid request body',
+		});
 	});
 
 	/**
@@ -63,7 +70,11 @@ describe('Parse Request Body tests', () => {
 
 		return expect(road.request('', '', body, {
 			'content-type' : 'application/json'
-		})).rejects.toEqual(new Error('Unexpected token h in JSON at position 1'));
+		})).resolves.toEqual({
+			status: 400,
+			headers: {},
+			body: 'Invalid request body',
+		});
 	});
 
 

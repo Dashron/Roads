@@ -14,7 +14,7 @@ import { Context, Middleware } from '../core/road';
  * 	the structure passed to `BodyType`.
  */
 export interface ParseBodyContext<BodyType> extends Context {
-    body: BodyType;
+    body?: BodyType;
 }
 /**
  * Attempts the parse the request body into a useful object

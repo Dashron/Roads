@@ -1,6 +1,6 @@
 {
   "name": "roads-example",
-  "version": "7.1.1",
+  "version": "7.3.0",
   "author": {
     "name": "Aaron Hedges",
     "email": "aaron@dashron.com",
@@ -14,7 +14,7 @@
     "brfs": "2.0.2",
     "browserify": "^17.0.0",
     "roads": "file:../../",
-    "roads-server": "1.0.5",
+    "roads-server": "1.1.1",
     "watchify": "^4.0.0"
   },
   "private": true,

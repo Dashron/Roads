@@ -19,7 +19,7 @@ export const middleware: Middleware<ModifiedSinceContext> = function (method, ur
 	this.checkModifiedSince = (lastModifiedTime) => {
 		lastMod = (lastModifiedTime instanceof Date) ? lastModifiedTime : new Date(lastModifiedTime);
 
-		if (headers['if-modified-since']) {
+		if (headers && headers['if-modified-since']) {
 			const lastModified = lastMod;
 			const ifModifiedSince = new Date(Array.isArray(headers['if-modified-since']) ?
 				headers['if-modified-since'][0] : headers['if-modified-since']);
