@@ -1,5 +1,5 @@
 
--3. Profiling (and write about it) Typescript: https://github.com/microsoft/TypeScript/wiki/Performance#performance-tracing Node: https://nodejs.org/en/docs/guides/simple-profiling/
+-3. Figure out a way to have better typing on headers
 -2. Add a "this request only" request chain to the simple router, allowing you to bind a series of functions to a single url. Have it work like the request chain in road.
 -1. Have the package-lock automatically updated pre-commit
 1. Ensure we have JS and Typescript examples for everything.

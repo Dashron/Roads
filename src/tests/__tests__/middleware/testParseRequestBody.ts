@@ -90,4 +90,21 @@ describe('Parse Request Body tests', () => {
 		middleware.call(context, '', '', body, {'content-type': 'application/json; charset=utf-8'}, () => {});
 		expect(context.body).toEqual({hello: 'there'});
 	});
+
+	// You can only have one content type for a request. Commas are not allowed.
+	test('test weird content-type', () => {
+		expect.assertions(1);
+		const context: Record<string, any> = {};
+		const body = '{"hello": "there"}';
+
+		// eslint-disable-next-line @typescript-eslint/no-empty-function
+		expect(middleware.call(context, '', '', body, {
+			'content-type': 'text/html,application/x-www-form-urlencoded'
+		// eslint-disable-next-line @typescript-eslint/no-empty-function
+		}, () => {})).toEqual({
+			status: 400,
+			headers: {},
+			body: 'Invalid content-type header',
+		});
+	});
 });

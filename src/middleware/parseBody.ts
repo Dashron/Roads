@@ -70,6 +70,10 @@ export const middleware: Middleware<Context> = function (method, url, body, head
 	try {
 		this.body = parseRequestBody(body, headers ? getSingleHeader(headers, 'content-type') : undefined);
 	} catch (e) {
+		if (e.message === 'invalid media type') {
+			return new Response('Invalid content-type header', 400);
+		}
+
 		console.error(e);
 		return new Response('Invalid request body', 400);
 	}
