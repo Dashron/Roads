@@ -8,7 +8,7 @@
 import { Context, Middleware } from '../core/road';
 import Response from '../core/response';
 export interface ModifiedSinceContext extends Context {
-    checkModifiedSince: (lastModifiedTime: string | Date) => boolean;
+    shouldReturnNotModifiedResponse: (lastModifiedTime: string | Date) => boolean;
     buildNotModifiedResponse: () => Response;
 }
 export declare const middleware: Middleware<ModifiedSinceContext>;

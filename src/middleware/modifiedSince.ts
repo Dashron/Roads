@@ -9,14 +9,15 @@ import { Context, Middleware } from '../core/road';
 import Response from '../core/response';
 
 export interface ModifiedSinceContext extends Context {
-	checkModifiedSince: (lastModifiedTime: string | Date) => boolean;
+	shouldReturnNotModifiedResponse: (lastModifiedTime: string | Date) => boolean;
 	buildNotModifiedResponse: () => Response;
 }
 
 export const middleware: Middleware<ModifiedSinceContext> = function (method, url, body, headers, next) {
 	let lastMod: Date | null = null;
 
-	this.checkModifiedSince = (lastModifiedTime) => {
+	// This is a mouthful, but I can't think of a better, clear function name
+	this.shouldReturnNotModifiedResponse = (lastModifiedTime: Date | string) => {
 		lastMod = (lastModifiedTime instanceof Date) ? lastModifiedTime : new Date(lastModifiedTime);
 
 		if (headers && headers['if-modified-since']) {
@@ -24,11 +25,14 @@ export const middleware: Middleware<ModifiedSinceContext> = function (method, ur
 			const ifModifiedSince = new Date(Array.isArray(headers['if-modified-since']) ?
 				headers['if-modified-since'][0] : headers['if-modified-since']);
 
+			// If the time the document was last modified is older than or equal to the client's
+			//		provided if-modified-since header, consider it "not modified"
 			if (lastModified.getTime() <= ifModifiedSince.getTime()) {
 				return true;
 			}
 		}
 
+		// Always consider the document modified if the client doesn't provide an if-modified-since header
 		return false;
 	};
 

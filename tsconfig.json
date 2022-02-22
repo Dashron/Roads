@@ -8,7 +8,8 @@
         "strictNullChecks": true,
         "noImplicitThis": true,
         "alwaysStrict": true,
-        "baseUrl": ".",
+		// TODO: Update all imports to be relative to the src folder
+        "baseUrl": "./src",
         "allowSyntheticDefaultImports": true,
         "declaration": true,
         "declarationDir": "./types",
