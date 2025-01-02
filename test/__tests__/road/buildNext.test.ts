@@ -1,5 +1,7 @@
-import { Road } from '../../../index';
-import { Response } from '../../../index';
+import { Road } from '../../../src/index';
+import { Response } from '../../../src/index';
+
+import { describe, expect, test } from 'vitest';
 
 // Note: This file used to have many more tests, but a recent roads change invalidated most of them, and the
 //	migration to jest made it clear that many of them were

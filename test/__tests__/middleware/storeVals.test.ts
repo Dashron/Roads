@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { middleware } from '../../../middleware/storeVals';
+import { middleware } from '../../../src/middleware/storeVals';
 
+import { describe, expect, test } from 'vitest';
 
 describe('Store Values', () => {
 

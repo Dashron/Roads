@@ -1,6 +1,8 @@
 
-import { Road } from '../../../index';
-import { Context } from '../../../core/road';
+import { Road } from '../../../src/index';
+import { Context } from '../../../src/core/road';
+
+import { describe, expect, test } from 'vitest';
 
 interface confirmContext {
 	confirmString: () => string

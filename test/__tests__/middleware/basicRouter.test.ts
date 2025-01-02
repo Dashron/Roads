@@ -1,9 +1,11 @@
 import * as url_module from 'url';
 
-import { BasicRouter, Route, BasicRouterURL } from '../../../middleware/basicRouter';
-import Road from '../../../core/road';
-import Response from '../../../core/response';
-import { Context, NextCallback } from '../../../core/road';
+import { BasicRouter, Route, BasicRouterURL } from '../../../src/middleware/basicRouter';
+import Road from '../../../src/core/road';
+import Response from '../../../src/core/response';
+import { Context, NextCallback } from '../../../src/core/road';
+
+import { describe, expect, test, assert } from 'vitest';
 
 const router_file_test_path = `${__dirname  }/../../resources/_router_file_test.js`;
 
@@ -82,9 +84,7 @@ describe('Basic Router Tests', () => {
 		};
 
 		router.addRoute('PUT', path, fn);
-		router.addRoute('POST', path, () => {
-			fail('POST route should not run');
-		});
+		router.addRoute('POST', path, () => assert.fail('POST route should not run'));
 		router['_middleware'](router['_routes'], method, path, '', {
 			'x-http-method-override': 'PUT'
 		}, next);
@@ -109,9 +109,7 @@ describe('Basic Router Tests', () => {
 		};
 
 		router.addRoute('GET', path, fn);
-		router.addRoute('PUT', path, () => {
-			fail('PUT route should not run');
-		});
+		router.addRoute('PUT', path, () => assert.fail('PUT route should not run'));
 		router['_middleware'](router['_routes'], method, path, '', {
 			'x-http-method-override': 'PUT'
 		}, next);
@@ -136,9 +134,7 @@ describe('Basic Router Tests', () => {
 		};
 
 		router.addRoute('PUT', path, fn);
-		router.addRoute('POST', path, () => {
-			fail('POST route should not run');
-		});
+		router.addRoute('POST', path, () => assert.fail('POST route should not run'));
 		router['_middleware'](router['_routes'], method, `${path}?_method=PUT`, '', {}, next);
 
 		expect(route_hit).toEqual(true);
@@ -161,9 +157,7 @@ describe('Basic Router Tests', () => {
 		};
 
 		router.addRoute('GET', path, fn);
-		router.addRoute('PUT', path, () => {
-			fail('PUT route should not run');
-		});
+		router.addRoute('PUT', path, () => assert.fail('PUT route should not run'));
 
 		router['_middleware'](router['_routes'], method, `${path}?_method=PUT`, '', {}, next);
 

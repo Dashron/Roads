@@ -1,6 +1,8 @@
-import { Road } from '../../../index';
-import { Context, Middleware } from '../../../core/road';
-import { Response } from '../../../index';
+import { Road } from '../../../src/index';
+import { Context, Middleware } from '../../../src/core/road';
+import { Response } from '../../../src/index';
+
+import { describe, expect, test } from 'vitest';
 
 describe('road request', () => {
 	/**

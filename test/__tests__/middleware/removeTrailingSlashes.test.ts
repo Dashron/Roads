@@ -1,6 +1,8 @@
-import { middleware } from '../../../middleware/removeTrailingSlash';
+import { middleware } from '../../../src/middleware/removeTrailingSlash';
 
-import Response from '../../../core/response';
+import Response from '../../../src/core/response';
+
+import { describe, expect, test } from 'vitest';
 
 describe('KillSlashes tests', () => {
 	test('test remove slash doesn\'t break normal', () => {

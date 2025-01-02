@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {  middleware } from '../../../middleware/parseBody';
+import {  middleware } from '../../../src/middleware/parseBody';
 
-import { Context, Middleware as MiddlewareType } from '../../../core/road';
-import { Road } from '../../../index';
-import Response from '../../../core/response';
+import { Context, Middleware as MiddlewareType } from '../../../src/core/road';
+import { Road } from '../../../src/index';
+import Response from '../../../src/core/response';
+
+import { describe, expect, test, assert } from 'vitest';
 
 describe('Parse Request Body tests', () => {
 	test('test request with valid json body', () => {
@@ -26,7 +28,7 @@ describe('Parse Request Body tests', () => {
 
 		// eslint-disable-next-line @typescript-eslint/no-empty-function
 		const response = middleware.call(context, '', '', body, {'content-type': 'application/json'}, () => {
-			fail('Next should not be called if the request body can not be parsed');
+			assert.fail('Next should not be called if the request body can not be parsed');
 		});
 
 		expect(context.body).toBe(undefined);

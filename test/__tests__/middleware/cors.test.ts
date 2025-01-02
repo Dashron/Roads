@@ -1,4 +1,5 @@
-import { build } from '../../../middleware/cors';
+import { build } from '../../../src/middleware/cors';
+import { describe, expect, test } from 'vitest';
 
 describe('Cors tests', () => {
 	test('test cors middleware doesn\'t break normal', () => {

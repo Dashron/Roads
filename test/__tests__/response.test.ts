@@ -1,4 +1,6 @@
-import { Response } from '../../index';
+import { Response } from '../../src/index';
+
+import { describe, expect, test } from 'vitest';
 
 describe('response tests', () => {
 	/**

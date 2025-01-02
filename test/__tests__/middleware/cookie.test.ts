@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { serverMiddleware, buildClientMiddleware } from '../../../middleware/cookieMiddleware';
+import { serverMiddleware, buildClientMiddleware } from '../../../src/middleware/cookieMiddleware';
 
-import { CookieContext } from '../../../middleware/cookieMiddleware';
-import Response from '../../../core/response';
+import { CookieContext } from '../../../src/middleware/cookieMiddleware';
+import Response from '../../../src/core/response';
+
+import { describe, expect, test } from 'vitest';
 
 describe('cookie tests', () => {
 	test('test cookie middleware parses cookies into context', () => {

@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { middleware, ModifiedSinceContext } from '../../../middleware/modifiedSince';
-import Response from '../../../core/response';
+import { middleware, ModifiedSinceContext } from '../../../src/middleware/modifiedSince';
+import Response from '../../../src/core/response';
+
+import { describe, expect, test } from 'vitest';
 
 describe('modified sine tests', () => {
 	test('test not-yet-updated endpoints return 304', async () => {

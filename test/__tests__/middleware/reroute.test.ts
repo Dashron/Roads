@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { build } from '../../../middleware/reroute';
-import Road from '../../../core/road';
-import { Context, Middleware as MiddlewareType } from '../../../core/road';
-import Response from '../../../core/response';
+import { build } from '../../../src/middleware/reroute';
+import Road from '../../../src/core/road';
+import { Context, Middleware as MiddlewareType } from '../../../src/core/road';
+import Response from '../../../src/core/response';
+
+import { describe, expect, test } from 'vitest';
 
 describe('Reroute middleware tests', () => {
 	/**

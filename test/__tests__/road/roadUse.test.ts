@@ -1,4 +1,6 @@
-import { Road } from '../../../index';
+import { Road } from '../../../src/index';
+
+import { describe, expect, test } from 'vitest';
 
 describe('road use', () => {
 	/**

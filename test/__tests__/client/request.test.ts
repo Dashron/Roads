@@ -1,22 +1,11 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import Client from '../../../client/request';
+import Client from '../../../src/client/request';
 import createServer, { port } from '../../resources/mockServer';
 import { Server as HttpServer } from 'http';
 import { Server as HttpsServer } from 'https';
-import Response from '../../../core/response';
-import fetch, { Headers, Request, Response as FetchResponse } from 'node-fetch';
+import Response from '../../../src/core/response';
 
-
-if (!globalThis.fetch) {
-	// @ts-ignore
-	globalThis.fetch = fetch;
-	// @ts-ignore
-	globalThis.Headers = Headers;
-	// @ts-ignore
-	globalThis.Request = Request;
-	// @ts-ignore
-	globalThis.Response = FetchResponse;
-}
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 describe('request', () => {
 	let server: HttpServer | HttpsServer;
@@ -50,20 +39,22 @@ describe('request', () => {
 				one : 'two'
 			}).then(function (response: Response) {
 				expect(response.status).toEqual(200);
-				expect(response.body).toEqual(JSON.stringify({
+				expect(JSON.parse(response.body as string)).toEqual({
 					url: '/',
 					method: 'GET',
 					body: '',
 					headers: {
 						one: 'two',
 						accept: '*/*',
-						'user-agent': 'node-fetch/1.0 (+https://github.com/bitinn/node-fetch)',
-						'accept-encoding': 'gzip,deflate',
-						connection: 'close',
+						'user-agent': 'node',
+						'accept-encoding': 'gzip, deflate',
+						'accept-language': '*',
+						'sec-fetch-mode': 'cors',
+						connection: 'keep-alive',
 						host: `127.0.0.1:${port}`,
 					},
 					message: 'hello!'
-				}));
+				});
 				expect(response.headers['this-is']).toEqual('for real');
 			}));
 		});
@@ -78,7 +69,7 @@ describe('request', () => {
 				one : ['two', 'three']
 			}).then(function (response: Response) {
 				expect(response.status).toEqual(200);
-				expect(response.body).toEqual(JSON.stringify({
+				expect(JSON.parse(response.body as string)).toEqual({
 					url: '/',
 					method: 'GET',
 					body: '',
@@ -86,13 +77,15 @@ describe('request', () => {
 						// node fetch doesn't seem to retain dupe arrays, this is what we get.
 						one: 'two, three',
 						accept: '*/*',
-						'user-agent': 'node-fetch/1.0 (+https://github.com/bitinn/node-fetch)',
-						'accept-encoding': 'gzip,deflate',
-						connection: 'close',
+						'user-agent': 'node',
+						'accept-encoding': 'gzip, deflate',
+						'accept-language': '*',
+						connection: 'keep-alive',
 						host: `127.0.0.1:${port}`,
+						'sec-fetch-mode': 'cors',
 					},
 					message: 'hello!'
-				}));
+				});
 				// I don't think this is correct for dupliate headers, it seems to be something node-fetch is doing,
 				// not sure if it's spec accurate: https://github.com/node-fetch/node-fetch/issues/771
 				expect(response.headers['cache-control']).toEqual('no-cache, no-store');
@@ -114,7 +107,7 @@ describe('request', () => {
 			}).then(function (response: Response) {
 				expect(response.status).toEqual(200);
 
-				expect(response.body).toEqual(JSON.stringify({
+				expect(JSON.parse(response.body as string)).toMatchObject({
 					url: '/',
 					method: 'POST',
 					body: '{"yeah": "what"}',
@@ -123,13 +116,13 @@ describe('request', () => {
 						'content-type': 'text/plain;charset=UTF-8',
 						accept: '*/*',
 						'content-length': '16',
-						'user-agent': 'node-fetch/1.0 (+https://github.com/bitinn/node-fetch)',
-						'accept-encoding': 'gzip,deflate',
-						connection: 'close',
+						'user-agent': 'node',
+						'accept-encoding': 'gzip, deflate',
+						connection: 'keep-alive',
 						host: `127.0.0.1:${port}`,
 					},
 					message: 'hello!'
-				}));
+				});
 
 				expect(response.headers['content-type']).toEqual('application/json');
 			}));

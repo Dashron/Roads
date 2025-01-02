@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { build } from '../../../middleware/applyToContext';
+import { build } from '../../../src/middleware/applyToContext';
+import { describe, expect, test } from 'vitest';
 
 describe('ApplyToContext tests', () => {
 	test('test apply to context applies context', () => {
