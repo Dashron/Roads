@@ -6,7 +6,6 @@
  * The response object contains all of the information you want to send to the client.
  * 	This includes the body, status code and all applicable headers.
  */
-/// <reference types="node" />
 export interface OutgoingHeaders extends Record<string, string | Array<string> | undefined> {
 }
 export default class Response {
@@ -32,3 +31,4 @@ export interface ResponseConstructor {
  * @returns {Promise<unknown>}
  */
 export declare function wrap(promise: Promise<Response | string>): Promise<Response>;
+//# sourceMappingURL=response.d.ts.map

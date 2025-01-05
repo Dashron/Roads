@@ -18,3 +18,4 @@ import { Context, Middleware } from '../core/road';
  * @returns {Middleware} The middleware function to apply to the road.use(fn) method.
  */
 export declare function build(key: string, val: unknown): Middleware<Context>;
+//# sourceMappingURL=applyToContext.d.ts.map

@@ -12,3 +12,4 @@ export interface ModifiedSinceContext extends Context {
     buildNotModifiedResponse: () => Response;
 }
 export declare const middleware: Middleware<ModifiedSinceContext>;
+//# sourceMappingURL=modifiedSince.d.ts.map

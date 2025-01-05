@@ -31,3 +31,4 @@ export interface StoreValsContext extends Context {
  * 	to reduce polluting the context
  */
 export declare const middleware: Middleware<StoreValsContext>;
+//# sourceMappingURL=storeVals.d.ts.map

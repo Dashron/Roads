@@ -19,3 +19,4 @@ import Road from '../core/road';
  * @return {function} The middleware function. This value should be passed to road.use(fn);
  */
 export declare function build(key: string, road: Road): Middleware<Context>;
+//# sourceMappingURL=reroute.d.ts.map

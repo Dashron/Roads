@@ -1,24 +1,27 @@
 {
-    "compilerOptions": {
-        "outDir": "./dist",
-        "target": "es2015",
-        "module": "CommonJS",
-        "moduleResolution": "node",
-        "noImplicitAny": true,
-        "strictNullChecks": true,
-        "noImplicitThis": true,
-        "alwaysStrict": true,
-		// TODO: Update all imports to be relative to the src folder
-        "baseUrl": "./src",
-        "allowSyntheticDefaultImports": true,
-        "declaration": true,
-        "declarationDir": "./types",
-		"types" : ["node", "jest"]
-    },
-    "exclude": [
-		"src/tests"
-    ],
-    "include": [
-        "src/index.ts"
-    ]
+	"compilerOptions": {
+		"outDir": "./dist",
+		"target": "ES2022",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"noImplicitAny": true,
+		"strictNullChecks": true,
+		"noImplicitThis": true,
+		"alwaysStrict": true,
+		"baseUrl": "./src",
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"declaration": true,
+		"declarationDir": "./types",
+		"types": ["node"],
+		"lib": ["es2022", "dom"],
+		"declarationMap": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"inlineSources": true,
+		"sourceRoot": "/",
+		"noErrorTruncation": true
+	},
+	"exclude": ["test"],
+	"include": ["src/index.ts"]
 }

@@ -11,3 +11,4 @@ export * as RerouteMiddleware from './middleware/reroute';
 export * as StoreValsMiddleware from './middleware/storeVals';
 export * as ModifiedSinceMiddleware from './middleware/modifiedSince';
 export * as BasicRouterMiddleware from './middleware/basicRouter';
+//# sourceMappingURL=index.d.ts.map

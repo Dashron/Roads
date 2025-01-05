@@ -59,3 +59,4 @@ export declare const serverMiddleware: Middleware<CookieContext>;
  */
 export declare const buildClientMiddleware: (pageDocument: Document) => Middleware<CookieContext>;
 export {};
+//# sourceMappingURL=cookieMiddleware.d.ts.map

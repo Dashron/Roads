@@ -20,3 +20,4 @@ export interface ParseBodyContext<BodyType> extends Context {
  * Attempts the parse the request body into a useful object
  */
 export declare const middleware: Middleware<Context>;
+//# sourceMappingURL=parseBody.d.ts.map

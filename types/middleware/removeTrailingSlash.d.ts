@@ -15,3 +15,4 @@ import { Context, Middleware } from '../core/road';
  * Any requests with trailing slashes will immediately return a Response object redirecting to a non-trailing-slash path
  */
 export declare const middleware: Middleware<Context>;
+//# sourceMappingURL=removeTrailingSlash.d.ts.map

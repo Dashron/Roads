@@ -93,3 +93,4 @@ export default class RoadsPjax {
      */
     protected _roadsFormEvent(form: HTMLFormElement): void;
 }
+//# sourceMappingURL=pjax.d.ts.map

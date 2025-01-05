@@ -6,7 +6,6 @@
  * This is a basic router middleware for roads.
  * 	It allows you to easily attach functionality to HTTP methods and paths.
  */
-/// <reference types="node" />
 import * as url_module from 'url';
 import { IncomingHeaders, NextCallback } from '../core/road';
 import Road, { Context } from '../core/road';
@@ -96,3 +95,4 @@ export declare class BasicRouter {
     protected _middleware(routes: RouteDetails[], request_method: string, request_url: string, request_body: string, request_headers: IncomingHeaders, next: NextCallback): Promise<Response | string>;
 }
 export {};
+//# sourceMappingURL=basicRouter.d.ts.map

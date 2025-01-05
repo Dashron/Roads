@@ -41,3 +41,4 @@ export default class Request {
      */
     request(method: string, path: string, body?: string, headers?: IncomingHeaders): Promise<Response>;
 }
+//# sourceMappingURL=request.d.ts.map

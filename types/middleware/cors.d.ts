@@ -30,3 +30,4 @@ export declare function build(options: {
         log: (ley: string, data?: unknown) => void;
     };
 }): Middleware<Context>;
+//# sourceMappingURL=cors.d.ts.map
