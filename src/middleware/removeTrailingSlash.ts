@@ -11,7 +11,7 @@
  * 	with Location: [url_without_slash])
  */
 import { Context, Middleware } from '../core/road';
-import * as url_module from 'url';
+import parse from 'url-parse';
 import Response from '../core/response';
 
 /**
@@ -19,8 +19,8 @@ import Response from '../core/response';
  */
 export const middleware: Middleware<Context> = function (method, url, body, headers, next) {
 	// TODO: parse is deprecated, but the URL object that replaces it doesn't do what I need it to
-	const parsedUrl = url_module.parse(url);
-	const parsedPath = parsedUrl.path;
+	const parsedUrl = parse(url);
+	const parsedPath = parsedUrl.pathname;
 
 	if (!parsedPath) {
 		return next();

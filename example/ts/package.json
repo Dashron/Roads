@@ -7,20 +7,19 @@
     "url": "http://www.dashron.com"
   },
   "description": "Example for roads.js",
-  "devDependencies": {},
+  "devDependencies": {
+    "esbuild": "0.24.2"
+  },
   "dependencies": {
-    "@types/browserify": "^12.0.37",
-    "@types/watchify": "^3.11.1",
     "brfs": "2.0.2",
-    "browserify": "^17.0.0",
     "roads": "file:../../",
     "roads-server": "1.1.1",
-    "watchify": "^4.0.0"
+    "typescript": "^5.7.3"
   },
   "private": true,
   "scripts": {
-    "start": "tsc && node dist/node/server.js",
-	"build": "npm install && tsc && node dist/node/buildClient.js"
+    "start": "./node_modules/.bin/tsc && node dist/node/server.js",
+    "build": "./node_modules/.bin/esbuild src/client.ts --bundle --outfile=public/client.js"
   },
   "license": "MIT"
 }

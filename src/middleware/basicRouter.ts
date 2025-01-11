@@ -7,7 +7,7 @@
  * 	It allows you to easily attach functionality to HTTP methods and paths.
  */
 
-import * as url_module from 'url';
+import parse from 'url-parse';
 import { IncomingHeaders, NextCallback } from '../core/road';
 import Road, {Context} from '../core/road';
 import Response from '../core/response';
@@ -24,7 +24,7 @@ interface RouteDetails {
 	method: string
 }
 
-export interface BasicRouterURL extends url_module.UrlWithParsedQuery {
+export interface BasicRouterURL extends ReturnType<typeof parse> {
 	args?: Record<string, string | number>
 }
 /**
@@ -148,7 +148,7 @@ export class BasicRouter {
 		let response = null;
 		let hit = false;
 
-		const parsed_url = url_module.parse(request_url, true);
+		const parsed_url = parse(request_url, true);
 
 		// Only override on POST methods
 		if (realMethod === 'POST') {
@@ -190,7 +190,7 @@ export class BasicRouter {
  * @param {string} request_method - HTTP request method
  * @returns {boolean}
  */
-function compareRouteAndApplyArgs (route: {method: string, path: string}, request_url: url_module.UrlWithParsedQuery,
+function compareRouteAndApplyArgs (route: {method: string, path: string}, request_url: ReturnType<typeof parse>,
 	request_method: string): boolean {
 
 	if (route.method !== request_method || !request_url.pathname) {

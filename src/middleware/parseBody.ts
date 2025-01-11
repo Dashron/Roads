@@ -9,7 +9,7 @@
 import { Context, IncomingHeaders, Middleware } from '../core/road';
 
 import * as contentTypeModule from 'content-type';
-import * as qsModule from 'querystring';
+import * as qsModule from 'fast-querystring';
 import Response, { OutgoingHeaders } from '../core/response';
 
 /**

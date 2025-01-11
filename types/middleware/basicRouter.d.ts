@@ -6,7 +6,7 @@
  * This is a basic router middleware for roads.
  * 	It allows you to easily attach functionality to HTTP methods and paths.
  */
-import * as url_module from 'url';
+import parse from 'url-parse';
 import { IncomingHeaders, NextCallback } from '../core/road';
 import Road, { Context } from '../core/road';
 import Response from '../core/response';
@@ -18,7 +18,7 @@ interface RouteDetails {
     path: string;
     method: string;
 }
-export interface BasicRouterURL extends url_module.UrlWithParsedQuery {
+export interface BasicRouterURL extends ReturnType<typeof parse> {
     args?: Record<string, string | number>;
 }
 /**

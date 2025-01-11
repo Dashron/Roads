@@ -13,49 +13,53 @@ Roads is a simple web framework. It's similar to Express.js, but has some very i
 ![Build status](https://travis-ci.org/Dashron/roads.svg?branch=master)
 
 # Table of Contents
+- [The Roads.js isomorphic web framework](#the-roadsjs-isomorphic-web-framework)
+- [Why should I use Roads?](#why-should-i-use-roads)
+- [Build Status](#build-status)
+- [Table of Contents](#table-of-contents)
 - [Getting Started](#getting-started)
 - [Road](#road)
-	- [new Road()](#new-road)
-	- [use(fn *Function*)](#usefn-function)
-		- [Middleware](#middleware)
-		- [How do I control the order of my middleware?](#how-do-i-control-the-order-of-my-middleware)
-		- [Context](#context)
-			- [Typing your context](#typing-your-context)
-	- [request(method: *string*, url: *string*, body?: *string*, headers?: *object*)](#requestmethod-string-url-string-body-string-headers-object)
+  - [new Road()](#new-road)
+  - [use(fn *Function*)](#usefn-function)
+    - [Middleware](#middleware)
+    - [How do I control the order of my middleware?](#how-do-i-control-the-order-of-my-middleware)
+    - [Context](#context)
+      - [Typing your context](#typing-your-context)
+  - [request(method: *string*, url: *string*, body?: *string*, headers?: *object*)](#requestmethod-string-url-string-body-string-headers-object)
 - [Response](#response)
-	- [new Response(body: *string*, status?: *number*, headers?: *object*)](#new-responsebody-string-status-number-headers-object)
-	- [Body](#body)
-	- [Status](#status)
-	- [Headers](#headers)
+  - [new Response(body: *string*, status?: *number*, headers?: *object*)](#new-responsebody-string-status-number-headers-object)
+  - [Body](#body)
+  - [Status](#status)
+  - [Headers](#headers)
 - [Bundled Middleware](#bundled-middleware)
-	- [Cookies](#cookies)
-		- [serverMiddleware](#servermiddleware)
-		- [buildClientMiddleware(pageDocumenet: *Document*)](#buildclientmiddlewarepagedocumenet-document)
-		- [Cookie Context](#cookie-context)
-			- [setCookie(name: *string*, value?: *string*, options?: *object*)](#setcookiename-string-value-string-options-object)
-			- [getCookies()](#getcookies)
-	- [CORS](#cors)
-	- [Parsing request bodies](#parsing-request-bodies)
-		- [Parse Body Context](#parse-body-context)
-	- [Remove trailing slash](#remove-trailing-slash)
-	- [Basic router](#basic-router)
-		- [applyMiddleware(road: *Road*)](#applymiddlewareroad-road)
-		- [addRoute(method: *string*, path: *string*, fn: *function*)](#addroutemethod-string-path-string-fn-function)
-		- [addRouteFile(filePath: *string*, prefix?: *string*)](#addroutefilefilepath-string-prefix-string)
-	- [If-Modified-Since caching](#if-modified-since-caching)
-		- [checkModifiedSince(date: string | Date)](#checkmodifiedsincedate-string--date)
-		- [buildNotModifiedResponse()](#buildnotmodifiedresponse)
+  - [Cookies](#cookies)
+    - [serverMiddleware](#servermiddleware)
+    - [buildClientMiddleware(pageDocumenet: *Document*)](#buildclientmiddlewarepagedocumenet-document)
+    - [Cookie Context](#cookie-context)
+      - [setCookie(name: *string*, value?: *string*, options?: *object*)](#setcookiename-string-value-string-options-object)
+      - [getCookies()](#getcookies)
+  - [CORS](#cors)
+  - [Parsing request bodies](#parsing-request-bodies)
+    - [Parse Body Context](#parse-body-context)
+  - [Remove trailing slash](#remove-trailing-slash)
+  - [Basic router](#basic-router)
+    - [applyMiddleware(road: *Road*)](#applymiddlewareroad-road)
+    - [addRoute(method: *string*, path: *string*, fn: *function*)](#addroutemethod-string-path-string-fn-function)
+    - [addRouteFile(filePath: *string*, prefix?: *string*)](#addroutefilefilepath-string-prefix-string)
+  - [If-Modified-Since caching](#if-modified-since-caching)
+    - [checkModifiedSince(date: string | Date)](#checkmodifiedsincedate-string--date)
+    - [buildNotModifiedResponse()](#buildnotmodifiedresponse)
 - [Middleware helpers](#middleware-helpers)
-	- [Apply To Context](#apply-to-context)
-	- [Reroute](#reroute)
-	- [Store Values](#store-values)
+  - [Apply To Context](#apply-to-context)
+  - [Reroute](#reroute)
+  - [Store Values](#store-values)
 - [PJAX(road: *Road*, containerElement: *DomElement*, window: *Window*)](#pjaxroad-road-containerelement-domelement-window-window)
-	- [PJAX.register()](#pjaxregister)
-	- [PJAX.registerAdditionalElement(element: *HTMLAnchorElement*)](#pjaxregisteradditionalelementelement-htmlanchorelement)
-	- [PJAX Link Format](#pjax-link-format)
-	- [PJAX Form Format](#pjax-form-format)
-	- [PJAX Page titles](#pjax-page-titles)
-		- [PJAX Page Title Example](#pjax-page-title-example)
+  - [PJAX.register()](#pjaxregister)
+  - [PJAX.registerAdditionalElement(element: *HTMLAnchorElement*)](#pjaxregisteradditionalelementelement-htmlanchorelement)
+  - [PJAX Link Format](#pjax-link-format)
+  - [PJAX Form Format](#pjax-form-format)
+  - [PJAX Page titles](#pjax-page-titles)
+    - [PJAX Page Title Example](#pjax-page-title-example)
 - [Isomorphic PJAX tips](#isomorphic-pjax-tips)
 - [FAQ](#faq)
 
@@ -143,10 +147,10 @@ Building a project with roads is very straightforward.
         });
     ```
 
- - You can also use browserify to compile everything for use in the browser. Check out the file example/ts/build.ts for more details.
+ - You can also use a bundler (like esbuild, rollup or webpack) to compile everything for use in the browser. Check out the file example/ts/package.json for more details.
 
 
-Now that you can interact with your ROad, continue reading the docs below for more information on [routers](#simplerouter), [error handling](#roadusefn-function), [PJAX support](#pjaxroad-road) and more!
+Now that you can interact with your Road, continue reading the docs below for more information on [routers](#simplerouter), [error handling](#roadusefn-function), [PJAX support](#pjaxroad-road) and more!
 
 
 
@@ -874,7 +878,7 @@ There's a very easy pattern to follow to ensure sharing client and server code w
 
 1. Any route that is unsafe to be run in the browser should be kept in separate files from the rest.
 2. Create two initalization scripts. One for starting the server, and one that will be compiled and loaded in the browser.
-3. Compile the browser script to be run in the browser. Currently I recommend Browserify, and that's how the typescript example works.
+3. Compile the browser script to be run in the browser. Currently I recommend esbuild, and that's how the typescript example works.
 4. Load the browser script on any server side page that should enable PJAX.
 
 # FAQ

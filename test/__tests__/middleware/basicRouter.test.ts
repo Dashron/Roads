@@ -1,4 +1,4 @@
-import * as url_module from 'url';
+import parse from 'url-parse';
 
 import { BasicRouter, Route, BasicRouterURL } from '../../../src/middleware/basicRouter';
 import Road from '../../../src/core/road';
@@ -259,7 +259,7 @@ describe('Basic Router Tests', () => {
 
 		const route: Route<Context> = (request_url, request_body, request_headers) => {
 			// parsed url
-			expect(request_url).toEqual(url_module.parse(path, true));
+			expect(request_url).toEqual(parse(path, true));
 			// passthrough request body
 			expect(request_body).toEqual(body);
 			// passthrough headers
@@ -289,7 +289,7 @@ describe('Basic Router Tests', () => {
 
 		const route: Route<Context> = (request_url, request_body, request_headers) => {
 			// parsed url
-			const parsed_url: BasicRouterURL = url_module.parse(req_path, true);
+			const parsed_url: BasicRouterURL = parse(req_path, true);
 			parsed_url.args = {numeric: 12345};
 			expect(request_url).toEqual(parsed_url);
 			// passthrough request body
@@ -321,7 +321,7 @@ describe('Basic Router Tests', () => {
 
 		const route: Route<Context> = (request_url, request_body, request_headers) => {
 			// parsed url
-			const parsed_url: BasicRouterURL = url_module.parse(req_path, true);
+			const parsed_url: BasicRouterURL = parse(req_path, true);
 			parsed_url.args = {string: 'hello'};
 			expect(request_url).toEqual(parsed_url);
 			// passthrough request body

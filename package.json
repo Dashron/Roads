@@ -38,8 +38,12 @@
     "typescript": "^5.7.2"
   },
   "dependencies": {
+    "@types/url-parse": "^1.4.11",
     "content-type": "^1.0.4",
     "cookie": "^0.4.1",
+    "fast-querystring": "^1.1.2",
+    "url": "^0.11.4",
+    "url-parse": "^1.5.10",
     "vitest": "^2.1.8"
   },
   "license": "MIT",
