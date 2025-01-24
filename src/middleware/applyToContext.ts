@@ -12,15 +12,12 @@ import { Context, Middleware } from '../core/road';
 /**
  * This is a very simple middleware to apply a single value to the request context with a single line of code.
  *
- * TODO: Get better typing on this. I think we need to wait for https://github.com/Microsoft/TypeScript/pull/26797.
- *		In the meanwhile if you use this middleware you should create your own context.
- *
  * @param {string} key - The key that should store the value on the request context.
  * @param {any} val - The value to apply to the request context.
  * @returns {Middleware} The middleware function to apply to the road.use(fn) method.
  */
-export function build (key: string, val: unknown): Middleware<Context> {
-	const applyToContext: Middleware<Context> = function (method, url, body, headers, next) {
+export function build<T extends Context, K extends keyof T> (key: K, val: T[K]): Middleware<T> {
+	const applyToContext: Middleware<T> = function (method, url, body, headers, next) {
 		this[key] = val;
 		return next();
 	};

@@ -77,6 +77,6 @@ describe('Road Context', () => {
 			return await next();
 		});
 
-		expect(road['_request_chain'].length).toEqual(1);
+		expect(road['_request_chain'].length()).toEqual(1);
 	});
 });

@@ -21,7 +21,7 @@ describe('cookie tests', () => {
 		expect(context.getCookies().abc).toEqual('def');
 	});
 
-	test('test cookie middleware will update the response headers', () => {
+	test('test cookie middleware will update the response headers', async () => {
 		expect.assertions(1);
 		const context = {
 			Response: Response
@@ -33,14 +33,14 @@ describe('cookie tests', () => {
 		};
 
 		// eslint-disable-next-line @typescript-eslint/no-empty-function
-		expect(serverMiddleware.call(context, 'a', 'b', 'c', {}, next.bind(context)))
-			.resolves.toEqual(new Response('test', 200, {
+		expect(await serverMiddleware.call(context, 'a', 'b', 'c', {}, next.bind(context)))
+			.toEqual(new Response('test', 200, {
 
 				'Set-Cookie': ['foo=bar']
 			}));
 	});
 
-	test('test that getCookies merges new and old cookies together and properly sets outgoing header', () => {
+	test('test that getCookies merges new and old cookies together and properly sets outgoing header', async () => {
 		expect.assertions(2);
 		const context = {
 			Response: Response
@@ -56,10 +56,10 @@ describe('cookie tests', () => {
 			return Promise.resolve('test');
 		};
 
-		expect(serverMiddleware.call(context, 'a', 'b', 'c', {
+		expect(await serverMiddleware.call(context, 'a', 'b', 'c', {
 			cookie: 'abc=def'
 		}, next.bind(context)))
-			.resolves.toEqual(new Response('test', 200, {
+			.toEqual(new Response('test', 200, {
 
 				'Set-Cookie': ['foo=bar']
 			}));

@@ -3,9 +3,10 @@ import parse from 'url-parse';
 import { BasicRouter, Route, BasicRouterURL } from '../../../src/middleware/basicRouter';
 import Road from '../../../src/core/road';
 import Response from '../../../src/core/response';
-import { Context, NextCallback } from '../../../src/core/road';
+import { Context } from '../../../src/core/road';
 
 import { describe, expect, test, assert } from 'vitest';
+import { NextCallback } from '../../../src/core/requestChain';
 
 const router_file_test_path = `${__dirname  }/../../resources/_router_file_test.js`;
 
@@ -39,7 +40,7 @@ describe('Basic Router Tests', () => {
 		const router = new BasicRouter();
 		router.applyMiddleware(road);
 
-		expect(road['_request_chain'].length).toEqual(1);
+		expect(road['_request_chain'].length()).toEqual(1);
 	});
 
 	/**
@@ -62,9 +63,24 @@ describe('Basic Router Tests', () => {
 		};
 
 		router.addRoute(method, path, fn);
-		router['_middleware'](router['_routes'], method, path, '', {}, next);
+		router['_middleware'].call({}, router['_routes'], method, path, '', {}, next);
 
 		expect(route_hit).toEqual(true);
+	});
+
+	test('test middleware function 405s when route exists but method is not present', () => {
+		expect.assertions(1);
+
+		const router = new BasicRouter();
+		const path = '/';
+
+		const next: NextCallback = () => {
+			return Promise.resolve(new Response(''));
+		};
+
+		router.addRoute('POST', path, () => assert.fail('POST route should not run'));
+		return expect(router['_middleware'].call({}, router['_routes'], 'GET', path, '', {}, next))
+			.resolves.toEqual(new Response('Method Not Allowed', 405));
 	});
 
 	test('test middleware function routes successfully to successful routes with x-http-method-override header', () => {
@@ -85,7 +101,7 @@ describe('Basic Router Tests', () => {
 
 		router.addRoute('PUT', path, fn);
 		router.addRoute('POST', path, () => assert.fail('POST route should not run'));
-		router['_middleware'](router['_routes'], method, path, '', {
+		router['_middleware'].call({}, router['_routes'], method, path, '', {
 			'x-http-method-override': 'PUT'
 		}, next);
 
@@ -110,7 +126,7 @@ describe('Basic Router Tests', () => {
 
 		router.addRoute('GET', path, fn);
 		router.addRoute('PUT', path, () => assert.fail('PUT route should not run'));
-		router['_middleware'](router['_routes'], method, path, '', {
+		router['_middleware'].call({}, router['_routes'], method, path, '', {
 			'x-http-method-override': 'PUT'
 		}, next);
 
@@ -135,7 +151,7 @@ describe('Basic Router Tests', () => {
 
 		router.addRoute('PUT', path, fn);
 		router.addRoute('POST', path, () => assert.fail('POST route should not run'));
-		router['_middleware'](router['_routes'], method, `${path}?_method=PUT`, '', {}, next);
+		router['_middleware'].call({}, router['_routes'], method, `${path}?_method=PUT`, '', {}, next);
 
 		expect(route_hit).toEqual(true);
 	});
@@ -159,7 +175,7 @@ describe('Basic Router Tests', () => {
 		router.addRoute('GET', path, fn);
 		router.addRoute('PUT', path, () => assert.fail('PUT route should not run'));
 
-		router['_middleware'](router['_routes'], method, `${path}?_method=PUT`, '', {}, next);
+		router['_middleware'].call({}, router['_routes'], method, `${path}?_method=PUT`, '', {}, next);
 
 		expect(route_hit).toEqual(true);
 	});
@@ -190,7 +206,7 @@ describe('Basic Router Tests', () => {
 
 		router.addRoute(method, path, fn);
 		router.addRoute(method, path, fn2);
-		router['_middleware'](router['_routes'], method, path, '', {}, next);
+		router['_middleware'].call({}, router['_routes'], method, path, '', {}, next);
 
 		expect(route_hit).toEqual(true);
 	});
@@ -198,7 +214,7 @@ describe('Basic Router Tests', () => {
 	/**
 	 *
 	 */
-	test('test middleware function routes to next  on a missed url', () => {
+	test('test middleware function routes to next on a missed url', () => {
 		expect.assertions(2);
 		const router = new BasicRouter();
 		const path = '/';
@@ -211,7 +227,7 @@ describe('Basic Router Tests', () => {
 		};
 
 		router.addRoute('/foo', method, fn);
-		router['_middleware'](router['_routes'], method, path, '', {}, () => {
+		router['_middleware'].call({}, router['_routes'], method, path, '', {}, () => {
 			next_hit = true;
 			return Promise.resolve(new Response(''));
 		});
@@ -236,7 +252,7 @@ describe('Basic Router Tests', () => {
 		};
 
 		router.addRoute(path, 'PUT', fn);
-		router['_middleware'](router['_routes'], method, path, '', {}, () => {
+		router['_middleware'].call({}, router['_routes'], method, path, '', {}, () => {
 			next_hit = true;
 			return Promise.resolve(new Response(''));
 		});
@@ -249,7 +265,7 @@ describe('Basic Router Tests', () => {
 	 *
 	 */
 	test('test route function with no template gets the proper context and arguments', () => {
-		expect.assertions(3);
+		expect.assertions(4);
 
 		const router = new BasicRouter();
 		const path = '/';
@@ -257,7 +273,8 @@ describe('Basic Router Tests', () => {
 		const body = '{"harvey": "birdman"}';
 		const headers = {bojack: 'horseman'};
 
-		const route: Route<Context> = (request_url, request_body, request_headers) => {
+		const route: Route<Context> = (request_method, request_url, request_body, request_headers) => {
+			expect(request_method).toEqual(method);
 			// parsed url
 			expect(request_url).toEqual(parse(path, true));
 			// passthrough request body
@@ -270,7 +287,7 @@ describe('Basic Router Tests', () => {
 
 		router.addRoute(method, path,route);
 
-		router['_middleware'](router['_routes'], method, path, body, headers, () => {
+		router['_middleware'].call({}, router['_routes'], method, path, body, headers, () => {
 			return Promise.resolve(new Response(''));
 		});
 	});
@@ -279,7 +296,7 @@ describe('Basic Router Tests', () => {
 	 *
 	 */
 	test('test route function with numeric template gets the proper context and arguments', () => {
-		expect.assertions(3);
+		expect.assertions(4);
 		const router = new BasicRouter();
 		const path = '/#numeric';
 		const req_path = '/12345';
@@ -287,7 +304,8 @@ describe('Basic Router Tests', () => {
 		const body = '{"harvey": "birdman"}';
 		const headers = {bojack: 'horseman'};
 
-		const route: Route<Context> = (request_url, request_body, request_headers) => {
+		const route: Route<Context> = (request_method, request_url, request_body, request_headers) => {
+			expect(request_method).toEqual(method);
 			// parsed url
 			const parsed_url: BasicRouterURL = parse(req_path, true);
 			parsed_url.args = {numeric: 12345};
@@ -302,7 +320,7 @@ describe('Basic Router Tests', () => {
 
 		router.addRoute(method, path, route);
 
-		router['_middleware'](router['_routes'], method, req_path, body, headers, () => {
+		router['_middleware'].call({}, router['_routes'], method, req_path, body, headers, () => {
 			return Promise.resolve(new Response(''));
 		});
 	});
@@ -311,7 +329,7 @@ describe('Basic Router Tests', () => {
 	 *
 	 */
 	test('test route function with string template gets the proper context and arguments', () => {
-		expect.assertions(3);
+		expect.assertions(4);
 		const router = new BasicRouter();
 		const path = '/$string';
 		const req_path = '/hello';
@@ -319,7 +337,8 @@ describe('Basic Router Tests', () => {
 		const body = '{"harvey": "birdman"}';
 		const headers = {bojack: 'horseman'};
 
-		const route: Route<Context> = (request_url, request_body, request_headers) => {
+		const route: Route<Context> = (request_method, request_url, request_body, request_headers) => {
+			expect(request_method).toEqual(method);
 			// parsed url
 			const parsed_url: BasicRouterURL = parse(req_path, true);
 			parsed_url.args = {string: 'hello'};
@@ -333,7 +352,7 @@ describe('Basic Router Tests', () => {
 
 		router.addRoute(method, path, route);
 
-		router['_middleware'](router['_routes'], method, req_path, body, headers, () => {
+		router['_middleware'].call({}, router['_routes'], method, req_path, body, headers, () => {
 			return Promise.resolve(new Response(''));
 		});
 	});
@@ -352,11 +371,11 @@ describe('Basic Router Tests', () => {
 		};
 
 		router.addRoute(method, path, fn);
-		expect(() => {
-			router['_middleware'](router['_routes'], method, path, '', {}, () => {
+		return expect(() => {
+			return router['_middleware'].call({}, router['_routes'], method, path, '', {}, () => {
 				return Promise.resolve(new Response(''));
 			});
-		}).toThrow(new Error(error_message));
+		}).rejects.toThrow(new Error(error_message));
 	});
 
 	/**
@@ -372,9 +391,11 @@ describe('Basic Router Tests', () => {
 		};
 
 		router.addRoute(method, path, fn);
-		const route_hit: Promise<Response | string> = router['_middleware'](router['_routes'], method, path, '', {}, () => {
-			return Promise.resolve(new Response(''));
-		});
+		const route_hit: Promise<Response | string> = router['_middleware'].call(
+			{}, router['_routes'], method, path, '', {}, () => {
+				return Promise.resolve(new Response(''));
+			}
+		);
 
 		route_hit.then((response: Response | string) => {
 			expect(response).toBeInstanceOf(Response);
@@ -395,9 +416,11 @@ describe('Basic Router Tests', () => {
 		};
 
 		router.addRoute(path, 'PUT', fn);
-		const route_hit: Promise<Response | string> = router['_middleware'](router['_routes'], method, path, '', {}, () => {
-			return Promise.resolve(new Response('next'));
-		});
+		const route_hit: Promise<Response | string> = router['_middleware'].call(
+			{}, router['_routes'], method, path, '', {}, () => {
+				return Promise.resolve(new Response('next'));
+			}
+		);
 
 		route_hit.then((response: Response | string) => {
 			expect(response).toBeInstanceOf(Response);
@@ -476,7 +499,7 @@ describe('Basic Router Tests', () => {
 					expect(results[1]).toEqual(new Response('root post successful'));
 					expect(results[2]).toEqual(new Response('test get successful'));
 
-					expect(results[3]).toEqual(new Response('Page not found', 404));
+					expect(results[3]).toEqual(new Response('Method Not Allowed', 405));
 
 					expect(results[4]).toEqual(new Response('Page not found', 404));
 				});
@@ -505,10 +528,45 @@ describe('Basic Router Tests', () => {
 					expect(results[1]).toEqual(new Response('root post successful'));
 					expect(results[2]).toEqual(new Response('test get successful'));
 
-					expect(results[3]).toEqual(new Response('Page not found', 404));
+					expect(results[3]).toEqual(new Response('Method Not Allowed', 405));
 
 					expect(results[4]).toEqual(new Response('Page not found', 404));
 				});
 			});
+	});
+
+	test('test routes using a request chain successfully progress through the chain', () => {
+		expect.assertions(3);
+		const road = new Road();
+		const router = new BasicRouter();
+		router.applyMiddleware(road);
+
+		const path = '/';
+		const method = 'GET';
+		let route_hit = '';
+		const fn: Route<Context> = async (method, url, body, headers, next) => {
+			// this logged undefined undefined [Function (anonymous)] undefined undefined
+			console.log(method, url, body, headers, next);
+			const result = await next();
+
+			if (result instanceof Response) {
+				return result;
+			}
+
+			return new Response(result);
+		};
+
+		const fn2: Route<Context> = (method, url, body, headers, next) => {
+			route_hit = 'route';
+			return Promise.resolve(new Response(''));
+		};
+
+		router.addRoute(method, path, [fn, fn2]);
+
+		return road.request(method, path).then((response: Response) => {
+			expect(route_hit).toEqual('route');
+			expect(response).toBeInstanceOf(Response);
+			expect(response.body).toEqual('');
+		});
 	});
 });

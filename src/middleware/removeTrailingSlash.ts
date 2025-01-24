@@ -18,7 +18,6 @@ import Response from '../core/response';
  * Any requests with trailing slashes will immediately return a Response object redirecting to a non-trailing-slash path
  */
 export const middleware: Middleware<Context> = function (method, url, body, headers, next) {
-	// TODO: parse is deprecated, but the URL object that replaces it doesn't do what I need it to
 	const parsedUrl = parse(url);
 	const parsedPath = parsedUrl.pathname;
 

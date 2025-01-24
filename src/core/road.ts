@@ -9,7 +9,7 @@
 
 import * as response_lib from './response';
 import Response from './response';
-
+import { NextCallback, RequestChain } from './requestChain';
 
 export interface IncomingHeaders extends Record<string, string | Array<string> | undefined> {}
 
@@ -17,10 +17,6 @@ export interface Middleware<MiddlewareContext extends Context> {
 	(this: MiddlewareContext, method: string, path: string,
 		body: string | undefined, headers: IncomingHeaders | undefined,
 		next: NextCallback): Promise<Response | string> | Response | string
-}
-
-export interface NextCallback {
-	(): Promise<Response | string>
 }
 
 export interface Context extends Record<string, unknown> {}
@@ -31,7 +27,7 @@ export interface Context extends Record<string, unknown> {}
  * @name Road
  */
 export default class Road {
-	protected _request_chain: Middleware<Context>[];
+	protected _request_chain: RequestChain<Middleware<Context>>;
 
 	/**
 	 * Road Constructor
@@ -39,7 +35,7 @@ export default class Road {
 	 * Creates a new Road object
 	 */
 	constructor () {
-		this._request_chain = [];
+		this._request_chain = new RequestChain();
 	}
 
 	/**
@@ -73,7 +69,7 @@ export default class Road {
 	use<ContextType extends Context> (fn: Middleware<ContextType>): Road {
 		// Currently we pass everything through the coroutine wrapper to be save. Let that library decide
 		// 		what does and does not actually need to be wrapped
-		this._request_chain.push(fn);
+		this._request_chain.add(fn);
 
 		return this;
 	}
@@ -94,40 +90,6 @@ export default class Road {
 	 * @returns {Promise} this promise will resolve to a Response object
 	 */
 	request (method: string, url: string, body?: string, headers?: IncomingHeaders): Promise<Response> {
-		return response_lib.wrap(this._buildNext({}, method, url, body, headers)());
-	}
-
-	/**
-	 * Turn an HTTP request into an executable function with a useful request context. Will also incorporate the entire
-	 * request handler chain
-	 *
-	 * @param {Context} context - Request context
-	 * @param {string} request_method - HTTP request method
-	 * @param {string} path - HTTP request path
-	 * @param {string} request_body - HTTP request body
-	 * @param {object} request_headers - HTTP request headers
-	 * @returns {NextMiddleware} A function that will start (or continue) the request chain
-	 */
-	protected _buildNext (context: Context, request_method: string, path: string, request_body?: string,
-		request_headers?: IncomingHeaders
-	): NextCallback {
-
-		let progress = 0;
-		const next: NextCallback = async () => {
-
-			if (this._request_chain.length && this._request_chain[progress]) {
-				return this._request_chain[progress].call(context,
-					request_method, path, request_body, request_headers, () => {
-						progress += 1;
-						return next();
-					});
-			}
-
-			// If next is called and there is nothing next, we should still return a promise,
-			//		it just shouldn't do anything
-			return new Response('Page not found', 404);
-		};
-
-		return next;
+		return response_lib.wrap(this._request_chain.getChainStart()({}, method, url, body, headers));
 	}
 }

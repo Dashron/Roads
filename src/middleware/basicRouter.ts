@@ -8,18 +8,19 @@
  */
 
 import parse from 'url-parse';
-import { IncomingHeaders, NextCallback } from '../core/road';
+import { IncomingHeaders } from '../core/road';
 import Road, {Context} from '../core/road';
 import Response from '../core/response';
+import { NextCallback, RequestChain } from '../core/requestChain';
 
 
 export interface Route<ContextType extends Context> {
-	(this: ContextType, path: BasicRouterURL, body: string,
+	(this: ContextType, method: string, path: BasicRouterURL, body: string,
 		headers: IncomingHeaders, next: NextCallback): Promise<Response>
 }
 
 interface RouteDetails {
-	route: Route<Context>,
+	route: Route<Context> | RequestChain<Route<Context>>,
 	path: string,
 	method: string
 }
@@ -98,7 +99,9 @@ export class BasicRouter {
 	 * @param {(string|array)} paths - One or many URL paths that will trigger the provided function
 	 * @param {function} fn - The function containing all of your route logic
 	 */
-	addRoute<ContextType extends Context> (method: string, paths: string | string[], fn: Route<ContextType>): void {
+	addRoute<ContextType extends Context> (
+		method: string, paths: string | string[], fn: Route<ContextType> | Route<ContextType>[]
+	): void {
 		if (!Array.isArray(paths)) {
 			paths = [paths];
 		}
@@ -107,7 +110,7 @@ export class BasicRouter {
 			this._routes.push({
 				path: path,
 				method: method,
-				route: fn
+				route: Array.isArray(fn) ? new RequestChain(fn) : fn
 			});
 		});
 	}
@@ -137,16 +140,17 @@ export class BasicRouter {
 	 * Slightly non-standard roads middleware to execute the functions in this router when requests are received by the road
 	 * The first method is the routes to ensure that we can properly use this router once we loose the "this" value
 	 * from the roads context
-	 *
-	 * @todo there might be a better way to do this
 	 */
-	protected _middleware (routes: RouteDetails[], request_method: string, request_url: string, request_body: string,
-		request_headers: IncomingHeaders, next: NextCallback): Promise<Response | string> {
+	protected async _middleware (
+		this: Context, routes: RouteDetails[], request_method: string, request_url: string, request_body: string,
+		request_headers: IncomingHeaders, next: () => Promise<Response | string>
+	): Promise<Response | string> {
 
 		let realMethod = request_method;
 
 		let response = null;
 		let hit = false;
+		let routeHitMethodFail = false;
 
 		const parsed_url = parse(request_url, true);
 
@@ -165,15 +169,29 @@ export class BasicRouter {
 		for (let i = 0; i < routes.length; i++) {
 			const route = routes[i];
 
-			if (compareRouteAndApplyArgs(route, parsed_url, realMethod)) {
-				response = (route.route).call(this, parsed_url, request_body, request_headers, next);
-				hit = true;
-				break;
+			if (compareRouteAndApplyArgs(route, parsed_url)) {
+				// Check the method last, so we can give proper status codes
+				if (route.method === realMethod) {
+					if (route.route instanceof RequestChain) {
+						response = route.route.getChainStart()(this, realMethod, parsed_url, request_body, request_headers);
+					} else {
+						response = (route.route).call(this, realMethod, parsed_url, request_body, request_headers, next);
+					}
+
+					hit = true;
+					break;
+				} else {
+					routeHitMethodFail = true;
+				}
 			}
 		}
 
 		if (hit) {
 			return response;
+		}
+
+		if (routeHitMethodFail) {
+			return new Response('Method Not Allowed', 405);
 		}
 
 		return next();
@@ -190,10 +208,9 @@ export class BasicRouter {
  * @param {string} request_method - HTTP request method
  * @returns {boolean}
  */
-function compareRouteAndApplyArgs (route: {method: string, path: string}, request_url: ReturnType<typeof parse>,
-	request_method: string): boolean {
+function compareRouteAndApplyArgs (route: {method: string, path: string}, request_url: ReturnType<typeof parse>): boolean {
 
-	if (route.method !== request_method || !request_url.pathname) {
+	if (!request_url.pathname) {
 		return false;
 	}
 
@@ -270,7 +287,6 @@ function applyArg(request_url: BasicRouterURL, template_part: string, actual_par
 /**
  * Applies a prefix to paths of route files
  *
- * @todo I'm pretty sure there's an existing library that will do this more accurately
  * @param {string} path - The HTTP path of a route
  * @param {string} [prefix] - An optional prefix for the HTTP path
  * @returns {string}

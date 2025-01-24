@@ -22,9 +22,6 @@ import { StoreValsContext, middleware as storeValsMiddleware} from '../middlewar
 /**
   * This is a helper class to make PJAX easier. PJAX is a clean way of improving the performance of webpages
   * by progressively turning standard HTML links into AJAX requests for portions of a web page.
-  *
-  * @todo Form support
-  * @todo tests
   */
 export default class RoadsPjax {
 	protected _road: Road;
@@ -73,7 +70,6 @@ export default class RoadsPjax {
 
 			return next().then((response) => {
 				if (this.getVal) {
-					// TODO: I'm not sure I like title key in here. Maybe we should have it passed in?
 					pjaxObj._page_title = this.getVal(titleKey) as string;
 				}
 
@@ -91,8 +87,7 @@ export default class RoadsPjax {
 	 * This function call enables PJAX on the current page.
 	 */
 	register (): void {
-		// Handle navigation changes besides pushState. TODO: don' blow out existing onpopstate's
-		// TODO: If a request is in process during the popstate, we should kill it and use the new url
+		// Handle navigation changes besides pushState.
 		this._window.onpopstate = (event: PopStateEvent) => {
 			if (event.state.pjax) {
 				// if the popped state was generated  via pjax, execute the appropriate route
@@ -156,7 +151,6 @@ export default class RoadsPjax {
 		if (event.target instanceof HTMLAnchorElement && event.target.dataset['roadsPjax'] === 'link' && !event.ctrlKey) {
 			event.preventDefault();
 			this._roadsLinkEvent(event.target as HTMLAnchorElement);
-			// TODO: Change this to a on submit event?
 		} else if ((event.target instanceof HTMLInputElement || event.target instanceof HTMLButtonElement)
 					&& event.target.dataset['roadsPjax'] === 'submit'
 					&& event.target.form && event.target.form.dataset['roadsPjax'] === 'form') {
@@ -205,7 +199,6 @@ export default class RoadsPjax {
 		)
 			.then((response: Response) => {
 				if ([301, 302, 303, 307, 308].includes(response.status) && typeof response.headers?.location === 'string') {
-					// todo: location can be an array via code, but I don't think it's vaild to the spec?
 					return this._road.request('GET', response.headers.location);
 				} else {
 					return response;
