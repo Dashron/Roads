@@ -39,14 +39,18 @@ describe('request', () => {
 				one : 'two'
 			}).then(function (response: Response) {
 				expect(response.status).toEqual(200);
-				expect(JSON.parse(response.body as string)).toEqual({
+
+				const body = JSON.parse(response.body as string);
+				// as of node 19 this became uncidi, I don't want to reject old versions for just this one test issue
+				delete body.headers['user-agent'];
+
+				expect(body).toEqual({
 					url: '/',
 					method: 'GET',
 					body: '',
 					headers: {
 						one: 'two',
 						accept: '*/*',
-						'user-agent': 'node',
 						'accept-encoding': 'gzip, deflate',
 						'accept-language': '*',
 						'sec-fetch-mode': 'cors',
@@ -69,7 +73,12 @@ describe('request', () => {
 				one : ['two', 'three']
 			}).then(function (response: Response) {
 				expect(response.status).toEqual(200);
-				expect(JSON.parse(response.body as string)).toEqual({
+
+				const body = JSON.parse(response.body as string);
+				// as of node 19 this became uncidi, I don't want to reject old versions for just this one test issue
+				delete body.headers['user-agent'];
+
+				expect(body).toEqual({
 					url: '/',
 					method: 'GET',
 					body: '',
@@ -77,7 +86,6 @@ describe('request', () => {
 						// node fetch doesn't seem to retain dupe arrays, this is what we get.
 						one: 'two, three',
 						accept: '*/*',
-						'user-agent': 'node',
 						'accept-encoding': 'gzip, deflate',
 						'accept-language': '*',
 						connection: 'keep-alive',
@@ -107,7 +115,10 @@ describe('request', () => {
 			}).then(function (response: Response) {
 				expect(response.status).toEqual(200);
 
-				expect(JSON.parse(response.body as string)).toMatchObject({
+				const body = JSON.parse(response.body as string);
+				// as of node 19 this became uncidi, I don't want to reject old versions for just this one test issue
+				delete body.headers['user-agent'];
+				expect(body).toMatchObject({
 					url: '/',
 					method: 'POST',
 					body: '{"yeah": "what"}',
@@ -116,7 +127,6 @@ describe('request', () => {
 						'content-type': 'text/plain;charset=UTF-8',
 						accept: '*/*',
 						'content-length': '16',
-						'user-agent': 'node',
 						'accept-encoding': 'gzip, deflate',
 						connection: 'keep-alive',
 						host: `127.0.0.1:${port}`,
