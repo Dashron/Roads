@@ -14,8 +14,6 @@ import Response from '../core/response';
  * This class is a helper with making HTTP requests that look like roads requests.
  * The function signature matches the roads "request" method to allow the details of a request to be abstracted
  * away from the client. Sometimes the request may route internally, sometimes it may be an HTTP request.
- *
- * @todo tests
  */
 export default class Request {
 	protected secure: boolean;
@@ -23,8 +21,6 @@ export default class Request {
 	protected port: number;
 
 	/**
-	 * @todo: port should just be part of the host
-	 *
 	 * @param {boolean} secure - Whether or not this request should use HTTPS
 	 * @param {string} host - The hostname of all requests made by this function
 	 * @param {number} port - The post of all requests made by this function
@@ -76,9 +72,6 @@ export default class Request {
 			headers: newHeaders,
 			redirect: 'manual',
 			referrerPolicy: 'no-referrer',
-
-			// TODO: What should we do with these?
-			//   origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
 			body
 		});
 

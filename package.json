@@ -1,6 +1,6 @@
 {
   "name": "roads",
-  "version": "7.4.1",
+  "version": "8.0.0-alpha.1",
   "author": {
     "name": "Aaron Hedges",
     "email": "aaron@dashron.com",
@@ -14,7 +14,9 @@
   ],
   "homepage": "https://roadsjs.com",
   "scripts": {
-    "test": "tsc && node node_modules/eslint/bin/eslint.js ./ && node_modules/jest/bin/jest.js --config jest.config.js src/tests/",
+    "test-code": "node ./node_modules/.bin/vitest run ./test/__tests__",
+    "lint": "tsc && node node_modules/eslint/bin/eslint.js",
+    "test": "npm run lint && npm run test-code",
     "build": "tsc",
     "prepack": "tsc"
   },
@@ -28,21 +30,21 @@
   },
   "devDependencies": {
     "@types/content-type": "^1.1.5",
-	"@types/cookie": "^0.4.1",
-    "@types/jest": "^27.0.3",
-    "@types/node": "^16.4.0",
-    "@types/node-fetch": "^2.5.12",
+    "@types/cookie": "^0.4.1",
+    "@types/node": "^22.10.3",
     "@typescript-eslint/eslint-plugin": "^5.10.1",
     "@typescript-eslint/parser": "^5.10.1",
     "eslint": "^8.8.0",
-    "jest": "^27.4.3",
-    "node-fetch": "^2.6.7",
-    "ts-jest": "^27.1.0",
-    "typescript": "^4.5.2"
+    "typescript": "^5.7.2"
   },
   "dependencies": {
+    "@types/url-parse": "^1.4.11",
     "content-type": "^1.0.4",
-    "cookie": "^0.4.1"
+    "cookie": "^0.4.1",
+    "fast-querystring": "^1.1.2",
+    "url": "^0.11.4",
+    "url-parse": "^1.5.10",
+    "vitest": "^2.1.8"
   },
   "license": "MIT",
   "main": "dist/index.js",

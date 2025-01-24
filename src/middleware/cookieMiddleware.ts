@@ -80,7 +80,6 @@ function (route_method, route_path, route_body, route_headers, next) {
 	// Find the cookies from the request and store them locally
 	if (route_headers && route_headers.cookie) {
 		cookies = cookie.parse(
-			// todo: hmm... Can we get an array of cookies? I don't think so... this handles it properly if we do though.
 			Array.isArray(route_headers.cookie) ? route_headers.cookie.join('; ') : route_headers.cookie);
 	}
 
@@ -108,15 +107,18 @@ function (route_method, route_path, route_body, route_headers, next) {
 				response = new Response(response);
 			}
 
-			// Initalize the header
+			// Force the set cookie response header to be an array, for ease of applying them below.
 			if (!response.headers['Set-Cookie']) {
 				response.headers['Set-Cookie'] = [];
 			}
 
+			if (typeof response.headers['Set-Cookie'] === 'string') {
+				response.headers['Set-Cookie'] = [response.headers['Set-Cookie']];
+			}
+
 			// Apply all the cookies
 			for (let i = 0; i < cookieKeys.length; i++) {
-				// TODO: Don't have this "as"
-				(response.headers['Set-Cookie'] as Array<string>).push(
+				(response.headers['Set-Cookie']).push(
 					cookie.serialize(cookieKeys[i],
 						this.newCookies[cookieKeys[i]].value, this.newCookies[cookieKeys[i]].options));
 			}

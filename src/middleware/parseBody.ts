@@ -9,7 +9,7 @@
 import { Context, IncomingHeaders, Middleware } from '../core/road';
 
 import * as contentTypeModule from 'content-type';
-import * as qsModule from 'querystring';
+import * as qsModule from 'fast-querystring';
 import Response, { OutgoingHeaders } from '../core/response';
 
 /**
@@ -44,7 +44,6 @@ function getSingleHeader(headers: IncomingHeaders | OutgoingHeaders, key: string
  * @param  {string} body - request body
  * @param  {string} content_type - media type of the body
  * @returns {(object|string)} parsed body
- * @todo Actually do something with the parameters, such as charset
  */
 function parseRequestBody (body: string | undefined, contentType?: string): unknown {
 	if (contentType && body) {

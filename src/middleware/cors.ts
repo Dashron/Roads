@@ -49,7 +49,6 @@ export function build (options: {
 	const supportsCredentials = options.supportsCredentials || false;
 	const responseHeaders = options.responseHeaders || [];
 	const requestHeaders = options.requestHeaders || [];
-	// todo: lowercase all valid methods
 	const validMethods = options.validMethods || [];
 	const cacheMaxAge = options.cacheMaxAge || null;
 	const logger = options.logger || { log: () => { /* do nothing */ } };
@@ -124,9 +123,9 @@ export function build (options: {
 
 			Note: Always matching is acceptable since the list of methods can be unbounded.
 			*/
-
-			// todo: lowercase valid methods and cors method
-			if (corsMethod && validMethods.indexOf(corsMethod) === -1) {
+			if (corsMethod && validMethods.findIndex((value) => {
+				return value.toLowerCase() === corsMethod.toLowerCase();
+			})) {
 				logger.log('CORS Error: bad method', corsMethod);
 				return next();
 			}
