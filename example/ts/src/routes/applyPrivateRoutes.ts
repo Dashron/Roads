@@ -9,7 +9,7 @@
 import * as fs from 'fs';
 import { CookieContext } from 'roads/types/middleware/cookieMiddleware';
 import { StoreValsContext } from 'roads/types/middleware/storeVals';
-import { BasicRouterMiddleware, Response } from 'roads';
+import { RouterMiddleware, Response } from 'roads';
 const TITLE_KEY = 'page-title';
 
 /**
@@ -19,7 +19,7 @@ const TITLE_KEY = 'page-title';
   *
   * @param {SimpleRouter} router - The router that the routes will be added to
   */
-export default function applyPrivateRotues(router: BasicRouterMiddleware.BasicRouter<StoreValsContext>): void {
+export default function applyPrivateRotues(router: RouterMiddleware.Router<StoreValsContext>): void {
 	router.addRoute<CookieContext>('GET', '/private', async function () {
 		this.storeVal(TITLE_KEY, 'Private Resource');
 		this.setCookie('private_cookie', 'foo', {

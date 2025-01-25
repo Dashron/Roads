@@ -6,7 +6,7 @@
  * This file is an example of how to assign some public routes to a roads server
  */
 
-import { Response, BasicRouterMiddleware } from 'roads';
+import { Response, RouterMiddleware } from 'roads';
 const TITLE_KEY = 'page-title';
 
 import { ParseBodyContext } from 'roads/types/middleware/parseBody';
@@ -24,7 +24,7 @@ interface ExampleRequestBody {
   *
   * @param {SimpleRouter} router - The router that the routes will be added to
   */
-export default function applyPublicRotues(router: BasicRouterMiddleware.BasicRouter<StoreValsContext>): void {
+export default function applyPublicRotues(router: RouterMiddleware.Router<StoreValsContext>): void {
 	router.addRoute('GET', '/', async function () {
 		this.storeVal(TITLE_KEY, 'Root Resource');
 

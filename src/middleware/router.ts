@@ -1,9 +1,9 @@
 /**
- * basicRouter.ts
+ * router.ts
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
- * This is a basic router middleware for roads.
+ * This is a  router middleware for roads.
  * 	It allows you to easily attach functionality to HTTP methods and paths.
  */
 
@@ -15,7 +15,7 @@ import { NextCallback, RequestChain } from '../core/requestChain';
 
 
 export interface Route<ContextType extends Context> {
-	(this: ContextType, method: string, path: BasicRouterURL, body: string,
+	(this: ContextType, method: string, path: RouterURL, body: string,
 		headers: IncomingHeaders, next: NextCallback): Promise<Response>
 }
 
@@ -25,14 +25,14 @@ interface RouteDetails {
 	method: string
 }
 
-export interface BasicRouterURL extends ReturnType<typeof parse> {
+export interface RouterURL extends ReturnType<typeof parse> {
 	args?: Record<string, string | number>
 }
 /**
- * This is a basic router middleware for roads.
- * You can assign functions to url paths, and those paths can have some very basic variable templating
+ * This is a router middleware for roads.
+ * You can assign functions to url paths, and those paths can have variable templating
  *
- * Templating is basic. Each URI is considered to be a series of "path parts" separated by slashes.
+ * There are only a couple of template options. Each URI is considered to be a series of "path parts" separated by slashes.
  * If a path part starts with a #, it is assumed to be a numeric variable. Non-numbers will not match this route
  * If a path part starts with a $, it is considered to be an alphanumeric variabe.
  * 		All non-slash values will match this route.
@@ -43,13 +43,13 @@ export interface BasicRouterURL extends ReturnType<typeof parse> {
  * /users/#user_id will match /users/12345, not /users/abcde. If a request is made to /users/12345
  * 	 the route's requestUrl object will contain { args: {user_id: 12345}} along with all other url object values
  *
- * @name BasicRouter
+ * @name Router
  */
-export class BasicRouter<RouterContextType extends Context> {
+export class Router<RouterContextType extends Context> {
 	protected _routes: RouteDetails[];
 
 	/**
-	 * @param {Road} [road] - The road that will receive the BasicRouter middleware
+	 * @param {Road} [road] - The road that will receive the Router middleware
 	 */
 	constructor (road?: Road) {
 		this._routes = [];
@@ -63,15 +63,15 @@ export class BasicRouter<RouterContextType extends Context> {
 	 * If you don't provide a road to the SimpleRouter constructor, your routes will not be executed.
 	 * 	If you have reason not to assign the road off the bat, you can assign it later with this function.
 	 *
-	 * @param  {Road} road - The road that will receive the BasicRouter middleware
+	 * @param  {Road} road - The road that will receive the Router middleware
 	 */
 	applyMiddleware (road: Road): void {
 		// We need to alias because "this" for the middleware function must
-		//		be the this applied by road.use, not the BasicRouter
+		//		be the this applied by road.use, not the Router
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		const _self = this;
 
-		// We do this to ensure we have access to the BasicRouter once we lose this due to road's context
+		// We do this to ensure we have access to the Router once we lose this due to road's context
 		road.use((function (request_method, request_url, request_body, request_headers, next) {
 			return _self._middleware.call(this, _self._routes, request_method, request_url,
 				request_body, request_headers, next);
@@ -82,7 +82,7 @@ export class BasicRouter<RouterContextType extends Context> {
 	 * This is where you want to write the majority of your webservice. The `fn` parameter should contain
 	 * 	the actions you want to perform when a certain `path` and HTTP `method` are accessed via the `road` object.
 	 *
-	 * The path supports a very basic templating system. The values inbetween each slash can be interpreted
+	 * The path supports a templating system. The values inbetween each slash can be interpreted
 	 * 	in one of three ways
 	 *  - If a path part starts with a #, it is assumed to be a numeric variable. Non-numbers will not match this route
 	 *  - If a path part starts with a $, it is considered to be an alphanumeric variabe. All non-slash values
@@ -203,7 +203,7 @@ export class BasicRouter<RouterContextType extends Context> {
 /**
  * Checks to see if the route matches the request, and if true assigns any applicable url variables and returns the route
  *
- * @param {object} route - Route object from this basic router class
+ * @param {object} route - Route object from this router class
  * @param {object} route.method - HTTP method associated with this route
  * @param {object} route.path - HTTP path associated with this route
  * @param {object} request_url - Parsed HTTP request url
@@ -242,14 +242,14 @@ function compareRouteAndApplyArgs (route: {method: string, path: string}, reques
 			}
 
 			// TODO: get rid of this `as`
-			applyArg(request_url as BasicRouterURL, template_part.substring(1), Number(actual_part));
+			applyArg(request_url as RouterURL, template_part.substring(1), Number(actual_part));
 			continue;
 		}
 
 		if (template_part[0] === '$') {
 			// $ templates accept any non-slash alphanumeric character
 			// TODO: get rid of this `as`
-			applyArg(request_url as BasicRouterURL, template_part.substring(1), String(actual_part));
+			applyArg(request_url as RouterURL, template_part.substring(1), String(actual_part));
 			// Continue so that
 			continue;
 		}
@@ -272,7 +272,7 @@ function compareRouteAndApplyArgs (route: {method: string, path: string}, reques
  * @param {string} template_part - The template variable
  * @param {*} actual_part - The url value
  */
-function applyArg(request_url: BasicRouterURL, template_part: string, actual_part: string | number): void {
+function applyArg(request_url: RouterURL, template_part: string, actual_part: string | number): void {
 	if (typeof(request_url.args) === 'undefined') {
 		request_url.args = {};
 	}
