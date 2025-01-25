@@ -3,6 +3,7 @@
    2. Ensure browserify is entirely gone from all examples
    3. Document the router request chain
    4. Document the new context typing
+   5. Common middleware function
 
 # Future
 1. Figure out a way to have better typing on headers
