@@ -5,6 +5,7 @@
  *
  * This file is an example of how to assign some private routes to a road server
  */
+import { StoreValsContext } from 'roads/types/middleware/storeVals';
 import { BasicRouterMiddleware } from 'roads';
 /**
   * Before calling this function you should create your roads object and bind a SimpleRouter to that road.
@@ -13,4 +14,4 @@ import { BasicRouterMiddleware } from 'roads';
   *
   * @param {SimpleRouter} router - The router that the routes will be added to
   */
-export default function applyPrivateRotues(router: BasicRouterMiddleware.BasicRouter): void;
+export default function applyPrivateRotues(router: BasicRouterMiddleware.BasicRouter<StoreValsContext>): void;

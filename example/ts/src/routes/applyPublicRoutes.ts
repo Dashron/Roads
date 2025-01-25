@@ -24,8 +24,8 @@ interface ExampleRequestBody {
   *
   * @param {SimpleRouter} router - The router that the routes will be added to
   */
-export default function applyPublicRotues(router: BasicRouterMiddleware.BasicRouter): void {
-	router.addRoute('GET', '/', async function (this: StoreValsContext) {
+export default function applyPublicRotues(router: BasicRouterMiddleware.BasicRouter<StoreValsContext>): void {
+	router.addRoute('GET', '/', async function () {
 		this.storeVal(TITLE_KEY, 'Root Resource');
 
 		// In the real world the body of the response should be created from a template engine.
@@ -39,7 +39,7 @@ export default function applyPublicRotues(router: BasicRouterMiddleware.BasicRou
 		});
 	});
 
-	router.addRoute('GET', '/public', async function (this: StoreValsContext & CookieContext) {
+	router.addRoute<CookieContext>('GET', '/public', async function () {
 		this.storeVal(TITLE_KEY, 'Public Resource');
 		console.log('Here are all cookies accessible to this code: ', this.getCookies());
 		console.log('Cookies are not set until you access the private route.');
@@ -59,7 +59,7 @@ export default function applyPublicRotues(router: BasicRouterMiddleware.BasicRou
 	});
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	router.addRoute('POST', '/postdata', async function (this: ParseBodyContext<ExampleRequestBody>, url, body, headers) {
+	router.addRoute<ParseBodyContext<ExampleRequestBody>>('POST', '/postdata', async function (url, body, headers) {
 		console.log(`You sent the message:${this.body?.message}`);
 		this.ignore_layout = true;
 		return new Response('', 302, { location: '/public' });

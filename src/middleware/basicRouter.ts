@@ -45,7 +45,7 @@ export interface BasicRouterURL extends ReturnType<typeof parse> {
  *
  * @name BasicRouter
  */
-export class BasicRouter {
+export class BasicRouter<RouterContextType extends Context> {
 	protected _routes: RouteDetails[];
 
 	/**
@@ -99,8 +99,10 @@ export class BasicRouter {
 	 * @param {(string|array)} paths - One or many URL paths that will trigger the provided function
 	 * @param {function} fn - The function containing all of your route logic
 	 */
-	addRoute<ContextType extends Context> (
-		method: string, paths: string | string[], fn: Route<ContextType> | Route<ContextType>[]
+	addRoute<RouteContextType extends Context> (
+		method: string,
+		paths: string | string[],
+		fn: Route<RouterContextType & RouteContextType> | Route<RouterContextType & RouteContextType>[]
 	): void {
 		if (!Array.isArray(paths)) {
 			paths = [paths];
