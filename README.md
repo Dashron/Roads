@@ -42,7 +42,7 @@ Roads is a simple web framework. It's similar to Express.js, but has some very i
   - [Parsing request bodies](#parsing-request-bodies)
     - [Parse Body Context](#parse-body-context)
   - [Remove trailing slash](#remove-trailing-slash)
-  - [Basic router](#basic-router)
+  - [Router](#router)
     - [applyMiddleware(road: *Road*)](#applymiddlewareroad-road)
     - [addRoute(method: *string*, path: *string*, fn: *function*)](#addroutemethod-string-path-string-fn-function)
     - [addRouteFile(filePath: *string*, prefix?: *string*)](#addroutefilefilepath-string-prefix-string)
@@ -547,8 +547,8 @@ var road = new Road();
 road.use(RemoveTrailingSlashMiddleware.middleware);
 ```
 
-## Basic router
-This is a basic router middleware for roads. It allows you to easily attach functionality to HTTP methods and paths.
+## Router
+This is a Router middleware for roads. It allows you to easily attach functionality to HTTP methods and paths.
 
 Here's how you use it.
 

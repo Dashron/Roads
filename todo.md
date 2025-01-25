@@ -1,3 +1,9 @@
+1. Fix documentation
+   1. Method is now part of the route function
+   2. Ensure browserify is entirely gone from all examples
+   3. Document the router request chain
+   4. Document the new context typing
+
 # Future
 1. Figure out a way to have better typing on headers
 2. Ensure we have JS and Typescript examples for everything.

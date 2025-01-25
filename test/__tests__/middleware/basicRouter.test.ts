@@ -1,6 +1,6 @@
 import parse from 'url-parse';
 
-import { BasicRouter, Route, BasicRouterURL } from '../../../src/middleware/basicRouter';
+import { Router, Route, RouterURL } from '../../../src/middleware/router';
 import Road from '../../../src/core/road';
 import Response from '../../../src/core/response';
 import { Context } from '../../../src/core/road';
@@ -10,14 +10,14 @@ import { NextCallback } from '../../../src/core/requestChain';
 
 const router_file_test_path = `${__dirname  }/../../resources/_router_file_test.js`;
 
-describe('Basic Router Tests', () => {
+describe('Router Tests', () => {
 	/**
 	 *
 	 */
 	test('test addRoute adds values to the list of routes in the right format', () => {
 		expect.assertions(1);
 
-		const router = new BasicRouter();
+		const router = new Router();
 		const path = '/';
 		const method = 'GET';
 		const fn: Route<Context> = () => { return Promise.resolve(new Response(''));};
@@ -37,7 +37,7 @@ describe('Basic Router Tests', () => {
 		expect.assertions(1);
 
 		const road = new Road();
-		const router = new BasicRouter();
+		const router = new Router();
 		router.applyMiddleware(road);
 
 		expect(road['_request_chain'].length()).toEqual(1);
@@ -49,7 +49,7 @@ describe('Basic Router Tests', () => {
 	test('test middleware function routes successfully to successful routes', () => {
 		expect.assertions(1);
 
-		const router = new BasicRouter();
+		const router = new Router();
 		const path = '/';
 		const method = 'GET';
 		let route_hit = false;
@@ -71,7 +71,7 @@ describe('Basic Router Tests', () => {
 	test('test middleware function 405s when route exists but method is not present', () => {
 		expect.assertions(1);
 
-		const router = new BasicRouter();
+		const router = new Router();
 		const path = '/';
 
 		const next: NextCallback = () => {
@@ -86,7 +86,7 @@ describe('Basic Router Tests', () => {
 	test('test middleware function routes successfully to successful routes with x-http-method-override header', () => {
 		expect.assertions(1);
 
-		const router = new BasicRouter();
+		const router = new Router();
 		const path = '/';
 		const method = 'POST';
 		let route_hit = false;
@@ -111,7 +111,7 @@ describe('Basic Router Tests', () => {
 	test('test middleware function routes ignores x-http-method-override header on GET requests', () => {
 		expect.assertions(1);
 
-		const router = new BasicRouter();
+		const router = new Router();
 		const path = '/';
 		const method = 'GET';
 		let route_hit = false;
@@ -136,7 +136,7 @@ describe('Basic Router Tests', () => {
 	test('test middleware function routes successfully to successful routes with _method query param', () => {
 		expect.assertions(1);
 
-		const router = new BasicRouter();
+		const router = new Router();
 		const path = '/';
 		const method = 'POST';
 		let route_hit = false;
@@ -159,7 +159,7 @@ describe('Basic Router Tests', () => {
 	test('test middleware function routes successfully ignores _method query param on GET requests', () => {
 		expect.assertions(1);
 
-		const router = new BasicRouter();
+		const router = new Router();
 		const path = '/';
 		const method = 'GET';
 		let route_hit = false;
@@ -186,7 +186,7 @@ describe('Basic Router Tests', () => {
 	test(`test middleware function routes successfully to successful routes
 	only once when there may be more than one route`, () => {
 		expect.assertions(1);
-		const router = new BasicRouter();
+		const router = new Router();
 		const path = '/';
 		const method = 'GET';
 		let route_hit = false;
@@ -216,7 +216,7 @@ describe('Basic Router Tests', () => {
 	 */
 	test('test middleware function routes to next on a missed url', () => {
 		expect.assertions(2);
-		const router = new BasicRouter();
+		const router = new Router();
 		const path = '/';
 		const method = 'GET';
 		let route_hit = false;
@@ -241,7 +241,7 @@ describe('Basic Router Tests', () => {
 	 */
 	test('test middleware function routes to next on a missed http method but matching url', () => {
 		expect.assertions(2);
-		const router = new BasicRouter();
+		const router = new Router();
 		const path = '/';
 		const method = 'GET';
 		let route_hit = false;
@@ -267,7 +267,7 @@ describe('Basic Router Tests', () => {
 	test('test route function with no template gets the proper context and arguments', () => {
 		expect.assertions(4);
 
-		const router = new BasicRouter();
+		const router = new Router();
 		const path = '/';
 		const method = 'GET';
 		const body = '{"harvey": "birdman"}';
@@ -297,7 +297,7 @@ describe('Basic Router Tests', () => {
 	 */
 	test('test route function with numeric template gets the proper context and arguments', () => {
 		expect.assertions(4);
-		const router = new BasicRouter();
+		const router = new Router();
 		const path = '/#numeric';
 		const req_path = '/12345';
 		const method = 'GET';
@@ -307,7 +307,7 @@ describe('Basic Router Tests', () => {
 		const route: Route<Context> = (request_method, request_url, request_body, request_headers) => {
 			expect(request_method).toEqual(method);
 			// parsed url
-			const parsed_url: BasicRouterURL = parse(req_path, true);
+			const parsed_url: RouterURL = parse(req_path, true);
 			parsed_url.args = {numeric: 12345};
 			expect(request_url).toEqual(parsed_url);
 			// passthrough request body
@@ -330,7 +330,7 @@ describe('Basic Router Tests', () => {
 	 */
 	test('test route function with string template gets the proper context and arguments', () => {
 		expect.assertions(4);
-		const router = new BasicRouter();
+		const router = new Router();
 		const path = '/$string';
 		const req_path = '/hello';
 		const method = 'GET';
@@ -340,7 +340,7 @@ describe('Basic Router Tests', () => {
 		const route: Route<Context> = (request_method, request_url, request_body, request_headers) => {
 			expect(request_method).toEqual(method);
 			// parsed url
-			const parsed_url: BasicRouterURL = parse(req_path, true);
+			const parsed_url: RouterURL = parse(req_path, true);
 			parsed_url.args = {string: 'hello'};
 			expect(request_url).toEqual(parsed_url);
 			// passthrough request body
@@ -362,7 +362,7 @@ describe('Basic Router Tests', () => {
 	 */
 	test('test route that throws an exception is handled properly', () => {
 		expect.assertions(1);
-		const router = new BasicRouter();
+		const router = new Router();
 		const path = '/';
 		const method = 'GET';
 		const error_message = 'blah blah blah';
@@ -383,7 +383,7 @@ describe('Basic Router Tests', () => {
 	 */
 	test('test route successfully returns value out of the middleware', () => {
 		expect.assertions(2);
-		const router = new BasicRouter();
+		const router = new Router();
 		const path = '/';
 		const method = 'GET';
 		const fn: Route<Context> = () => {
@@ -408,7 +408,7 @@ describe('Basic Router Tests', () => {
 	 */
 	test('test next successfully returns value out of the middleware', () => {
 		expect.assertions(2);
-		const router = new BasicRouter();
+		const router = new Router();
 		const path = '/';
 		const method = 'GET';
 		const fn: Route<Context> = () => {
@@ -436,7 +436,7 @@ describe('Basic Router Tests', () => {
 		expect.assertions(1);
 
 		const road = new Road();
-		const router = new BasicRouter();
+		const router = new Router();
 		router.applyMiddleware(road);
 
 		const path = '/';
@@ -460,7 +460,7 @@ describe('Basic Router Tests', () => {
 		expect.assertions(1);
 
 		const road = new Road();
-		const router = new BasicRouter();
+		const router = new Router();
 		router.applyMiddleware(road);
 
 		const path = '/';
@@ -481,7 +481,7 @@ describe('Basic Router Tests', () => {
 		expect.assertions(5);
 
 		const road = new Road();
-		const router = new BasicRouter();
+		const router = new Router();
 		router.applyMiddleware(road);
 
 		return router.addRouteFile(router_file_test_path)
@@ -510,7 +510,7 @@ describe('Basic Router Tests', () => {
 	test('test routes loaded from a file with prefix', () => {
 		expect.assertions(5);
 		const road = new Road();
-		const router = new BasicRouter();
+		const router = new Router();
 		router.applyMiddleware(road);
 
 		return router.addRouteFile(router_file_test_path, '/test_prefix')
@@ -538,7 +538,7 @@ describe('Basic Router Tests', () => {
 	test('test routes using a request chain successfully progress through the chain', () => {
 		expect.assertions(3);
 		const road = new Road();
-		const router = new BasicRouter();
+		const router = new Router();
 		router.applyMiddleware(road);
 
 		const path = '/';
