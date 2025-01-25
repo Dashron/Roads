@@ -7,7 +7,7 @@
  */
 
 import { Road, Response, RemoveTrailingSlashMiddleware, CookieMiddleware,
-	StoreValsMiddleware, ParseBodyMiddleware, RouterMiddleware } from 'roads';
+	StoreValsMiddleware, ParseBodyMiddleware, RouterMiddleware, attachCommonMiddleware } from 'roads';
 
 import { Server } from 'roads-server';
 import addLayout from './middleware/addLayout';
@@ -22,11 +22,9 @@ road.use(function (method, url, body, headers, next) {
 	return next();
 });
 
-road.use(RemoveTrailingSlashMiddleware.middleware);
+attachCommonMiddleware(road);
 road.use(CookieMiddleware.serverMiddleware);
-road.use(StoreValsMiddleware.middleware);
 road.use(addLayout);
-road.use(ParseBodyMiddleware.middleware);
 
 const router = new RouterMiddleware.Router(road);
 applyPublicRotues(router);
