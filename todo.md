@@ -1,9 +1,14 @@
-1. Fix documentation
-   1. Method is now part of the route function
+1. Update tests
+   1. before/after methods
+   2. sub-roads tests (path routing may need to be tweaked)
+2. Fix roads-server to work with the latest
+
+3. Fix documentation
+   1. The new routing system, and chain of requests
    2. Ensure browserify is entirely gone from all examples
-   3. Document the router request chain
-   4. Document the new context typing
-   5. Common middleware function
+   3. Document the new context typing
+   4. Common middleware function
+   5. New embedded roads routing
 
 # Future
 1. Figure out a way to have better typing on headers

@@ -1,6 +1,6 @@
 /**
  * pjax.ts
- * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2025 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * PJAX is a technique for speeding up webpages by automatically replacing links or
@@ -15,16 +15,17 @@
  *
  */
 
-import Road, { Middleware } from '../core/road';
+import Road, { Context } from '../core/road';
 import Response from '../core/response';
 import { StoreValsContext, middleware as storeValsMiddleware} from '../middleware/storeVals';
+import { Route } from '../core/router';
 
 /**
   * This is a helper class to make PJAX easier. PJAX is a clean way of improving the performance of webpages
   * by progressively turning standard HTML links into AJAX requests for portions of a web page.
   */
-export default class RoadsPjax {
-	protected _road: Road;
+export default class RoadsPjax<PjaxContext extends Context & StoreValsContext> {
+	protected _road: Road<PjaxContext>;
 	protected _page_title?: string;
 	protected _window: Window;
 	protected _container_element: HTMLElement;
@@ -38,7 +39,7 @@ export default class RoadsPjax {
 	 * @param {HTMLElement} containerElement - The element that will be filled with your roads output
 	 * @param {Window} window - The page's window object to help set page title url
 	 */
-	constructor(road: Road, containerElement: HTMLElement, window: Window) {
+	constructor(road: Road<PjaxContext>, containerElement: HTMLElement, window: Window) {
 		this._road = road;
 		this._page_title = undefined;
 		this._window = window;
@@ -62,11 +63,11 @@ export default class RoadsPjax {
 	 * @param {titleKey} string - The key of the title as stored in the "storeVals" middleware.
 	 * @returns {RoadsPjax} Returns the PJAX object. This is provided to allow for easy function chaining.
 	 */
-	addTitleMiddleware (titleKey: string): RoadsPjax {
+	addTitleMiddleware (titleKey: string): RoadsPjax<PjaxContext> {
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		const pjaxObj = this;
 
-		const titleMiddleware: Middleware<StoreValsContext> = function (method, url, body, headers, next) {
+		const titleMiddleware: Route<StoreValsContext> = function (method, url, body, headers, next) {
 
 			return next().then((response) => {
 				if (this.getVal) {
@@ -77,8 +78,8 @@ export default class RoadsPjax {
 			});
 		};
 
-		this._road.use(storeValsMiddleware);
-		this._road.use(titleMiddleware);
+		this._road.beforeRoute(storeValsMiddleware);
+		this._road.beforeRoute(titleMiddleware);
 
 		return this;
 	}

@@ -1,6 +1,6 @@
 /**
  * response.ts
- * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2025 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * The response object contains all of the information you want to send to the client.

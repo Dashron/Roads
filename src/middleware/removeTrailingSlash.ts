@@ -1,6 +1,6 @@
 /**
  * removeTrailingSlash.ts
- * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2025 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * Exposes a single middleware function to remove trailing slashes in HTTP requests.
@@ -10,16 +10,15 @@
  * 	object redirecting the client to the same url without the trailing slash (302 redirect
  * 	with Location: [url_without_slash])
  */
-import { Context, Middleware } from '../core/road';
-import parse from 'url-parse';
+import { Context } from '../core/road';
 import Response from '../core/response';
+import { Route } from '../core/router';
 
 /**
  * Any requests with trailing slashes will immediately return a Response object redirecting to a non-trailing-slash path
  */
-export const middleware: Middleware<Context> = function (method, url, body, headers, next) {
-	const parsedUrl = parse(url);
-	const parsedPath = parsedUrl.pathname;
+export const middleware: Route<Context> = function (method, url, body, headers, next) {
+	const parsedPath = url.pathname;
 
 	if (!parsedPath) {
 		return next();

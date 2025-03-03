@@ -1,19 +1,20 @@
 /**
  * modifiedSince.ts
- * Copyright(c) 2022 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2025 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * This file exposes middleware that helps manage the if-modified-since caching headers
  */
-import { Context, Middleware } from '../core/road';
+import { Context } from '../core/road';
 import Response from '../core/response';
+import { Route } from '../core/router';
 
 export interface ModifiedSinceContext extends Context {
 	shouldReturnNotModifiedResponse: (lastModifiedTime: string | Date) => boolean;
 	buildNotModifiedResponse: () => Response;
 }
 
-export const middleware: Middleware<ModifiedSinceContext> = function (method, url, body, headers, next) {
+export const middleware: Route<ModifiedSinceContext> = function (method, url, body, headers, next) {
 	let lastMod: Date | null = null;
 
 	// This is a mouthful, but I can't think of a better, clear function name

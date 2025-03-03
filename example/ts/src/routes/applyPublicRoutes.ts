@@ -1,12 +1,12 @@
 /**
  * applyPublicRoutes.ts
- * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2025 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * This file is an example of how to assign some public routes to a roads server
  */
 
-import { Response, RouterMiddleware } from 'roads';
+import { Response, Road } from 'roads';
 const TITLE_KEY = 'page-title';
 
 import { ParseBodyContext } from 'roads/types/middleware/parseBody';
@@ -24,8 +24,8 @@ interface ExampleRequestBody {
   *
   * @param {SimpleRouter} router - The router that the routes will be added to
   */
-export default function applyPublicRotues(router: RouterMiddleware.Router<StoreValsContext>): void {
-	router.addRoute('GET', '/', async function () {
+export default function applyPublicRoutes(road: Road<StoreValsContext>): void {
+	road.addRoute('GET', '/', async function () {
 		this.storeVal(TITLE_KEY, 'Root Resource');
 
 		// In the real world the body of the response should be created from a template engine.
@@ -39,7 +39,7 @@ export default function applyPublicRotues(router: RouterMiddleware.Router<StoreV
 		});
 	});
 
-	router.addRoute<CookieContext>('GET', '/public', async function () {
+	road.addRoute<CookieContext & StoreValsContext>('GET', '/public', async function () {
 		this.storeVal(TITLE_KEY, 'Public Resource');
 		console.log('Here are all cookies accessible to this code: ', this.getCookies());
 		console.log('Cookies are not set until you access the private route.');
@@ -59,7 +59,9 @@ export default function applyPublicRotues(router: RouterMiddleware.Router<StoreV
 	});
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	router.addRoute<ParseBodyContext<ExampleRequestBody>>('POST', '/postdata', async function (url, body, headers) {
+	road.addRoute<
+		StoreValsContext & ParseBodyContext<ExampleRequestBody>
+	>('POST', '/postdata', async function (url, body, headers) {
 		console.log(`You sent the message:${this.body?.message}`);
 		this.ignore_layout = true;
 		return new Response('', 302, { location: '/public' });

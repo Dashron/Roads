@@ -1,16 +1,17 @@
 /**
  * parseBody.ts
- * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2025 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * Exposes a single middleware function to help parse request bodies
  */
 
-import { Context, IncomingHeaders, Middleware } from '../core/road';
+import { Context, IncomingHeaders } from '../core/road';
 
 import * as contentTypeModule from 'content-type';
 import * as qsModule from 'fast-querystring';
 import Response, { OutgoingHeaders } from '../core/response';
+import { Route } from '../core/router';
 
 /**
  * When using typescript you can pass this when adding middleware or
@@ -65,7 +66,7 @@ function parseRequestBody (body: string | undefined, contentType?: string): unkn
 /**
  * Attempts the parse the request body into a useful object
  */
-export const middleware: Middleware<Context> = function (method, url, body, headers, next) {
+export const middleware: Route<Context> = function (method, url, body, headers, next) {
 	try {
 		this.body = parseRequestBody(body, headers ? getSingleHeader(headers, 'content-type') : undefined);
 	} catch (e) {

@@ -1,6 +1,6 @@
 /**
  * server.ts
- * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2025 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * This file starts up the HTTP roads server
@@ -17,19 +17,18 @@ import emptyTo404 from './middleware/emptyTo404';
 
 const road = new Road();
 
-road.use(function (method, url, body, headers, next) {
+road.beforeRoute(function (method, url, body, headers, next) {
 	console.log(`${method} ${url}`);
 	return next();
 });
 
 attachCommonMiddleware(road);
-road.use(CookieMiddleware.serverMiddleware);
-road.use(addLayout);
+road.beforeRoute(CookieMiddleware.serverMiddleware);
+road.beforeRoute(addLayout);
 
-const router = new RouterMiddleware.Router(road);
-applyPublicRotues(router);
-applyPrivateRoutes(router);
-road.use(emptyTo404);
+applyPublicRotues(road);
+applyPrivateRoutes(road);
+road.afterRoute(emptyTo404);
 
 const server = new Server(road, function (err: Error) {
 	console.log(err.stack);

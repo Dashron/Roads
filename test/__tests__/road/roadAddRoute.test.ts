@@ -11,7 +11,7 @@ describe('road use', () => {
 
 		const road = new Road();
 
-		expect(road.use(function (method, path, body, headers, next) {
+		expect(road.addRoute('GET', '/', function (method, path, body, headers, next) {
 			return next();
 		})).toEqual(road);
 

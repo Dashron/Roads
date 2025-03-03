@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {  middleware } from '../../../src/middleware/parseBody';
 
-import { Context, Middleware as MiddlewareType } from '../../../src/core/road';
+import { Context } from '../../../src/core/road';
 import { Road } from '../../../src/index';
 import Response from '../../../src/core/response';
 
 import { describe, expect, test, assert } from 'vitest';
+import { Route } from '../../../src/core/router';
 
 describe('Parse Request Body tests', () => {
 	test('test request with valid json body', () => {
@@ -46,17 +47,17 @@ describe('Parse Request Body tests', () => {
 		expect.assertions(1);
 
 		const road = new Road();
-		road.use(middleware);
+		road.beforeRoute(middleware);
 		const body = '{"hello": "there"}';
 
-		const middleware2: MiddlewareType<Context> = function () {
+		const middleware2: Route<Context> = function () {
 			expect(this.body).toEqual({hello: 'there'});
 			return Promise.resolve(new Response(''));
 		};
 
-		road.use(middleware2);
+		road.addRoute('GET', '/', middleware2);
 
-		road.request('', '', body, {
+		return road.request('GET', '/', body, {
 			'content-type' : 'application/json'
 		});
 	});
@@ -67,10 +68,10 @@ describe('Parse Request Body tests', () => {
 	test('test used request with invalid json body', () => {
 		expect.assertions(1);
 		const road = new Road();
-		road.use(middleware);
+		road.addRoute('GET', '/', middleware);
 		const body = '{hello there';
 
-		return expect(road.request('', '', body, {
+		return expect(road.request('GET', '/', body, {
 			'content-type' : 'application/json'
 		})).resolves.toEqual({
 			status: 400,

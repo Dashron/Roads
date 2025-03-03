@@ -18,7 +18,7 @@ describe('Road Context', () => {
 
 		const road = new Road();
 
-		road.use(function (method, url, body, headers, next) {
+		road.beforeRoute(function (method, url, body, headers, next) {
 			this.confirmString = function () {
 				return response_string;
 			};
@@ -26,7 +26,7 @@ describe('Road Context', () => {
 			return next();
 		});
 
-		road.use(function (this: Context & confirmContext) {
+		road.addRoute('GET', '/', function (this: Context & confirmContext) {
 			return this.confirmString();
 		});
 
@@ -47,7 +47,7 @@ describe('Road Context', () => {
 
 		const road = new Road();
 
-		road.use(async function (method, url, body, headers, next) {
+		road.beforeRoute(async function (method, url, body, headers, next) {
 			this.confirmString = function () {
 				return response_string;
 			};
@@ -55,7 +55,7 @@ describe('Road Context', () => {
 			return await next();
 		});
 
-		road.use(function (this: Context & confirmContext) {
+		road.addRoute('GET', '/', function (this: Context & confirmContext) {
 			return this.confirmString();
 		});
 
@@ -64,19 +64,5 @@ describe('Road Context', () => {
 			body: response_string,
 			headers: {}
 		});
-	});
-
-	/**
-	 * Ensure that contexts are only added once to a resource.
-	 */
-	test('Road Async Uniqueness', () => {
-		expect.assertions(1);
-		const road = new Road();
-
-		road.use(async function (method, url, body, headers, next) {
-			return await next();
-		});
-
-		expect(road['_request_chain'].length()).toEqual(1);
 	});
 });

@@ -1,13 +1,14 @@
 /**
  * cookie.ts
- * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2025 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * Middleware for managing cookies
  */
 import * as cookie from 'cookie';
-import { Context, Middleware } from '../core/road';
+import { Context } from '../core/road';
 import Response from '../core/response';
+import { Route } from '../core/router';
 
 /**
  * The Cookie Context represents the request context when either the
@@ -72,7 +73,7 @@ function getCookieValues(newCookies: NewCookies): SetCookies {
  * @param next
  * @returns
  */
-export const serverMiddleware: Middleware<CookieContext> =
+export const serverMiddleware: Route<CookieContext> =
 function (route_method, route_path, route_body, route_headers, next) {
 	let cookies: SetCookies = {};
 	this.newCookies = {};
@@ -136,7 +137,7 @@ function (route_method, route_path, route_body, route_headers, next) {
  * @param pageDocument The pages Document object
  * @returns Middleware
  */
-export const buildClientMiddleware: (pageDocument: Document) => Middleware<CookieContext> = (pageDocument) => {
+export const buildClientMiddleware: (pageDocument: Document) => Route<CookieContext> = (pageDocument) => {
 
 	return function (route_method, route_path, route_body, route_headers, next) {
 

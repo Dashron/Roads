@@ -1,15 +1,15 @@
 /**
  * addLayout.ts
- * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2025 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * This file is an example of how to apply HTML layouts via a middleware system
  */
 
-import { Middleware } from 'roads/types/core/road';
 import { Response } from 'roads';
 const TITLE_KEY = 'page-title';
 import { StoreValsContext } from 'roads/types/middleware/storeVals';
+import { Route } from '../../../../types/core/router';
 
 /**
   * Example function to wrap an HTML body in the required surrounding HTML tags (commonly called a layout)
@@ -50,7 +50,7 @@ function wrapLayout(body: string | Buffer, vals: {
  * @param {object} headers - HTTP request headers
  * @param {function} next - When called, this function will execute the next step in the roads method chain
  */
-const addLayoutMiddleware: Middleware<StoreValsContext> = function addLayoutMiddleware (method, url, body, headers, next) {
+const addLayoutMiddleware: Route<StoreValsContext> = function addLayoutMiddleware (method, url, body, headers, next) {
 	return next()
 		.then((response) => {
 			if (!(response instanceof Response)) {

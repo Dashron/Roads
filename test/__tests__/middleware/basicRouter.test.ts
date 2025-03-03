@@ -1,12 +1,11 @@
 import parse from 'url-parse';
 
-import { Router, Route, RouterURL } from '../../../src/middleware/router';
 import Road from '../../../src/core/road';
 import Response from '../../../src/core/response';
 import { Context } from '../../../src/core/road';
 
 import { describe, expect, test, assert } from 'vitest';
-import { NextCallback } from '../../../src/core/requestChain';
+import { Route, Router, RouterURL } from '../../../src/core/router';
 
 const router_file_test_path = `${__dirname  }/../../resources/_router_file_test.js`;
 
@@ -33,19 +32,6 @@ describe('Router Tests', () => {
 	/**
 	 *
 	 */
-	test('test addRoute adds middleware to the route', () => {
-		expect.assertions(1);
-
-		const road = new Road();
-		const router = new Router();
-		router.applyMiddleware(road);
-
-		expect(road['_request_chain'].length()).toEqual(1);
-	});
-
-	/**
-	 *
-	 */
 	test('test middleware function routes successfully to successful routes', () => {
 		expect.assertions(1);
 
@@ -58,12 +44,8 @@ describe('Router Tests', () => {
 			return Promise.resolve(new Response('{"route_hit": true}'));
 		};
 
-		const next: NextCallback = () => {
-			return Promise.resolve(new Response(''));
-		};
-
 		router.addRoute(method, path, fn);
-		router['_middleware'].call({}, router['_routes'], method, path, '', {}, next);
+		router.route(method, path, '', {}, {});
 
 		expect(route_hit).toEqual(true);
 	});
@@ -74,12 +56,8 @@ describe('Router Tests', () => {
 		const router = new Router();
 		const path = '/';
 
-		const next: NextCallback = () => {
-			return Promise.resolve(new Response(''));
-		};
-
 		router.addRoute('POST', path, () => assert.fail('POST route should not run'));
-		return expect(router['_middleware'].call({}, router['_routes'], 'GET', path, '', {}, next))
+		return expect(router.route('GET', path, '', {}, {}))
 			.resolves.toEqual(new Response('Method Not Allowed', 405));
 	});
 
@@ -95,15 +73,11 @@ describe('Router Tests', () => {
 			return Promise.resolve(new Response('{"route_hit": true}'));
 		};
 
-		const next: NextCallback = () => {
-			return Promise.resolve(new Response(''));
-		};
-
 		router.addRoute('PUT', path, fn);
 		router.addRoute('POST', path, () => assert.fail('POST route should not run'));
-		router['_middleware'].call({}, router['_routes'], method, path, '', {
+		router.route(method, path, '', {
 			'x-http-method-override': 'PUT'
-		}, next);
+		}, {});
 
 		expect(route_hit).toEqual(true);
 	});
@@ -120,15 +94,11 @@ describe('Router Tests', () => {
 			return Promise.resolve(new Response('{"route_hit": true}'));
 		};
 
-		const next: NextCallback = () => {
-			return Promise.resolve(new Response(''));
-		};
-
 		router.addRoute('GET', path, fn);
 		router.addRoute('PUT', path, () => assert.fail('PUT route should not run'));
-		router['_middleware'].call({}, router['_routes'], method, path, '', {
+		router.route(method, path, '', {
 			'x-http-method-override': 'PUT'
-		}, next);
+		}, {});
 
 		expect(route_hit).toEqual(true);
 	});
@@ -145,13 +115,9 @@ describe('Router Tests', () => {
 			return Promise.resolve(new Response('{"route_hit": true}'));
 		};
 
-		const next: NextCallback = () => {
-			return Promise.resolve(new Response(''));
-		};
-
 		router.addRoute('PUT', path, fn);
 		router.addRoute('POST', path, () => assert.fail('POST route should not run'));
-		router['_middleware'].call({}, router['_routes'], method, `${path}?_method=PUT`, '', {}, next);
+		router.route(method, `${path}?_method=PUT`, '', {}, {});
 
 		expect(route_hit).toEqual(true);
 	});
@@ -168,14 +134,10 @@ describe('Router Tests', () => {
 			return Promise.resolve(new Response('{"route_hit": true}'));
 		};
 
-		const next: NextCallback = () => {
-			return Promise.resolve(new Response(''));
-		};
-
 		router.addRoute('GET', path, fn);
 		router.addRoute('PUT', path, () => assert.fail('PUT route should not run'));
 
-		router['_middleware'].call({}, router['_routes'], method, `${path}?_method=PUT`, '', {}, next);
+		router.route(method, `${path}?_method=PUT`, '', {}, {});
 
 		expect(route_hit).toEqual(true);
 	});
@@ -200,65 +162,11 @@ describe('Router Tests', () => {
 			return Promise.resolve(new Response(''));
 		};
 
-		const next: NextCallback = () => {
-			return Promise.resolve(new Response(''));
-		};
-
 		router.addRoute(method, path, fn);
 		router.addRoute(method, path, fn2);
-		router['_middleware'].call({}, router['_routes'], method, path, '', {}, next);
+		router.route(method, path, '', {}, {});
 
 		expect(route_hit).toEqual(true);
-	});
-
-	/**
-	 *
-	 */
-	test('test middleware function routes to next on a missed url', () => {
-		expect.assertions(2);
-		const router = new Router();
-		const path = '/';
-		const method = 'GET';
-		let route_hit = false;
-		let next_hit = false;
-		const fn = () => {
-			route_hit = true;
-			return Promise.resolve(new Response(''));
-		};
-
-		router.addRoute('/foo', method, fn);
-		router['_middleware'].call({}, router['_routes'], method, path, '', {}, () => {
-			next_hit = true;
-			return Promise.resolve(new Response(''));
-		});
-
-		expect(route_hit).toEqual(false);
-		expect(next_hit).toEqual(true);
-	});
-
-	/**
-	 *
-	 */
-	test('test middleware function routes to next on a missed http method but matching url', () => {
-		expect.assertions(2);
-		const router = new Router();
-		const path = '/';
-		const method = 'GET';
-		let route_hit = false;
-		let next_hit = false;
-		const fn = () => {
-			route_hit = true;
-			return Promise.resolve(new Response(''));
-		};
-
-		router.addRoute(path, 'PUT', fn);
-		router['_middleware'].call({}, router['_routes'], method, path, '', {}, () => {
-			next_hit = true;
-			return Promise.resolve(new Response(''));
-		});
-
-		expect(route_hit).toEqual(false);
-		expect(next_hit).toEqual(true);
 	});
 
 	/**
@@ -287,9 +195,7 @@ describe('Router Tests', () => {
 
 		router.addRoute(method, path,route);
 
-		router['_middleware'].call({}, router['_routes'], method, path, body, headers, () => {
-			return Promise.resolve(new Response(''));
-		});
+		router.route(method, path, body, headers, {});
 	});
 
 	/**
@@ -320,9 +226,7 @@ describe('Router Tests', () => {
 
 		router.addRoute(method, path, route);
 
-		router['_middleware'].call({}, router['_routes'], method, req_path, body, headers, () => {
-			return Promise.resolve(new Response(''));
-		});
+		router.route(method, req_path, body, headers, {});
 	});
 
 	/**
@@ -352,9 +256,7 @@ describe('Router Tests', () => {
 
 		router.addRoute(method, path, route);
 
-		router['_middleware'].call({}, router['_routes'], method, req_path, body, headers, () => {
-			return Promise.resolve(new Response(''));
-		});
+		router.route(method, req_path, body, headers, {});
 	});
 
 	/**
@@ -372,9 +274,7 @@ describe('Router Tests', () => {
 
 		router.addRoute(method, path, fn);
 		return expect(() => {
-			return router['_middleware'].call({}, router['_routes'], method, path, '', {}, () => {
-				return Promise.resolve(new Response(''));
-			});
+			return router.route(method, path, '', {}, {});
 		}).rejects.toThrow(new Error(error_message));
 	});
 
@@ -391,10 +291,8 @@ describe('Router Tests', () => {
 		};
 
 		router.addRoute(method, path, fn);
-		const route_hit: Promise<Response | string> = router['_middleware'].call(
-			{}, router['_routes'], method, path, '', {}, () => {
-				return Promise.resolve(new Response(''));
-			}
+		const route_hit: Promise<Response | string> = router.route(
+			method, path, '', {}, {}
 		);
 
 		route_hit.then((response: Response | string) => {
@@ -406,38 +304,10 @@ describe('Router Tests', () => {
 	/**
 	 *
 	 */
-	test('test next successfully returns value out of the middleware', () => {
-		expect.assertions(2);
-		const router = new Router();
-		const path = '/';
-		const method = 'GET';
-		const fn: Route<Context> = () => {
-			return Promise.resolve(new Response('true'));
-		};
-
-		router.addRoute(path, 'PUT', fn);
-		const route_hit: Promise<Response | string> = router['_middleware'].call(
-			{}, router['_routes'], method, path, '', {}, () => {
-				return Promise.resolve(new Response('next'));
-			}
-		);
-
-		route_hit.then((response: Response | string) => {
-			expect(response).toBeInstanceOf(Response);
-			expect((response as Response).body).toEqual('next');
-		});
-
-	});
-
-	/**
-	 *
-	 */
-	test('test applyMiddleware can call the middleware properly', () => {
+	test('test road works correctly with the router', () => {
 		expect.assertions(1);
 
 		const road = new Road();
-		const router = new Router();
-		router.applyMiddleware(road);
 
 		const path = '/';
 		const method = 'GET';
@@ -447,7 +317,7 @@ describe('Router Tests', () => {
 			return Promise.resolve(new Response(''));
 		};
 
-		router.addRoute(method, path, fn);
+		road.use(method, path, fn);
 		road.request(method, path, '');
 
 		expect(route_hit).toEqual('route');
@@ -460,8 +330,6 @@ describe('Router Tests', () => {
 		expect.assertions(1);
 
 		const road = new Road();
-		const router = new Router();
-		router.applyMiddleware(road);
 
 		const path = '/';
 		const method = 'GET';
@@ -471,7 +339,7 @@ describe('Router Tests', () => {
 			return Promise.resolve(new Response(''));
 		};
 
-		router.addRoute(method, path, fn);
+		road.use(method, path, fn);
 		road.request(method, `${path  }?foo=bar`);
 
 		expect(route_hit).toEqual('route');
@@ -481,10 +349,8 @@ describe('Router Tests', () => {
 		expect.assertions(5);
 
 		const road = new Road();
-		const router = new Router();
-		router.applyMiddleware(road);
 
-		return router.addRouteFile(router_file_test_path)
+		return road.useFile(router_file_test_path)
 			.then(() => {
 				return Promise.all([
 					road.request('GET', '/'),
@@ -510,10 +376,8 @@ describe('Router Tests', () => {
 	test('test routes loaded from a file with prefix', () => {
 		expect.assertions(5);
 		const road = new Road();
-		const router = new Router();
-		router.applyMiddleware(road);
 
-		return router.addRouteFile(router_file_test_path, '/test_prefix')
+		return road.useFile('/test_prefix', router_file_test_path)
 			.then(() => {
 				return Promise.all([
 					road.request('GET', '/test_prefix'),
@@ -538,15 +402,12 @@ describe('Router Tests', () => {
 	test('test routes using a request chain successfully progress through the chain', () => {
 		expect.assertions(3);
 		const road = new Road();
-		const router = new Router();
-		router.applyMiddleware(road);
 
 		const path = '/';
 		const method = 'GET';
 		let route_hit = '';
 		const fn: Route<Context> = async (method, url, body, headers, next) => {
 			// this logged undefined undefined [Function (anonymous)] undefined undefined
-			console.log(method, url, body, headers, next);
 			const result = await next();
 
 			if (result instanceof Response) {
@@ -561,7 +422,7 @@ describe('Router Tests', () => {
 			return Promise.resolve(new Response(''));
 		};
 
-		router.addRoute(method, path, [fn, fn2]);
+		road.use(method, path, [fn, fn2]);
 
 		return road.request(method, path).then((response: Response) => {
 			expect(route_hit).toEqual('route');

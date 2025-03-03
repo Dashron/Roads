@@ -1,4 +1,4 @@
-import Road from './core/road';
+import Road, { Context } from './core/road';
 
 export { default as Response } from './core/response';
 export { default as Road } from './core/road';
@@ -22,11 +22,13 @@ export * as ModifiedSinceMiddleware from './middleware/modifiedSince';
 import * as ModifiedSinceMiddleware from './middleware/modifiedSince';
 // This is not part of the common middleware because it requires configuration,
 //  and should happen after all user-provided middleware
-export * as RouterMiddleware from './middleware/router';
+export * as RouterMiddleware from './core/router';
 
-export function attachCommonMiddleware(road: Road) {
-	road.use(RemoveTrailingSlashMiddleware.middleware);
-	road.use(StoreValsMiddleware.middleware);
-	road.use(ParseBodyMiddleware.middleware);
-	road.use(ModifiedSinceMiddleware.middleware);
+export function attachCommonMiddleware<
+	MiddlewareContext extends Context & StoreValsMiddleware.StoreValsContext & ModifiedSinceMiddleware.ModifiedSinceContext
+>(road: Road<MiddlewareContext>) {
+	road.beforeRoute(RemoveTrailingSlashMiddleware.middleware);
+	road.beforeRoute(StoreValsMiddleware.middleware);
+	road.beforeRoute(ParseBodyMiddleware.middleware);
+	road.beforeRoute(ModifiedSinceMiddleware.middleware);
 }

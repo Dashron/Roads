@@ -1,6 +1,6 @@
 /**
  * request.ts
- * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
+ * Copyright(c) 2025 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
  * This file exposes a Request object to offer an HTTP request library with a method signature that matches

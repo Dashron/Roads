@@ -28,7 +28,7 @@ describe('road request', () => {
 		expect.assertions(1);
 		const road = new Road();
 
-		road.use(function () {
+		road.addRoute('GET', '/', function () {
 			throw new Error('huh');
 		});
 
@@ -42,7 +42,7 @@ describe('road request', () => {
 		expect.assertions(1);
 		const road = new Road();
 
-		road.use(async function () {
+		road.addRoute('GET', '/', async function () {
 			throw new Error('huh');
 		});
 
@@ -50,28 +50,28 @@ describe('road request', () => {
 	});
 
 	/**
-	 * Ensure that a request handler that executes, then calls the actual route returns as expected
+	 * Ensure that
 	 */
-	test('Request With Multiple Handlers Called', () => {
-		expect.assertions(2);
+	test('Only a single route attched to a method/path pairing is executed', async () => {
+		expect.assertions(3);
 		const road = new Road();
 		let step1 = false;
 		let step2 = false;
 
-		road.use(function (method, url, body, headers, next) {
+		road.addRoute('GET', '/', function () {
 			step1 = true;
-			return next();
+			return 'first';
 		});
 
-		road.use(function (method, url, body, headers, next) {
+		road.addRoute('GET', '/', function () {
 			step2 = true;
-			return next();
+			return 'second';
 		});
 
-		return road.request('GET', '/').then(function () {
-			expect(step1).toEqual(true);
-			expect(step2).toEqual(true);
-		});
+		const response = await road.request('GET', '/');
+		expect(step1).toEqual(true);
+		expect(step2).toEqual(false);
+		expect(response).toEqual(new Response('first', 200));
 	});
 
 	/**
@@ -82,7 +82,7 @@ describe('road request', () => {
 
 		const road = new Road();
 
-		road.use(function (method, url, body, headers, next) {
+		road.addRoute('GET', '/', function (method, url, body, headers, next) {
 			return next();
 		});
 
@@ -120,7 +120,7 @@ describe('road request', () => {
 		expect.assertions(1);
 		const road = new Road();
 
-		const middleware: Middleware<Context> = function (method, url, body, headers, next) {
+		const middleware: Route<Context> = function (method, url, body, headers, next) {
 			return next()
 				.catch(function (error: Error) {
 					return new Response(JSON.stringify({error : error.message}), 200);
