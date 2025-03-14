@@ -23,20 +23,20 @@ export interface CookieContext extends Context {
 	 * Calling this function will store your new cookies.
 	 * 	The parameters directly map to the [cookie](https://github.com/jshttp/cookie) module.
 	 */
-	setCookie: (name: string, value?: string, options?: cookie.CookieSerializeOptions) => void,
+	setCookie: (name: string, value?: string, options?: cookie.SerializeOptions) => void,
 	/**
 	 * Returns an object with all the cookies. It defaults to
 	 * 	all the request cookies, but merges anything applied via
   	 * 	setCookie on top (i.e. setCookie will override the request cookie)
 	 */
-	getCookies: () => Record<string, string>
+	getCookies: () => Record<string, string | undefined>
 	newCookies: NewCookies
 }
 
-interface SetCookies {[key: string]: string}
+interface SetCookies {[key: string]: string | undefined}
 interface NewCookies {[key: string]: {
 	value: string,
-	options: cookie.CookieSerializeOptions
+	options: cookie.SerializeOptions
 }}
 
 /**
