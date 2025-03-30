@@ -1,6 +1,6 @@
 {
   "name": "roads",
-  "version": "8.0.0-alpha.4",
+  "version": "8.0.0-alpha.5",
   "author": {
     "name": "Aaron Hedges",
     "email": "aaron@dashron.com",
@@ -51,5 +51,6 @@
   "files": [
     "dist",
     "types"
-  ]
+  ],
+  "type": "module"
 }
