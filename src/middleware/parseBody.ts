@@ -46,18 +46,12 @@ function getSingleHeader(headers: IncomingHeaders | OutgoingHeaders, key: string
  * @returns {(object|string)} parsed body
  */
 function parseRequestBody (body: string | undefined, contentType?: string): unknown {
-	console.log('parsing');
 	if (contentType && body) {
-		console.log('has reqs', body);
 		const parsedContentType = contentTypeModule.parse(contentType);
-		console.log(contentType);
-		console.log(parsedContentType);
 		if (parsedContentType.type === 'application/json') {
-			console.log('is json', body);
 			// parse json
 			return JSON.parse(body);
 		} else if (parsedContentType.type === 'application/x-www-form-urlencoded') {
-			console.log('form encoded', qsModule.parse(body));
 			// parse form encoded
 			return qsModule.parse(body);
 		}
@@ -72,9 +66,7 @@ function parseRequestBody (body: string | undefined, contentType?: string): unkn
  */
 export const middleware: Middleware<Context> = function (method, url, body, headers, next) {
 	try {
-		console.log('headers', headers);
 		this.body = parseRequestBody(body, headers ? getSingleHeader(headers, 'content-type') : undefined);
-		console.log('this body', this.body);
 	} catch (e) {
 		if (e.message === 'invalid media type') {
 			return new Response('Invalid content-type header', 400);
