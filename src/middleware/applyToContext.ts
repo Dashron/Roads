@@ -7,7 +7,7 @@
  * It's useful for making values easily available to each request, such as an api library
  */
 
-import { Context, Middleware } from '../core/road';
+import { Context, Middleware } from '../core/road.js';
 
 /**
  * This is a very simple middleware to apply a single value to the request context with a single line of code.

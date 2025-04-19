@@ -1,9 +1,9 @@
 {
     "compilerOptions": {
         "outDir": "./dist/node",
-        "target": "es2015",
-        "module": "CommonJS",
-        "moduleResolution": "node",
+        "target": "es2022",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
         "noImplicitAny": true,
         "strictNullChecks": true,
         "noImplicitThis": true,

@@ -8,7 +8,7 @@
  * 	to reduce polluting the context
  */
 
-import { Context, Middleware } from '../core/road';
+import { Context, Middleware } from '../core/road.js';
 
 export interface StoreValsContext extends Context {
 	/**

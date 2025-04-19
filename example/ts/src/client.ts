@@ -7,8 +7,8 @@
  */
 
 import { Road, RoadsPJAX, ParseBodyMiddleware, RouterMiddleware, CookieMiddleware, Request } from 'roads';
-import applyPublicRotues from './routes/applyPublicRoutes';
-import emptyTo404 from './middleware/emptyTo404';
+import applyPublicRotues from './routes/applyPublicRoutes.js';
+import emptyTo404 from './middleware/emptyTo404.js';
 
 const road = new Road();
 

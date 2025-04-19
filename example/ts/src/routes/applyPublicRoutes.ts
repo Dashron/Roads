@@ -9,9 +9,9 @@
 import { Response, RouterMiddleware } from 'roads';
 const TITLE_KEY = 'page-title';
 
-import { ParseBodyContext } from 'roads/types/middleware/parseBody';
-import { StoreValsContext } from 'roads/types/middleware/storeVals';
-import { CookieContext } from 'roads/types/middleware/cookieMiddleware';
+import { ParseBodyContext } from 'roads/types/middleware/parseBody.js';
+import { StoreValsContext } from 'roads/types/middleware/storeVals.js';
+import { CookieContext } from 'roads/types/middleware/cookieMiddleware.js';
 
 interface ExampleRequestBody {
 	message?: string

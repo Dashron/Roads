@@ -8,12 +8,14 @@
   },
   "description": "Example for roads.js",
   "devDependencies": {
+    "@types/express": "^5.0.1",
     "esbuild": "0.24.2"
   },
   "dependencies": {
+    "body-parser": "^2.2.0",
     "brfs": "2.0.2",
+    "express": "^5.1.0",
     "roads": "file:../../",
-    "roads-server": "1.1.1",
     "typescript": "^5.7.3"
   },
   "private": true,
@@ -21,5 +23,6 @@
     "start": "./node_modules/.bin/tsc && node dist/node/server.js",
     "build": "./node_modules/.bin/esbuild src/client.ts --bundle --outfile=public/client.js"
   },
+  "type": "module",
   "license": "MIT"
 }

@@ -7,9 +7,9 @@
  * Exposes the core Road class
  */
 
-import * as response_lib from './response';
-import Response from './response';
-import { NextCallback, RequestChain } from './requestChain';
+import * as response_lib from './response.js';
+import Response from './response.js';
+import { NextCallback, RequestChain } from './requestChain.js';
 
 export interface IncomingHeaders extends Record<string, string | Array<string> | undefined> {}
 

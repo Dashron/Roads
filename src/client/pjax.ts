@@ -15,9 +15,9 @@
  *
  */
 
-import Road, { Middleware } from '../core/road';
-import Response from '../core/response';
-import { StoreValsContext, middleware as storeValsMiddleware} from '../middleware/storeVals';
+import Road, { Middleware } from '../core/road.js';
+import Response from '../core/response.js';
+import { StoreValsContext, middleware as storeValsMiddleware} from '../middleware/storeVals.js';
 
 /**
   * This is a helper class to make PJAX easier. PJAX is a clean way of improving the performance of webpages
@@ -195,7 +195,9 @@ export default class RoadsPjax {
 		//		to lowercase their methods. To fix this we uppercase here as any is a workaround.
 		//		see https://github.com/Microsoft/TypeScript/issues/30584
 		this._road.request(form.method.toUpperCase(), form.action, new URLSearchParams(
-			new FormData(form).toString()).toString(), {'content-type': 'application/x-www-form-urlencoded'}
+			// Typescript wants urlsearchparams to take a string, but if we .toString() formdata it doesn't come out in a 
+			// way url search params understands.
+			(new FormData(form)) as any).toString(), {'content-type': 'application/x-www-form-urlencoded'}
 		)
 			.then((response: Response) => {
 				if ([301, 302, 303, 307, 308].includes(response.status) && typeof response.headers?.location === 'string') {

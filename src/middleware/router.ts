@@ -8,10 +8,10 @@
  */
 
 import parse from 'url-parse';
-import { IncomingHeaders } from '../core/road';
-import Road, {Context} from '../core/road';
-import Response from '../core/response';
-import { NextCallback, RequestChain } from '../core/requestChain';
+import { IncomingHeaders } from '../core/road.js';
+import Road, {Context} from '../core/road.js';
+import Response from '../core/response.js';
+import { NextCallback, RequestChain } from '../core/requestChain.js';
 
 
 export interface Route<ContextType extends Context> {

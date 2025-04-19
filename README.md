@@ -61,7 +61,8 @@ Roads is a simple web framework. It's similar to Express.js, but has some very i
   - [PJAX Page titles](#pjax-page-titles)
     - [PJAX Page Title Example](#pjax-page-title-example)
 - [Isomorphic PJAX tips](#isomorphic-pjax-tips)
-- [FAQ](#faq)
+- [SPA's](#spas)
+- [Islands Pattern](#islands-pattern)
 
 
 # Getting Started
@@ -881,9 +882,9 @@ There's a very easy pattern to follow to ensure sharing client and server code w
 3. Compile the browser script to be run in the browser. Currently I recommend esbuild, and that's how the typescript example works.
 4. Load the browser script on any server side page that should enable PJAX.
 
-# FAQ
+# SPA's
+Check out roads-spa for an example of how to use roads to build a single page application
 
-**Why is this called roads?**
-The name Roads fit well with some of the earlier architectural decisions and some of the more advanced ways of using this feature. Over time those features have become less prominent but we kept the name.
+# Islands Pattern
+Check out roads-ssr for an example of how to use roads with the islands pattern.
 
-Not good enough for you? Fine, I'll make an awkward backronym. How about Requests Organized And Dispatched Simply. Ugh.
