@@ -6,8 +6,8 @@
  * This exposes a function that helps you manage CORS in your roads service
  */
 
-import { Context, IncomingHeaders, Middleware } from '../core/road';
-import Response, { OutgoingHeaders } from '../core/response';
+import { Context, IncomingHeaders, Middleware } from '../core/road.js';
+import Response, { OutgoingHeaders } from '../core/response.js';
 
 function getSingleHeader(headers: IncomingHeaders | OutgoingHeaders, key: string): string | undefined {
 	if (headers) {

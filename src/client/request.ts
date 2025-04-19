@@ -7,8 +7,8 @@
  * the roads.request method
  */
 
-import { IncomingHeaders } from '../core/road';
-import Response from '../core/response';
+import { IncomingHeaders } from '../core/road.js';
+import Response from '../core/response.js';
 
 /**
  * This class is a helper with making HTTP requests that look like roads requests.

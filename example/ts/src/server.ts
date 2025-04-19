@@ -6,14 +6,15 @@
  * This file starts up the HTTP roads server
  */
 
-import { Road, Response, RemoveTrailingSlashMiddleware, CookieMiddleware,
-	StoreValsMiddleware, ParseBodyMiddleware, RouterMiddleware, attachCommonMiddleware } from 'roads';
+import { Road, Response, CookieMiddleware, RouterMiddleware, attachCommonMiddleware } from 'roads';
 
-import { Server } from 'roads-server';
-import addLayout from './middleware/addLayout';
-import applyPublicRotues from './routes/applyPublicRoutes';
-import applyPrivateRoutes from './routes/applyPrivateRoutes';
-import emptyTo404 from './middleware/emptyTo404';
+import express from 'express';
+import addLayout from './middleware/addLayout.js';
+import applyPublicRotues from './routes/applyPublicRoutes.js';
+import applyPrivateRoutes from './routes/applyPrivateRoutes.js';
+import emptyTo404 from './middleware/emptyTo404.js';
+import { expressConnector } from './middleware/expressConnector.js';
+import bodyParser from 'body-parser';
 
 const road = new Road();
 
@@ -31,11 +32,13 @@ applyPublicRotues(router);
 applyPrivateRoutes(router);
 road.use(emptyTo404);
 
-const server = new Server(road, function (err: Error) {
-	console.log(err.stack);
-	return new Response('Unknown Error', 500);
-});
+const app = express();
 
-server.listen(8081, 'localhost', function () {
+app.use(bodyParser.json());
+app.set('etag', false);
+app.use(express.raw({ type: '*/*' }));
+app.use(expressConnector(road));
+
+app.listen(8081, 'localhost', function () {
 	console.log('server has started');
 });

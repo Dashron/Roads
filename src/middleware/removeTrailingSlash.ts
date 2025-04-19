@@ -10,9 +10,9 @@
  * 	object redirecting the client to the same url without the trailing slash (302 redirect
  * 	with Location: [url_without_slash])
  */
-import { Context, Middleware } from '../core/road';
+import { Context, Middleware } from '../core/road.js';
 import parse from 'url-parse';
-import Response from '../core/response';
+import Response from '../core/response.js';
 
 /**
  * Any requests with trailing slashes will immediately return a Response object redirecting to a non-trailing-slash path

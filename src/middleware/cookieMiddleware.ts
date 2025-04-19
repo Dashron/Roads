@@ -6,8 +6,8 @@
  * Middleware for managing cookies
  */
 import * as cookie from 'cookie';
-import { Context, Middleware } from '../core/road';
-import Response from '../core/response';
+import { Context, Middleware } from '../core/road.js';
+import Response from '../core/response.js';
 
 /**
  * The Cookie Context represents the request context when either the

@@ -7,8 +7,8 @@
  * This is useful when you're running two servers locally. One example is a webserver and a separate API server.
  */
 
-import { Context, IncomingHeaders, Middleware } from '../core/road';
-import Road from '../core/road';
+import { Context, IncomingHeaders, Middleware } from '../core/road.js';
+import Road from '../core/road.js';
 
 /**
  * Applies a method to the request context that allows you to make requests into another roads object.

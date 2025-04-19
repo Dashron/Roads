@@ -7,10 +7,12 @@
  */
 
 import * as fs from 'fs';
-import { CookieContext } from 'roads/types/middleware/cookieMiddleware';
-import { StoreValsContext } from 'roads/types/middleware/storeVals';
+import { CookieContext } from 'roads/types/middleware/cookieMiddleware.js';
+import { StoreValsContext } from 'roads/types/middleware/storeVals.js';
 import { RouterMiddleware, Response } from 'roads';
 const TITLE_KEY = 'page-title';
+
+const __dirname = import.meta.dirname;
 
 /**
   * Before calling this function you should create your roads object and bind a SimpleRouter to that road.

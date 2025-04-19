@@ -6,10 +6,10 @@
  * This file is an example of how to apply HTML layouts via a middleware system
  */
 
-import { Middleware } from 'roads/types/core/road';
+import { Middleware } from 'roads/types/core/road.js';
 import { Response } from 'roads';
 const TITLE_KEY = 'page-title';
-import { StoreValsContext } from 'roads/types/middleware/storeVals';
+import { StoreValsContext } from 'roads/types/middleware/storeVals.js';
 
 /**
   * Example function to wrap an HTML body in the required surrounding HTML tags (commonly called a layout)

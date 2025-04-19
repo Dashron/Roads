@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
-import Response from './response';
-import { Context } from './road';
+import Response from './response.js';
+import { Context } from './road.js';
 
 export interface NextCallback {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
