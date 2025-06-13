@@ -25,7 +25,7 @@ interface RouteDetails {
 	method: string
 }
 
-export interface RouterURL extends ReturnType<typeof parse> {
+export interface RouterURL extends ReturnType<typeof parse<Record<string, string | number>>> {
 	args?: Record<string, string | number>
 }
 /**
