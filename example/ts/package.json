@@ -1,6 +1,6 @@
 {
   "name": "roads-example",
-  "version": "7.3.0",
+  "version": "8.0.0-alpha.8",
   "author": {
     "name": "Aaron Hedges",
     "email": "aaron@dashron.com",
@@ -21,7 +21,7 @@
   "private": true,
   "scripts": {
     "start": "./node_modules/.bin/tsc && node dist/node/server.js",
-    "build": "./node_modules/.bin/esbuild src/client.ts --bundle --outfile=public/client.js"
+    "build": "./node_modules/.bin/tsc && ./node_modules/.bin/esbuild src/client.ts --bundle --outfile=public/client.js"
   },
   "type": "module",
   "license": "MIT"

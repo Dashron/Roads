@@ -44,7 +44,7 @@ export default function applyPrivateRotues(router: RouterMiddleware.Router<Store
 	});
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	router.addRoute('GET', 'client.js', async function (url, body, headers) {
+	router.addRoute('GET', 'client.js', async function (method, url, body, headers) {
 		this.storeVal('ignoreLayout', true);
 		// In the real world the body of the response should be created from a template engine.
 		return new Response(fs.readFileSync(`${__dirname  }/../../../public/client.js`).toString('utf-8'), 200, {
