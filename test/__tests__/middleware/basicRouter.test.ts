@@ -556,7 +556,7 @@ describe('Router Tests', () => {
 			return new Response(result);
 		};
 
-		const fn2: Route<Context> = (method, url, body, headers, next) => {
+		const fn2: Route<Context> = () => {
 			route_hit = 'route';
 			return Promise.resolve(new Response(''));
 		};

@@ -50,11 +50,8 @@ interface NewCookies {[key: string]: {
 function getCookieValues(newCookies: NewCookies): SetCookies {
 	const cookies: SetCookies = {};
 
-	const cookieKeys = Object.keys(newCookies);
-
-	for (let i = 0; i < cookieKeys.length; i++) {
-		const newCookie = newCookies[cookieKeys[i]];
-		cookies[cookieKeys[i]] = newCookie.value;
+	for (const [key, newCookie] of Object.entries(newCookies)) {
+		cookies[key] = newCookie.value;
 	}
 
 	return cookies;
@@ -98,10 +95,10 @@ function (route_method, route_path, route_body, route_headers, next) {
 
 	// Apply the cookie headers to the response
 	return next().then((response) => {
-		const cookieKeys = Object.keys(this.newCookies);
+		const newCookiesEntries = Object.entries(this.newCookies);
 
 		// If there are new cookies to transmit
-		if (cookieKeys.length) {
+		if (newCookiesEntries.length) {
 			// Ensure we're dealing with a response object and not a string
 			if (!(response instanceof Response)) {
 				response = new Response(response);
@@ -117,10 +114,9 @@ function (route_method, route_path, route_body, route_headers, next) {
 			}
 
 			// Apply all the cookies
-			for (let i = 0; i < cookieKeys.length; i++) {
+			for (const [cookieKey, cookieValue] of newCookiesEntries) {
 				(response.headers['Set-Cookie']).push(
-					cookie.serialize(cookieKeys[i],
-						this.newCookies[cookieKeys[i]].value, this.newCookies[cookieKeys[i]].options));
+					cookie.serialize(cookieKey, cookieValue.value, cookieValue.options));
 			}
 		}
 
@@ -146,9 +142,11 @@ export const buildClientMiddleware: (pageDocument: Document) => Middleware<Cooki
 		}, next)
 			.then((response: Response) => {
 
-				Object.keys(this.newCookies).forEach((key) => {
-					pageDocument.cookie = cookie.serialize(key, this.newCookies[key].value, this.newCookies[key].options);
-				});
+				for (const [key, cookieValue] of Object.entries(this.newCookies)) {
+					if (cookieValue) {
+						pageDocument.cookie = cookie.serialize(key, cookieValue.value, cookieValue.options);
+					}
+				}
 
 				return response;
 			});

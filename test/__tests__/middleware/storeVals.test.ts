@@ -10,7 +10,7 @@ describe('Store Values', () => {
 
 		const context: Record<string, any> = {};
 
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		middleware.call(context, 'a', 'b', 'c', {}, function () {});
 
 		expect(typeof(context.storeVal)).toEqual('function');
@@ -25,7 +25,7 @@ describe('Store Values', () => {
 
 		const context: Record<string, any> = {};
 
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		middleware.call(context, 'a', 'b', 'c', {}, function () {});
 		context.storeVal('foo', 'bar');
 

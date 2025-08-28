@@ -40,7 +40,6 @@ export default class RoadsPjax {
 	 */
 	constructor(road: Road, containerElement: HTMLElement, window: Window) {
 		this._road = road;
-		this._page_title = undefined;
 		this._window = window;
 		this._container_element = containerElement;
 	}
@@ -195,8 +194,9 @@ export default class RoadsPjax {
 		//		to lowercase their methods. To fix this we uppercase here as any is a workaround.
 		//		see https://github.com/Microsoft/TypeScript/issues/30584
 		this._road.request(form.method.toUpperCase(), form.action, new URLSearchParams(
-			// Typescript wants urlsearchparams to take a string, but if we .toString() formdata it doesn't come out in a 
+			// Typescript wants urlsearchparams to take a string, but if we .toString() formdata it doesn't come out in a
 			// way url search params understands.
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			(new FormData(form)) as any).toString(), {'content-type': 'application/x-www-form-urlencoded'}
 		)
 			.then((response: Response) => {

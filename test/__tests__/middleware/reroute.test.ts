@@ -28,7 +28,7 @@ describe('Reroute middleware tests', () => {
 
 		expect(typeof(middleware)).toEqual('function');
 
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		middleware.call(context, 'a', 'b', 'c', {}, function () {});
 
 		expect(typeof(context[key])).toEqual('function');

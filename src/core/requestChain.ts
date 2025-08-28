@@ -3,11 +3,11 @@ import Response from './response.js';
 import { Context } from './road.js';
 
 export interface NextCallback {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 	(): Promise<Response | string>
 }
 
-// eslint-disable-next-line @typescript-eslint/ban-types
+// eslint-disable-next-line
 export class RequestChain<fn extends Function> {
 	/**
 	 * The request chain is an array of functions that are executed in order when `run` is called
@@ -42,13 +42,16 @@ export class RequestChain<fn extends Function> {
 	getChainStart () {
 
 		let progress = 0;
-		const next: (context: Context, ...args: any[]) => Promise<Response | string> = async (context, ...args) => {
+		const next: (context: Context, ...args: unknown[]) => Promise<Response | string> = async (context, ...args) => {
 
-			if (this._function_chain.length && this._function_chain[progress]) {
-				return this._function_chain[progress].call(context, ...args, () => {
-					progress += 1;
-					return next(context, ...args);
-				});
+			if (this._function_chain.length && progress < this._function_chain.length) {
+				const currentFunction = this._function_chain[progress];
+				if (currentFunction) {
+					return currentFunction.call(context, ...args, () => {
+						progress += 1;
+						return next(context, ...args);
+					});
+				}
 			}
 
 			// If next is called and there is nothing next, we should still return a promise,

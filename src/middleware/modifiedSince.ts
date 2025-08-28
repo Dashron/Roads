@@ -22,8 +22,15 @@ export const middleware: Middleware<ModifiedSinceContext> = function (method, ur
 
 		if (headers && headers['if-modified-since']) {
 			const lastModified = lastMod;
-			const ifModifiedSince = new Date(Array.isArray(headers['if-modified-since']) ?
-				headers['if-modified-since'][0] : headers['if-modified-since']);
+			const ifModifiedSinceHeader = headers['if-modified-since'];
+			const ifModifiedSinceValue = Array.isArray(ifModifiedSinceHeader) ?
+				ifModifiedSinceHeader[0] : ifModifiedSinceHeader;
+
+			if (!ifModifiedSinceValue) {
+				return false;
+			}
+
+			const ifModifiedSince = new Date(ifModifiedSinceValue);
 
 			// If the time the document was last modified is older than or equal to the client's
 			//		provided if-modified-since header, consider it "not modified"

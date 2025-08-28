@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 
 import { middleware, ModifiedSinceContext } from '../../../src/middleware/modifiedSince';
 import Response from '../../../src/core/response';
