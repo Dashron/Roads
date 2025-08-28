@@ -7,7 +7,7 @@
  */
 
 import { Road, RoadsPJAX, ParseBodyMiddleware, RouterMiddleware, CookieMiddleware, Request } from 'roads';
-import applyPublicRotues from './routes/applyPublicRoutes.js';
+import applyPublicRoutes from './routes/applyPublicRoutes.js';
 import emptyTo404 from './middleware/emptyTo404.js';
 
 const road = new Road();
@@ -26,7 +26,7 @@ road.use(CookieMiddleware.buildClientMiddleware(document));
 pjax.register();
 pjax.registerAdditionalElement(document.getElementById('home') as HTMLAnchorElement);
 const router = new RouterMiddleware.Router(road);
-applyPublicRotues(router);
+applyPublicRoutes(router);
 
 const testRequest = new Request(false, 'localhost', 8081);
 testRequest.request('GET', '/').then(response => {

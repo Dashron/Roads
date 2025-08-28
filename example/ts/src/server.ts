@@ -10,7 +10,7 @@ import { Road, Response, CookieMiddleware, RouterMiddleware, attachCommonMiddlew
 
 import express from 'express';
 import addLayout from './middleware/addLayout.js';
-import applyPublicRotues from './routes/applyPublicRoutes.js';
+import applyPublicRoutes from './routes/applyPublicRoutes.js';
 import applyPrivateRoutes from './routes/applyPrivateRoutes.js';
 import emptyTo404 from './middleware/emptyTo404.js';
 import { expressConnector } from './middleware/expressConnector.js';
@@ -28,7 +28,7 @@ road.use(CookieMiddleware.serverMiddleware);
 road.use(addLayout);
 
 const router = new RouterMiddleware.Router(road);
-applyPublicRotues(router);
+applyPublicRoutes(router);
 applyPrivateRoutes(router);
 road.use(emptyTo404);
 

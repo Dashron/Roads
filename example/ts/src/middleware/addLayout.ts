@@ -6,10 +6,10 @@
  * This file is an example of how to apply HTML layouts via a middleware system
  */
 
-import { Middleware } from 'roads/types/core/road.js';
+import { Road, RoadModule } from 'roads';
 import { Response } from 'roads';
 const TITLE_KEY = 'page-title';
-import { StoreValsContext } from 'roads/types/middleware/storeVals.js';
+import { StoreValsMiddleware } from 'roads';
 
 /**
   * Example function to wrap an HTML body in the required surrounding HTML tags (commonly called a layout)
@@ -50,7 +50,7 @@ function wrapLayout(body: string | Buffer, vals: {
  * @param {object} headers - HTTP request headers
  * @param {function} next - When called, this function will execute the next step in the roads method chain
  */
-const addLayoutMiddleware: Middleware<StoreValsContext> = function addLayoutMiddleware (method, url, body, headers, next) {
+const addLayoutMiddleware: RoadModule.Middleware<StoreValsMiddleware.StoreValsContext> = function addLayoutMiddleware (method, url, body, headers, next) {
 	return next()
 		.then((response) => {
 			if (!(response instanceof Response)) {

@@ -7,8 +7,8 @@
  */
 
 import * as fs from 'fs';
-import { CookieContext } from 'roads/types/middleware/cookieMiddleware.js';
-import { StoreValsContext } from 'roads/types/middleware/storeVals.js';
+import { CookieMiddleware } from 'roads';
+import { StoreValsMiddleware } from 'roads';
 import { RouterMiddleware, Response } from 'roads';
 const TITLE_KEY = 'page-title';
 
@@ -21,8 +21,8 @@ const __dirname = import.meta.dirname;
   *
   * @param {SimpleRouter} router - The router that the routes will be added to
   */
-export default function applyPrivateRotues(router: RouterMiddleware.Router<StoreValsContext>): void {
-	router.addRoute<CookieContext>('GET', '/private', async function () {
+export default function applyPrivateRoutes(router: RouterMiddleware.Router<StoreValsMiddleware.StoreValsContext>): void {
+	router.addRoute<CookieMiddleware.CookieContext>('GET', '/private', async function () {
 		this.storeVal(TITLE_KEY, 'Private Resource');
 		this.setCookie('private_cookie', 'foo', {
 			httpOnly: true
@@ -33,9 +33,9 @@ export default function applyPrivateRotues(router: RouterMiddleware.Router<Store
 		});
 
 		return new Response(
-			`This is a private resource. It's available to the server, but is not build in the client!
+			`This is a private resource. It's available to the server, but is not built in the client!
 			The landing page can be rendered via the client though, so try going back
-			<a href="/" data-roads="link">home</a>!<br />`);
+			<a href="/" data-roads-pjax="link">home</a>!<br />`);
 	});
 
 	router.addRoute('GET', '/privateJSON', async function () {

@@ -9,9 +9,7 @@
 import { Response, RouterMiddleware } from 'roads';
 const TITLE_KEY = 'page-title';
 
-import { ParseBodyContext } from 'roads/types/middleware/parseBody.js';
-import { StoreValsContext } from 'roads/types/middleware/storeVals.js';
-import { CookieContext } from 'roads/types/middleware/cookieMiddleware.js';
+import { ParseBodyMiddleware, StoreValsMiddleware, CookieMiddleware } from 'roads';
 
 interface ExampleRequestBody {
 	message?: string
@@ -24,7 +22,7 @@ interface ExampleRequestBody {
   *
   * @param {SimpleRouter} router - The router that the routes will be added to
   */
-export default function applyPublicRotues(router: RouterMiddleware.Router<StoreValsContext>): void {
+export default function applyPublicRoutes(router: RouterMiddleware.Router<StoreValsMiddleware.StoreValsContext>): void {
 	router.addRoute('GET', '/', async function () {
 		this.storeVal(TITLE_KEY, 'Root Resource');
 
@@ -33,20 +31,20 @@ export default function applyPublicRotues(router: RouterMiddleware.Router<StoreV
 		 Try the <a href="/public" data-roads-pjax="link">public test link</a>.
 		 It's available to the server and can be rendered from the client! Try clicking it for the client path,
 		 or control clicking for a real request to the server.<br />
-		 Try the <a href="/private">private test link</a>. Itt's available to the server, but is not build in the client!
+		 Try the <a href="/private">private test link</a>. It's available to the server, but is not built in the client!
 		 Check your console for proof of the network request!`, 200, {
 			duplicateHeaders: ['first', 'second']
 		});
 	});
 
-	router.addRoute<CookieContext>('GET', '/public', async function () {
+	router.addRoute<CookieMiddleware.CookieContext>('GET', '/public', async function () {
 		this.storeVal(TITLE_KEY, 'Public Resource');
 		console.log('Here are all cookies accessible to this code: ', this.getCookies());
 		console.log('Cookies are not set until you access the private route.');
 		console.log('Notice that the http only cookies do not show in your browser\'s console.log');
 
 		const html = `Hello!<br />
-		 The page you are looking at can be renderd via server or client.
+		 The page you are looking at can be rendered via server or client.
 		 The landing page can too, so try going back <a href="/" data-roads-pjax="link">home</a>!
 		 <form method="POST" action="/postdata" data-roads-pjax="form">
 			Message: <input type="text" name="message">
@@ -59,7 +57,7 @@ export default function applyPublicRotues(router: RouterMiddleware.Router<StoreV
 	});
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	router.addRoute<ParseBodyContext<ExampleRequestBody>>('POST', '/postdata', async function (url, body, headers) {
+	router.addRoute<ParseBodyMiddleware.ParseBodyContext<ExampleRequestBody>>('POST', '/postdata', async function (url, body, headers) {
 		console.log(`You sent the message:${this.body?.message}`);
 		this.ignore_layout = true;
 		return new Response('', 302, { location: '/public' });

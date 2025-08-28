@@ -2,6 +2,7 @@ import Road from './core/road.js';
 
 export { default as Response } from './core/response.js';
 export { default as Road } from './core/road.js';
+export * as RoadModule from './core/road.js';
 export { default as RoadsPJAX } from './client/pjax.js';
 export { default as Request } from './client/request.js';
 
