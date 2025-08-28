@@ -6,8 +6,8 @@
  * This file is an example of how to apply HTML layouts via a middleware system
  */
 
-import { Middleware, Context } from 'roads/types/core/road.js';
-import { Response } from 'roads';
+import { Response, RoadModule } from 'roads';
+
 
 /**
  * This middleware translates missing responses into 404s
@@ -18,7 +18,7 @@ import { Response } from 'roads';
  * @param {object} headers - HTTP request headers
  * @param {function} next - When called, this function will execute the next step in the roads method chain
  */
-const emptyTo404: Middleware<Context> = function (method, url, body, headers, next) {
+const emptyTo404: RoadModule.Middleware<RoadModule.Context> = function (method, url, body, headers, next) {
 	return next()
 		.then((response) => {
 			if (!response) {

@@ -5,6 +5,7 @@
    4. Document the new context typing
    5. Common middleware function
 
+2. Have claude review the  cors code and tests against how cors is supposed to work
 # Future
 1. Figure out a way to have better typing on headers
 2. Ensure we have JS and Typescript examples for everything.

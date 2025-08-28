@@ -171,7 +171,7 @@ export class Router<RouterContextType extends Context> {
 		for (let i = 0; i < routes.length; i++) {
 			const route = routes[i];
 
-			if (compareRouteAndApplyArgs(route, parsed_url)) {
+			if (route && compareRouteAndApplyArgs(route, parsed_url)) {
 				// Check the method last, so we can give proper status codes
 				if (route.method === realMethod) {
 					if (route.route instanceof RequestChain) {
@@ -235,7 +235,7 @@ function compareRouteAndApplyArgs (route: {method: string, path: string}, reques
 		const template_part = template[i];
 
 		// Process variables first
-		if (template_part[0] === '#') {
+		if (template_part?.[0] === '#') {
 			// # templates only accept numbers
 			if (isNaN(Number(actual_part))) {
 				return false;
@@ -246,7 +246,7 @@ function compareRouteAndApplyArgs (route: {method: string, path: string}, reques
 			continue;
 		}
 
-		if (template_part[0] === '$') {
+		if (template_part?.[0] === '$') {
 			// $ templates accept any non-slash alphanumeric character
 			// TODO: get rid of this `as`
 			applyArg(request_url as RouterURL, template_part.substring(1), String(actual_part));
@@ -273,7 +273,7 @@ function compareRouteAndApplyArgs (route: {method: string, path: string}, reques
  * @param {*} actual_part - The url value
  */
 function applyArg(request_url: RouterURL, template_part: string, actual_part: string | number): void {
-	if (typeof(request_url.args) === 'undefined') {
+	if (request_url.args === undefined) {
 		request_url.args = {};
 	}
 

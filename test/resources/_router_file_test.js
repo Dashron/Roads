@@ -1,14 +1,14 @@
 module.exports['/'] = {
 	GET:  function () {
-		return "root get successful";
+		return 'root get successful';
 	},
 	POST: function () {
-		return "root post successful";
+		return 'root post successful';
 	}
 };
 
 module.exports['/test'] = {
 	GET: function () {
-		return "test get successful";
+		return 'test get successful';
 	}
 };

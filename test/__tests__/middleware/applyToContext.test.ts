@@ -12,7 +12,7 @@ describe('ApplyToContext tests', () => {
 		const fn = build(key, val);
 		expect(typeof(fn)).toEqual('function');
 
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		fn.call(context, 'a', 'b', 'c', 'd', function () {});
 
 		expect(val).toEqual(context[key]);

@@ -32,7 +32,7 @@ describe('cookie tests', () => {
 			return Promise.resolve('test');
 		};
 
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		expect(await serverMiddleware.call(context, 'a', 'b', 'c', {}, next.bind(context)))
 			.toEqual(new Response('test', 200, {
 
@@ -129,5 +129,23 @@ describe('cookie tests', () => {
 		}, next.bind(context));
 
 		expect(testDocument.cookie).toEqual('foo=bar');
+	});
+
+	test('test cookie middleware handles existing string Set-Cookie header', async () => {
+		expect.assertions(1);
+		const context = {
+			Response: Response
+		};
+
+		const next: (this: CookieContext) => Promise<Response> = function () {
+			this.setCookie('new', 'cookie');
+			return Promise.resolve(new Response('test', 200, {
+				'Set-Cookie': 'existing=value'  // String instead of array
+			}));
+		};
+
+		const result = await serverMiddleware.call(context, 'a', 'b', 'c', {}, next.bind(context));
+
+		expect(result.headers['Set-Cookie']).toEqual(['existing=value', 'new=cookie']);
 	});
 });

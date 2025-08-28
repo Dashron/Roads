@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
+
 import Client from '../../../src/client/request';
 import createServer, { port } from '../../resources/mockServer';
 import { Server as HttpServer } from 'http';

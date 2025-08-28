@@ -23,6 +23,72 @@ function getSingleHeader(headers: IncomingHeaders | OutgoingHeaders, key: string
 }
 
 /**
+ * Validates that an origin string matches the proper format: scheme://host[:port]
+ * Also handles the special "null" origin case for sandboxed contexts
+ * @param origin - The origin string to validate
+ * @returns true if the origin is valid, false otherwise
+ */
+function isValidOrigin(origin: string): boolean {
+	// Handle the special "null" origin case
+	if (origin === 'null') {
+		return true;
+	}
+
+	try {
+		// Use URL constructor to validate origin format
+		const url = new URL(origin);
+		// Origin should only contain scheme, host, and port - no path, query, or fragment
+		return url.pathname === '/' && url.search === '' && url.hash === '';
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Determines if a request qualifies as a CORS simple request that can skip preflight validation
+ * Simple requests use safe methods and headers that don't require preflight checks
+ * @param method - HTTP method
+ * @param headers - Request headers
+ * @returns true if this is a simple request, false otherwise
+ */
+function isSimpleCorsRequest(method: string, headers: IncomingHeaders): boolean {
+	// CORS-safelisted methods only
+	const simpleMethods = ['GET', 'HEAD', 'POST'];
+	if (!simpleMethods.includes(method.toUpperCase())) {
+		return false;
+	}
+
+	// Check for non-simple headers (beyond CORS-safelisted headers)
+	const simpleHeaders = [
+		'accept', 'accept-language', 'content-language', 'content-type',
+		'cache-control', 'expires', 'last-modified', 'pragma'
+	];
+
+	for (const header in headers) {
+		if (!simpleHeaders.includes(header.toLowerCase())) {
+			return false;
+		}
+	}
+
+	// For POST with Content-Type, validate it's a CORS-safelisted type
+	if (method.toUpperCase() === 'POST') {
+		const contentType = getSingleHeader(headers, 'content-type');
+		if (contentType) {
+			const simpleTypes = [
+				'application/x-www-form-urlencoded',
+				'multipart/form-data',
+				'text/plain'
+			];
+			if (!simpleTypes.some(type => contentType.toLowerCase().startsWith(type))) {
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+/**
  * Sets up everything you need for your server to properly respond to CORS requests.
  *
  * @param {object} [options] - A collection of different cors settings.
@@ -32,26 +98,52 @@ function getSingleHeader(headers: IncomingHeaders | OutgoingHeaders, key: string
  * @param {object} [options.requestHeaders] - An array of valid HTTP request headers
  * @param {object} [options.validMethods] - An array of valid HTTP methods
  * @param {object} [options.cacheMaxAge] - The maximum age to cache the cors information
+ * @param {object} [options.returnCorsErrors] - Return specific CORS error responses instead of calling next()
+ *                                            (default: true)
  *
  * @return {function} The middleware to bind to your road
  */
 export function build (options: {
 		validOrigins?: string[],
 		supportsCredentials?: boolean,
-		responseHeaders?: Array<string>,
-		requestHeaders?: Array<string>,
-		validMethods?: Array<string>,
+		allowedResponseHeaders?: Array<string>,
+		allowedRequestHeaders?: Array<string>,
+		allowedMethods?: Array<string>,
 		cacheMaxAge?: number,
-		logger?: {log: (ley: string, data?: unknown) => void}
+		logger?: {log: (ley: string, data?: unknown) => void},
+		returnCorsErrors?: boolean
 	}): Middleware<Context> {
 
 	const validOrigins = options.validOrigins || [];
 	const supportsCredentials = options.supportsCredentials || false;
-	const responseHeaders = options.responseHeaders || [];
-	const requestHeaders = options.requestHeaders || [];
-	const validMethods = options.validMethods || [];
+	const allowedResponseHeaders = options.allowedResponseHeaders || [];
+	const allowedRequestHeaders = options.allowedRequestHeaders || [];
+	const allowedMethods = options.allowedMethods || [];
 	const cacheMaxAge = options.cacheMaxAge || null;
 	const logger = options.logger || { log: () => { /* do nothing */ } };
+	const returnCorsErrors = options.returnCorsErrors !== false;
+
+	/*
+	 * Helper function to handle CORS errors consistently
+	 */
+	const handleCorsError = (next: () => Promise<string | Response>, errorType: string,
+		details?: string, statusCode = 403): Promise<Response> => {
+		if (returnCorsErrors) {
+			const errorMessage = details ? `CORS Error: ${errorType} - ${details}` : `CORS Error: ${errorType}`;
+			logger.log(errorMessage);
+			return Promise.resolve(new Response(errorMessage, statusCode, {
+				'content-type': 'text/plain'
+			}));
+		} else {
+			logger.log(`CORS ERROR: ${errorType}`, details);
+			return next().then(result => {
+				if (typeof result === 'string') {
+					return new Response(result, 200);
+				}
+				return result;
+			});
+		}
+	};
 
 	/*
 	Note: the comments below are pulled from the spec https://www.w3.org/TR/cors/ to help development
@@ -80,6 +172,47 @@ export function build (options: {
 		}
 
 		const preflight = method === 'OPTIONS' && headers['access-control-request-method'];
+		const originHeader = getSingleHeader(headers, 'origin');
+
+		// Optimize simple requests - skip complex validation for CORS-safelisted requests
+		const isSimpleRequest = !preflight && isSimpleCorsRequest(method, headers);
+
+		if (isSimpleRequest) {
+			// Validate origin format
+			if (originHeader && !isValidOrigin(originHeader)) {
+				return handleCorsError(next, 'invalid origin format', originHeader, 400);
+			}
+
+			// Validate against allowed origins
+			if (validOrigins[0] !== '*' && originHeader && !validOrigins.includes(originHeader)) {
+				return handleCorsError(next, 'origin not allowed', originHeader, 403);
+			}
+
+			// For simple requests, set basic CORS headers
+			if (originHeader) {
+				corsResponseHeaders['access-control-allow-origin'] = originHeader;
+				// Add Vary: Origin header for non-wildcard origins to prevent cache poisoning
+				if (validOrigins[0] !== '*') {
+					corsResponseHeaders['vary'] = 'Origin';
+				}
+			}
+
+			if (supportsCredentials) {
+				corsResponseHeaders['access-control-allow-credentials'] = 'true';
+			}
+
+			if (allowedResponseHeaders && allowedResponseHeaders.length) {
+				corsResponseHeaders['access-control-expose-headers'] = allowedResponseHeaders.join(', ');
+			}
+
+			return next()
+				.then((response: Response) => {
+					for (const key in corsResponseHeaders) {
+						response.headers[key] = corsResponseHeaders[key];
+					}
+					return response;
+				});
+		}
 
 
 		/* Simple:
@@ -101,10 +234,14 @@ export function build (options: {
 			header or provide other appropriate control directives to prevent caching of such responses, which may be
 			inaccurate if re-used across-origins.
 		*/
-		const originHeader = getSingleHeader(headers, 'origin');
-		if (validOrigins[0] !== '*' && originHeader && validOrigins.indexOf(originHeader) === -1) {
-			logger.log('CORS ERROR: bad origin', originHeader);
-			return next();
+
+		// Validate origin format
+		if (originHeader && !isValidOrigin(originHeader)) {
+			return handleCorsError(next, 'invalid origin format', originHeader, 400);
+		}
+
+		if (validOrigins[0] !== '*' && originHeader && !validOrigins.includes(originHeader)) {
+			return handleCorsError(next, 'origin not allowed', originHeader, 403);
 		}
 
 		if (preflight) {
@@ -123,11 +260,8 @@ export function build (options: {
 
 			Note: Always matching is acceptable since the list of methods can be unbounded.
 			*/
-			if (corsMethod && validMethods.findIndex((value) => {
-				return value.toLowerCase() === corsMethod.toLowerCase();
-			})) {
-				logger.log('CORS Error: bad method', corsMethod);
-				return next();
+			if (corsMethod && !allowedMethods.includes(corsMethod)) {
+				return handleCorsError(next, 'method not allowed', corsMethod, 405);
 			}
 
 			/*
@@ -143,9 +277,9 @@ export function build (options: {
 
 			try {
 				headerNames = acRequestHeaders ? acRequestHeaders.split(',') : [];
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			} catch (e) {
-				logger.log('CORS Error: request headers parse fail');
-				return next();
+				return handleCorsError(next, 'invalid request headers format', acRequestHeaders, 400);
 			}
 
 			/*
@@ -157,9 +291,14 @@ export function build (options: {
 			*/
 
 			for (let i = 0; i < headerNames.length; i++) {
-				if (requestHeaders.indexOf(headerNames[i]) === -1) {
-					logger.log('CORS Error: invalid header requested', headerNames[i]);
-					return next();
+				const headerName = headerNames[i]?.trim();
+				if (headerName) {
+					const isAllowed = allowedRequestHeaders.find(allowed =>
+						allowed.toLowerCase() === headerName.toLowerCase()
+					);
+					if (!isAllowed) {
+						return handleCorsError(next, 'header not allowed', headerName, 403);
+					}
 				}
 			}
 
@@ -180,7 +319,7 @@ export function build (options: {
 			 *	Note: Since the list of methods can be unbounded, simply returning the method indicated by
 			 *		Access-Control-Request-Method (if supported) can be enough.
 			*/
-			corsResponseHeaders['access-control-allow-methods'] = validMethods.join(', ');
+			corsResponseHeaders['access-control-allow-methods'] = allowedMethods.join(', ');
 
 			/*
 			 *	Preflight
@@ -191,7 +330,7 @@ export function build (options: {
 			 *	Note: Since the list of headers can be unbounded, simply returning supported headers from
 			 * 		Access-Control-Allow-Headers can be enough.
 			*/
-			corsResponseHeaders['access-control-allow-headers'] = requestHeaders.join(', ');
+			corsResponseHeaders['access-control-allow-headers'] = allowedRequestHeaders.join(', ');
 		} else {
 			/*
 			 *	Simple
@@ -202,8 +341,8 @@ export function build (options: {
 			 *	where origin is a case-sensitive match for the value of the Origin header and url is a case-sensitive
 			 *	match for the URL of the resource.
 			*/
-			if (responseHeaders && responseHeaders.length) {
-				corsResponseHeaders['access-control-expose-headers'] = responseHeaders.join(', ');
+			if (allowedResponseHeaders && allowedResponseHeaders.length) {
+				corsResponseHeaders['access-control-expose-headers'] = allowedResponseHeaders.join(', ');
 			}
 		}
 
@@ -231,6 +370,10 @@ export function build (options: {
 
 		if (originHeader) {
 			corsResponseHeaders['access-control-allow-origin'] = originHeader;
+			// Add Vary: Origin header for non-wildcard origins to prevent cache poisoning
+			if (validOrigins[0] !== '*') {
+				corsResponseHeaders['vary'] = 'Origin';
+			}
 		}
 
 		if (supportsCredentials) {

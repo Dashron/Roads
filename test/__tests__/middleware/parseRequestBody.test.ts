@@ -13,7 +13,7 @@ describe('Parse Request Body tests', () => {
 		const context: Record<string, any> = {};
 		const body = '{"hello": "there"}';
 
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		middleware.call(context, '', '', body, {'content-type': 'application/json'}, () => {});
 		expect(context.body).toEqual({hello: 'there'});
 	});
@@ -26,7 +26,7 @@ describe('Parse Request Body tests', () => {
 		const context: Record<string, any> = {};
 		const body = '{hello ';
 
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		const response = middleware.call(context, '', '', body, {'content-type': 'application/json'}, () => {
 			assert.fail('Next should not be called if the request body can not be parsed');
 		});
@@ -88,7 +88,7 @@ describe('Parse Request Body tests', () => {
 		const context: Record<string, any> = {};
 		const body = '{"hello": "there"}';
 
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		middleware.call(context, '', '', body, {'content-type': 'application/json; charset=utf-8'}, () => {});
 		expect(context.body).toEqual({hello: 'there'});
 	});
@@ -99,14 +99,52 @@ describe('Parse Request Body tests', () => {
 		const context: Record<string, any> = {};
 		const body = '{"hello": "there"}';
 
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		expect(middleware.call(context, '', '', body, {
 			'content-type': 'text/html,application/x-www-form-urlencoded'
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
+
 		}, () => {})).toEqual({
 			status: 400,
 			headers: {},
 			body: 'Invalid content-type header',
 		});
+	});
+
+	test('test form-encoded body parsing', () => {
+		expect.assertions(1);
+		const context: Record<string, any> = {};
+		const body = 'name=John&age=30';
+
+		middleware.call(context, '', '', body, {'content-type': 'application/x-www-form-urlencoded'}, () => {});
+		expect(context.body).toEqual({name: 'John', age: '30'});
+	});
+
+	test('test array content-type header uses first value', () => {
+		expect.assertions(1);
+		const context: Record<string, any> = {};
+		const body = '{"hello": "there"}';
+
+		middleware.call(context, '', '', body, {
+			'content-type': ['application/json', 'text/plain']
+		}, () => {});
+		expect(context.body).toEqual({hello: 'there'});
+	});
+
+	test('test unknown content-type returns literal body', () => {
+		expect.assertions(1);
+		const context: Record<string, any> = {};
+		const body = 'raw text content';
+
+		middleware.call(context, '', '', body, {'content-type': 'text/plain'}, () => {});
+		expect(context.body).toBe('raw text content');
+	});
+
+	test('test no content-type returns literal body', () => {
+		expect.assertions(1);
+		const context: Record<string, any> = {};
+		const body = 'raw text content';
+
+		middleware.call(context, '', '', body, {}, () => {});
+		expect(context.body).toBe('raw text content');
 	});
 });

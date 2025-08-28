@@ -48,10 +48,9 @@ export default class Request {
 
 		// Build proper header object for fetch interface
 		if (headers) {
-			Object.keys(headers).forEach(key => {
-				const val = headers[key];
+			for (const [key, val] of Object.entries(headers)) {
 				if (!val) {
-					return;
+					continue;
 				}
 
 				if (Array.isArray(val)) {
@@ -59,7 +58,7 @@ export default class Request {
 				} else {
 					newHeaders.append(key, val);
 				}
-			});
+			}
 		}
 
 		const protocol = this.secure ? 'https://' : 'http://';
@@ -72,7 +71,7 @@ export default class Request {
 			headers: newHeaders,
 			redirect: 'manual',
 			referrerPolicy: 'no-referrer',
-			body
+			body: body ?? null
 		});
 
 		const responseHeaders: IncomingHeaders = {};
