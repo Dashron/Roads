@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { build } from '../../../src/middleware/reroute';
-import Road from '../../../src/core/road';
-import { Context, Middleware as MiddlewareType } from '../../../src/core/road';
-import Response from '../../../src/core/response';
+import { build } from '../../../src/middleware/reroute.js';
+import Road from '../../../src/core/road.js';
+import { Context, Middleware as MiddlewareType } from '../../../src/core/road.js';
+import Response from '../../../src/core/response.js';
 
 import { describe, expect, test } from 'vitest';
 
@@ -29,7 +29,7 @@ describe('Reroute middleware tests', () => {
 		expect(typeof(middleware)).toEqual('function');
 
 
-		middleware.call(context, 'a', 'b', 'c', {}, function () {});
+		middleware.call(context, 'a', 'b', 'c', {}, function () { return Promise.resolve(''); });
 
 		expect(typeof(context[key])).toEqual('function');
 		return expect(context[key]()).resolves.toEqual(new Response('banana'));

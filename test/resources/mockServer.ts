@@ -65,11 +65,16 @@ interface MockResponse {
 
 // Formatting help for building the responses interpreted by this test http server
 function buildResponse(status: number, headers?: Record<string, any>, body?: string): MockResponse {
-	return {
-		status: status,
-		headers: headers,
-		body: body
+	const response: MockResponse = {
+		status: status
 	};
+	if (headers !== undefined) {
+		response.headers = headers;
+	}
+	if (body !== undefined) {
+		response.body = body;
+	}
+	return response;
 }
 
 /**

@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {  middleware } from '../../../src/middleware/parseBody';
+import {  middleware } from '../../../src/middleware/parseBody.js';
 
-import { Context, Middleware as MiddlewareType } from '../../../src/core/road';
-import { Road } from '../../../src/index';
-import Response from '../../../src/core/response';
+import { Context, Middleware as MiddlewareType } from '../../../src/core/road.js';
+import { Road } from '../../../src/index.js';
+import Response from '../../../src/core/response.js';
 
 import { describe, expect, test, assert } from 'vitest';
 
@@ -14,7 +14,7 @@ describe('Parse Request Body tests', () => {
 		const body = '{"hello": "there"}';
 
 
-		middleware.call(context, '', '', body, {'content-type': 'application/json'}, () => {});
+		middleware.call(context, '', '', body, {'content-type': 'application/json'}, () => Promise.resolve(''));
 		expect(context.body).toEqual({hello: 'there'});
 	});
 
@@ -89,7 +89,9 @@ describe('Parse Request Body tests', () => {
 		const body = '{"hello": "there"}';
 
 
-		middleware.call(context, '', '', body, {'content-type': 'application/json; charset=utf-8'}, () => {});
+		middleware.call(
+			context, '', '', body, {'content-type': 'application/json; charset=utf-8'}, () => Promise.resolve('')
+		);
 		expect(context.body).toEqual({hello: 'there'});
 	});
 
@@ -103,7 +105,7 @@ describe('Parse Request Body tests', () => {
 		expect(middleware.call(context, '', '', body, {
 			'content-type': 'text/html,application/x-www-form-urlencoded'
 
-		}, () => {})).toEqual({
+		}, () => Promise.resolve(''))).toEqual({
 			status: 400,
 			headers: {},
 			body: 'Invalid content-type header',
@@ -115,7 +117,9 @@ describe('Parse Request Body tests', () => {
 		const context: Record<string, any> = {};
 		const body = 'name=John&age=30';
 
-		middleware.call(context, '', '', body, {'content-type': 'application/x-www-form-urlencoded'}, () => {});
+		middleware.call(
+			context, '', '', body, {'content-type': 'application/x-www-form-urlencoded'}, () => Promise.resolve('')
+		);
 		expect(context.body).toEqual({name: 'John', age: '30'});
 	});
 
@@ -126,7 +130,7 @@ describe('Parse Request Body tests', () => {
 
 		middleware.call(context, '', '', body, {
 			'content-type': ['application/json', 'text/plain']
-		}, () => {});
+		}, () => Promise.resolve(''));
 		expect(context.body).toEqual({hello: 'there'});
 	});
 
@@ -135,7 +139,7 @@ describe('Parse Request Body tests', () => {
 		const context: Record<string, any> = {};
 		const body = 'raw text content';
 
-		middleware.call(context, '', '', body, {'content-type': 'text/plain'}, () => {});
+		middleware.call(context, '', '', body, {'content-type': 'text/plain'}, () => Promise.resolve(''));
 		expect(context.body).toBe('raw text content');
 	});
 
@@ -144,7 +148,33 @@ describe('Parse Request Body tests', () => {
 		const context: Record<string, any> = {};
 		const body = 'raw text content';
 
-		middleware.call(context, '', '', body, {}, () => {});
+		middleware.call(context, '', '', body, {}, () => Promise.resolve(''));
 		expect(context.body).toBe('raw text content');
+	});
+
+	test('test handles non-Error thrown objects safely', () => {
+		expect.assertions(2);
+		const context: Record<string, any> = {};
+		const body = '{"hello": "there"}';
+
+		// Mock JSON.parse to throw a non-Error object
+		const originalParse = JSON.parse;
+		JSON.parse = () => {
+			throw 'string error'; // Not an Error object
+		};
+
+		const response = middleware.call(context, '', '', body, {'content-type': 'application/json'}, () => {
+			assert.fail('Next should not be called if the request body can not be parsed');
+		});
+
+		// Restore JSON.parse
+		JSON.parse = originalParse;
+
+		expect(context.body).toBe(undefined);
+		expect(response).toEqual({
+			status: 400,
+			headers: {},
+			body: 'Invalid request body',
+		});
 	});
 });

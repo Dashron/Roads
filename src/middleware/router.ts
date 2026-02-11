@@ -150,7 +150,7 @@ export class Router<RouterContextType extends Context> {
 
 		let realMethod = request_method;
 
-		let response = null;
+		let response: string | Response | Promise<string | Response> | null = null;
 		let hit = false;
 		let routeHitMethodFail = false;
 
@@ -189,7 +189,8 @@ export class Router<RouterContextType extends Context> {
 		}
 
 		if (hit) {
-			return response;
+			// response is guaranteed to be non-null when hit is true
+			return response!;
 		}
 
 		if (routeHitMethodFail) {
@@ -226,7 +227,7 @@ function compareRouteAndApplyArgs (route: {method: string, path: string}, reques
 		actual = actual.slice(1); // Slice kills the emptystring before the leading slash
 	}
 
-	if (template.length != actual.length) {
+	if (template.length !== actual.length) {
 		return false;
 	}
 

@@ -1,21 +1,33 @@
 
 
-import { middleware, ModifiedSinceContext } from '../../../src/middleware/modifiedSince';
-import Response from '../../../src/core/response';
+import { middleware, ModifiedSinceContext } from '../../../src/middleware/modifiedSince.js';
+import Response from '../../../src/core/response.js';
 
 import { describe, expect, test } from 'vitest';
+
+/**
+ * Helper function to ensure middleware returns a Response object
+ * Throws an error if the result is not a Response object
+ */
+async function ensureResponse(middlewarePromise: Promise<Response | string> | Response | string): Promise<Response> {
+	const result = await middlewarePromise;
+	if (!(result instanceof Response)) {
+		throw new Error(`Expected Response object but got: ${typeof result}`);
+	}
+	return result;
+}
 
 describe('modified sine tests', () => {
 	test('test not-yet-updated endpoints return 304', async () => {
 		expect.assertions(4);
 
 		const context: ModifiedSinceContext  = {} as ModifiedSinceContext;
-		const response = await middleware.call(context, 'GET', '/', null, {
+		const response = await ensureResponse(middleware.call(context, 'GET', '/', undefined, {
 			'if-modified-since': 'Fri, 01 Jan 2021 00:00:00 GMT'
 		}, () => {
 			expect(context.shouldReturnNotModifiedResponse('Wed, 01 Jan 2020 00:00:00 GMT')).toBe(true);
 			return Promise.resolve(context.buildNotModifiedResponse());
-		});
+		}));
 
 		expect(response.status).toBe(304);
 		expect(response.headers['last-modified']).toBe('Wed, 01 Jan 2020 00:00:00 GMT');
@@ -26,12 +38,12 @@ describe('modified sine tests', () => {
 		expect.assertions(4);
 
 		const context: ModifiedSinceContext  = {} as ModifiedSinceContext;
-		const response = await middleware.call(context, 'GET', '/', null, {
+		const response = await ensureResponse(middleware.call(context, 'GET', '/', undefined, {
 			'if-modified-since': 'Mon, 01 Jan 1990 00:00:00 GMT'
 		}, () => {
 			expect(context.shouldReturnNotModifiedResponse('Wed, 01 Jan 2020 00:00:00 GMT')).toBe(false);
 			return Promise.resolve(new Response('hi', 200));
-		});
+		}));
 
 		expect(response.status).toBe(200);
 		expect(response.headers['last-modified']).toBe('Wed, 01 Jan 2020 00:00:00 GMT');
@@ -42,12 +54,12 @@ describe('modified sine tests', () => {
 		expect.assertions(4);
 
 		const context: ModifiedSinceContext  = {} as ModifiedSinceContext;
-		const response = await middleware.call(context, 'GET', '/', null, {
+		const response = await ensureResponse(middleware.call(context, 'GET', '/', undefined, {
 			'if-modified-since': 'Fri, 01 Jan 2021 00:00:00 GMT'
 		}, () => {
 			expect(context.shouldReturnNotModifiedResponse('Fri, 01 Jan 2021 00:00:00 GMT')).toBe(true);
 			return Promise.resolve(context.buildNotModifiedResponse());
-		});
+		}));
 
 		expect(response.status).toBe(304);
 		expect(response.headers['last-modified']).toBe('Fri, 01 Jan 2021 00:00:00 GMT');

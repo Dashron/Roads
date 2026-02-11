@@ -88,7 +88,7 @@ export default class RoadsPjax {
 	register (): void {
 		// Handle navigation changes besides pushState.
 		this._window.onpopstate = (event: PopStateEvent) => {
-			if (event.state.pjax) {
+			if (event.state?.pjax) {
 				// if the popped state was generated  via pjax, execute the appropriate route
 				this._road.request('GET', this._window.location.pathname)
 					.then((response: Response) => {
@@ -166,7 +166,7 @@ export default class RoadsPjax {
 	 */
 	protected _roadsLinkEvent (link: HTMLAnchorElement): void {
 
-		this._road.request('GET', link.href)
+		this._road.request('GET', link.pathname + link.search + link.hash)
 			.then((response: Response) => {
 				this._window.history.pushState({
 					page_title: this._page_title,

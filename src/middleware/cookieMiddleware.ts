@@ -6,7 +6,8 @@
  * Middleware for managing cookies
  */
 import * as cookie from 'cookie';
-import { Context, Middleware } from '../core/road.js';
+import { Context, IncomingHeaders, Middleware } from '../core/road.js';
+import { NextCallback } from '../core/requestChain.js';
 import Response from '../core/response.js';
 
 /**
@@ -69,8 +70,14 @@ function getCookieValues(newCookies: NewCookies): SetCookies {
  * @param next
  * @returns
  */
-export const serverMiddleware: Middleware<CookieContext> =
-function (route_method, route_path, route_body, route_headers, next) {
+export const serverMiddleware = function (
+	this: CookieContext,
+	route_method: string,
+	route_path: string,
+	route_body: string | undefined,
+	route_headers: IncomingHeaders | undefined,
+	next: NextCallback
+): Promise<Response | string> {
 	let cookies: SetCookies = {};
 	this.newCookies = {};
 
@@ -94,7 +101,7 @@ function (route_method, route_path, route_body, route_headers, next) {
 	};
 
 	// Apply the cookie headers to the response
-	return next().then((response) => {
+	return next().then((response: Response | string) => {
 		const newCookiesEntries = Object.entries(this.newCookies);
 
 		// If there are new cookies to transmit

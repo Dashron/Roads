@@ -37,7 +37,12 @@ export default [
 				Headers: 'readonly',
 				fetch: 'readonly',
 				Window: 'readonly',
-				URL: 'readonly'
+				URL: 'readonly',
+				// Timer globals
+				setTimeout: 'readonly',
+				clearTimeout: 'readonly',
+				setInterval: 'readonly',
+				clearInterval: 'readonly'
 			}
 		},
 		plugins: {

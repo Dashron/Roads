@@ -27,8 +27,9 @@ export const middleware: Middleware<Context> = function (method, url, body, head
 
 	// kill trailing slash as long as we aren't at the root level
 	if (parsedPath !== '/' && parsedPath[parsedPath.length - 1] === '/') {
+		const newPath = parsedPath.substring(0, parsedPath.length - 1);
 		return Promise.resolve(new Response('', 302, {
-			location : parsedPath.substring(0, parsedPath.length - 1)
+			location : newPath + parsedUrl.query + parsedUrl.hash
 		}));
 	}
 

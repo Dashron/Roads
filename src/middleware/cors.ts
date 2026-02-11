@@ -7,20 +7,8 @@
  */
 
 import { Context, IncomingHeaders, Middleware } from '../core/road.js';
-import Response, { OutgoingHeaders } from '../core/response.js';
-
-function getSingleHeader(headers: IncomingHeaders | OutgoingHeaders, key: string): string | undefined {
-	if (headers) {
-		// This is a little weirder than I would like, but it works better with typescript
-		const val = headers[key];
-
-		if (Array.isArray(val)) {
-			return val[0];
-		}
-
-		return val;
-	}
-}
+import Response from '../core/response.js';
+import { getSingleHeader } from '../util/headers.js';
 
 /**
  * Validates that an origin string matches the proper format: scheme://host[:port]
@@ -206,7 +194,9 @@ export function build (options: {
 			}
 
 			return next()
-				.then((response: Response) => {
+				.then((result) => {
+					// Ensure we have a Response object
+					const response = result instanceof Response ? result : new Response(result);
 					for (const key in corsResponseHeaders) {
 						response.headers[key] = corsResponseHeaders[key];
 					}
@@ -385,7 +375,9 @@ export function build (options: {
 		}
 
 		return next()
-			.then((response: Response) => {
+			.then((result) => {
+				// Ensure we have a Response object
+				const response = result instanceof Response ? result : new Response(result);
 				for (const key in corsResponseHeaders) {
 					response.headers[key] = corsResponseHeaders[key];
 				}

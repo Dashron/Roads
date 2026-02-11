@@ -1,17 +1,29 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { serverMiddleware, buildClientMiddleware } from '../../../src/middleware/cookieMiddleware';
+import { serverMiddleware, buildClientMiddleware } from '../../../src/middleware/cookieMiddleware.js';
 
-import { CookieContext } from '../../../src/middleware/cookieMiddleware';
-import Response from '../../../src/core/response';
+import { CookieContext } from '../../../src/middleware/cookieMiddleware.js';
+import Response from '../../../src/core/response.js';
 
 import { describe, expect, test } from 'vitest';
+
+/**
+ * Helper function to ensure middleware returns a Response object
+ * Throws an error if the result is not a Response object
+ */
+async function ensureResponse(middlewarePromise: Promise<Response | string> | Response | string): Promise<Response> {
+	const result = await middlewarePromise;
+	if (!(result instanceof Response)) {
+		throw new Error(`Expected Response object but got: ${typeof result}`);
+	}
+	return result;
+}
 
 describe('cookie tests', () => {
 	test('test cookie middleware parses cookies into context', () => {
 		expect.assertions(2);
-		const context: Record<string, any> = {
+		const context = {
 			Response: Response
-		};
+		} as unknown as CookieContext;
 
 		serverMiddleware.call(context, 'a', 'b', 'c', {
 			cookie: 'foo=bar;abc=def'
@@ -25,7 +37,7 @@ describe('cookie tests', () => {
 		expect.assertions(1);
 		const context = {
 			Response: Response
-		};
+		} as unknown as CookieContext;
 
 		const next: (this: CookieContext) => Promise<string> = function () {
 			this.setCookie('foo', 'bar');
@@ -44,7 +56,7 @@ describe('cookie tests', () => {
 		expect.assertions(2);
 		const context = {
 			Response: Response
-		};
+		} as unknown as CookieContext;
 
 		const next: (this: CookieContext) => Promise<string> = function () {
 			this.setCookie('foo', 'bar');
@@ -87,7 +99,7 @@ describe('cookie tests', () => {
 		expect.assertions(1);
 		const context = {
 			Response: Response
-		};
+		} as unknown as CookieContext;
 
 		const testDocument = {
 			cookie: ''
@@ -107,7 +119,7 @@ describe('cookie tests', () => {
 		expect.assertions(2);
 		const context = {
 			Response: Response
-		};
+		} as unknown as CookieContext;
 
 		const next: (this: CookieContext) => Promise<string> = function () {
 			this.setCookie('foo', 'bar');
@@ -135,7 +147,7 @@ describe('cookie tests', () => {
 		expect.assertions(1);
 		const context = {
 			Response: Response
-		};
+		} as unknown as CookieContext;
 
 		const next: (this: CookieContext) => Promise<Response> = function () {
 			this.setCookie('new', 'cookie');
@@ -144,7 +156,7 @@ describe('cookie tests', () => {
 			}));
 		};
 
-		const result = await serverMiddleware.call(context, 'a', 'b', 'c', {}, next.bind(context));
+		const result = await ensureResponse(serverMiddleware.call(context, 'a', 'b', 'c', {}, next.bind(context)));
 
 		expect(result.headers['Set-Cookie']).toEqual(['existing=value', 'new=cookie']);
 	});

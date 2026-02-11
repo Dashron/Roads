@@ -1,4 +1,4 @@
-import { Road } from '../../../src/index';
+import { Road } from '../../../src/index.js';
 
 import { describe, expect, test } from 'vitest';
 

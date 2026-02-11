@@ -1,6 +1,6 @@
 
-import { Road } from '../../../src/index';
-import { Context } from '../../../src/core/road';
+import { Road } from '../../../src/index.js';
+import { Context } from '../../../src/core/road.js';
 
 import { describe, expect, test } from 'vitest';
 

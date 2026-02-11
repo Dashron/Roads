@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { middleware } from '../../../src/middleware/storeVals';
+import { middleware } from '../../../src/middleware/storeVals.js';
 
 import { describe, expect, test } from 'vitest';
 
@@ -11,7 +11,7 @@ describe('Store Values', () => {
 		const context: Record<string, any> = {};
 
 
-		middleware.call(context, 'a', 'b', 'c', {}, function () {});
+		middleware.call(context, 'a', 'b', 'c', {}, function () { return Promise.resolve(''); });
 
 		expect(typeof(context.storeVal)).toEqual('function');
 		expect(typeof(context.getVal)).toEqual('function');
@@ -26,7 +26,7 @@ describe('Store Values', () => {
 		const context: Record<string, any> = {};
 
 
-		middleware.call(context, 'a', 'b', 'c', {}, function () {});
+		middleware.call(context, 'a', 'b', 'c', {}, function () { return Promise.resolve(''); });
 		context.storeVal('foo', 'bar');
 
 		expect(context.getVal('foo')).toEqual('bar');

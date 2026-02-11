@@ -1,9 +1,9 @@
 
-import Client from '../../../src/client/request';
-import createServer, { port } from '../../resources/mockServer';
+import Client from '../../../src/client/request.js';
+import createServer, { port } from '../../resources/mockServer.js';
 import { Server as HttpServer } from 'http';
 import { Server as HttpsServer } from 'https';
-import Response from '../../../src/core/response';
+import Response from '../../../src/core/response.js';
 
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 

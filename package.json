@@ -6,7 +6,7 @@
     "email": "aaron@dashron.com",
     "url": "http://www.dashron.com"
   },
-  "description": "An isomophic http framework",
+  "description": "An isomorphic http framework",
   "keywords": [
     "http",
     "framework",
@@ -14,7 +14,8 @@
   ],
   "homepage": "https://roadsjs.com",
   "scripts": {
-    "test-code": "node ./node_modules/.bin/vitest run ./test/__tests__",
+    "test-types": "tsc --noEmit --project test/tsconfig.json",
+    "test-code": "npm run test-types && node ./node_modules/.bin/vitest run ./test/__tests__",
     "test:coverage": "vitest run --coverage",
     "lint": "tsc && node node_modules/eslint/bin/eslint.js",
     "test": "npm run lint && npm run test-code",
@@ -37,7 +38,7 @@
     "@typescript-eslint/parser": "^8.41.0",
     "@vitest/coverage-v8": "^3.2.4",
     "eslint": "^9.34.0",
-    "typescript": "^5.7.2"
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "@types/url-parse": "^1.4.11",

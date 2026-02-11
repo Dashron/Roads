@@ -1,6 +1,6 @@
-import { Road } from '../../../src/index';
-import { Context, Middleware } from '../../../src/core/road';
-import { Response } from '../../../src/index';
+import { Road } from '../../../src/index.js';
+import { Context, Middleware } from '../../../src/core/road.js';
+import { Response } from '../../../src/index.js';
 
 import { describe, expect, test } from 'vitest';
 

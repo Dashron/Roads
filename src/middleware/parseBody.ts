@@ -6,11 +6,12 @@
  * Exposes a single middleware function to help parse request bodies
  */
 
-import { Context, IncomingHeaders, Middleware } from '../core/road.js';
+import { Context, Middleware } from '../core/road.js';
+import { getSingleHeader } from '../util/headers.js';
 
 import * as contentTypeModule from 'content-type';
 import * as qsModule from 'fast-querystring';
-import Response, { OutgoingHeaders } from '../core/response.js';
+import Response from '../core/response.js';
 
 /**
  * When using typescript you can pass this when adding middleware or
@@ -21,17 +22,6 @@ import Response, { OutgoingHeaders } from '../core/response.js';
  */
 export interface ParseBodyContext<BodyType> extends Context {
 	body?: BodyType
-}
-
-function getSingleHeader(headers: IncomingHeaders | OutgoingHeaders, key: string): string | undefined {
-	// This is a little weirder than I would like, but it works better with typescript
-	const val = headers[key];
-
-	if (Array.isArray(val)) {
-		return val[0];
-	}
-
-	return val;
 }
 
 /**
@@ -68,7 +58,7 @@ export const middleware: Middleware<Context> = function (method, url, body, head
 	try {
 		this.body = parseRequestBody(body, headers ? getSingleHeader(headers, 'content-type') : undefined);
 	} catch (e) {
-		if (e.message === 'invalid media type') {
+		if (e instanceof Error && e.message === 'invalid media type') {
 			return new Response('Invalid content-type header', 400);
 		}
 

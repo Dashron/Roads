@@ -8,6 +8,7 @@
 		"strictNullChecks": true,
 		"noImplicitThis": true,
 		"alwaysStrict": true,
+		"strictBindCallApply": true,
 		"exactOptionalPropertyTypes": true,
 		"noUncheckedIndexedAccess": true,
 		"baseUrl": "./src",

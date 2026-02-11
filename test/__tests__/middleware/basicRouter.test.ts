@@ -1,12 +1,12 @@
 import parse from 'url-parse';
 
-import { Router, Route, RouterURL } from '../../../src/middleware/router';
-import Road from '../../../src/core/road';
-import Response from '../../../src/core/response';
-import { Context } from '../../../src/core/road';
+import { Router, Route, RouterURL } from '../../../src/middleware/router.js';
+import Road from '../../../src/core/road.js';
+import Response from '../../../src/core/response.js';
+import { Context } from '../../../src/core/road.js';
 
 import { describe, expect, test, assert } from 'vitest';
-import { NextCallback } from '../../../src/core/requestChain';
+import { NextCallback } from '../../../src/core/requestChain.js';
 
 const router_file_test_path = `${__dirname  }/../../resources/_router_file_test.js`;
 

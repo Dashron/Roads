@@ -1,6 +1,6 @@
-import { middleware } from '../../../src/middleware/removeTrailingSlash';
+import { middleware } from '../../../src/middleware/removeTrailingSlash.js';
 
-import Response from '../../../src/core/response';
+import Response from '../../../src/core/response.js';
 
 import { describe, expect, test } from 'vitest';
 
@@ -10,11 +10,11 @@ describe('KillSlashes tests', () => {
 
 		const method = 'GET';
 		const url = '/users';
-		const body = {};
+		const body = '';
 		const headers = {};
 		const contents = 'fooo';
 		const next = function () {
-			return new Promise(function (accept) {
+			return new Promise<string>(function (accept) {
 				accept(contents);
 			});
 		};
@@ -30,11 +30,11 @@ describe('KillSlashes tests', () => {
 
 		const method = 'GET';
 		const url = '/users/';
-		const body = {};
+		const body = '';
 		const headers = {};
 		const contents = 'fooo';
 		const next = function () {
-			return new Promise(function (accept) {
+			return new Promise<string>(function (accept) {
 				accept(contents);
 			});
 		};
@@ -60,15 +60,81 @@ describe('KillSlashes tests', () => {
 		expect.assertions(1);
 		const method = 'GET';
 		const url = '/';
-		const body = {};
+		const body = '';
 		const headers = {};
 		const contents = 'fooo';
 		const next = function () {
-			return new Promise(function (accept) {
+			return new Promise<string>(function (accept) {
 				accept(contents);
 			});
 		};
 
 		return expect(middleware.call({}, method, url, body, headers, next)).resolves.toEqual(contents);
+	});
+
+	/**
+	 * Test that query strings are preserved when removing trailing slash
+	 */
+	test('test remove slash preserves query string', () => {
+		expect.assertions(1);
+		const method = 'GET';
+		const url = '/users/?page=2&sort=name';
+		const body = '';
+		const headers = {};
+		const next = function () {
+			return Promise.resolve('should not be called');
+		};
+
+		return expect(middleware.call({}, method, url, body, headers, next)).resolves.toEqual({
+			status: 302,
+			body: '',
+			headers: {
+				location: '/users?page=2&sort=name'
+			}
+		});
+	});
+
+	/**
+	 * Test that hash fragments are preserved when removing trailing slash
+	 */
+	test('test remove slash preserves hash fragment', () => {
+		expect.assertions(1);
+		const method = 'GET';
+		const url = '/users/#section';
+		const body = '';
+		const headers = {};
+		const next = function () {
+			return Promise.resolve('should not be called');
+		};
+
+		return expect(middleware.call({}, method, url, body, headers, next)).resolves.toEqual({
+			status: 302,
+			body: '',
+			headers: {
+				location: '/users#section'
+			}
+		});
+	});
+
+	/**
+	 * Test that both query strings and hash fragments are preserved
+	 */
+	test('test remove slash preserves query string and hash', () => {
+		expect.assertions(1);
+		const method = 'GET';
+		const url = '/users/?page=2#top';
+		const body = '';
+		const headers = {};
+		const next = function () {
+			return Promise.resolve('should not be called');
+		};
+
+		return expect(middleware.call({}, method, url, body, headers, next)).resolves.toEqual({
+			status: 302,
+			body: '',
+			headers: {
+				location: '/users?page=2#top'
+			}
+		});
 	});
 });

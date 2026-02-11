@@ -2,6 +2,18 @@ import { build } from '../../../src/middleware/cors.js';
 import Response from '../../../src/core/response.js';
 import { describe, expect, test, vi } from 'vitest';
 
+/**
+ * Helper function to ensure middleware returns a Response object
+ * Throws an error if the result is not a Response object
+ */
+async function ensureResponse(middlewarePromise: Promise<Response | string> | Response | string): Promise<Response> {
+	const result = await middlewarePromise;
+	if (!(result instanceof Response)) {
+		throw new Error(`Expected Response object but got: ${typeof result}`);
+	}
+	return result;
+}
+
 describe('CORS Comprehensive Tests', () => {
 	test('builds cors middleware function', () => {
 		const middleware = build({});
@@ -12,7 +24,7 @@ describe('CORS Comprehensive Tests', () => {
 		const middleware = build({});
 		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
 
-		const result = await middleware.call({}, 'GET', '/', {}, {}, mockNext);
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', {}, mockNext));
 
 		expect(mockNext).toHaveBeenCalled();
 		expect(result).toBeInstanceOf(Response);
@@ -26,7 +38,7 @@ describe('CORS Comprehensive Tests', () => {
 		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
 
 		const headers = { origin: 'https://example.com' };
-		const result = await middleware.call({}, 'GET', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
 
 		expect(mockNext).toHaveBeenCalled();
 		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
@@ -40,7 +52,7 @@ describe('CORS Comprehensive Tests', () => {
 		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
 
 		const headers = { origin: 'https://malicious.com' };
-		const result = await middleware.call({}, 'GET', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
 
 		expect(mockNext).not.toHaveBeenCalled();
 		expect(result.status).toBe(403);
@@ -55,7 +67,7 @@ describe('CORS Comprehensive Tests', () => {
 		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
 
 		const headers = { origin: 'https://any-domain.com' };
-		const result = await middleware.call({}, 'GET', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
 
 		expect(result.headers['access-control-allow-origin']).toBe('https://any-domain.com');
 	});
@@ -74,7 +86,7 @@ describe('CORS Comprehensive Tests', () => {
 			'access-control-request-headers': 'Content-Type,Authorization'
 		};
 
-		const result = await middleware.call({}, 'OPTIONS', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
 		expect(mockNext).not.toHaveBeenCalled(); // Should not call next for valid preflight
 		expect(result).toBeInstanceOf(Response);
@@ -97,7 +109,7 @@ describe('CORS Comprehensive Tests', () => {
 			'access-control-request-method': 'DELETE'
 		};
 
-		const result = await middleware.call({}, 'OPTIONS', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
 		expect(mockNext).not.toHaveBeenCalled();
 		expect(result.status).toBe(405);
@@ -119,7 +131,7 @@ describe('CORS Comprehensive Tests', () => {
 			'access-control-request-headers': 'Authorization'
 		};
 
-		const result = await middleware.call({}, 'OPTIONS', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
 		expect(mockNext).not.toHaveBeenCalled();
 		expect(result.status).toBe(403);
@@ -135,7 +147,7 @@ describe('CORS Comprehensive Tests', () => {
 		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
 
 		const headers = { origin: 'https://example.com' };
-		const result = await middleware.call({}, 'GET', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
 
 		expect(result.headers['access-control-allow-credentials']).toBe('true');
 		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
@@ -149,7 +161,7 @@ describe('CORS Comprehensive Tests', () => {
 		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
 
 		const headers = { origin: 'https://example.com' };
-		const result = await middleware.call({}, 'GET', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
 
 		expect(result.headers['access-control-allow-credentials']).toBeUndefined();
 	});
@@ -167,7 +179,7 @@ describe('CORS Comprehensive Tests', () => {
 			'access-control-request-method': 'GET'
 		};
 
-		const result = await middleware.call({}, 'OPTIONS', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
 		expect(result.headers['access-control-max-age']).toBe('3600');
 	});
@@ -184,7 +196,7 @@ describe('CORS Comprehensive Tests', () => {
 			'access-control-request-method': 'GET'
 		};
 
-		const result = await middleware.call({}, 'OPTIONS', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
 		expect(result.headers['access-control-max-age']).toBeUndefined();
 	});
@@ -197,7 +209,7 @@ describe('CORS Comprehensive Tests', () => {
 		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
 
 		const headers = { origin: 'https://example.com' };
-		const result = await middleware.call({}, 'GET', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
 
 		expect(result.headers['access-control-expose-headers']).toBe('X-Custom-Header, X-Another-Header');
 	});
@@ -215,7 +227,7 @@ describe('CORS Comprehensive Tests', () => {
 			'access-control-request-method': 'POST'
 		};
 
-		const result = await middleware.call({}, 'OPTIONS', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
 		expect(result.headers['access-control-expose-headers']).toBeUndefined();
 	});
@@ -229,7 +241,7 @@ describe('CORS Comprehensive Tests', () => {
 		const headers = {
 			origin: ['https://example.com', 'https://other.com']
 		};
-		const result = await middleware.call({}, 'GET', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
 
 		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
 	});
@@ -248,7 +260,7 @@ describe('CORS Comprehensive Tests', () => {
 			// No access-control-request-headers header
 		};
 
-		const result = await middleware.call({}, 'OPTIONS', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
 		expect(result.status).toBe(200);
 		expect(result.headers['access-control-allow-headers']).toBe('Content-Type');
@@ -266,7 +278,7 @@ describe('CORS Comprehensive Tests', () => {
 			'access-control-request-method': 'post' // lowercase should be rejected
 		};
 
-		const result = await middleware.call({}, 'OPTIONS', '/', {}, headers, mockNext);
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
 		expect(mockNext).not.toHaveBeenCalled();
 		expect(result.status).toBe(405);
@@ -288,7 +300,7 @@ describe('CORS Comprehensive Tests', () => {
 			'access-control-request-headers': 'content-type,AUTHORIZATION' // different casing
 		};
 
-		const result = await middleware.call({}, 'OPTIONS', '/', {}, headers, mockNext);
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
 		expect(mockNext).not.toHaveBeenCalled();
 		expect(result.status).toBe(200);
@@ -309,7 +321,7 @@ describe('CORS Comprehensive Tests', () => {
 			'access-control-request-headers': 'X-Custom-Header' // not in allowed list
 		};
 
-		const result = await middleware.call({}, 'OPTIONS', '/', {}, headers, mockNext);
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
 		expect(mockNext).not.toHaveBeenCalled();
 		expect(result.status).toBe(403);
@@ -330,7 +342,7 @@ describe('CORS Comprehensive Tests', () => {
 			origin: 'https://example.com',
 			accept: 'text/html' // Safe header
 		};
-		const result = await middleware.call({}, 'GET', '/', {}, headers, mockNext);
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
 
 		expect(mockNext).toHaveBeenCalled();
 		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
@@ -350,7 +362,7 @@ describe('CORS Comprehensive Tests', () => {
 			origin: 'https://example.com',
 			'content-type': 'application/x-www-form-urlencoded'
 		};
-		const result = await middleware.call({}, 'POST', '/', {}, headers, mockNext);
+		const result = await ensureResponse(middleware.call({}, 'POST', '/', '', headers, mockNext));
 
 		expect(mockNext).toHaveBeenCalled();
 		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
@@ -368,7 +380,7 @@ describe('CORS Comprehensive Tests', () => {
 			origin: 'https://example.com',
 			'x-custom-header': 'test' // Non-simple header
 		};
-		const result = await middleware.call({}, 'GET', '/', {}, headers, mockNext);
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
 
 		// Should go through full validation, which would allow this since it's in allowedRequestHeaders
 		expect(mockNext).toHaveBeenCalled();
@@ -387,7 +399,7 @@ describe('CORS Comprehensive Tests', () => {
 			origin: 'https://example.com',
 			accept: 'text/html'
 		};
-		const result = await middleware.call({}, 'PUT', '/', {}, headers, mockNext);
+		const result = await ensureResponse(middleware.call({}, 'PUT', '/', '', headers, mockNext));
 
 		// PUT is not a simple method, so it goes through full validation but still gets CORS headers
 		// since it's not a preflight request - actual method blocking happens at the server level
@@ -403,12 +415,46 @@ describe('CORS Comprehensive Tests', () => {
 		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
 
 		const headers = { origin: 'https://malicious.com' };
-		const result = await middleware.call({}, 'GET', '/', {}, headers, mockNext);
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
 
 		// With returnCorsErrors: false, should call next() like the old behavior
 		expect(mockNext).toHaveBeenCalled();
 		expect(result.status).toBe(200);
 		expect(result.body).toBe('OK');
 		expect(result.headers['access-control-allow-origin']).toBeUndefined();
+	});
+
+	test('handles middleware returning string instead of Response - simple request', async () => {
+		const middleware = build({
+			validOrigins: ['https://example.com']
+		});
+		// Mock next() to return a string instead of a Response
+		const mockNext = vi.fn().mockResolvedValue('Hello World');
+
+		const headers = { origin: 'https://example.com' };
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+
+		expect(mockNext).toHaveBeenCalled();
+		expect(result).toBeInstanceOf(Response);
+		expect(result.body).toBe('Hello World');
+		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
+	});
+
+	test('handles middleware returning string instead of Response - normal flow', async () => {
+		const middleware = build({
+			validOrigins: ['https://example.com'],
+			allowedMethods: ['GET', 'POST'],
+			allowedRequestHeaders: ['content-type']
+		});
+		// Mock next() to return a string instead of a Response
+		const mockNext = vi.fn().mockResolvedValue('Hello World');
+
+		const headers = { origin: 'https://example.com' };
+		const result = await ensureResponse(middleware.call({}, 'POST', '/', '', headers, mockNext));
+
+		expect(mockNext).toHaveBeenCalled();
+		expect(result).toBeInstanceOf(Response);
+		expect(result.body).toBe('Hello World');
+		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
 	});
 });
