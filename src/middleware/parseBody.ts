@@ -38,6 +38,11 @@ export interface ParseBodyContext<BodyType> extends Context {
 function parseRequestBody (body: string | undefined, contentType?: string): unknown {
 	if (contentType && body) {
 		const parsedContentType = contentTypeModule.parse(contentType);
+		// content-type v3 no longer throws on invalid media types, so validate explicitly
+		if (!contentTypeModule.isTypeValid(parsedContentType.type)) {
+			throw new Error('invalid media type');
+		}
+
 		if (parsedContentType.type === 'application/json') {
 			// parse json
 			return JSON.parse(body);

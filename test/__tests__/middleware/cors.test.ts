@@ -457,4 +457,138 @@ describe('CORS Comprehensive Tests', () => {
 		expect(result.body).toBe('Hello World');
 		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
 	});
+
+	// "null" origin tests - for sandboxed contexts (file://, data:, sandboxed iframes)
+	test('handles "null" origin from sandboxed context - accepts when in allowlist', async () => {
+		const middleware = build({
+			validOrigins: ['null', 'https://example.com']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+
+		const headers = { origin: 'null' };
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+
+		expect(mockNext).toHaveBeenCalled();
+		expect(result.headers['access-control-allow-origin']).toBe('null');
+		expect(result.headers['vary']).toBe('Origin');
+	});
+
+	test('handles "null" origin with wildcard - accepts', async () => {
+		const middleware = build({
+			validOrigins: ['*']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+
+		const headers = { origin: 'null' };
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+
+		expect(mockNext).toHaveBeenCalled();
+		expect(result.headers['access-control-allow-origin']).toBe('null');
+	});
+
+	test('blocks "null" origin when not in allowlist', async () => {
+		const middleware = build({
+			validOrigins: ['https://example.com']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+
+		const headers = { origin: 'null' };
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+
+		expect(mockNext).not.toHaveBeenCalled();
+		expect(result.status).toBe(403);
+		expect(result.body).toContain('CORS Error: origin not allowed');
+	});
+
+	test('handles "null" origin in preflight request', async () => {
+		const middleware = build({
+			validOrigins: ['null'],
+			allowedMethods: ['POST'],
+			allowedRequestHeaders: ['Content-Type']
+		});
+		const mockNext = vi.fn();
+
+		const headers = {
+			origin: 'null',
+			'access-control-request-method': 'POST',
+			'access-control-request-headers': 'Content-Type'
+		};
+
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
+
+		expect(mockNext).not.toHaveBeenCalled();
+		expect(result.status).toBe(200);
+		expect(result.headers['access-control-allow-origin']).toBe('null');
+		expect(result.headers['access-control-allow-methods']).toBe('POST');
+	});
+
+	// Invalid origin format tests
+	test('rejects invalid origin format - not a URL', async () => {
+		const middleware = build({
+			validOrigins: ['*']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+
+		const headers = { origin: 'not-a-valid-origin' };
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+
+		expect(mockNext).not.toHaveBeenCalled();
+		expect(result.status).toBe(400);
+		expect(result.body).toContain('CORS Error: invalid origin format');
+	});
+
+	test('rejects invalid origin format - origin with path', async () => {
+		const middleware = build({
+			validOrigins: ['*']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+
+		const headers = { origin: 'https://example.com/some/path' };
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+
+		expect(mockNext).not.toHaveBeenCalled();
+		expect(result.status).toBe(400);
+		expect(result.body).toContain('CORS Error: invalid origin format');
+	});
+
+	test('rejects invalid origin format - origin with query string', async () => {
+		const middleware = build({
+			validOrigins: ['*']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+
+		const headers = { origin: 'https://example.com?query=param' };
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+
+		expect(mockNext).not.toHaveBeenCalled();
+		expect(result.status).toBe(400);
+		expect(result.body).toContain('CORS Error: invalid origin format');
+	});
+
+	test('rejects invalid origin format - origin with fragment', async () => {
+		const middleware = build({
+			validOrigins: ['*']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+
+		const headers = { origin: 'https://example.com#fragment' };
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+
+		expect(mockNext).not.toHaveBeenCalled();
+		expect(result.status).toBe(400);
+		expect(result.body).toContain('CORS Error: invalid origin format');
+	});
+
+	test('accepts valid origin with port', async () => {
+		const middleware = build({
+			validOrigins: ['https://example.com:8080']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+
+		const headers = { origin: 'https://example.com:8080' };
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+
+		expect(mockNext).toHaveBeenCalled();
+		expect(result.headers['access-control-allow-origin']).toBe('https://example.com:8080');
+	});
 });

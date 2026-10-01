@@ -1,6 +1,6 @@
 {
   "name": "roads",
-  "version": "8.0.1",
+  "version": "8.0.2",
   "author": {
     "name": "Aaron Hedges",
     "email": "aaron@dashron.com",
@@ -31,28 +31,26 @@
     "url": "git://github.com/Dashron/roads.git"
   },
   "devDependencies": {
-    "@eslint/js": "^9.34.0",
-    "@types/content-type": "^1.1.5",
-    "@types/node": "^24.3.0",
-    "@typescript-eslint/eslint-plugin": "^8.41.0",
-    "@typescript-eslint/parser": "^8.41.0",
-    "@vitest/coverage-v8": "^3.2.4",
-    "eslint": "^9.34.0",
-    "typescript": "^5.9.3"
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.20.4",
+    "@typescript-eslint/eslint-plugin": "^8.71.0",
+    "@typescript-eslint/parser": "^8.71.0",
+    "@vitest/coverage-v8": "^5.0.3",
+    "eslint": "^10.11.0",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.3"
   },
   "dependencies": {
     "@types/url-parse": "^1.4.11",
-    "content-type": "^1.0.4",
-    "cookie": "^1.0.2",
+    "content-type": "^3.1.1",
+    "cookie": "^2.0.1",
     "fast-querystring": "^1.1.2",
-    "url": "^0.11.4",
-    "url-parse": "^1.5.10",
-    "vitest": "^3.2.4"
+    "url-parse": "^1.5.10"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.12.0"
   },
-  "packageManager": "npm@11.4.2",
+  "packageManager": "npm@11.6.2",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "./types/index.d.ts",

@@ -17,7 +17,11 @@ import { getSingleHeader } from '../util/headers.js';
  * @returns true if the origin is valid, false otherwise
  */
 function isValidOrigin(origin: string): boolean {
-	// Handle the special "null" origin case
+	// Handle the special "null" origin case sent by browsers for:
+	// - file:// URLs (local HTML files)
+	// - data: URLs (inline data URIs)
+	// - Sandboxed iframes (without allow-same-origin)
+	// - Some redirect scenarios
 	if (origin === 'null') {
 		return true;
 	}
@@ -262,7 +266,7 @@ export function build (options: {
 			 *	Note: If parsing failed do not set any additional headers and terminate this set of steps. The request
 			 *		is outside the scope of this specification.
 			*/
-			let headerNames = undefined;
+			let headerNames: string[];
 			const acRequestHeaders = getSingleHeader(headers, 'access-control-request-headers');
 
 			try {

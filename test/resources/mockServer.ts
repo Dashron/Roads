@@ -17,7 +17,7 @@ export default function createServer(): Promise<Server> {
 			// Get all the streaming input data from the request
 			request.on('readable', () => {
 				bodyFound = true;
-				let chunk = null;
+				let chunk;
 
 				while (null !== (chunk = request.read())) {
 					body += chunk;

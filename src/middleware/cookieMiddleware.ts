@@ -59,6 +59,17 @@ function getCookieValues(newCookies: NewCookies): SetCookies {
 }
 
 /**
+ * Builds a Set-Cookie header value from a cookie set via setCookie
+ *
+ * @param name
+ * @param newCookie
+ * @returns
+ */
+function serializeCookie(name: string, newCookie: NewCookies[string]): string {
+	return cookie.stringifySetCookie({ ...newCookie.options, name, value: newCookie.value }, newCookie.options);
+}
+
+/**
  * Middleware to attach to your road via `road.use`.
  * 	This middleware will add any new cookies to the response object
  * 	and thus is most useful server-side
@@ -83,7 +94,7 @@ export const serverMiddleware = function (
 
 	// Find the cookies from the request and store them locally
 	if (route_headers && route_headers.cookie) {
-		cookies = cookie.parse(
+		cookies = cookie.parseCookie(
 			Array.isArray(route_headers.cookie) ? route_headers.cookie.join('; ') : route_headers.cookie);
 	}
 
@@ -123,7 +134,7 @@ export const serverMiddleware = function (
 			// Apply all the cookies
 			for (const [cookieKey, cookieValue] of newCookiesEntries) {
 				(response.headers['Set-Cookie']).push(
-					cookie.serialize(cookieKey, cookieValue.value, cookieValue.options));
+					serializeCookie(cookieKey, cookieValue));
 			}
 		}
 
@@ -151,7 +162,7 @@ export const buildClientMiddleware: (pageDocument: Document) => Middleware<Cooki
 
 				for (const [key, cookieValue] of Object.entries(this.newCookies)) {
 					if (cookieValue) {
-						pageDocument.cookie = cookie.serialize(key, cookieValue.value, cookieValue.options);
+						pageDocument.cookie = serializeCookie(key, cookieValue);
 					}
 				}
 

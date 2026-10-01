@@ -8,11 +8,8 @@ jobs:
 
     strategy:
       matrix:
-        # 8.x and lower not supported due to lack of URL object
-        # 10.x not supported with the current version of EJS. If you need it, it will probably run fine
-        # 14.x and 15.x are not supported by vitest
-        # 19.x and up the request UA is `undici` and affected the tests
-        node-version: [18.x, 20.x, 22.x]
+        # 20.x and lower are end-of-life and not supported by cookie, content-type or vitest
+        node-version: [22.x, 24.x]
 
     steps:
       - uses: actions/checkout@v4
