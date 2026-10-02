@@ -5,8 +5,9 @@ export function expressConnector(road: Road) {
 	// express middleware to translate express requests into roads requests, and roads responses into Express responses
 	return async function router(req: express.Request, res: express.Response, next: express.NextFunction) {
 		try {
-			// Execute the route
-			const response = await road.request(req.method, req.url, req.body?.toString() || '', req.headers);
+			// Ensure we pass a string body to Roads; let Roads parseBody handle JSON
+			const body = typeof req.body === 'string' ? req.body : undefined;
+			const response = await road.request(req.method, req.url, body, req.headers);
 
 			// Translate the Roads HTTP Status to Express
 			res.status(response.status);
@@ -17,13 +18,15 @@ export function expressConnector(road: Road) {
 			});
 
 			// Translate the Roads Body to Express
-			if (response.body) {
+			if (response.body !== undefined && response.body !== null) {
 				res.send(response.body);
+				return;
 			}
-			next();
+			res.end();
+			return;
 		} catch (err) {
-			// we call next here so we can rely on additional express middleware such as sentry, as opposed to our own.
-			// if we want to design this page better it would be in express
+			// we call next here so we can rely on additional express middleware such as sentry,
+			// as opposed to our own. if we want to design this page better it would be in express
 			next(err);
 		}
 	};

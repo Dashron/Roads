@@ -14,7 +14,6 @@ import applyPublicRoutes from './routes/applyPublicRoutes.js';
 import applyPrivateRoutes from './routes/applyPrivateRoutes.js';
 import emptyTo404 from './middleware/emptyTo404.js';
 import { expressConnector } from './middleware/expressConnector.js';
-import bodyParser from 'body-parser';
 
 const road = new Road();
 
@@ -34,9 +33,9 @@ road.use(emptyTo404);
 
 const app = express();
 
-app.use(bodyParser.json());
 app.set('etag', false);
-app.use(express.raw({ type: '*/*' }));
+// Roads expects the raw body as a string, and ParseBodyMiddleware handles JSON and forms
+app.use(express.text({ type: '*/*' }));
 app.use(expressConnector(road));
 
 app.listen(8081, 'localhost', function () {
