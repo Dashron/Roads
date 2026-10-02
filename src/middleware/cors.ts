@@ -8,7 +8,7 @@
 
 import { Context, IncomingHeaders, Middleware } from '../core/road.js';
 import Response from '../core/response.js';
-import { getSingleHeader } from '../util/headers.js';
+import { appendVary, getSingleHeader } from '../util/headers.js';
 
 /**
  * Validates that an origin string matches the proper format: scheme://host[:port]
@@ -84,8 +84,13 @@ function isSimpleCorsRequest(method: string, headers: IncomingHeaders): boolean 
  * Sets up everything you need for your server to properly respond to CORS requests.
  *
  * @param {object} [options] - A collection of different cors settings.
- * @param {object} [options.validOrigins] - An array of origin urls that can send requests to this API
- * @param {object} [options.supportsCredentials] - A boolean, true if you want this endpoint to receive cookies
+ * @param {object} [options.validOrigins] - An array of origin urls that can send requests to this API, or the
+ *                                        string '*' to allow every origin. '*' can not be combined with other
+ *                                        origins or with supportsCredentials: true.
+ * @param {object} [options.supportsCredentials] - True if every valid origin can send cookies to this endpoint.
+ *                                               To limit cookies to specific origins, provide an array of
+ *                                               origin urls or a function that receives the origin and returns
+ *                                               a boolean.
  * @param {object} [options.responseHeaders] - An array of valid HTTP response headers
  * @param {object} [options.requestHeaders] - An array of valid HTTP request headers
  * @param {object} [options.validMethods] - An array of valid HTTP methods
@@ -93,11 +98,13 @@ function isSimpleCorsRequest(method: string, headers: IncomingHeaders): boolean 
  * @param {object} [options.returnCorsErrors] - Return specific CORS error responses instead of calling next()
  *                                            (default: true)
  *
+ * @throws {Error} If '*' is combined with other origins or with supportsCredentials: true, or if the
+ *                 supportsCredentials array contains '*'
  * @return {function} The middleware to bind to your road
  */
 export function build (options: {
-		validOrigins?: string[],
-		supportsCredentials?: boolean,
+		validOrigins?: '*' | string[],
+		supportsCredentials?: boolean | string[] | ((origin: string) => boolean),
 		allowedResponseHeaders?: Array<string>,
 		allowedRequestHeaders?: Array<string>,
 		allowedMethods?: Array<string>,
@@ -106,7 +113,8 @@ export function build (options: {
 		returnCorsErrors?: boolean
 	}): Middleware<Context> {
 
-	const validOrigins = options.validOrigins || [];
+	const validOrigins = options.validOrigins === '*' ? ['*'] : (options.validOrigins || []);
+	const allowAllOrigins = validOrigins.includes('*');
 	const supportsCredentials = options.supportsCredentials || false;
 	const allowedResponseHeaders = options.allowedResponseHeaders || [];
 	const allowedRequestHeaders = options.allowedRequestHeaders || [];
@@ -114,6 +122,78 @@ export function build (options: {
 	const cacheMaxAge = options.cacheMaxAge || null;
 	const logger = options.logger || { log: () => { /* do nothing */ } };
 	const returnCorsErrors = options.returnCorsErrors !== false;
+
+	if (allowAllOrigins && validOrigins.length > 1) {
+		throw new Error('CORS validOrigins can not combine "*" with other origins. ' +
+			'Use validOrigins: "*" to allow every origin, or list each origin explicitly.');
+	}
+
+	/*
+	 * The string "*" cannot be used for a resource that supports credentials, and reflecting the Origin header
+	 * instead would let any site make credentialed requests.
+	 */
+	if (allowAllOrigins && supportsCredentials === true) {
+		throw new Error('CORS validOrigins: "*" can not be combined with supportsCredentials: true. ' +
+			'Set supportsCredentials to a list of origins, or a function, to choose which origins can send credentials.');
+	}
+
+	if (Array.isArray(supportsCredentials) && supportsCredentials.includes('*')) {
+		throw new Error('CORS supportsCredentials can not contain "*". ' +
+			'List each origin that is allowed to send credentials explicitly.');
+	}
+
+	/*
+	 * True if credentials are limited to specific origins, which means the response is different for each origin
+	 */
+	const perOriginCredentials = typeof supportsCredentials === 'function' ||
+		(Array.isArray(supportsCredentials) && supportsCredentials.length > 0);
+
+	/*
+	 * Helper function to check if an origin can send credentials. This only decides the credentials header,
+	 * the origin still has to pass the validOrigins check first.
+	 */
+	const allowsCredentials = (originHeader: string): boolean => {
+		if (typeof supportsCredentials === 'function') {
+			return supportsCredentials(originHeader);
+		}
+
+		if (Array.isArray(supportsCredentials)) {
+			return supportsCredentials.includes(originHeader);
+		}
+
+		return supportsCredentials;
+	};
+
+	/*
+	 * Helper function to add the origin headers. When every origin is allowed the response is the same for all of
+	 * them, so we send a literal "*". Otherwise the response depends on the Origin header and caches need to know.
+	 */
+	const setOriginHeaders = (corsResponseHeaders: Record<string, string>, originHeader: string) => {
+		if (allowAllOrigins && !perOriginCredentials) {
+			corsResponseHeaders['access-control-allow-origin'] = '*';
+		} else {
+			corsResponseHeaders['access-control-allow-origin'] = originHeader;
+			// Add Vary: Origin header for non-wildcard origins to prevent cache poisoning
+			corsResponseHeaders['vary'] = 'Origin';
+		}
+	};
+
+	/*
+	 * Helper function to add the cors headers to the response of the rest of the middleware chain
+	 */
+	const applyCorsHeaders = (result: string | Response, corsResponseHeaders: Record<string, string>): Response => {
+		// Ensure we have a Response object
+		const response = result instanceof Response ? result : new Response(result);
+		for (const key in corsResponseHeaders) {
+			if (key === 'vary') {
+				// The route might already vary on other headers, so we add to the list instead of replacing it
+				appendVary(response.headers, corsResponseHeaders[key] as string);
+			} else {
+				response.headers[key] = corsResponseHeaders[key];
+			}
+		}
+		return response;
+	};
 
 	/*
 	 * Helper function to handle CORS errors consistently
@@ -176,20 +256,16 @@ export function build (options: {
 			}
 
 			// Validate against allowed origins
-			if (validOrigins[0] !== '*' && originHeader && !validOrigins.includes(originHeader)) {
+			if (!allowAllOrigins && originHeader && !validOrigins.includes(originHeader)) {
 				return handleCorsError(next, 'origin not allowed', originHeader, 403);
 			}
 
 			// For simple requests, set basic CORS headers
 			if (originHeader) {
-				corsResponseHeaders['access-control-allow-origin'] = originHeader;
-				// Add Vary: Origin header for non-wildcard origins to prevent cache poisoning
-				if (validOrigins[0] !== '*') {
-					corsResponseHeaders['vary'] = 'Origin';
-				}
+				setOriginHeaders(corsResponseHeaders, originHeader);
 			}
 
-			if (supportsCredentials) {
+			if (originHeader && allowsCredentials(originHeader)) {
 				corsResponseHeaders['access-control-allow-credentials'] = 'true';
 			}
 
@@ -198,14 +274,7 @@ export function build (options: {
 			}
 
 			return next()
-				.then((result) => {
-					// Ensure we have a Response object
-					const response = result instanceof Response ? result : new Response(result);
-					for (const key in corsResponseHeaders) {
-						response.headers[key] = corsResponseHeaders[key];
-					}
-					return response;
-				});
+				.then((result) => applyCorsHeaders(result, corsResponseHeaders));
 		}
 
 
@@ -234,7 +303,7 @@ export function build (options: {
 			return handleCorsError(next, 'invalid origin format', originHeader, 400);
 		}
 
-		if (validOrigins[0] !== '*' && originHeader && !validOrigins.includes(originHeader)) {
+		if (!allowAllOrigins && originHeader && !validOrigins.includes(originHeader)) {
 			return handleCorsError(next, 'origin not allowed', originHeader, 403);
 		}
 
@@ -363,14 +432,10 @@ export function build (options: {
 		*/
 
 		if (originHeader) {
-			corsResponseHeaders['access-control-allow-origin'] = originHeader;
-			// Add Vary: Origin header for non-wildcard origins to prevent cache poisoning
-			if (validOrigins[0] !== '*') {
-				corsResponseHeaders['vary'] = 'Origin';
-			}
+			setOriginHeaders(corsResponseHeaders, originHeader);
 		}
 
-		if (supportsCredentials) {
+		if (originHeader && allowsCredentials(originHeader)) {
 			corsResponseHeaders['access-control-allow-credentials'] = 'true';
 		}
 
@@ -379,15 +444,7 @@ export function build (options: {
 		}
 
 		return next()
-			.then((result) => {
-				// Ensure we have a Response object
-				const response = result instanceof Response ? result : new Response(result);
-				for (const key in corsResponseHeaders) {
-					response.headers[key] = corsResponseHeaders[key];
-				}
-
-				return response;
-			});
+			.then((result) => applyCorsHeaders(result, corsResponseHeaders));
 	};
 
 	return corsMiddleware;

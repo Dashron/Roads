@@ -473,14 +473,27 @@ This middleware sets up everything you need for your server to properly respond 
 
 The options object supports the following properties.
 
-| name                | type    | description                                                  |
-| ------------------- | ------- | ------------------------------------------------------------ |
-| validOrigins        | array   | An array of origin urls that can send requests to this API   |
-| supportsCredentials | boolean | A boolean, true if you want this endpoint to receive cookies |
-| responseHeaders     | array   | An array of valid HTTP response headers                      |
-| requestHeaders      | array   | An array of valid HTTP request headers                       |
-| validMethods        | array   | An array of valid HTTP methods                               |
-| cacheMaxAge         | number  | The maximum age to cache the cors information                |
+| name                | type                        | description                                                                                                                                              |
+| ------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| validOrigins        | array or `'*'`              | An array of origin urls that can send requests to this API, or the string `'*'` to allow every origin                                                    |
+| supportsCredentials | boolean, array or function  | True if every valid origin can send cookies to this endpoint. An array of origin urls, or a function `(origin) => boolean`, limits cookies to those origins |
+| responseHeaders     | array                       | An array of valid HTTP response headers                                                                                                                  |
+| requestHeaders      | array                       | An array of valid HTTP request headers                                                                                                                   |
+| validMethods        | array                       | An array of valid HTTP methods                                                                                                                           |
+| cacheMaxAge         | number                      | The maximum age to cache the cors information                                                                                                            |
+
+`validOrigins: '*'` sends the header `Access-Control-Allow-Origin: *`. `build` throws if `'*'` is combined with other origins or with `supportsCredentials: true`, because browsers will not share credentialed responses with every origin.
+
+To allow every origin but only accept cookies from some of them, set `supportsCredentials` to an array or a function. Every response then names the request's origin and sends `Vary: Origin`, and only the origins you chose receive `Access-Control-Allow-Credentials: true`.
+
+```JavaScript
+road.use(CorsMiddleware.build({
+    validOrigins: '*',
+    supportsCredentials: ['https://app.example.com']
+}));
+```
+
+`supportsCredentials` only decides who can send cookies. An origin still has to pass `validOrigins` first.
 
 ```JavaScript
 import { CorsMiddleware, Road } from 'roads';
