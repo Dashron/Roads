@@ -27,7 +27,9 @@ export const middleware: Middleware<Context> = function (method, url, body, head
 
 	// kill trailing slash as long as we aren't at the root level
 	if (parsedPath !== '/' && parsedPath[parsedPath.length - 1] === '/') {
-		const newPath = parsedPath.substring(0, parsedPath.length - 1);
+		// Collapse any leading run of slashes, backslashes or whitespace that browsers ignore. Otherwise a request
+		//		for //evil.com/ would redirect to //evil.com, which browsers treat as a protocol-relative URL
+		const newPath = parsedPath.substring(0, parsedPath.length - 1).replace(/^[/\\\t\n\r]+/, '/');
 		return Promise.resolve(new Response('', 302, {
 			location : newPath + parsedUrl.query + parsedUrl.hash
 		}));
