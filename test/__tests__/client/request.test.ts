@@ -138,4 +138,28 @@ describe('request', () => {
 			}));
 		});
 	});
+
+	/**
+	 * Ensure that the path can never send the request to a different host
+	 */
+	test.each([
+		'//evil.example/x',
+		'http://evil.example/x',
+		'\\\\evil.example/x',
+		`https://127.0.0.1:${port}/`,
+	])('Request with path %s that changes the origin is rejected', async (path) => {
+		const client = new Client(false, '127.0.0.1', port);
+
+		await expect(client.request('GET', path)).rejects.toThrow('must not change the origin');
+	});
+
+	test('Request with path missing the leading slash stays on the configured host', async () => {
+		const client = new Client(false, '127.0.0.1', port);
+
+		// The mock server has no route for "/@evil.example/", so its 404 proves the request stayed on the configured host
+		const response = await client.request('GET', '@evil.example/');
+
+		expect(response.status).toEqual(404);
+		expect(response.body).toEqual('Page not found');
+	});
 });

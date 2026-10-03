@@ -64,7 +64,15 @@ export default class Request {
 		const protocol = this.secure ? 'https://' : 'http://';
 		const port = this.port ? `:${this.port}` : '';
 
-		const response = await fetch(`${protocol}${this.host}${port}${path}`, {
+		const base = new URL(`${protocol}${this.host}${port}`);
+		const url = new URL(path, base);
+
+		// The path must never be able to redirect the request to another host (e.g. "//evil.example/x")
+		if (url.origin !== base.origin) {
+			throw new Error(`The request path "${path}" must not change the origin of the request`);
+		}
+
+		const response = await fetch(url, {
 			method,
 			mode: 'cors',
 			credentials: 'same-origin',
