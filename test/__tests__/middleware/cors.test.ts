@@ -1,5 +1,6 @@
 import { build } from '../../../src/middleware/cors.js';
 import Response from '../../../src/core/response.js';
+import Road from '../../../src/core/road.js';
 import { describe, expect, test, vi } from 'vitest';
 
 /**
@@ -1011,5 +1012,31 @@ describe('CORS credentials for specific origins', () => {
 			validOrigins: [trusted],
 			supportsCredentials: [trusted, '*']
 		})).toThrow();
+	});
+});
+
+describe('CORS through a Road', () => {
+	test('a capitalised Origin header name still gets CORS headers', async () => {
+		const road = new Road();
+		road.use(build({
+			validOrigins: ['https://example.com']
+		}));
+		road.use(() => 'OK');
+
+		const result = await road.request('GET', '/', undefined, { Origin: 'https://example.com' });
+
+		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
+	});
+
+	test('a capitalised Origin header name is still checked against the allowlist', async () => {
+		const road = new Road();
+		road.use(build({
+			validOrigins: ['https://example.com']
+		}));
+		road.use(() => 'OK');
+
+		const result = await road.request('GET', '/', undefined, { Origin: 'https://malicious.com' });
+
+		expect(result.status).toBe(403);
 	});
 });

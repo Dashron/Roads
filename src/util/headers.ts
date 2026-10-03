@@ -30,6 +30,35 @@ export function getSingleHeader(headers: IncomingHeaders | OutgoingHeaders, key:
 }
 
 /**
+ * Builds a copy of a headers object with every header name lower-cased.
+ * Header names are case-insensitive, so names that only differ by case are merged into a single header
+ * that holds all of their values. Headers with an undefined value are dropped.
+ *
+ * @param headers - The headers object (incoming or outgoing). It is not modified.
+ * @returns A new headers object with lower-case header names
+ */
+export function normalizeHeaders(headers: IncomingHeaders | OutgoingHeaders): Record<string, string | Array<string>> {
+	const normalized: Record<string, string | Array<string>> = {};
+
+	for (const [key, val] of Object.entries(headers)) {
+		if (val === undefined) {
+			continue;
+		}
+
+		const lowerKey = key.toLowerCase();
+		const existing = normalized[lowerKey];
+
+		if (existing === undefined) {
+			normalized[lowerKey] = Array.isArray(val) ? [...val] : val;
+		} else {
+			normalized[lowerKey] = ([] as Array<string>).concat(existing, val);
+		}
+	}
+
+	return normalized;
+}
+
+/**
  * Adds a field name to the Vary header without losing any field names that are already there.
  * Header names are case-insensitive, so every casing of "vary" is merged into a single header.
  * If the field name is already listed, or the header is "*" (which already covers everything), nothing is added.

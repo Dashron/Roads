@@ -314,6 +314,8 @@ This function will execute the *request chain* in the order they were assigned v
 
 The parameters are all the standard HTTP request parameters.
 
+Header names are case-insensitive, so `request` lower-cases them before your middleware runs. Always look request headers up by their lower-case name (e.g. `headers['content-type']`).
+
 Make sure to catch any errors in the promise!
 
 
@@ -369,6 +371,8 @@ console.log(response.status);
 ```JavaScript
 console.log(response.headers);
 ```
+
+The response returned by `road.request` always has lower-case header names (e.g. `response.headers['set-cookie']`), no matter how your middleware wrote them. If two names only differ by case, such as `Set-Cookie` and `set-cookie`, they are merged into one header that holds an array of every value.
 
 # Bundled Middleware
 

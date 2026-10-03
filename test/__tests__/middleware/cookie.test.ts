@@ -48,7 +48,7 @@ describe('cookie tests', () => {
 		expect(await serverMiddleware.call(context, 'a', 'b', 'c', {}, next.bind(context)))
 			.toEqual(new Response('test', 200, {
 
-				'Set-Cookie': ['foo=bar']
+				'set-cookie': ['foo=bar']
 			}));
 	});
 
@@ -73,7 +73,7 @@ describe('cookie tests', () => {
 		}, next.bind(context)))
 			.toEqual(new Response('test', 200, {
 
-				'Set-Cookie': ['foo=bar']
+				'set-cookie': ['foo=bar']
 			}));
 	});
 
@@ -158,6 +158,27 @@ describe('cookie tests', () => {
 
 		const result = await ensureResponse(serverMiddleware.call(context, 'a', 'b', 'c', {}, next.bind(context)));
 
-		expect(result.headers['Set-Cookie']).toEqual(['existing=value', 'new=cookie']);
+		expect(result.headers['set-cookie']).toEqual(['existing=value', 'new=cookie']);
+	});
+
+	test('test cookie middleware merges every casing of an existing set-cookie header', async () => {
+		expect.assertions(1);
+		const context = {
+			Response: Response
+		} as unknown as CookieContext;
+
+		const next: (this: CookieContext) => Promise<Response> = function () {
+			this.setCookie('new', 'cookie');
+			return Promise.resolve(new Response('test', 200, {
+				'set-cookie': 'lower=value',
+				'Set-Cookie': ['upper=value']
+			}));
+		};
+
+		const result = await ensureResponse(serverMiddleware.call(context, 'a', 'b', 'c', {}, next.bind(context)));
+
+		expect(result.headers).toEqual({
+			'set-cookie': ['lower=value', 'upper=value', 'new=cookie']
+		});
 	});
 });

@@ -122,20 +122,23 @@ export const serverMiddleware = function (
 				response = new Response(response);
 			}
 
-			// Force the set cookie response header to be an array, for ease of applying them below.
-			if (!response.headers['Set-Cookie']) {
-				response.headers['Set-Cookie'] = [];
-			}
+			// Header names are case-insensitive, so collect every casing of set-cookie the route might have used
+			// 		into one array. This way we end up with a single header and none of the cookies are lost.
+			let setCookies: Array<string> = [];
 
-			if (typeof response.headers['Set-Cookie'] === 'string') {
-				response.headers['Set-Cookie'] = [response.headers['Set-Cookie']];
+			for (const key of Object.keys(response.headers)) {
+				if (key.toLowerCase() === 'set-cookie') {
+					setCookies = setCookies.concat(response.headers[key] || []);
+					delete response.headers[key];
+				}
 			}
 
 			// Apply all the cookies
 			for (const [cookieKey, cookieValue] of newCookiesEntries) {
-				(response.headers['Set-Cookie']).push(
-					serializeCookie(cookieKey, cookieValue));
+				setCookies.push(serializeCookie(cookieKey, cookieValue));
 			}
+
+			response.headers['set-cookie'] = setCookies;
 		}
 
 		return response;

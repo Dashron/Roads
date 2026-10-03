@@ -569,4 +569,38 @@ describe('Router Tests', () => {
 			expect(response.body).toEqual('');
 		});
 	});
+
+	test('test routes using a request chain rerun the rest of the chain when next is called twice', () => {
+		expect.assertions(3);
+		const road = new Road();
+		const router = new Router();
+		router.applyMiddleware(road);
+
+		const path = '/';
+		const method = 'GET';
+		let route_hits = 0;
+		const fn: Route<Context> = async (method, url, body, headers, next) => {
+			await next();
+			const result = await next();
+
+			if (result instanceof Response) {
+				return result;
+			}
+
+			return new Response(result);
+		};
+
+		const fn2: Route<Context> = () => {
+			route_hits += 1;
+			return Promise.resolve(new Response('route'));
+		};
+
+		router.addRoute(method, path, [fn, fn2]);
+
+		return road.request(method, path).then((response: Response) => {
+			expect(route_hits).toEqual(2);
+			expect(response.status).toEqual(200);
+			expect(response.body).toEqual('route');
+		});
+	});
 });

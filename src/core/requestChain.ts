@@ -41,17 +41,13 @@ export class RequestChain<fn extends Function> {
 	 */
 	getChainStart () {
 
-		let progress = 0;
-		const next: (context: Context, ...args: unknown[]) => Promise<Response | string> = async (context, ...args) => {
+		// Each step is given its own index, so the next callback handed to a function always runs the
+		//		function after it, no matter how many times it is called
+		const run = async (index: number, context: Context, ...args: unknown[]): Promise<Response | string> => {
+			const currentFunction = this._function_chain[index];
 
-			if (this._function_chain.length && progress < this._function_chain.length) {
-				const currentFunction = this._function_chain[progress];
-				if (currentFunction) {
-					return currentFunction.call(context, ...args, () => {
-						progress += 1;
-						return next(context, ...args);
-					});
-				}
+			if (currentFunction) {
+				return currentFunction.call(context, ...args, () => run(index + 1, context, ...args));
 			}
 
 			// If next is called and there is nothing next, we should still return a promise,
@@ -59,6 +55,6 @@ export class RequestChain<fn extends Function> {
 			return new Response('Page not found', 404);
 		};
 
-		return next;
+		return (context: Context, ...args: unknown[]) => run(0, context, ...args);
 	}
 }

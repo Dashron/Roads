@@ -10,6 +10,7 @@
 import * as response_lib from './response.js';
 import Response from './response.js';
 import { NextCallback, RequestChain } from './requestChain.js';
+import { normalizeHeaders } from '../util/headers.js';
 
 export interface IncomingHeaders extends Record<string, string | Array<string> | undefined> {}
 
@@ -67,8 +68,6 @@ export default class Road {
 	 * @returns {Road} this road object. Useful for chaining use statements.
 	 */
 	use<ContextType extends Context> (fn: Middleware<ContextType>): Road {
-		// Currently we pass everything through the coroutine wrapper to be save. Let that library decide
-		// 		what does and does not actually need to be wrapped
 		this._request_chain.add(fn);
 
 		return this;
@@ -90,6 +89,13 @@ export default class Road {
 	 * @returns {Promise} this promise will resolve to a Response object
 	 */
 	request (method: string, url: string, body?: string, headers?: IncomingHeaders): Promise<Response> {
-		return response_lib.wrap(this._request_chain.getChainStart()({}, method, url, body, headers));
+		// Header names are case-insensitive, so we lower-case them on the way in and on the way out. This lets
+		// 		middleware and connectors look headers up by their lower-case name
+		return response_lib.wrap(this._request_chain.getChainStart()({}, method, url, body,
+			headers ? normalizeHeaders(headers) : headers))
+			.then((response) => {
+				response.headers = normalizeHeaders(response.headers);
+				return response;
+			});
 	}
 }

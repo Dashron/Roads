@@ -10,4 +10,8 @@
 
 ## Reporting a Vulnerability
 
-Leave an issue and tag @dashron
+Please do not report security vulnerabilities through public issues.
+
+Instead, use GitHub's private vulnerability reporting: go to the [Security tab](https://github.com/Dashron/roads/security) of this repository and click **Report a vulnerability**, or open a report directly at https://github.com/Dashron/roads/security/advisories/new.
+
+Include the affected version, a description of the issue, and steps to reproduce it if you can. The report stays private between you and the maintainers until a fix is released.
