@@ -2,9 +2,18 @@
 import Response from './response.js';
 import { Context } from './road.js';
 
+/**
+ * Values that a function in the chain can change for every function after it.
+ * 	Anything left out is passed along unchanged.
+ */
+export interface NextOverrides {
+	method?: string,
+	body?: unknown
+}
+
 export interface NextCallback {
 
-	(): Promise<Response | string>
+	(overrides?: NextOverrides): Promise<Response | string>
 }
 
 // eslint-disable-next-line
@@ -47,7 +56,25 @@ export class RequestChain<fn extends Function> {
 			const currentFunction = this._function_chain[index];
 
 			if (currentFunction) {
-				return currentFunction.call(context, ...args, () => run(index + 1, context, ...args));
+				return currentFunction.call(context, ...args, (overrides?: NextOverrides) => {
+					if (!overrides) {
+						return run(index + 1, context, ...args);
+					}
+
+					// The method is always the first argument of the chain, and the body is always the third
+					const newArgs = [...args];
+
+					if (overrides.method) {
+						newArgs[0] = overrides.method;
+					}
+
+					// We check for the key so the body can be replaced with an empty string or undefined
+					if ('body' in overrides) {
+						newArgs[2] = overrides.body;
+					}
+
+					return run(index + 1, context, ...newArgs);
+				});
 			}
 
 			// If next is called and there is nothing next, we should still return a promise,

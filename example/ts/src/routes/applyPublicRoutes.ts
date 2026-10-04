@@ -9,7 +9,7 @@
 import { Response, RouterMiddleware } from 'roads';
 const TITLE_KEY = 'page-title';
 
-import { ParseBodyMiddleware, StoreValsMiddleware, CookieMiddleware } from 'roads';
+import { ParseBodyMiddleware, StoreValsMiddleware, CookieMiddleware, CSRFMiddleware } from 'roads';
 
 interface ExampleRequestBody {
 	message?: string
@@ -37,7 +37,7 @@ export default function applyPublicRoutes(router: RouterMiddleware.Router<StoreV
 		});
 	});
 
-	router.addRoute<CookieMiddleware.CookieContext>('GET', '/public', async function () {
+	router.addRoute<CookieMiddleware.CookieContext & CSRFMiddleware.CSRFContext>('GET', '/public', async function () {
 		this.storeVal(TITLE_KEY, 'Public Resource');
 		console.log('Here are all cookies accessible to this code: ', this.getCookies());
 		console.log('Cookies are not set until you access the private route.');
@@ -47,6 +47,7 @@ export default function applyPublicRoutes(router: RouterMiddleware.Router<StoreV
 		 The page you are looking at can be rendered via server or client.
 		 The landing page can too, so try going back <a href="/" data-roads-pjax="link">home</a>!
 		 <form method="POST" action="/postdata" data-roads-pjax="form">
+			${this.getCSRFFormElement()}
 			Message: <input type="text" name="message">
 			<input type="submit" value="Send message" data-roads-pjax="submit">
 		 </form>`;
@@ -56,9 +57,8 @@ export default function applyPublicRoutes(router: RouterMiddleware.Router<StoreV
 		return new Response(html);
 	});
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	router.addRoute<ParseBodyMiddleware.ParseBodyContext<ExampleRequestBody>>('POST', '/postdata', async function (url, body, headers) {
-		console.log(`You sent the message:${this.body?.message}`);
+	router.addRoute<ParseBodyMiddleware.ParseBodyContext, ExampleRequestBody>('POST', '/postdata', async function (method, url, body) {
+		console.log(`You sent the message:${body?.message}`);
 		this.ignore_layout = true;
 		return new Response('', 302, { location: '/public' });
 	});

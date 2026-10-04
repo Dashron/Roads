@@ -14,8 +14,12 @@ import Response from '../core/response.js';
 import { NextCallback, RequestChain } from '../core/requestChain.js';
 
 
-export interface Route<ContextType extends Context> {
-	(this: ContextType, method: string, path: RouterURL, body: string,
+/**
+ * `BodyType` is the type of the request body this route receives. If you use the parse body middleware
+ * 	this is the parsed body, otherwise it is the request body string.
+ */
+export interface Route<ContextType extends Context, BodyType = unknown> {
+	(this: ContextType, method: string, path: RouterURL, body: BodyType,
 		headers: IncomingHeaders, next: NextCallback): Promise<Response>
 }
 
@@ -99,10 +103,10 @@ export class Router<RouterContextType extends Context> {
 	 * @param {(string|array)} paths - One or many URL paths that will trigger the provided function
 	 * @param {function} fn - The function containing all of your route logic
 	 */
-	addRoute<RouteContextType extends Context> (
+	addRoute<RouteContextType extends Context, BodyType = unknown> (
 		method: string,
 		paths: string | string[],
-		fn: Route<RouterContextType & RouteContextType> | Route<RouterContextType & RouteContextType>[]
+		fn: Route<RouterContextType & RouteContextType, BodyType> | Route<RouterContextType & RouteContextType, BodyType>[]
 	): void {
 		if (!Array.isArray(paths)) {
 			paths = [paths];
@@ -144,11 +148,9 @@ export class Router<RouterContextType extends Context> {
 	 * from the roads context
 	 */
 	protected async _middleware (
-		this: Context, routes: RouteDetails[], request_method: string, request_url: string, request_body: string,
+		this: Context, routes: RouteDetails[], request_method: string, request_url: string, request_body: unknown,
 		request_headers: IncomingHeaders, next: () => Promise<Response | string>
 	): Promise<Response | string> {
-
-		let realMethod = request_method;
 
 		let response: string | Response | Promise<string | Response> | null = null;
 		let hit = false;
@@ -156,28 +158,17 @@ export class Router<RouterContextType extends Context> {
 
 		const parsed_url = parse(request_url, true);
 
-		// Only override on POST methods
-		if (realMethod === 'POST') {
-			const methodOverrideHeader = request_headers?.['x-http-method-override'];
-			const methodOverrideQuery = parsed_url.query?.['_method'];
-
-			if (methodOverrideHeader) {
-				realMethod = Array.isArray(methodOverrideHeader) ? methodOverrideHeader.join('') : methodOverrideHeader ;
-			} else if (methodOverrideQuery) {
-				realMethod = Array.isArray(methodOverrideQuery) ? methodOverrideQuery.join('') : methodOverrideQuery ;
-			}
-		}
-
 		for (let i = 0; i < routes.length; i++) {
 			const route = routes[i];
 
 			if (route && compareRouteAndApplyArgs(route, parsed_url)) {
 				// Check the method last, so we can give proper status codes
-				if (route.method === realMethod) {
+				if (route.method === request_method) {
 					if (route.route instanceof RequestChain) {
-						response = route.route.getChainStart()(this, realMethod, parsed_url, request_body, request_headers);
+						response = route.route.getChainStart()(
+							this, request_method, parsed_url, request_body, request_headers);
 					} else {
-						response = (route.route).call(this, realMethod, parsed_url, request_body, request_headers, next);
+						response = (route.route).call(this, request_method, parsed_url, request_body, request_headers, next);
 					}
 
 					hit = true;

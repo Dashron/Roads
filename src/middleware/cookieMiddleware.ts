@@ -85,7 +85,7 @@ export const serverMiddleware = function (
 	this: CookieContext,
 	route_method: string,
 	route_path: string,
-	route_body: string | undefined,
+	route_body: unknown,
 	route_headers: IncomingHeaders | undefined,
 	next: NextCallback
 ): Promise<Response | string> {

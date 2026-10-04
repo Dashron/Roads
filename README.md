@@ -174,9 +174,9 @@ Parameters
 | ------- | ---------------------------- | ------------------------------------------------------------------------------------------------ |
 | method  | string                       | The request's HTTP method                                                                        |
 | path    | string                       | The request's path. Use the Router middleware for advanced URL pattern matching.                |
-| body    | string \| undefined          | The request's body (as a string). Use ParseBodyMiddleware to parse JSON/form data.              |
+| body    | string \| undefined          | The request's body (as a string). If the ParseBodyMiddleware runs earlier in the request chain, this is the parsed JSON/form data instead. |
 | headers | object \| undefined          | The request's headers. This is an object of strings or arrays of strings.                        |
-| next    | function(): Promise<Response \| String> | The next step of the *request chain*. If there are no more steps in the *request chain* this returns a 404. This method will always return a promise, which resolves to a `Response` object, or a string. |
+| next    | function(overrides?: object): Promise<Response \| String> | The next step of the *request chain*. If there are no more steps in the *request chain* this returns a 404. This method will always return a promise, which resolves to a `Response` object, or a string. Pass `{ method: 'DELETE' }` or `{ body: newBody }` to change the method or body that the rest of the request chain receives. |
 
 Each middleware function must return a promise that resolves to a [Response](#response) object or a string. If you return a string it will be transformed into a response object using the default status code (200) and no headers.
 
@@ -509,25 +509,164 @@ road.use(CorsMiddleware.build({
 }));
 ```
 
+## CSRF
+**Middleware to protect against cross site request forgery**
+
+This middleware rejects every `POST`, `PUT`, `PATCH` and `DELETE` request with a 403 unless both of these are true:
+
+- The request came from your own origin. Browsers report this in the `Sec-Fetch-Site` and `Origin` headers. Requests with neither header, such as non-browser clients, skip this check.
+- The request body contains a `csrf_token` field that matches the CSRF cookie.
+
+It must be added after the cookie middleware and the parse body middleware, and it only runs on the server. For roads that run in the browser, see [buildClientMiddleware](#buildclientmiddlewarepagedocument-document-cookiename-string).
+
+Roads does not ship any signing logic, so you provide the `sign` and `verify` functions. This keeps your secret and your signing library on the server. The example below uses [jsonwebtoken](https://github.com/auth0/node-jsonwebtoken).
+
+```JavaScript
+import { CookieMiddleware, CSRFMiddleware, ParseBodyMiddleware, Road } from 'roads';
+import jwt from 'jsonwebtoken';
+
+var road = new Road();
+road.use(CookieMiddleware.serverMiddleware);
+road.use(ParseBodyMiddleware.middleware);
+road.use(CSRFMiddleware.build({
+    sign: (payload) => jwt.sign(payload, process.env.CSRF_SECRET),
+    verify: (token) => jwt.verify(token, process.env.CSRF_SECRET),
+    // Optional. Ties each token to the logged in user
+    getUserId: (context) => context.userID
+}));
+```
+
+| name           | type                              | required | description                                                                                                   |
+| -------------- | --------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------- |
+| sign           | function(payload: object): string | yes      | Turns the token data into a signed string.                                                                    |
+| verify         | function(token: string): object   | yes      | Checks the signature and returns the token data. Throw, or return a non-object, if the token is invalid.      |
+| cookieName     | string                            | no       | The name of the cookie that holds the token. Defaults to `__Host-csrf`, and must start with `__Host-`.        |
+| insecureCookie | boolean                           | no       | Local development over plain http only. See below.                                                            |
+| trustedOrigins | string[]                          | no       | Other origins that may send forms to this one, e.g. `['https://www.example.com']`. Also needed if a proxy changes the `Host` header. These requests still need a valid token. |
+| expiresIn      | number                            | no       | How long a token is valid for, in seconds. Defaults to one day. Roads adds an `exp` field to the token data.  |
+| getUserId      | function(context: object)         | no       | Returns the ID of the logged in user. A token created for one user (or while logged out) won't work for another. |
+
+### Safety checks
+
+`CSRFMiddleware.build` throws an error straight away, before any request is handled, if it is set up in a way that would weaken the protection.
+
+- **The cookie is locked to your host.** The cookie is set with `Secure`, `SameSite=Strict` and `Path=/`, and its name must start with `__Host-`. Browsers only accept that prefix on a cookie that belongs to one exact host, so another subdomain of your site can't replace it. This means your site must be served over https.
+- **The signer is tested.** `verify` must accept a token made by `sign`, and must reject that token after one character is changed. This catches a `verify` that only decodes the token (such as `jwt.decode`), which would turn the protection off.
+- **It can't be built in the browser.** If a `document` exists the build throws, because your signing secret must never be part of your client code.
+
+For local development over plain http, set `insecureCookie: true`. This removes the `Secure` flag and the `__Host-` prefix (the default cookie name becomes `csrf`). Never set it in production.
+
+A few things can't be checked for you:
+
+- Serve your site over https, and consider HSTS with `includeSubDomains`.
+- Use `getUserId` if your site has logins.
+- Never change data in a `GET` route. `GET` requests are not checked.
+
+### buildClientMiddleware(pageDocument: *Document*, cookieName?: *string*)
+
+If your routes also run in the browser (for example with [PJAX](#roadspjax)), add this to the browser's road so routes that call `getCSRFFormElement` work there too. It reads the token from the cookie that the server set. It has no secret, and it does not check anything, because requests on a browser road never leave the page. Requests that reach your server are still checked there.
+
+```JavaScript
+import { CSRFMiddleware, Road } from 'roads';
+
+var road = new Road();
+road.use(CSRFMiddleware.buildClientMiddleware(document));
+```
+
+Only pass `cookieName` if you changed it on the server. If the server uses `insecureCookie`, pass `CSRFMiddleware.CSRF_INSECURE_COOKIE_NAME`.
+
+### CSRF Context
+
+#### getCSRFFormElement(data?: *object*)
+Returns a hidden `<input>` containing the token. Put this inside every form that isn't a `GET`. If the Store Values middleware is in use, the element is also stored under `csrfElement`.
+
+```JavaScript
+router.addRoute('GET', '/posts/new', function () {
+    return `<form method="POST" action="/posts">
+        ${this.getCSRFFormElement()}
+        <input type="text" name="title">
+        <input type="submit" value="Save">
+    </form>`;
+});
+```
+
+#### getCSRFToken(data?: *object*)
+Returns the token on its own, creating it and its cookie if the user doesn't have a usable one yet. `data` is added to the token only when a new one is created.
+
+#### isValidCSRFToken()
+Returns true if the request body's token matches the cookie, has a valid signature, has not expired and belongs to the current user. The middleware calls this for you on unsafe methods.
+
+#### csrfProtected
+Always `true` once this middleware has run. Other middleware can check this to require CSRF protection.
+
+## Method override
+**Middleware to let HTML forms reach PUT, PATCH and DELETE routes**
+
+HTML forms can only send `GET` and `POST`. With this middleware, a `POST` request can ask to be treated as a different method. Every middleware after it, including the router, receives the new method.
+
+On `POST` requests it looks in these places, in order:
+
+1. The `x-http-method-override` header
+2. The `_method` field of the parsed request body
+3. The `_method` query parameter
+
+```html
+<form method="POST" action="/posts/12345">
+    <input type="hidden" name="_method" value="DELETE">
+    <!-- this.getCSRFFormElement() goes here -->
+    <input type="submit" value="Delete">
+</form>
+```
+
+Because this lets a plain form reach routes that browsers would otherwise protect, it will throw an error unless the [CSRF middleware](#csrf) has been added to the road before it. There is no option to turn this off. The order must be: cookies, parse body, CSRF, method override, router.
+
+On a road that runs in the browser, add `CSRFMiddleware.buildClientMiddleware(document)` in place of the server CSRF middleware.
+
+```JavaScript
+import { CookieMiddleware, CSRFMiddleware, MethodOverrideMiddleware, ParseBodyMiddleware, RouterMiddleware, Road } from 'roads';
+
+var road = new Road();
+road.use(CookieMiddleware.serverMiddleware);
+road.use(ParseBodyMiddleware.middleware);
+road.use(CSRFMiddleware.build({ /* see above */ }));
+road.use(MethodOverrideMiddleware.build());
+
+const router = new RouterMiddleware.Router(road);
+```
+
+| name        | type     | required | description                                                                                                  |
+| ----------- | -------- | -------- | ------------------------------------------------------------------------------------------------------------ |
+| methods     | string[] | no       | The methods a `POST` is allowed to become. Defaults to `PUT`, `PATCH` and `DELETE`. Any other override gets a 400. |
 ## Parsing request bodies
 **Middleware to parse the request body**
 
-This middleware looks at the Content-Type header and uses that information to attempt to parse the incoming request body string. The body will be applied to the context field `body`.
+This middleware looks at the Content-Type header and uses that information to attempt to parse the incoming request body string. Every middleware and route that runs after it receives the parsed body as its `body` parameter, in place of the string.
+
+- `application/json` bodies are parsed as JSON
+- `application/x-www-form-urlencoded` bodies are parsed as form data
+- Anything else is passed along as the original string
+
+Middleware added before this one still receives the string.
 
 ```JavaScript
 import { ParseBodyMiddleware, Road } from 'roads';
 
 var road = new Road();
 road.use(ParseBodyMiddleware.middleware);
+
+road.use(function (method, path, body, headers) {
+    // body === {"name": "dashron"}
+    // this.rawBody === '{"name":"dashron"}'
+});
+
+road.request('POST', '/users', '{"name":"dashron"}', {"content-type": "application/json"});
 ```
 
+**Note:** Earlier versions put the parsed body on the context as `this.body`. That is gone. Use the `body` parameter instead.
 
-### Parse Body Context
+### Typing the body
 
-`ParseBodyContext<BodyType>`
-When using typescript you can pass this when adding middleware or routes to see proper typing on `this`.
-
-This context specifically adds one variable `body` which will match the structure passed to the `ParseBodyContext` via the `BodyType` generic.
+When using typescript, the `body` parameter is `unknown` by default. You can pass the structure you expect as the second generic of `road.use` or `router.addRoute`.
 
 ```TypeScript
 import { ParseBodyMiddleware, Road } from 'roads';
@@ -535,17 +674,22 @@ import { ParseBodyMiddleware, Road } from 'roads';
 var road = new Road();
 road.use(ParseBodyMiddleware.middleware);
 
-road.use<ParseBodyMiddleware.ParseBodyContext<{
+road.use<ParseBodyMiddleware.ParseBodyContext, {
     name: string,
     description?: string
-}>>(function (method, path, body, headers) {
-    // body === string representation of the input. In this example, '{"name":"dashron"}'
-    // this.body === parsed version of that representation. In this example, {"name": "dashron"}
-    // this.body.name will be properly identified by typescript due to the generic BodyType passed to ParseBodyContext. In this example, "dashron"
+}>(function (method, path, body, headers) {
+    // body.name will be properly identified by typescript. In this example, "dashron"
 });
-
-road.request('POST', '/users', '{"name":"dashron"}', {"content-type": "application/json"});
 ```
+
+Roads does not check that the request matches this structure, so validate anything you rely on.
+
+### Parse Body Context
+
+`ParseBodyContext`
+When using typescript you can pass this when adding middleware or routes to see proper typing on `this`.
+
+This context adds one variable, `rawBody`, which is the request body string exactly as it was received. This is useful when you need the original text, such as when checking a webhook signature.
 
 ## Remove trailing slash
 **Middleware to kill the trailing slash on http requests**
@@ -599,7 +743,7 @@ Here's how you use it.
     });
 ```
 
-**Note:** This router supports the `x-http-method-override` header and `_method` query parameter on `POST` requests, which allow you to route to a different HTTP method than `POST`.
+**Note:** The router no longer handles the `x-http-method-override` header or `_method` parameter itself. If you need HTML forms to reach `PUT`, `PATCH` or `DELETE` routes, add the [method override middleware](#method-override) before the router.
 
 ### applyMiddleware(road: *Road*)
 If you don't provide a road to the SimpleRouter constructor, your routes will not be executed. If you have reason not to assign the road off the bat, you can assign it later with this function.

@@ -14,9 +14,14 @@ import { normalizeHeaders } from '../util/headers.js';
 
 export interface IncomingHeaders extends Record<string, string | Array<string> | undefined> {}
 
-export interface Middleware<MiddlewareContext extends Context> {
+/**
+ * `BodyType` is the type of the request body this middleware receives. It starts out as a string (or undefined),
+ * 	but any earlier middleware can replace it via `next({ body })`, which is how the parse body middleware
+ * 	passes along the parsed body.
+ */
+export interface Middleware<MiddlewareContext extends Context, BodyType = unknown> {
 	(this: MiddlewareContext, method: string, path: string,
-		body: string | undefined, headers: IncomingHeaders | undefined,
+		body: BodyType, headers: IncomingHeaders | undefined,
 		next: NextCallback): Promise<Response | string> | Response | string
 }
 
@@ -56,9 +61,9 @@ export default class Road {
 	 * | ------- | ---------------------------- | ------------------------------------------------------------------------------------------------ |
 	 * | method  | string                       | The request's HTTP method                                                                        |
 	 * | url     | string                       | The request's URL. The `SimpleRouter` is included to help run different code for different URLs. |
-	 * | body    | string                       | The request's body (as a string). To parse this check out the `parseBodyMiddleware`              |
+	 * | body    | string                       | The request's body (as a string). If the `parseBodyMiddleware` runs earlier in the chain, this is the parsed body instead |
 	 * | headers | object                       | The request's headers. This is an object of strings or arrays of strings.                        |
-	 * | next    | function(): Promise<Response | String>                                                                                          | The next step of the *request chain*. If there are no more steps in the *request chain* this does nothing. This method will always return a promise, which resolves to a `Response` object, or a string. |
+	 * | next    | function(): Promise<Response | String>                                                                                          | The next step of the *request chain*. If there are no more steps in the *request chain* this does nothing. This method will always return a promise, which resolves to a `Response` object, or a string. Pass `{ method: 'DELETE' }` or `{ body: newBody }` to change the method or body that the rest of the chain receives. |
 	 *
 	 * Each middleware function must return a promise that resolves to a [Response](#response) object or a string. If you return a string it will be transformed into a response object using the default status code (200) and no headers.
 	 *
@@ -67,7 +72,7 @@ export default class Road {
 	 * @param {Function} fn - A callback (function or async function) that will be executed every time a request is made.
 	 * @returns {Road} this road object. Useful for chaining use statements.
 	 */
-	use<ContextType extends Context> (fn: Middleware<ContextType>): Road {
+	use<ContextType extends Context, BodyType = unknown> (fn: Middleware<ContextType, BodyType>): Road {
 		this._request_chain.add(fn);
 
 		return this;

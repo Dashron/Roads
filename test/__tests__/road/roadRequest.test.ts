@@ -274,6 +274,112 @@ describe('road request', () => {
 	});
 
 	/**
+	 * Ensure that passing a method to next changes the method for the rest of the request chain
+	 */
+	test('Next Can Override The Method For Later Middleware', () => {
+		expect.assertions(1);
+		const road = new Road();
+		const seen: string[] = [];
+
+		road.use(function (method, url, body, headers, next) {
+			seen.push(method);
+			return next({ method: 'DELETE' });
+		});
+
+		road.use(function (method, url, body, headers, next) {
+			seen.push(method);
+			return next();
+		});
+
+		road.use(function (method, url, body, headers) {
+			seen.push(method);
+			return `${url} ${body} ${JSON.stringify(headers)}`;
+		});
+
+		return road.request('POST', '/a', 'b', { c: 'd' }).then((response) => {
+			expect({ seen, body: response.body }).toEqual({
+				seen: ['POST', 'DELETE', 'DELETE'],
+				body: '/a b {"c":"d"}'
+			});
+		});
+	});
+
+	/**
+	 * Ensure that passing a body to next changes the body for the rest of the request chain
+	 */
+	test('Next Can Override The Body For Later Middleware', () => {
+		expect.assertions(1);
+		const road = new Road();
+		const seen: unknown[] = [];
+
+		road.use(function (method, url, body, headers, next) {
+			seen.push(body);
+			return next({ body: { parsed: true } });
+		});
+
+		road.use(function (method, url, body, headers, next) {
+			seen.push(body);
+			return next();
+		});
+
+		road.use(function (method, url, body, headers) {
+			seen.push(body);
+			return `${method} ${url} ${JSON.stringify(headers)}`;
+		});
+
+		return road.request('POST', '/a', 'b', { c: 'd' }).then((response) => {
+			expect({ seen, body: response.body }).toEqual({
+				seen: ['b', { parsed: true }, { parsed: true }],
+				body: 'POST /a {"c":"d"}'
+			});
+		});
+	});
+
+	/**
+	 * Ensure that the body can be replaced with an empty value, and that the method and body can be changed together
+	 */
+	test('Next Can Override The Body With Undefined Alongside The Method', () => {
+		expect.assertions(1);
+		const road = new Road();
+
+		road.use(function (method, url, body, headers, next) {
+			return next({ method: 'PUT', body: undefined });
+		});
+
+		road.use(function (method, url, body) {
+			return `${method} ${body}`;
+		});
+
+		return expect(road.request('POST', '/', 'b')).resolves.toEqual({
+			status: 200,
+			headers : {},
+			body : 'PUT undefined'
+		});
+	});
+
+	/**
+	 * Ensure that calling next without an override leaves the method alone
+	 */
+	test('Next Without An Override Keeps The Method', () => {
+		expect.assertions(1);
+		const road = new Road();
+
+		road.use(function (method, url, body, headers, next) {
+			return next();
+		});
+
+		road.use(function (method) {
+			return method;
+		});
+
+		return expect(road.request('POST', '/')).resolves.toEqual({
+			status: 200,
+			headers : {},
+			body : 'POST'
+		});
+	});
+
+	/**
 	 * Ensure that response header names are lower-cased, and that names differing only by case are merged
 	 */
 	test('Response Header Names Are Lower-Cased And Merged', () => {

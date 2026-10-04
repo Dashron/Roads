@@ -83,7 +83,7 @@ describe('Router Tests', () => {
 			.resolves.toEqual(new Response('Method Not Allowed', 405));
 	});
 
-	test('test middleware function routes successfully to successful routes with x-http-method-override header', () => {
+	test('test middleware function ignores the x-http-method-override header on POST requests', () => {
 		expect.assertions(1);
 
 		const router = new Router();
@@ -99,8 +99,8 @@ describe('Router Tests', () => {
 			return Promise.resolve(new Response(''));
 		};
 
-		router.addRoute('PUT', path, fn);
-		router.addRoute('POST', path, () => assert.fail('POST route should not run'));
+		router.addRoute('POST', path, fn);
+		router.addRoute('PUT', path, () => assert.fail('PUT route should not run'));
 		router['_middleware'].call({}, router['_routes'], method, path, '', {
 			'x-http-method-override': 'PUT'
 		}, next);
@@ -133,7 +133,7 @@ describe('Router Tests', () => {
 		expect(route_hit).toEqual(true);
 	});
 
-	test('test middleware function routes successfully to successful routes with _method query param', () => {
+	test('test middleware function ignores the _method query param on POST requests', () => {
 		expect.assertions(1);
 
 		const router = new Router();
@@ -149,8 +149,8 @@ describe('Router Tests', () => {
 			return Promise.resolve(new Response(''));
 		};
 
-		router.addRoute('PUT', path, fn);
-		router.addRoute('POST', path, () => assert.fail('POST route should not run'));
+		router.addRoute('POST', path, fn);
+		router.addRoute('PUT', path, () => assert.fail('PUT route should not run'));
 		router['_middleware'].call({}, router['_routes'], method, `${path}?_method=PUT`, '', {}, next);
 
 		expect(route_hit).toEqual(true);
