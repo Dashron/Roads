@@ -10,8 +10,8 @@ import { Road, Response, CookieMiddleware, CSRFMiddleware, RouterMiddleware, att
 
 import express from 'express';
 import addLayout from './middleware/addLayout.js';
-import applyPublicRoutes from './routes/applyPublicRoutes.js';
-import applyPrivateRoutes from './routes/applyPrivateRoutes.js';
+import applyBrowserSafeRoutes from './routes/applyBrowserSafeRoutes.js';
+import applyServerOnlyRoutes from './routes/applyServerOnlyRoutes.js';
 import emptyTo404 from './middleware/emptyTo404.js';
 import { expressConnector } from './middleware/expressConnector.js';
 import { sign, verify } from './csrfSigner.js';
@@ -34,7 +34,7 @@ road.use(CSRFMiddleware.build({
 	//		Never set this in the real world. Without it the cookie is Secure and locked to your exact host
 	insecureCookie: true
 }));
-// The public routes can also be rendered in the browser, which reads the token from the cookie (see client.ts).
+// The browser safe routes can also be rendered in the browser, which reads the token from the cookie (see client.ts).
 //		Creating the token on every page load makes sure the cookie is there before the browser needs it
 road.use<CSRFMiddleware.CSRFContext>(function (method, url, body, headers, next) {
 	if (method === 'GET') {
@@ -46,8 +46,8 @@ road.use<CSRFMiddleware.CSRFContext>(function (method, url, body, headers, next)
 road.use(addLayout);
 
 const router = new RouterMiddleware.Router(road);
-applyPublicRoutes(router);
-applyPrivateRoutes(router);
+applyBrowserSafeRoutes(router);
+applyServerOnlyRoutes(router);
 road.use(emptyTo404);
 
 const app = express();

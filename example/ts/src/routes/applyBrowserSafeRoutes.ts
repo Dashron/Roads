@@ -1,9 +1,9 @@
 /**
- * applyPublicRoutes.ts
+ * applyBrowserSafeRoutes.ts
  * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
- * This file is an example of how to assign some public routes to a roads server
+ * This file is an example of how to assign some browser safe routes to a roads server
  */
 
 import { Response, RouterMiddleware } from 'roads';
@@ -22,25 +22,25 @@ interface ExampleRequestBody {
   *
   * @param {SimpleRouter} router - The router that the routes will be added to
   */
-export default function applyPublicRoutes(router: RouterMiddleware.Router<StoreValsMiddleware.StoreValsContext>): void {
+export default function applyBrowserSafeRoutes(router: RouterMiddleware.Router<StoreValsMiddleware.StoreValsContext>): void {
 	router.addRoute('GET', '/', async function () {
 		this.storeVal(TITLE_KEY, 'Root Resource');
 
 		// In the real world the body of the response should be created from a template engine.
 		return new Response(`Hello!<br />
-		 Try the <a href="/public" data-roads-pjax="link">public test link</a>.
+		 Try the <a href="/browser-safe" data-roads-pjax="link">browser safe test link</a>.
 		 It's available to the server and can be rendered from the client! Try clicking it for the client path,
 		 or control clicking for a real request to the server.<br />
-		 Try the <a href="/private">private test link</a>. It's available to the server, but is not built in the client!
+		 Try the <a href="/server-only">server only test link</a>. It's available to the server, but is not built in the client!
 		 Check your console for proof of the network request!`, 200, {
 			duplicateHeaders: ['first', 'second']
 		});
 	});
 
-	router.addRoute<CookieMiddleware.CookieContext & CSRFMiddleware.CSRFContext>('GET', '/public', async function () {
-		this.storeVal(TITLE_KEY, 'Public Resource');
+	router.addRoute<CookieMiddleware.CookieContext & CSRFMiddleware.CSRFContext>('GET', '/browser-safe', async function () {
+		this.storeVal(TITLE_KEY, 'Browser Safe Resource');
 		console.log('Here are all cookies accessible to this code: ', this.getCookies());
-		console.log('Cookies are not set until you access the private route.');
+		console.log('Cookies are not set until you access the server only route.');
 		console.log('Notice that the http only cookies do not show in your browser\'s console.log');
 
 		const html = `Hello!<br />
@@ -52,7 +52,7 @@ export default function applyPublicRoutes(router: RouterMiddleware.Router<StoreV
 			<input type="submit" value="Send message" data-roads-pjax="submit">
 		 </form>`;
 
-		// todo: make a client request to /privateJSON and get { "private-success": true }
+		// todo: make a client request to /server-only-json and get { "server-only-success": true }
 
 		return new Response(html);
 	});
@@ -60,6 +60,6 @@ export default function applyPublicRoutes(router: RouterMiddleware.Router<StoreV
 	router.addRoute<ParseBodyMiddleware.ParseBodyContext, ExampleRequestBody>('POST', '/postdata', async function (method, url, body) {
 		console.log(`You sent the message:${body?.message}`);
 		this.ignore_layout = true;
-		return new Response('', 302, { location: '/public' });
+		return new Response('', 302, { location: '/browser-safe' });
 	});
 }

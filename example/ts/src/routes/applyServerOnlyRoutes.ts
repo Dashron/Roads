@@ -1,9 +1,9 @@
 /**
- * applyPrivateRoutes.ts
+ * applyServerOnlyRoutes.ts
  * Copyright(c) 2018 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
- * This file is an example of how to assign some private routes to a road server
+ * This file is an example of how to assign some server only routes to a road server
  */
 
 import * as fs from 'fs';
@@ -21,26 +21,26 @@ const __dirname = import.meta.dirname;
   *
   * @param {SimpleRouter} router - The router that the routes will be added to
   */
-export default function applyPrivateRoutes(router: RouterMiddleware.Router<StoreValsMiddleware.StoreValsContext>): void {
-	router.addRoute<CookieMiddleware.CookieContext>('GET', '/private', async function () {
-		this.storeVal(TITLE_KEY, 'Private Resource');
-		this.setCookie('private_cookie', 'foo', {
+export default function applyServerOnlyRoutes(router: RouterMiddleware.Router<StoreValsMiddleware.StoreValsContext>): void {
+	router.addRoute<CookieMiddleware.CookieContext>('GET', '/server-only', async function () {
+		this.storeVal(TITLE_KEY, 'Server Only Resource');
+		this.setCookie('http_only_cookie', 'foo', {
 			httpOnly: true
 		});
 
-		this.setCookie('public_cookie', 'bar', {
+		this.setCookie('browser_readable_cookie', 'bar', {
 			httpOnly: false
 		});
 
 		return new Response(
-			`This is a private resource. It's available to the server, but is not built in the client!
+			`This is a server only resource. It's available to the server, but is not built in the client!
 			The landing page can be rendered via the client though, so try going back
 			<a href="/" data-roads-pjax="link">home</a>!<br />`);
 	});
 
-	router.addRoute('GET', '/privateJSON', async function () {
+	router.addRoute('GET', '/server-only-json', async function () {
 		this.storeVal('ignoreLayout', true);
-		return new Response(JSON.stringify({'private-success': true}));
+		return new Response(JSON.stringify({'server-only-success': true}));
 	});
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars

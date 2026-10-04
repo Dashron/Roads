@@ -7,7 +7,7 @@
  */
 
 import { Road, RoadsPJAX, ParseBodyMiddleware, RouterMiddleware, CookieMiddleware, CSRFMiddleware, Request } from 'roads';
-import applyPublicRoutes from './routes/applyPublicRoutes.js';
+import applyBrowserSafeRoutes from './routes/applyBrowserSafeRoutes.js';
 import emptyTo404 from './middleware/emptyTo404.js';
 
 const road = new Road();
@@ -30,7 +30,7 @@ road.use(CSRFMiddleware.buildClientMiddleware(document, CSRFMiddleware.CSRF_INSE
 pjax.register();
 pjax.registerAdditionalElement(document.getElementById('home') as HTMLAnchorElement);
 const router = new RouterMiddleware.Router(road);
-applyPublicRoutes(router);
+applyBrowserSafeRoutes(router);
 
 const testRequest = new Request(false, 'localhost', 8081);
 testRequest.request('GET', '/').then(response => {
