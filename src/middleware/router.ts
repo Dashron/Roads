@@ -156,14 +156,20 @@ export class Router<RouterContextType extends Context> {
 		let hit = false;
 		let routeHitMethodFail = false;
 
-		const parsed_url = parse(request_url, true);
+		const parsed_url: RouterURL = parse(request_url, true);
 
 		for (let i = 0; i < routes.length; i++) {
 			const route = routes[i];
 
-			if (route && compareRouteAndApplyArgs(route, parsed_url)) {
+			const args = route ? matchRoutePath(route, parsed_url) : null;
+
+			if (route && args) {
 				// Check the method last, so we can give proper status codes
 				if (route.method === request_method) {
+					if (Object.keys(args).length > 0) {
+						parsed_url.args = args;
+					}
+
 					if (route.route instanceof RequestChain) {
 						response = route.route.getChainStart()(
 							this, request_method, parsed_url, request_body, request_headers);
@@ -193,19 +199,20 @@ export class Router<RouterContextType extends Context> {
 }
 
 /**
- * Checks to see if the route matches the request, and if true assigns any applicable url variables and returns the route
+ * Checks to see if the route's path matches the request, and if true returns any url variables.
+ * The args are not applied to the url, so a route that fails to match (by path or method) can't leak them.
  *
  * @param {object} route - Route object from this router class
- * @param {object} route.method - HTTP method associated with this route
  * @param {object} route.path - HTTP path associated with this route
  * @param {object} request_url - Parsed HTTP request url
- * @param {string} request_method - HTTP request method
- * @returns {boolean}
+ * @returns {object | null} - The url variables if the path matches, otherwise null
  */
-function compareRouteAndApplyArgs (route: {method: string, path: string}, request_url: ReturnType<typeof parse>): boolean {
+function matchRoutePath (
+	route: {path: string}, request_url: ReturnType<typeof parse>
+): Record<string, string | number> | null {
 
 	if (!request_url.pathname) {
-		return false;
+		return null;
 	}
 
 	let template = route.path.split('/');
@@ -219,8 +226,10 @@ function compareRouteAndApplyArgs (route: {method: string, path: string}, reques
 	}
 
 	if (template.length !== actual.length) {
-		return false;
+		return null;
 	}
+
+	const args: Record<string, string | number> = {};
 
 	for (let i = 0; i < template.length; i++) {
 		const actual_part = actual[i];
@@ -228,21 +237,22 @@ function compareRouteAndApplyArgs (route: {method: string, path: string}, reques
 
 		// Process variables first
 		if (template_part?.[0] === '#') {
-			// # templates only accept numbers
-			if (isNaN(Number(actual_part))) {
-				return false;
+			// # templates only accept non-negative integers
+			if (actual_part === undefined || !/^\d+$/.test(actual_part)) {
+				return null;
 			}
 
-			// TODO: get rid of this `as`
-			applyArg(request_url as RouterURL, template_part.substring(1), Number(actual_part));
+			args[template_part.substring(1)] = Number(actual_part);
 			continue;
 		}
 
 		if (template_part?.[0] === '$') {
-			// $ templates accept any non-slash alphanumeric character
-			// TODO: get rid of this `as`
-			applyArg(request_url as RouterURL, template_part.substring(1), String(actual_part));
-			// Continue so that
+			// $ templates accept any non-empty segment
+			if (!actual_part) {
+				return null;
+			}
+
+			args[template_part.substring(1)] = actual_part;
 			continue;
 		}
 
@@ -251,31 +261,10 @@ function compareRouteAndApplyArgs (route: {method: string, path: string}, reques
 			continue;
 		}
 
-		return false;
+		return null;
 	}
 
-	return true;
-}
-
-/**
- * Assigns a value to the parsed request urls args parameter
- *
- * @param {object} request_url - The parsed url object
- * @param {string} template_part - The template variable
- * @param {*} actual_part - The url value
- */
-function applyArg(request_url: RouterURL, template_part: string, actual_part: string | number): void {
-	if (request_url.args === undefined) {
-		request_url.args = {};
-	}
-
-	if (typeof request_url.args !== 'object') {
-		throw new Error(`The request url's args have already been defined as a ${typeof request_url.args  }
-			and we expected an object. For safety we are throwing this error instead of overwriting your
-			existing data. Please use a different field name in your code`);
-	}
-
-	request_url.args[template_part] = actual_part;
+	return args;
 }
 
 /**

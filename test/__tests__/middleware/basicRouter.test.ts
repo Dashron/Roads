@@ -603,4 +603,77 @@ describe('Router Tests', () => {
 			expect(response.body).toEqual('route');
 		});
 	});
+
+	test.each(['', '-1', '1.5', '0x1F', '1e3', 'Infinity', ' 1', 'abc'])(
+		'test numeric template does not match %j', async (segment) => {
+			const road = new Road();
+			const router = new Router();
+			router.applyMiddleware(road);
+
+			router.addRoute('GET', '/users/#id', () => Promise.resolve(new Response('route')));
+
+			const response = await road.request('GET', `/users/${segment}`);
+			expect(response.status).toEqual(404);
+		});
+
+	test('test numeric template accepts zero and leading zeros', async () => {
+		const road = new Road();
+		const router = new Router();
+		router.applyMiddleware(road);
+
+		const ids: unknown[] = [];
+		router.addRoute('GET', '/users/#id', (method, url: RouterURL) => {
+			ids.push(url.args?.id);
+			return Promise.resolve(new Response('route'));
+		});
+
+		await road.request('GET', '/users/0');
+		await road.request('GET', '/users/007');
+		expect(ids).toEqual([0, 7]);
+	});
+
+	test('test string template does not match an empty segment', async () => {
+		const road = new Road();
+		const router = new Router();
+		router.applyMiddleware(road);
+
+		router.addRoute('GET', '/users/$name', () => Promise.resolve(new Response('route')));
+
+		const response = await road.request('GET', '/users/');
+		expect(response.status).toEqual(404);
+	});
+
+	test('test args from routes whose path did not match are not applied', async () => {
+		const road = new Road();
+		const router = new Router();
+		router.applyMiddleware(road);
+
+		let args: RouterURL['args'];
+		router.addRoute('GET', '/$a/foo', () => Promise.resolve(new Response('foo')));
+		router.addRoute('GET', '/$b/bar', (method, url: RouterURL) => {
+			args = url.args;
+			return Promise.resolve(new Response('bar'));
+		});
+
+		const response = await road.request('GET', '/x/bar');
+		expect(response.body).toEqual('bar');
+		expect(args).toEqual({ b: 'x' });
+	});
+
+	test('test args from routes whose method did not match are not applied', async () => {
+		const road = new Road();
+		const router = new Router();
+		router.applyMiddleware(road);
+
+		let args: RouterURL['args'];
+		router.addRoute('GET', '/$a', () => Promise.resolve(new Response('get')));
+		router.addRoute('POST', '/$b', (method, url: RouterURL) => {
+			args = url.args;
+			return Promise.resolve(new Response('post'));
+		});
+
+		const response = await road.request('POST', '/x');
+		expect(response.body).toEqual('post');
+		expect(args).toEqual({ b: 'x' });
+	});
 });
