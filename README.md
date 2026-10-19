@@ -816,6 +816,8 @@ router.addRoute('GET', '/protected', [
 ]);
 ```
 
+If the last function in the array calls `next()`, the request continues down the road's request chain, just like a route with a single function. Any method or body overrides made inside the array are carried along.
+
 
 ### addRouteFile(filePath: *string*, prefix?: *string*)
 Add an entire file worth of routes.

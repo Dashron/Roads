@@ -604,6 +604,40 @@ describe('Router Tests', () => {
 		});
 	});
 
+	// Route must resolve to a Response, but next can resolve to a string
+	const toResponse = (result: Response | string) => result instanceof Response ? result : new Response(result);
+
+	test.each([
+		['single', (fn: Route<Context>) => fn],
+		['array', (fn: Route<Context>) => [fn]]
+	])('test a %s route that calls next falls through to the next road middleware', async (_name, wrap) => {
+		const road = new Road();
+		const router = new Router();
+		router.applyMiddleware(road);
+		road.use(() => Promise.resolve(new Response('after router')));
+
+		router.addRoute('GET', '/', wrap(async (method, url, body, headers, next) => toResponse(await next())));
+
+		const response = await road.request('GET', '/');
+		expect(response.status).toEqual(200);
+		expect(response.body).toEqual('after router');
+	});
+
+	test('test overrides made inside an array route reach the next road middleware', async () => {
+		const road = new Road();
+		const router = new Router();
+		router.applyMiddleware(road);
+		road.use((method, url, body) => Promise.resolve(new Response(`${method} ${String(body)}`)));
+
+		router.addRoute('POST', '/', [
+			async (method, url, body, headers, next) => toResponse(await next({ method: 'PUT', body: 'changed' })),
+			async (method, url, body, headers, next) => toResponse(await next())
+		]);
+
+		const response = await road.request('POST', '/', 'original');
+		expect(response.body).toEqual('PUT changed');
+	});
+
 	test.each(['', '-1', '1.5', '0x1F', '1e3', 'Infinity', ' 1', 'abc'])(
 		'test numeric template does not match %j', async (segment) => {
 			const road = new Road();

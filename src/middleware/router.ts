@@ -149,7 +149,7 @@ export class Router<RouterContextType extends Context> {
 	 */
 	protected async _middleware (
 		this: Context, routes: RouteDetails[], request_method: string, request_url: string, request_body: unknown,
-		request_headers: IncomingHeaders, next: () => Promise<Response | string>
+		request_headers: IncomingHeaders, next: NextCallback
 	): Promise<Response | string> {
 
 		let response: string | Response | Promise<string | Response> | null = null;
@@ -171,7 +171,7 @@ export class Router<RouterContextType extends Context> {
 					}
 
 					if (route.route instanceof RequestChain) {
-						response = route.route.getChainStart()(
+						response = route.route.getChainStart(next)(
 							this, request_method, parsed_url, request_body, request_headers);
 					} else {
 						response = (route.route).call(this, request_method, parsed_url, request_body, request_headers, next);

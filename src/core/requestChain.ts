@@ -47,8 +47,9 @@ export class RequestChain<fn extends Function> {
 	 *
 	 * The function function returns a Promise that resolves to a Response object or a string.
 	 *
+	 * @param end - Called when the last function in the chain calls next. Without it, that next returns a 404.
 	 */
-	getChainStart () {
+	getChainStart (end?: NextCallback) {
 
 		// Each step is given its own index, so the next callback handed to a function always runs the
 		//		function after it, no matter how many times it is called
@@ -75,6 +76,11 @@ export class RequestChain<fn extends Function> {
 
 					return run(index + 1, context, ...newArgs);
 				});
+			}
+
+			// Hand off to whatever comes after this chain, carrying along any method or body overrides
+			if (end) {
+				return end({ method: args[0] as string, body: args[2] });
 			}
 
 			// If next is called and there is nothing next, we should still return a promise,
