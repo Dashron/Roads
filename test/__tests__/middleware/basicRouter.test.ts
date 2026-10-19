@@ -226,7 +226,7 @@ describe('Router Tests', () => {
 			return Promise.resolve(new Response(''));
 		};
 
-		router.addRoute('/foo', method, fn);
+		router.addRoute(method, '/foo', fn);
 		router['_middleware'].call({}, router['_routes'], method, path, '', {}, () => {
 			next_hit = true;
 			return Promise.resolve(new Response(''));
@@ -239,8 +239,8 @@ describe('Router Tests', () => {
 	/**
 	 *
 	 */
-	test('test middleware function routes to next on a missed http method but matching url', () => {
-		expect.assertions(2);
+	test('test middleware function does not route to next on a missed http method but matching url', async () => {
+		expect.assertions(3);
 		const router = new Router();
 		const path = '/';
 		const method = 'GET';
@@ -251,14 +251,15 @@ describe('Router Tests', () => {
 			return Promise.resolve(new Response(''));
 		};
 
-		router.addRoute(path, 'PUT', fn);
-		router['_middleware'].call({}, router['_routes'], method, path, '', {}, () => {
+		router.addRoute('PUT', path, fn);
+		const response = await router['_middleware'].call({}, router['_routes'], method, path, '', {}, () => {
 			next_hit = true;
 			return Promise.resolve(new Response(''));
 		});
 
 		expect(route_hit).toEqual(false);
-		expect(next_hit).toEqual(true);
+		expect(next_hit).toEqual(false);
+		expect(response).toEqual(new Response('Method Not Allowed', 405));
 	});
 
 	/**
@@ -415,14 +416,14 @@ describe('Router Tests', () => {
 			return Promise.resolve(new Response('true'));
 		};
 
-		router.addRoute(path, 'PUT', fn);
+		router.addRoute(method, '/foo', fn);
 		const route_hit: Promise<Response | string> = router['_middleware'].call(
 			{}, router['_routes'], method, path, '', {}, () => {
 				return Promise.resolve(new Response('next'));
 			}
 		);
 
-		route_hit.then((response: Response | string) => {
+		return route_hit.then((response: Response | string) => {
 			expect(response).toBeInstanceOf(Response);
 			expect((response as Response).body).toEqual('next');
 		});
@@ -545,8 +546,6 @@ describe('Router Tests', () => {
 		const method = 'GET';
 		let route_hit = '';
 		const fn: Route<Context> = async (method, url, body, headers, next) => {
-			// this logged undefined undefined [Function (anonymous)] undefined undefined
-			console.log(method, url, body, headers, next);
 			const result = await next();
 
 			if (result instanceof Response) {
