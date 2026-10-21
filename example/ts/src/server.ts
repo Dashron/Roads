@@ -60,6 +60,13 @@ app.use(expressConnector(road));
 const host = 'localhost';
 const port = 8081;
 
-app.listen(port, host, function () {
+// Express 5 passes startup errors (such as the port already being in use) to this callback instead of throwing them
+app.listen(port, host, function (err?: Error) {
+	if (err) {
+		console.error(`server failed to start at http://${host}:${port}`, err);
+		process.exitCode = 1;
+		return;
+	}
+
 	console.log(`server has started at http://${host}:${port}`);
 });
