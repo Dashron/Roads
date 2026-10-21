@@ -31,4 +31,32 @@ describe('Store Values', () => {
 
 		expect(context.getVal('foo')).toEqual('bar');
 	});
+
+	test.each(['constructor', 'toString', 'hasOwnProperty', '__proto__'])(
+		'test getVal does not return the inherited %s', (field) => {
+			const context: Record<string, any> = {};
+			middleware.call(context, 'a', 'b', 'c', {}, function () { return Promise.resolve(''); });
+
+			expect(context.getVal(field)).toBeUndefined();
+		});
+
+	test('test __proto__ is stored as an ordinary value', () => {
+		const context: Record<string, any> = {};
+		middleware.call(context, 'a', 'b', 'c', {}, function () { return Promise.resolve(''); });
+
+		context.storeVal('__proto__', { polluted: true });
+
+		expect(context.getVal('__proto__')).toEqual({ polluted: true });
+		expect(context.getVal('polluted')).toBeUndefined();
+		expect(Object.keys(context.getAllVals())).toEqual(['__proto__']);
+	});
+
+	test('test getAllVals returns only stored values', () => {
+		const context: Record<string, any> = {};
+		middleware.call(context, 'a', 'b', 'c', {}, function () { return Promise.resolve(''); });
+
+		context.storeVal('page-title', 'Home');
+
+		expect({ ...context.getAllVals() }).toEqual({ 'page-title': 'Home' });
+	});
 });

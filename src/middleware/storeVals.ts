@@ -34,7 +34,8 @@ export interface StoreValsContext extends Context {
  * 	to reduce polluting the context
  */
 export const middleware: Middleware<StoreValsContext> = function (method, path, body, headers, next) {
-	const storedVals: {[key: string]: unknown} = {};
+	// No prototype, so inherited keys like `constructor` are never returned, and `__proto__` is an ordinary key
+	const storedVals: {[key: string]: unknown} = Object.create(null);
 
 	this.storeVal = (field, val) => {
 		storedVals[field] = val;

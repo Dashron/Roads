@@ -960,6 +960,7 @@ road.use(function (method, path, body, headers, next) {
         return response;
     });
 });
+```
 
 ### storeVal(field: *string*, value: *unknown*)
 Stores a value in the context that can be retrieved later in the middleware chain.
@@ -969,7 +970,6 @@ Retrieves a previously stored value from the context.
 
 ### getAllVals()
 Retrieves all stored values as an object.
-```
 
 
 # RoadsPJAX(road: *Road*, containerElement: *HTMLElement*, window: *Window*)
