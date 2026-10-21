@@ -893,6 +893,11 @@ The middleware will automatically return a `last-modified` header equal to the `
 ### shouldReturnNotModifiedResponse(date: string | Date)
 This function returns true if the date provided is less than or equal to the date in the `if-modified-since` header, indicating that a 304 Not Modified response should be returned. False otherwise.
 
+Following [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110#section-13.1.3), this function always returns false when:
+- the request method is not `GET` or `HEAD`
+- the request also has an `if-none-match` header
+- the `if-modified-since` header, or `date`, is not a valid date
+
 If `date` is a string, it should be a value that can be passed to the `Date(string)` constructor. See [If-Modified-Since caching](#if-modified-since-caching) for an example of how to use this function.
 
 ### buildNotModifiedResponse()
