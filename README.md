@@ -1001,9 +1001,17 @@ This function call enables PJAX on the current page.
 pjax.register();
 ```
 
-## PJAX.registerAdditionalElement(element: *HTMLAnchorElement*)
+## PJAX.unregister()
 
-If you would like PJAX to work on links that are not within the container you must call this function. Additionally this function must be called before `register`
+Removes every listener added by `register` and `registerAdditionalElement`, so links, forms and the back and forward buttons go back to normal browser behaviour.
+
+```JavaScript
+pjax.unregister();
+```
+
+## PJAX.registerAdditionalElement(element: *HTMLElement*)
+
+If you would like PJAX to work on links or forms that are not within the container you must call this function. It can be called before or after `register`.
 
 ```HTML
 <div id="container"></div>
@@ -1031,7 +1039,16 @@ e.g.
 
 `<a href="/home" data-roads-pjax="link">Home</a>`
 
-Note: The link must be within the container for this to work. If you want links outside the container to work you should use [registerAdditionalElement](#pjaxregisteradditionalelementelement-htmlanchorelement)
+Note: The link must be within the container for this to work. If you want links outside the container to work you should use [registerAdditionalElement](#pjaxregisteradditionalelementelement-htmlelement)
+
+Clicks anywhere inside the link, such as on an icon or a `<span>`, are handled. The browser handles the click itself, without PJAX, when:
+- Ctrl, Cmd, Shift or Alt is held, or a button other than the main one is used
+- the link has a `target` other than `_self`, or a `download` attribute
+- the link points to another origin
+
+PJAX follows redirects returned by your road (up to five) and puts the final url in the url bar. A redirect to another origin sends the browser there. If the road throws, the browser loads the link normally.
+
+If links are clicked quickly, only the response for the most recent click is rendered.
 
 ## PJAX Form Format
 
@@ -1042,6 +1059,12 @@ Form attributes
 
 Submit button attributes
 - `data-roads-pjax="submit"`
+
+PJAX listens for the form's `submit` event, so the browser's validation (`required` and so on) runs first, and pressing enter in a field works too. Submit buttons without `data-roads-pjax="submit"` submit the form normally. A form with a `target` other than `_self`, or that submits to another origin, is also left to the browser.
+
+- The submit button's `name` and `value` are sent with the form, and its `formmethod` and `formaction` attributes are honoured.
+- `GET` forms send their fields as the query string and put the new url in the url bar. If the road throws, the browser loads that url normally.
+- Other methods send the fields as an `application/x-www-form-urlencoded` body. Redirects are followed as with links, and the url bar only changes if the response redirects. If the road throws the error is logged and the form is not submitted again, so it is never sent twice.
 
 e.g.
 
@@ -1065,6 +1088,8 @@ this.storeVal('page-title', 'Homepage');
 Second you should have your server-side rendering put this value into the `<title>` element of your layout. Check the typescript example for how that could work with the Handlebars templating engine.
 
 Third you need to create your `RoadsPJAX` object and configure it to look for your `page-title` value.
+
+If a route doesn't store a page title, the current title is left alone.
 
 
 ### PJAX Page Title Example
