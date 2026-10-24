@@ -1,22 +1,23 @@
 {
     "compilerOptions": {
         "outDir": "./dist/node",
-        "target": "es2022",
+        "rootDir": "./src",
+        "target": "ES2023",
         "module": "NodeNext",
         "moduleResolution": "NodeNext",
+        "lib": ["es2023", "dom"],
+        "types": ["node"],
         "noImplicitAny": true,
         "strictNullChecks": true,
         "noImplicitThis": true,
         "alwaysStrict": true,
-        "baseUrl": ".",
+        "strictBindCallApply": true,
+        "exactOptionalPropertyTypes": true,
+        "noUncheckedIndexedAccess": true,
         "allowSyntheticDefaultImports": true,
-        "declaration": true,
-        "declarationDir": "./types"
+        "esModuleInterop": true,
+        "skipLibCheck": true
     },
-    "exclude": [
-        "./types",
-        "./example/js"
-    ],
     "include": [
         "./src/**/*.ts"
     ]

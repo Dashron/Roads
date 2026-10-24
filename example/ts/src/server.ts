@@ -6,67 +6,37 @@
  * This file starts up the HTTP roads server
  */
 
-import { Road, Response, CookieMiddleware, CSRFMiddleware, RouterMiddleware, attachCommonMiddleware } from 'roads';
-
 import express from 'express';
-import addLayout from './middleware/addLayout.js';
-import applyBrowserSafeRoutes from './routes/applyBrowserSafeRoutes.js';
-import applyServerOnlyRoutes from './routes/applyServerOnlyRoutes.js';
-import emptyTo404 from './middleware/emptyTo404.js';
+import buildApiRoad from './api/buildApiRoad.js';
+import buildServerRoad from './buildServerRoad.js';
 import { expressConnector } from './middleware/expressConnector.js';
-import { sign, verify } from './csrfSigner.js';
 
-const road = new Road();
+// Browsers resolve localhost to this address too, so http://localhost and http://127.0.0.1 both reach the server
+const host = '127.0.0.1';
+// Set the PORT environment variable to use a different port
+const port = Number(process.env.PORT ?? 8081);
 
-road.use(function (method, url, body, headers, next) {
-	console.log(`${method} ${url}`);
-	return next();
-});
-
-attachCommonMiddleware(road);
-road.use(CookieMiddleware.serverMiddleware);
-// This must come after the cookie middleware and the parse body middleware (which is part of the common middleware).
-//		Every POST, PUT, PATCH and DELETE request below this point needs a valid CSRF token
-road.use(CSRFMiddleware.build({
-	sign,
-	verify,
-	// This example runs over plain http on localhost, so it can't use a Secure cookie.
-	//		Never set this in the real world. Without it the cookie is Secure and locked to your exact host
-	insecureCookie: true
-}));
-// The browser safe routes can also be rendered in the browser, which reads the token from the cookie (see client.ts).
-//		Creating the token on every page load makes sure the cookie is there before the browser needs it
-road.use<CSRFMiddleware.CSRFContext>(function (method, url, body, headers, next) {
-	if (method === 'GET') {
-		this.getCSRFToken();
-	}
-
-	return next();
-});
-road.use(addLayout);
-
-const router = new RouterMiddleware.Router(road);
-applyBrowserSafeRoutes(router);
-applyServerOnlyRoutes(router);
-road.use(emptyTo404);
+// Pages from both of these origins may call the API from the browser. They're different origins, so opening
+//		the example at one and calling the API at the other shows CORS in action (see /client-requests)
+const apiRoad = buildApiRoad([`http://localhost:${port}`, `http://127.0.0.1:${port}`]);
+const road = buildServerRoad(apiRoad);
 
 const app = express();
 
 app.set('etag', false);
 // Roads expects the raw body as a string, and ParseBodyMiddleware handles JSON and forms
 app.use(express.text({ type: '*/*' }));
+// Express removes the /api prefix from req.url, so /api/posts reaches the API road as /posts
+app.use('/api', expressConnector(apiRoad));
 app.use(expressConnector(road));
 
-const host = 'localhost';
-const port = 8081;
-
-// Express 5 passes startup errors (such as the port already being in use) to this callback instead of throwing them
 app.listen(port, host, function (err?: Error) {
+	// Express 5 passes startup errors (such as the port already being in use) to this callback instead of throwing them
 	if (err) {
 		console.error(`server failed to start at http://${host}:${port}`, err);
 		process.exitCode = 1;
 		return;
 	}
 
-	console.log(`server has started at http://${host}:${port}`);
+	console.log(`server has started at http://localhost:${port} and http://${host}:${port}`);
 });

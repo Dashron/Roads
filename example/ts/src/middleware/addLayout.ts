@@ -6,43 +6,53 @@
  * This file is an example of how to apply HTML layouts via a middleware system
  */
 
-import { Road, RoadModule } from 'roads';
-import { Response } from 'roads';
-const TITLE_KEY = 'page-title';
-import { StoreValsMiddleware } from 'roads';
+import { Response, RoadModule, StoreValsMiddleware } from 'roads';
+import { IGNORE_LAYOUT_KEY, SiteContext, TITLE_KEY } from '../shared.js';
 
 /**
-  * Example function to wrap an HTML body in the required surrounding HTML tags (commonly called a layout)
-  *
-  * @param {string} body - The custom HTML to be rendered within the layout
-  * @param {string} title - The page title
-  * @param {boolean} ignore_layout - If true, the layout is not used, and we return the body as is
-  */
-function wrapLayout(body: string | Buffer, vals: {
-	[TITLE_KEY]?: string,
-	ignoreLayout?: boolean
-}) {
-
-	if (vals.ignoreLayout) {
-		return body;
-	}
-
+ * Example function to wrap an HTML body in the required surrounding HTML tags (commonly called a layout)
+ *
+ * @param {string} body - The custom HTML to be rendered within the layout
+ * @param {string} title - The page title
+ * @param {string} siteName - The site name, from ApplyToContextMiddleware
+ */
+function wrapLayout(body: string | Buffer, title: string, siteName: string) {
+	// In the real world the layout should be created from a template engine, which also escapes the title.
+	//		The script tag is outside of the container, because RoadsPJAX replaces everything inside the container
 	return `<!DOCTYPE html>
 <html>
-<head><title>${vals[TITLE_KEY]}</title></head>
+<head><title>${title}</title></head>
 <body>
-	<a id="home" data-roads-pjax="link" href="/">Home</a>
-	<div id="container">${body}
-		<script src="/client.js"></script>
-    </div>
+	<nav>
+		<strong>${siteName}</strong>
+		<a id="home" data-roads-pjax="link" href="/">Home</a>
+	</nav>
+	<div id="container">${body}</div>
+	<script src="/client.js"></script>
 </body>
 </html>`;
 }
 
 /**
- * This middleware wraps the response in a standard HTML layout. It looks for three fields in the request context.
- * - _page_title - The title of the page
- * - ignore_layout - If true, this middleware will not apply the layout (useful for JSON responses)
+ * Returns true if the response should be sent as is, without the layout
+ *
+ * @param {Response} response - The response from the rest of the request chain
+ * @param {boolean} ignoreLayout - True if the route asked to skip the layout
+ */
+function skipLayout(response: Response, ignoreLayout: boolean): boolean {
+	const contentType = response.headers['content-type'];
+
+	return ignoreLayout ||
+		// Redirects and 304 Not Modified responses must not have a body
+		(response.status >= 300 && response.status < 400) ||
+		// Only HTML gets the HTML layout. Responses without a content type are assumed to be HTML
+		(typeof contentType === 'string' && !contentType.startsWith('text/html'));
+}
+
+/**
+ * This middleware wraps the response in a standard HTML layout. It reads two values from StoreValsMiddleware
+ * - TITLE_KEY - The title of the page
+ * - IGNORE_LAYOUT_KEY - If true, the layout is skipped. Redirects, 304s and non-HTML responses always skip it
  *
  * @param {string} method - HTTP request method
  * @param {string} url - HTTP request url
@@ -50,22 +60,25 @@ function wrapLayout(body: string | Buffer, vals: {
  * @param {object} headers - HTTP request headers
  * @param {function} next - When called, this function will execute the next step in the roads method chain
  */
-const addLayoutMiddleware: RoadModule.Middleware<StoreValsMiddleware.StoreValsContext> = function addLayoutMiddleware (method, url, body, headers, next) {
-	return next()
-		.then((response) => {
-			if (!(response instanceof Response)) {
-				response = new Response(response);
-			}
+const addLayoutMiddleware: RoadModule.Middleware<StoreValsMiddleware.StoreValsContext & SiteContext> =
+	function addLayoutMiddleware (method, url, body, headers, next) {
+		return next()
+			.then((response) => {
+				if (!(response instanceof Response)) {
+					response = new Response(response);
+				}
 
-			let layoutData = {};
+				if (skipLayout(response, this.getVal(IGNORE_LAYOUT_KEY) === true)) {
+					return response;
+				}
 
-			if (this.getAllVals) {
-				layoutData = this.getAllVals();
-			}
+				// RoadsPJAX sets document.title from the same value when it renders a page in the browser
+				const pageTitle = this.getVal(TITLE_KEY);
+				const title = typeof pageTitle === 'string' ? pageTitle : this.siteName;
 
-			response.body = wrapLayout(response.body, layoutData);
-			return response;
-		});
-};
+				response.body = wrapLayout(response.body, title, this.siteName);
+				return response;
+			});
+	};
 
 export default addLayoutMiddleware;

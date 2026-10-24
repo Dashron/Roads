@@ -1,6 +1,6 @@
 
 import Client from '../../../src/client/request.js';
-import createServer, { port } from '../../resources/mockServer.js';
+import createServer from '../../resources/mockServer.js';
 import { Server as HttpServer } from 'http';
 import { Server as HttpsServer } from 'https';
 import Response from '../../../src/core/response.js';
@@ -8,15 +8,17 @@ import Response from '../../../src/core/response.js';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 describe('request', () => {
-	let server: HttpServer | HttpsServer;
+	let server: HttpServer | HttpsServer | undefined;
+	let port: number;
 
 	/**
      * Setup
      */
 	beforeAll(() => {
 		return createServer()
-			.then((newServer: HttpServer | HttpsServer) => {
-				server = newServer;
+			.then((created) => {
+				server = created.server;
+				port = created.port;
 			});
 	});
 
@@ -24,7 +26,7 @@ describe('request', () => {
      * Shutdown
      */
 	afterAll(() => {
-		return server.close();
+		return server?.close();
 	});
 
 	/**
@@ -146,11 +148,29 @@ describe('request', () => {
 		'//evil.example/x',
 		'http://evil.example/x',
 		'\\\\evil.example/x',
-		`https://127.0.0.1:${port}/`,
 	])('Request with path %s that changes the origin is rejected', async (path) => {
 		const client = new Client(false, '127.0.0.1', port);
 
 		await expect(client.request('GET', path)).rejects.toThrow('must not change the origin');
+	});
+
+	test('Request bodies are not shared between requests', async () => {
+		const client = new Client(false, '127.0.0.1', port);
+		const bodySeenByServer = async (method: string, body?: string) => {
+			const response = await client.request(method, '/', body);
+			return JSON.parse(response.body as string).body;
+		};
+
+		expect(await bodySeenByServer('POST', 'first')).toEqual('first');
+		expect(await bodySeenByServer('POST', 'second')).toEqual('second');
+		expect(await bodySeenByServer('GET')).toEqual('');
+	});
+
+	// Separate from the cases above, because the port isn't known until the mock server starts
+	test('Request with a path on the same host and port but a different scheme is rejected', async () => {
+		const client = new Client(false, '127.0.0.1', port);
+
+		await expect(client.request('GET', `https://127.0.0.1:${port}/`)).rejects.toThrow('must not change the origin');
 	});
 
 	test('Request with path missing the leading slash stays on the configured host', async () => {

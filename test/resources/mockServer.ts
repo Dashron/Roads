@@ -1,22 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as http from 'http';
 import {Server} from 'http';
+import { AddressInfo } from 'net';
 
-export const port = 8081;
-
-// creates an http server specifically for testing this request library
-export default function createServer(): Promise<Server> {
+// creates an http server specifically for testing this request library. It listens on a port chosen
+//	by the OS, so it never collides with anything else running on the machine.
+export default function createServer(): Promise<{ server: Server, port: number }> {
 
 	return new Promise((resolve, reject) => {
 		const server = http.createServer();
 
-		let body: string | undefined = '';
-		let bodyFound = false;
-
 		server.on('request', (request, response) => {
+			// Each request collects its own body
+			let body = '';
+
 			// Get all the streaming input data from the request
 			request.on('readable', () => {
-				bodyFound = true;
 				let chunk;
 
 				while (null !== (chunk = request.read())) {
@@ -26,10 +25,6 @@ export default function createServer(): Promise<Server> {
 
 			// When the request stops sending data, wrap it all up and find the proper API response
 			request.on('end', () => {
-				if (!bodyFound) {
-					body = undefined;
-				}
-
 				const routerResponse = router(request.method as string, request.url as string)(body, request.headers);
 				response.writeHead(routerResponse.status, routerResponse.headers ? routerResponse.headers : {});
 
@@ -41,14 +36,15 @@ export default function createServer(): Promise<Server> {
 
 			});
 
-			// Handle any errors
-			request.on('error', (err: Error) => {
-				throw err;
+			// Fail the request instead of throwing, which would crash the test run
+			request.on('error', () => {
+				response.writeHead(500);
+				response.end();
 			});
 		});
 
-		server.listen(port, () => {
-			resolve(server);
+		server.listen(0, '127.0.0.1', () => {
+			resolve({ server, port: (server.address() as AddressInfo).port });
 		});
 
 		server.on('error', (err) => {
@@ -81,7 +77,7 @@ function buildResponse(status: number, headers?: Record<string, any>, body?: str
  * List of all test routes
  */
 const routes: Record<string, Record<string, {
-    (body: string | undefined, headers: Record<string, any>): MockResponse
+    (body: string, headers: Record<string, any>): MockResponse
 }>> = {
 	'/': {
 		GET: (body, headers) => {

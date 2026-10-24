@@ -3,14 +3,15 @@
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
- * This file is an example of how to apply HTML layouts via a middleware system
+ * This file is an example of a middleware that acts on the response of the rest of the request chain
  */
 
 import { Response, RoadModule } from 'roads';
 
 
 /**
- * This middleware translates missing responses into 404s
+ * This middleware translates missing responses into 404s. Add it after your router, so it only runs
+ * 	when no route matched
  *
  * @param {string} method - HTTP request method
  * @param {string} url - HTTP request url
