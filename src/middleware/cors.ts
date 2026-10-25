@@ -40,18 +40,19 @@ function isValidOrigin(origin: string): boolean {
  * Sets up everything you need for your server to properly respond to CORS requests.
  *
  * @param {object} [options] - A collection of different cors settings.
- * @param {object} [options.validOrigins] - An array of origin urls that can send requests to this API, or the
- *                                        string '*' to allow every origin. '*' can not be combined with other
+ * @param {'*' | Array<string>} [options.validOrigins] - An array of origin urls that can send requests to this API,
+ *                                        or the string '*' to allow every origin. '*' can not be combined with other
  *                                        origins or with supportsCredentials: true.
- * @param {object} [options.supportsCredentials] - True if every valid origin can send cookies to this endpoint.
- *                                               To limit cookies to specific origins, provide an array of
- *                                               origin urls or a function that receives the origin and returns
- *                                               a boolean.
- * @param {object} [options.responseHeaders] - An array of valid HTTP response headers
- * @param {object} [options.requestHeaders] - An array of valid HTTP request headers
- * @param {object} [options.validMethods] - An array of valid HTTP methods
- * @param {object} [options.cacheMaxAge] - The maximum age to cache the cors information
- * @param {object} [options.returnCorsErrors] - Return specific CORS error responses instead of calling next()
+ * @param {boolean | Array<string> | function} [options.supportsCredentials] - True if every valid origin can send
+ *                                               cookies to this endpoint. To limit cookies to specific origins,
+ *                                               provide an array of origin urls or a function that receives the
+ *                                               origin and returns a boolean.
+ * @param {Array<string>} [options.allowedResponseHeaders] - Response headers the browser can expose to the page
+ * @param {Array<string>} [options.allowedRequestHeaders] - Request headers the browser can send
+ * @param {Array<string>} [options.allowedMethods] - HTTP methods the browser can send
+ * @param {number} [options.cacheMaxAge] - How long, in seconds, the browser can cache a preflight response
+ * @param {object} [options.logger] - An object with a log(key, data) function, called for every CORS error
+ * @param {boolean} [options.returnCorsErrors] - Return specific CORS error responses instead of calling next()
  *                                            (default: true)
  *
  * @throws {Error} If '*' is combined with other origins or with supportsCredentials: true, or if the
@@ -65,7 +66,7 @@ export function build (options: {
 		allowedRequestHeaders?: Array<string>,
 		allowedMethods?: Array<string>,
 		cacheMaxAge?: number,
-		logger?: {log: (ley: string, data?: unknown) => void},
+		logger?: {log: (key: string, data?: unknown) => void},
 		returnCorsErrors?: boolean
 	}): Middleware<Context> {
 
@@ -75,7 +76,7 @@ export function build (options: {
 	const allowedResponseHeaders = options.allowedResponseHeaders || [];
 	const allowedRequestHeaders = options.allowedRequestHeaders || [];
 	const allowedMethods = options.allowedMethods || [];
-	const cacheMaxAge = options.cacheMaxAge || null;
+	const cacheMaxAge = options.cacheMaxAge ?? null;
 	const logger = options.logger || { log: () => { /* do nothing */ } };
 	const returnCorsErrors = options.returnCorsErrors !== false;
 
@@ -259,15 +260,8 @@ export function build (options: {
 			 *	Note: If parsing failed do not set any additional headers and terminate this set of steps. The request
 			 *		is outside the scope of this specification.
 			*/
-			let headerNames: string[];
 			const acRequestHeaders = getSingleHeader(headers, 'access-control-request-headers');
-
-			try {
-				headerNames = acRequestHeaders ? acRequestHeaders.split(',') : [];
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			} catch (e) {
-				return handleCorsError(next, 'invalid request headers format', acRequestHeaders, 400);
-			}
+			const headerNames = acRequestHeaders ? acRequestHeaders.split(',') : [];
 
 			/*
 			preflight
@@ -364,7 +358,14 @@ export function build (options: {
 		}
 
 		if (preflight) {
-			return Promise.resolve(new Response('', 200, corsResponseHeaders));
+			/*
+			 * Whether a preflight succeeds depends on the requested method and headers, so caches need to know
+			 */
+			const preflightVary = 'Access-Control-Request-Method, Access-Control-Request-Headers';
+			corsResponseHeaders['vary'] = corsResponseHeaders['vary'] ?
+				`${corsResponseHeaders['vary']}, ${preflightVary}` : preflightVary;
+
+			return Promise.resolve(new Response('', 204, corsResponseHeaders));
 		}
 
 		return next()

@@ -91,7 +91,7 @@ describe('CORS Comprehensive Tests', () => {
 
 		expect(mockNext).not.toHaveBeenCalled(); // Should not call next for valid preflight
 		expect(result).toBeInstanceOf(Response);
-		expect(result.status).toBe(200);
+		expect(result.status).toBe(204);
 		expect(result.body).toBe('');
 		expect(result.headers['access-control-allow-origin']).toBe('*');
 		expect(result.headers['access-control-allow-methods']).toBe('GET, POST, PUT');
@@ -185,6 +185,24 @@ describe('CORS Comprehensive Tests', () => {
 		expect(result.headers['access-control-max-age']).toBe('3600');
 	});
 
+	test('adds a cache max age of 0 for preflight', async () => {
+		const middleware = build({
+			validOrigins: ['*'],
+			allowedMethods: ['GET'],
+			cacheMaxAge: 0
+		});
+		const mockNext = vi.fn();
+
+		const headers = {
+			origin: 'https://example.com',
+			'access-control-request-method': 'GET'
+		};
+
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
+
+		expect(result.headers['access-control-max-age']).toBe('0');
+	});
+
 	test('does not add cache max age when not specified', async () => {
 		const middleware = build({
 			validOrigins: ['*'],
@@ -263,7 +281,7 @@ describe('CORS Comprehensive Tests', () => {
 
 		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
-		expect(result.status).toBe(200);
+		expect(result.status).toBe(204);
 		expect(result.headers['access-control-allow-headers']).toBe('Content-Type');
 	});
 
@@ -304,7 +322,7 @@ describe('CORS Comprehensive Tests', () => {
 		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
 		expect(mockNext).not.toHaveBeenCalled();
-		expect(result.status).toBe(200);
+		expect(result.status).toBe(204);
 		expect(result.headers['access-control-allow-headers']).toBe('Content-Type, Authorization');
 	});
 
@@ -464,7 +482,7 @@ describe('CORS Comprehensive Tests', () => {
 		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
 		expect(mockNext).not.toHaveBeenCalled();
-		expect(result.status).toBe(200);
+		expect(result.status).toBe(204);
 		expect(result.headers['access-control-allow-origin']).toBe('null');
 		expect(result.headers['access-control-allow-methods']).toBe('POST');
 	});
@@ -643,6 +661,39 @@ describe('CORS wildcard origin with credentials', () => {
 		expect(result.headers['access-control-allow-origin']).toBe('*');
 		expect(result.headers['access-control-allow-credentials']).toBeUndefined();
 	});
+
+	test('wildcard preflight varies on the requested method and headers', async () => {
+		const middleware = build({
+			validOrigins: '*',
+			allowedMethods: ['PUT']
+		});
+		const mockNext = vi.fn();
+
+		const headers = {
+			origin: 'https://any-domain.com',
+			'access-control-request-method': 'PUT'
+		};
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
+
+		expect(varyValues(result)).toEqual(['access-control-request-method', 'access-control-request-headers']);
+	});
+
+	test('allowlist preflight varies on the origin and the requested method and headers', async () => {
+		const middleware = build({
+			validOrigins: ['https://example.com'],
+			allowedMethods: ['PUT']
+		});
+		const mockNext = vi.fn();
+
+		const headers = {
+			origin: 'https://example.com',
+			'access-control-request-method': 'PUT'
+		};
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
+
+		expect(result.status).toBe(204);
+		expect(varyValues(result)).toEqual(['origin', 'access-control-request-method', 'access-control-request-headers']);
+	});
 });
 
 describe('CORS preserves an existing Vary header', () => {
@@ -784,10 +835,10 @@ describe('CORS credentials for specific origins', () => {
 		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
 		expect(mockNext).not.toHaveBeenCalled();
-		expect(result.status).toBe(200);
+		expect(result.status).toBe(204);
 		expect(result.headers['access-control-allow-origin']).toBe(trusted);
 		expect(result.headers['access-control-allow-credentials']).toBe('true');
-		expect(varyValues(result)).toEqual(['origin']);
+		expect(varyValues(result)).toEqual(['origin', 'access-control-request-method', 'access-control-request-headers']);
 	});
 
 	test('wildcard with a credentials list - other origins are allowed without credentials', async () => {
@@ -821,10 +872,10 @@ describe('CORS credentials for specific origins', () => {
 		};
 		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
-		expect(result.status).toBe(200);
+		expect(result.status).toBe(204);
 		expect(result.headers['access-control-allow-origin']).toBe(other);
 		expect(result.headers['access-control-allow-credentials']).toBeUndefined();
-		expect(varyValues(result)).toEqual(['origin']);
+		expect(varyValues(result)).toEqual(['origin', 'access-control-request-method', 'access-control-request-headers']);
 	});
 
 	test('wildcard with a credentials function - the function decides per origin', async () => {
