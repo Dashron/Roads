@@ -16,39 +16,28 @@ pjax.register();
 // The home link is outside of the container, so PJAX needs to be told about it
 pjax.registerAdditionalElement(document.getElementById('home') as HTMLAnchorElement);
 
-const port = Number(window.location.port);
-// The Request class sends real HTTP requests. Its paths can't change the host it was created with
-const sameOrigin = new Request(window.location.protocol === 'https:', window.location.hostname, port);
-// localhost and 127.0.0.1 are different origins, so whichever one this page isn't on is cross origin
-const otherOrigin = new Request(false, window.location.hostname === 'localhost' ? '127.0.0.1' : 'localhost', port);
+// The Request class sends real HTTP requests. Its paths can't change the host it was created with.
+//		localhost and 127.0.0.1 are different origins, so whichever one this page isn't on is cross origin
+const otherOrigin = new Request(false, window.location.hostname === 'localhost' ? '127.0.0.1' : 'localhost',
+	Number(window.location.port));
 
 /**
- * Handles the buttons on /client-requests. We listen on the document because PJAX
- * 	replaces the page content, which would remove listeners added to the buttons themselves
+ * Handles the button on /client-requests. We listen on the document because PJAX
+ * 	replaces the page content, which would remove listeners added to the button itself
  */
 document.addEventListener('click', (event) => {
-	const button = event.target instanceof Element ? event.target.closest('[data-example-action]') : null;
+	const button = event.target instanceof Element ? event.target.closest('[data-example-action="create-post"]') : null;
 	const output = document.getElementById('request-output');
 
-	if (!(button instanceof HTMLElement) || !output) {
+	if (!button || !output) {
 		return;
 	}
 
-	let request;
-
-	if (button.dataset['exampleAction'] === 'fetch-json') {
-		request = sameOrigin.request('GET', '/server-only-json');
-	} else if (button.dataset['exampleAction'] === 'create-post') {
-		// application/json isn't a "simple" content type, so the browser asks the API's CORS middleware
-		//		for permission with an OPTIONS request before it sends this
-		request = otherOrigin.request('POST', '/api/posts', JSON.stringify({ title: 'Made with CORS' }), {
-			'content-type': 'application/json'
-		});
-	} else {
-		return;
-	}
-
-	request
+	// application/json isn't a "simple" content type, so the browser asks the API's CORS middleware
+	//		for permission with an OPTIONS request before it sends this
+	otherOrigin.request('POST', '/api/posts', JSON.stringify({ title: 'Made with CORS' }), {
+		'content-type': 'application/json'
+	})
 		.then((response) => {
 			// The Request class always resolves with a string body, so JSON needs to be parsed
 			const body: unknown = response.headers['content-type']?.includes('application/json') ?

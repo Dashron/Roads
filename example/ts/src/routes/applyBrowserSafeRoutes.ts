@@ -93,15 +93,17 @@ export default function applyBrowserSafeRoutes(
 		 <p>Try <a href="/tags/typescript" data-roads-pjax="link">another tag</a>.</p>`);
 	});
 
-	// The buttons on this page are handled in client.ts
+	// The button on this page is handled in client.ts
 	router.addRoute('GET', '/client-requests', async function () {
 		this.storeVal(TITLE_KEY, 'Client Requests');
 
-		return new Response(`<p>These buttons use the roads <code>Request</code> class, a small wrapper around fetch.</p>
-		 <p><button type="button" data-example-action="fetch-json">GET /server-only-json</button></p>
+		// /server-only-json isn't in the browser road, so the link doesn't have data-roads-pjax
+		return new Response(`<p><a href="/server-only-json">/server-only-json</a> is a server only route that
+		 responds with JSON instead of a page.</p>
 		 <p>The API road is served at /api, and only allows requests from the origins listed in server.ts.
 		 Open this page at <code>127.0.0.1</code> instead of <code>localhost</code> (or the other way around)
-		 and this button makes a cross origin request. Watch the network tab for the OPTIONS preflight request.</p>
+		 and this button uses the roads <code>Request</code> class to make a cross origin request.
+		 Watch the network tab for the OPTIONS preflight request. This needs JavaScript.</p>
 		 <p><button type="button" data-example-action="create-post">POST JSON to the API on the other host</button></p>
 		 <pre id="request-output"></pre>`);
 	});
