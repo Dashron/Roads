@@ -26,9 +26,15 @@ export interface ParseBodyContext extends Context {
 }
 
 /**
+ * Thrown when the content-type header is not a valid media type
+ */
+class InvalidMediaTypeError extends Error {}
+
+/**
  * Translate the request body into a usable value.
  *
- * If the content type is application/json this will attempt to parse that json
+ * If the content type is application/json, or any +json type (e.g. application/vnd.api+json), this will
+ * 	attempt to parse that json
  * If application/x-www-form-urlencoded this will attempt to parse it as a query format
  * Otherwise this will return a string
  *
@@ -41,10 +47,10 @@ function parseRequestBody (body: string | undefined, contentType?: string): unkn
 		const parsedContentType = contentTypeModule.parse(contentType);
 		// content-type v3 no longer throws on invalid media types, so validate explicitly
 		if (!contentTypeModule.isTypeValid(parsedContentType.type)) {
-			throw new Error('invalid media type');
+			throw new InvalidMediaTypeError('invalid media type');
 		}
 
-		if (parsedContentType.type === 'application/json') {
+		if (parsedContentType.type === 'application/json' || parsedContentType.type.endsWith('+json')) {
 			// parse json
 			return JSON.parse(body);
 		} else if (parsedContentType.type === 'application/x-www-form-urlencoded') {
@@ -69,11 +75,10 @@ export const middleware: Middleware<ParseBodyContext, string | undefined> = func
 	try {
 		parsedBody = parseRequestBody(body, headers ? getSingleHeader(headers, 'content-type') : undefined);
 	} catch (e) {
-		if (e instanceof Error && e.message === 'invalid media type') {
+		if (e instanceof InvalidMediaTypeError) {
 			return new Response('Invalid content-type header', 400);
 		}
 
-		console.error(e);
 		return new Response('Invalid request body', 400);
 	}
 	return next({ body: parsedBody });

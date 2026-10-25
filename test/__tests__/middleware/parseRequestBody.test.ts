@@ -5,7 +5,7 @@ import { NextOverrides } from '../../../src/core/requestChain.js';
 import { Road } from '../../../src/index.js';
 import Response from '../../../src/core/response.js';
 
-import { describe, expect, test, assert } from 'vitest';
+import { describe, expect, test, assert, vi } from 'vitest';
 
 /**
  * Calls the middleware directly and returns what it sent to next, along with the context and response.
@@ -153,6 +153,29 @@ describe('Parse Request Body tests', () => {
 			headers: {},
 			body: 'Invalid content-type header',
 		});
+	});
+
+	test('test +json content type is parsed as json', () => {
+		expect.assertions(1);
+
+		const { overrides } = callMiddleware('{"hello": "there"}', {'content-type': 'application/vnd.api+json'});
+
+		expect(overrides).toEqual({ body: {hello: 'there'} });
+	});
+
+	test('test invalid json body is not logged', () => {
+		expect.assertions(2);
+		const consoleError = vi.spyOn(console, 'error').mockImplementation(() => { /* silence */ });
+
+		const { response } = callMiddleware('{hello ', {'content-type': 'application/json'});
+
+		expect(consoleError).not.toHaveBeenCalled();
+		expect(response).toEqual({
+			status: 400,
+			headers: {},
+			body: 'Invalid request body',
+		});
+		consoleError.mockRestore();
 	});
 
 	test('test form-encoded body parsing', () => {
