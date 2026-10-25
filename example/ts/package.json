@@ -12,7 +12,6 @@
     "esbuild": "0.24.2"
   },
   "dependencies": {
-    "brfs": "2.0.2",
     "express": "^5.1.0",
     "roads": "file:../../",
     "typescript": "^5.7.3"

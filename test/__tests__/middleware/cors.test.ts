@@ -330,20 +330,23 @@ describe('CORS Comprehensive Tests', () => {
 		expect(result.headers['access-control-allow-headers']).toBeUndefined();
 	});
 
-	test('optimizes simple GET request - skips full validation', async () => {
+	// allowedMethods and allowedRequestHeaders are only checked on preflight requests. Browsers enforce them by
+	//	not sending the actual request when the preflight fails, so actual requests always get CORS headers.
+	test.each([
+		['GET', { accept: 'text/html' }],
+		['POST', { 'content-type': 'application/x-www-form-urlencoded' }],
+		['PUT', { accept: 'text/html' }]
+	])('a %s request gets CORS headers even when its method is not in allowedMethods', async (method, extraHeaders) => {
 		const middleware = build({
 			validOrigins: ['https://example.com'],
-			allowedMethods: ['POST', 'PUT'], // Intentionally don't include GET
-			allowedRequestHeaders: ['x-custom-header'], // Intentionally restrictive
+			allowedMethods: ['PATCH'],
+			allowedRequestHeaders: ['x-other-header'],
 			allowedResponseHeaders: ['x-exposed']
 		});
 		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
 
-		const headers = {
-			origin: 'https://example.com',
-			accept: 'text/html' // Safe header
-		};
-		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+		const headers = { origin: 'https://example.com', ...extraHeaders };
+		const result = await ensureResponse(middleware.call({}, method, '/', '', headers, mockNext));
 
 		expect(mockNext).toHaveBeenCalled();
 		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
@@ -351,59 +354,20 @@ describe('CORS Comprehensive Tests', () => {
 		expect(result.headers['vary']).toBe('Origin');
 	});
 
-	test('optimizes simple POST request with form data - skips full validation', async () => {
-		const middleware = build({
-			validOrigins: ['https://example.com'],
-			allowedMethods: ['PUT'], // Intentionally don't include POST
-			allowedRequestHeaders: ['x-custom-header'] // Intentionally restrictive
-		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
-
-		const headers = {
-			origin: 'https://example.com',
-			'content-type': 'application/x-www-form-urlencoded'
-		};
-		const result = await ensureResponse(middleware.call({}, 'POST', '/', '', headers, mockNext));
-
-		expect(mockNext).toHaveBeenCalled();
-		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
-	});
-
-	test('does not optimize non-simple request with custom headers', async () => {
+	test('a request gets CORS headers even when it sends a header not in allowedRequestHeaders', async () => {
 		const middleware = build({
 			validOrigins: ['https://example.com'],
 			allowedMethods: ['GET'],
-			allowedRequestHeaders: ['x-custom-header']
+			allowedRequestHeaders: ['x-other-header']
 		});
 		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
 
 		const headers = {
 			origin: 'https://example.com',
-			'x-custom-header': 'test' // Non-simple header
+			'x-custom-header': 'test'
 		};
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
 
-		// Should go through full validation, which would allow this since it's in allowedRequestHeaders
-		expect(mockNext).toHaveBeenCalled();
-		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
-	});
-
-	test('does not optimize PUT request - uses full validation', async () => {
-		const middleware = build({
-			validOrigins: ['https://example.com'],
-			allowedMethods: ['GET'], // Don't allow PUT
-			allowedRequestHeaders: []
-		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
-
-		const headers = {
-			origin: 'https://example.com',
-			accept: 'text/html'
-		};
-		const result = await ensureResponse(middleware.call({}, 'PUT', '/', '', headers, mockNext));
-
-		// PUT is not a simple method, so it goes through full validation but still gets CORS headers
-		// since it's not a preflight request - actual method blocking happens at the server level
 		expect(mockNext).toHaveBeenCalled();
 		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
 	});
@@ -425,7 +389,7 @@ describe('CORS Comprehensive Tests', () => {
 		expect(result.headers['access-control-allow-origin']).toBeUndefined();
 	});
 
-	test('handles middleware returning string instead of Response - simple request', async () => {
+	test.each(['GET', 'POST'])('handles middleware returning string instead of Response - %s request', async (method) => {
 		const middleware = build({
 			validOrigins: ['https://example.com']
 		});
@@ -433,25 +397,7 @@ describe('CORS Comprehensive Tests', () => {
 		const mockNext = vi.fn().mockResolvedValue('Hello World');
 
 		const headers = { origin: 'https://example.com' };
-		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
-
-		expect(mockNext).toHaveBeenCalled();
-		expect(result).toBeInstanceOf(Response);
-		expect(result.body).toBe('Hello World');
-		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
-	});
-
-	test('handles middleware returning string instead of Response - normal flow', async () => {
-		const middleware = build({
-			validOrigins: ['https://example.com'],
-			allowedMethods: ['GET', 'POST'],
-			allowedRequestHeaders: ['content-type']
-		});
-		// Mock next() to return a string instead of a Response
-		const mockNext = vi.fn().mockResolvedValue('Hello World');
-
-		const headers = { origin: 'https://example.com' };
-		const result = await ensureResponse(middleware.call({}, 'POST', '/', '', headers, mockNext));
+		const result = await ensureResponse(middleware.call({}, method, '/', '', headers, mockNext));
 
 		expect(mockNext).toHaveBeenCalled();
 		expect(result).toBeInstanceOf(Response);
@@ -666,28 +612,14 @@ describe('CORS wildcard origin with credentials', () => {
 		})).not.toThrow();
 	});
 
-	test('wildcard without credentials sends a literal * - simple request', async () => {
+	test.each(['GET', 'PUT'])('wildcard without credentials sends a literal * - %s request', async (method) => {
 		const middleware = build({
 			validOrigins: ['*']
 		});
 		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
 
 		const headers = { origin: 'https://any-domain.com' };
-		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
-
-		expect(mockNext).toHaveBeenCalled();
-		expect(result.headers['access-control-allow-origin']).toBe('*');
-		expect(result.headers['access-control-allow-credentials']).toBeUndefined();
-	});
-
-	test('wildcard without credentials sends a literal * - non-simple request', async () => {
-		const middleware = build({
-			validOrigins: ['*']
-		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
-
-		const headers = { origin: 'https://any-domain.com' };
-		const result = await ensureResponse(middleware.call({}, 'PUT', '/', '', headers, mockNext));
+		const result = await ensureResponse(middleware.call({}, method, '/', '', headers, mockNext));
 
 		expect(mockNext).toHaveBeenCalled();
 		expect(result.headers['access-control-allow-origin']).toBe('*');
@@ -714,56 +646,30 @@ describe('CORS wildcard origin with credentials', () => {
 });
 
 describe('CORS preserves an existing Vary header', () => {
-	test('appends Origin to an existing vary header - simple request', async () => {
+	test.each(['GET', 'PUT'])('appends Origin to an existing vary header - %s request', async (method) => {
 		const middleware = build({
 			validOrigins: ['https://example.com']
 		});
 		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, { vary: 'Accept-Encoding' }));
 
 		const headers = { origin: 'https://example.com' };
-		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+		const result = await ensureResponse(middleware.call({}, method, '/', '', headers, mockNext));
 
 		expect(varyValues(result)).toEqual(expect.arrayContaining(['accept-encoding', 'origin']));
 		expect(varyKeys(result)).toHaveLength(1);
 	});
 
-	test('appends Origin to an existing vary header - non-simple request', async () => {
-		const middleware = build({
-			validOrigins: ['https://example.com']
-		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, { vary: 'Accept-Encoding' }));
-
-		const headers = { origin: 'https://example.com' };
-		const result = await ensureResponse(middleware.call({}, 'PUT', '/', '', headers, mockNext));
-
-		expect(varyValues(result)).toEqual(expect.arrayContaining(['accept-encoding', 'origin']));
-		expect(varyKeys(result)).toHaveLength(1);
-	});
-
-	test('appends Origin to an existing Vary header with different casing - simple request', async () => {
+	test.each(['GET', 'PUT'])('appends Origin to a differently cased Vary header - %s request', async (method) => {
 		const middleware = build({
 			validOrigins: ['https://example.com']
 		});
 		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, { Vary: 'Accept-Encoding' }));
 
 		const headers = { origin: 'https://example.com' };
-		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+		const result = await ensureResponse(middleware.call({}, method, '/', '', headers, mockNext));
 
 		expect(varyValues(result)).toEqual(expect.arrayContaining(['accept-encoding', 'origin']));
 		// Two differently cased keys would overwrite each other when written to the node response
-		expect(varyKeys(result)).toHaveLength(1);
-	});
-
-	test('appends Origin to an existing Vary header with different casing - non-simple request', async () => {
-		const middleware = build({
-			validOrigins: ['https://example.com']
-		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, { Vary: 'Accept-Encoding' }));
-
-		const headers = { origin: 'https://example.com' };
-		const result = await ensureResponse(middleware.call({}, 'PUT', '/', '', headers, mockNext));
-
-		expect(varyValues(result)).toEqual(expect.arrayContaining(['accept-encoding', 'origin']));
 		expect(varyKeys(result)).toHaveLength(1);
 	});
 
@@ -848,29 +754,14 @@ describe('CORS credentials for specific origins', () => {
 	const trusted = 'https://app.example.com';
 	const other = 'https://third-party.example.org';
 
-	test('wildcard with a credentials list - listed origin gets credentials on a simple request', async () => {
+	test.each(['GET', 'PUT'])('wildcard with a credentials list - listed origin gets credentials on %s', async (method) => {
 		const middleware = build({
 			validOrigins: '*',
 			supportsCredentials: [trusted]
 		});
 		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
 
-		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', { origin: trusted }, mockNext));
-
-		expect(mockNext).toHaveBeenCalled();
-		expect(result.headers['access-control-allow-origin']).toBe(trusted);
-		expect(result.headers['access-control-allow-credentials']).toBe('true');
-		expect(varyValues(result)).toEqual(['origin']);
-	});
-
-	test('wildcard with a credentials list - listed origin gets credentials on a non-simple request', async () => {
-		const middleware = build({
-			validOrigins: '*',
-			supportsCredentials: [trusted]
-		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
-
-		const result = await ensureResponse(middleware.call({}, 'PUT', '/', '', { origin: trusted }, mockNext));
+		const result = await ensureResponse(middleware.call({}, method, '/', '', { origin: trusted }, mockNext));
 
 		expect(mockNext).toHaveBeenCalled();
 		expect(result.headers['access-control-allow-origin']).toBe(trusted);

@@ -6,7 +6,7 @@
  * This exposes a function that helps you manage CORS in your roads service
  */
 
-import { Context, IncomingHeaders, Middleware } from '../core/road.js';
+import { Context, Middleware } from '../core/road.js';
 import Response from '../core/response.js';
 import { appendVary, getSingleHeader } from '../util/headers.js';
 
@@ -34,50 +34,6 @@ function isValidOrigin(origin: string): boolean {
 	} catch {
 		return false;
 	}
-}
-
-/**
- * Determines if a request qualifies as a CORS simple request that can skip preflight validation
- * Simple requests use safe methods and headers that don't require preflight checks
- * @param method - HTTP method
- * @param headers - Request headers
- * @returns true if this is a simple request, false otherwise
- */
-function isSimpleCorsRequest(method: string, headers: IncomingHeaders): boolean {
-	// CORS-safelisted methods only
-	const simpleMethods = ['GET', 'HEAD', 'POST'];
-	if (!simpleMethods.includes(method.toUpperCase())) {
-		return false;
-	}
-
-	// Check for non-simple headers (beyond CORS-safelisted headers)
-	const simpleHeaders = [
-		'accept', 'accept-language', 'content-language', 'content-type',
-		'cache-control', 'expires', 'last-modified', 'pragma'
-	];
-
-	for (const header in headers) {
-		if (!simpleHeaders.includes(header.toLowerCase())) {
-			return false;
-		}
-	}
-
-	// For POST with Content-Type, validate it's a CORS-safelisted type
-	if (method.toUpperCase() === 'POST') {
-		const contentType = getSingleHeader(headers, 'content-type');
-		if (contentType) {
-			const simpleTypes = [
-				'application/x-www-form-urlencoded',
-				'multipart/form-data',
-				'text/plain'
-			];
-			if (!simpleTypes.some(type => contentType.toLowerCase().startsWith(type))) {
-				return false;
-			}
-		}
-	}
-
-	return true;
 }
 
 /**
@@ -245,38 +201,6 @@ export function build (options: {
 
 		const preflight = method === 'OPTIONS' && headers['access-control-request-method'];
 		const originHeader = getSingleHeader(headers, 'origin');
-
-		// Optimize simple requests - skip complex validation for CORS-safelisted requests
-		const isSimpleRequest = !preflight && isSimpleCorsRequest(method, headers);
-
-		if (isSimpleRequest) {
-			// Validate origin format
-			if (originHeader && !isValidOrigin(originHeader)) {
-				return handleCorsError(next, 'invalid origin format', originHeader, 400);
-			}
-
-			// Validate against allowed origins
-			if (!allowAllOrigins && originHeader && !validOrigins.includes(originHeader)) {
-				return handleCorsError(next, 'origin not allowed', originHeader, 403);
-			}
-
-			// For simple requests, set basic CORS headers
-			if (originHeader) {
-				setOriginHeaders(corsResponseHeaders, originHeader);
-			}
-
-			if (originHeader && allowsCredentials(originHeader)) {
-				corsResponseHeaders['access-control-allow-credentials'] = 'true';
-			}
-
-			if (allowedResponseHeaders && allowedResponseHeaders.length) {
-				corsResponseHeaders['access-control-expose-headers'] = allowedResponseHeaders.join(', ');
-			}
-
-			return next()
-				.then((result) => applyCorsHeaders(result, corsResponseHeaders));
-		}
-
 
 		/* Simple:
 		If the value of the Origin header is not a case-sensitive match for any of the values in list of
