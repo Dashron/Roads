@@ -7,7 +7,7 @@
  */
 
 import { Response, RoadModule, StoreValsMiddleware } from 'roads';
-import { IGNORE_LAYOUT_KEY, SiteContext, TITLE_KEY } from '../shared.js';
+import { escapeHtml, IGNORE_LAYOUT_KEY, SiteContext, TITLE_KEY } from '../shared.js';
 
 /**
  * Example function to wrap an HTML body in the required surrounding HTML tags (commonly called a layout)
@@ -17,11 +17,11 @@ import { IGNORE_LAYOUT_KEY, SiteContext, TITLE_KEY } from '../shared.js';
  * @param {string} siteName - The site name, from ApplyToContextMiddleware
  */
 function wrapLayout(body: string | Buffer, title: string, siteName: string) {
-	// In the real world the layout should be created from a template engine, which also escapes the title.
+	// In the real world the layout should be created from a template engine, which escapes values for you.
 	//		The script tag is outside of the container, because RoadsPJAX replaces everything inside the container
 	return `<!DOCTYPE html>
 <html>
-<head><title>${title}</title></head>
+<head><title>${escapeHtml(title)}</title></head>
 <body>
 	<nav>
 		<strong>${siteName}</strong>

@@ -27,3 +27,12 @@ export interface SiteContext extends RoadModule.Context {
 }
 
 export const SITE_NAME = 'Roads Example';
+
+/**
+ * Escapes text so it can be placed in HTML. Anything from the request, such as url.args or url.query,
+ * 	must be escaped, because roads decodes it (e.g. %3Cscript%3E becomes <script>)
+ */
+export function escapeHtml(text: string): string {
+	return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}

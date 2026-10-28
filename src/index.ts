@@ -1,14 +1,18 @@
 import Road from './core/road.js';
 
-export { default as Response } from './core/response.js';
+// Response and Request share their names with the fetch API's globals. RoadResponse and RoadRequest are the same
+//		classes under names that don't shadow them.
+export { default as Response, default as RoadResponse } from './core/response.js';
 export { default as Road } from './core/road.js';
 export * as RoadModule from './core/road.js';
 
 // Export types
 export type { Context, Middleware } from './core/road.js';
 export type { NextCallback, NextOverrides } from './core/requestChain.js';
+export type { ParsedURL } from './util/url.js';
 export { default as RoadsPJAX } from './client/pjax.js';
-export { default as Request } from './client/request.js';
+export { default as Request, default as RoadRequest } from './client/request.js';
+export type { RequestOptions } from './client/request.js';
 
 export * as ApplyToContextMiddleware from './middleware/applyToContext.js';
 // This is not part of the common middleware because it uses different middleware depending on client or server

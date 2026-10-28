@@ -256,6 +256,46 @@ describe('RoadsPjax Tests', () => {
 			expect(container.innerHTML).toBe('Fast content');
 			expect(window.location.pathname).toBe('/fast');
 		});
+
+		test('a slow failure does not fall back to a normal page load after a newer navigation', async () => {
+			const navigations = recordNavigation();
+			let failSlow: (err: Error) => void = () => undefined;
+			routes['GET /slow'] = () => new Promise<Response>((resolve, reject) => { failSlow = reject; });
+			routes['GET /fast'] = () => new Response('Fast content');
+			container.innerHTML = '<a id="slow" href="/slow" data-roads-pjax="link">Slow</a>'
+				+ '<a id="fast" href="/fast" data-roads-pjax="link">Fast</a>';
+			pjax.register();
+
+			click(container.querySelector('#slow') as Element);
+			await settle();
+			click(container.querySelector('#fast') as Element);
+			await settle();
+			failSlow(new Error('route failed'));
+			await settle();
+
+			expect(navigations.href).toEqual([]);
+			expect(container.innerHTML).toBe('Fast content');
+		});
+
+		test('a slow redirect to another origin does not send the browser away after a newer navigation', async () => {
+			const navigations = recordNavigation();
+			let finishSlow: (response: Response) => void = () => undefined;
+			routes['GET /slow'] = () => new Promise<Response>(resolve => { finishSlow = resolve; });
+			routes['GET /fast'] = () => new Response('Fast content');
+			container.innerHTML = '<a id="slow" href="/slow" data-roads-pjax="link">Slow</a>'
+				+ '<a id="fast" href="/fast" data-roads-pjax="link">Fast</a>';
+			pjax.register();
+
+			click(container.querySelector('#slow') as Element);
+			await settle();
+			click(container.querySelector('#fast') as Element);
+			await settle();
+			finishSlow(new Response('', 302, { location: 'https://example.com/landing' }));
+			await settle();
+
+			expect(navigations.href).toEqual([]);
+			expect(container.innerHTML).toBe('Fast content');
+		});
 	});
 
 	describe('page titles', () => {
@@ -298,6 +338,36 @@ describe('RoadsPjax Tests', () => {
 			await settle();
 
 			expect(document.title).toBe('Saved Title');
+		});
+
+		test('a response from an older navigation does not change the title of a newer one', async () => {
+			const titledRoad = new Road();
+			pjax = new RoadsPjax(titledRoad, container, window);
+			pjax.addTitleMiddleware('page-title');
+
+			const pending: Record<string, () => void> = {};
+			titledRoad.use(function (this: StoreValsContext, method, path) {
+				this.storeVal('page-title', `Title ${path}`);
+				return new Promise<Response>((resolve) => {
+					pending[path] = () => resolve(new Response(`Content ${path}`));
+				});
+			});
+
+			container.innerHTML = '<a href="/old" data-roads-pjax="link">Old</a>' +
+				'<a href="/new" data-roads-pjax="link">New</a>';
+			pjax.register();
+
+			click(container.querySelector('a[href="/old"]') as Element);
+			click(container.querySelector('a[href="/new"]') as Element);
+			await settle();
+
+			// Both finish together, so the old response's title middleware runs while the new one is rendering
+			pending['/new']?.();
+			pending['/old']?.();
+			await settle();
+
+			expect(container.innerHTML).toBe('Content /new');
+			expect(document.title).toBe('Title /new');
 		});
 	});
 
@@ -351,6 +421,26 @@ describe('RoadsPjax Tests', () => {
 
 			expect(navigations.reload).toHaveBeenCalled();
 		});
+
+		test('a slow failure on back or forward does not reload the page after a newer navigation', async () => {
+			const navigations = recordNavigation();
+			let failSlow: (err: Error) => void = () => undefined;
+			routes['GET /slow'] = () => new Promise<Response>((resolve, reject) => { failSlow = reject; });
+			routes['GET /fast'] = () => new Response('Fast content');
+			container.innerHTML = '<a href="/fast" data-roads-pjax="link">Fast</a>';
+			pjax.register();
+			window.history.replaceState({ pjax: true }, '', '/slow');
+
+			popstate({ pjax: true });
+			await settle();
+			click(container.querySelector('a') as Element);
+			await settle();
+			failSlow(new Error('route failed'));
+			await settle();
+
+			expect(navigations.reload).not.toHaveBeenCalled();
+			expect(container.innerHTML).toBe('Fast content');
+		});
 	});
 
 	describe('forms', () => {
@@ -367,7 +457,7 @@ describe('RoadsPjax Tests', () => {
 
 			expect(defaultAllowed).toEqual([false]);
 			expect(requests).toEqual([
-				{ method: 'GET', path: '/search?q=roads&sort=new', body: undefined, headers: undefined }
+				{ method: 'GET', path: '/search?q=roads&sort=new', body: undefined, headers: {} }
 			]);
 			expect(container.innerHTML).toBe('Results');
 			expect(window.location.pathname + window.location.search).toBe('/search?q=roads&sort=new');
@@ -392,6 +482,48 @@ describe('RoadsPjax Tests', () => {
 			}]);
 			expect(container.innerHTML).toBe('Sent');
 			expect(window.location.pathname).toBe('/');
+		});
+
+		test('a multipart POST form is left for the browser to submit', async () => {
+			container.innerHTML = `<form method="post" action="/upload" enctype="multipart/form-data" data-roads-pjax="form">
+				<input type="file" name="upload">
+				<button data-roads-pjax="submit">Upload</button>
+			</form>`;
+			pjax.register();
+
+			(container.querySelector('button') as HTMLButtonElement).click();
+			await settle();
+
+			expect(defaultAllowed).toEqual([true]);
+			expect(requests).toEqual([]);
+		});
+
+		test('a submit button can make the form multipart with formenctype', async () => {
+			container.innerHTML = `<form method="post" action="/upload" data-roads-pjax="form">
+				<button formenctype="multipart/form-data" data-roads-pjax="submit">Upload</button>
+			</form>`;
+			pjax.register();
+
+			(container.querySelector('button') as HTMLButtonElement).click();
+			await settle();
+
+			expect(defaultAllowed).toEqual([true]);
+			expect(requests).toEqual([]);
+		});
+
+		test('a file input in a urlencoded form sends the file name, like the browser', async () => {
+			routes['POST /upload'] = () => new Response('Sent');
+			container.innerHTML = `<form method="post" action="/upload" data-roads-pjax="form">
+				<input type="file" name="upload">
+				<button data-roads-pjax="submit">Upload</button>
+			</form>`;
+			pjax.register();
+
+			(container.querySelector('button') as HTMLButtonElement).click();
+			await settle();
+
+			// No file was chosen, so the name is empty
+			expect(requests[0]?.body).toBe('upload=');
 		});
 
 		test('a POST form that redirects renders the redirect target and puts it in the url bar', async () => {
@@ -507,6 +639,28 @@ describe('RoadsPjax Tests', () => {
 
 			expect(requests.length).toBe(1);
 			expect(navigations.href).toEqual([]);
+		});
+
+		test('a slow POST failure is not logged after a newer navigation', async () => {
+			const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+			let failSlow: (err: Error) => void = () => undefined;
+			routes['POST /save'] = () => new Promise<Response>((resolve, reject) => { failSlow = reject; });
+			routes['GET /fast'] = () => new Response('Fast content');
+			container.innerHTML = `<form method="post" action="/save" data-roads-pjax="form">
+				<button data-roads-pjax="submit">Save</button>
+			</form>
+			<a href="/fast" data-roads-pjax="link">Fast</a>`;
+			pjax.register();
+
+			(container.querySelector('button') as HTMLButtonElement).click();
+			await settle();
+			click(container.querySelector('a') as Element);
+			await settle();
+			failSlow(new Error('route failed'));
+			await settle();
+
+			expect(log).not.toHaveBeenCalled();
+			expect(container.innerHTML).toBe('Fast content');
 		});
 	});
 

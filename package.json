@@ -15,12 +15,13 @@
   "homepage": "https://roadsjs.com",
   "scripts": {
     "test-types": "tsc --noEmit --project test/tsconfig.json",
-    "test-code": "npm run test-types && node ./node_modules/.bin/vitest run ./test/__tests__",
+    "test-code": "node ./node_modules/.bin/vitest run ./test/__tests__",
     "test:coverage": "vitest run --coverage",
-    "lint": "tsc && node node_modules/eslint/bin/eslint.js",
+    "lint": "tsc --noEmit && npm run test-types && node node_modules/eslint/bin/eslint.js",
     "test": "npm run lint && npm run test-code",
-    "build": "tsc",
-    "prepack": "tsc"
+    "clean": "node -e \"for (const target of ['dist', 'types', '.tsbuildinfo']) require('fs').rmSync(target, { recursive: true, force: true })\"",
+    "build": "npm run clean && tsc",
+    "prepack": "npm run build"
   },
   "bugs": {
     "url": "http://github.com/Dashron/roads/issues",
@@ -28,7 +29,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/Dashron/roads.git"
+    "url": "git+https://github.com/Dashron/roads.git"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -42,11 +43,8 @@
     "vitest": "^5.0.3"
   },
   "dependencies": {
-    "@types/url-parse": "^1.4.11",
     "content-type": "^3.1.1",
-    "cookie": "^2.0.1",
-    "fast-querystring": "^1.1.2",
-    "url-parse": "^1.5.10"
+    "cookie": "^2.0.1"
   },
   "engines": {
     "node": ">=22.23.4"
@@ -63,7 +61,8 @@
   },
   "files": [
     "dist",
-    "types"
+    "types",
+    "src"
   ],
   "type": "module"
 }

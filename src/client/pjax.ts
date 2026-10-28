@@ -35,7 +35,12 @@ interface PjaxRequest {
   */
 export default class RoadsPjax {
 	protected _road: Road;
-	protected _page_title?: string;
+
+	/**
+	 * The page title stored by the title middleware, for each response. Keying the title by response means a
+	 * 	response from an older navigation can never change the title used by a newer one.
+	 */
+	protected _page_titles = new WeakMap<Response, string>();
 	protected _window: Window;
 	protected _container_element: HTMLElement;
 
@@ -88,11 +93,16 @@ export default class RoadsPjax {
 		const titleMiddleware: Middleware<StoreValsContext> = function (method, url, body, headers, next) {
 
 			return next().then((response) => {
-				if (this.getVal) {
-					pjaxObj._page_title = this.getVal(titleKey) as string;
+				const title = this.getVal ? this.getVal(titleKey) : undefined;
+
+				if (typeof title !== 'string') {
+					return response;
 				}
 
-				return response;
+				// Wrap strings now, so the title can be attached to the response object the road returns
+				const responseObject = response instanceof Response ? response : new Response(response);
+				pjaxObj._page_titles.set(responseObject, title);
+				return responseObject;
 			});
 		};
 
@@ -242,8 +252,11 @@ export default class RoadsPjax {
 
 		const target = submitter?.getAttribute('formtarget') ?? form.getAttribute('target');
 		const { method, url } = this._formTarget(form, submitter);
+		const enctype = (submitter?.getAttribute('formenctype') ?? form.getAttribute('enctype') ?? '').toLowerCase();
 
-		if ((target && target !== '_self') || method === 'DIALOG' || url.origin !== this._window.location.origin) {
+		// Road request bodies are strings, so multipart forms (e.g. file uploads) are left for the browser to submit
+		if ((target && target !== '_self') || method === 'DIALOG' || url.origin !== this._window.location.origin
+			|| (method !== 'GET' && enctype === 'multipart/form-data')) {
 			return;
 		}
 
@@ -273,10 +286,12 @@ export default class RoadsPjax {
 	protected _roadsFormEvent (form: HTMLFormElement, submitter?: HTMLElement | null): Promise<void> {
 		const { method, url } = this._formTarget(form, submitter);
 
-		// Typescript wants urlsearchparams to take a string, but if we .toString() formdata it doesn't come out in a
-		// way url search params understands.
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const params = new URLSearchParams(new FormData(form, submitter) as any);
+		const params = new URLSearchParams();
+
+		for (const [name, value] of new FormData(form, submitter)) {
+			// Like the browser, file inputs in a url encoded form send the file's name
+			params.append(name, typeof value === 'string' ? value : value.name);
+		}
 
 		if (method === 'GET') {
 			// Like the browser, GET forms replace the action's query string with the form fields
@@ -342,7 +357,7 @@ export default class RoadsPjax {
 
 				this.render(response);
 
-				const title = this._page_title ?? options.fallbackTitle;
+				const title = this._page_titles.get(response) ?? options.fallbackTitle;
 
 				if (title) {
 					this._window.document.title = title;

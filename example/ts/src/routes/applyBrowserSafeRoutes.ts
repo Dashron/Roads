@@ -7,7 +7,7 @@
  */
 
 import { Response, RoadModule, RouterMiddleware, StoreValsMiddleware, CookieMiddleware, CSRFMiddleware } from 'roads';
-import { SiteContext, TITLE_KEY } from '../shared.js';
+import { escapeHtml, SiteContext, TITLE_KEY } from '../shared.js';
 
 interface ExampleRequestBody {
 	message?: string
@@ -76,14 +76,14 @@ export default function applyBrowserSafeRoutes(
 	});
 
 	// $ matches any value in that part of the path, and # only matches numbers. Matches are in url.args.
-	//		The query string is parsed into url.query
+	//		The query string is parsed into url.query. Both are decoded, so they must be escaped before going into HTML
 	router.addRoute('GET', '/tags/$slug', async function (method, url) {
 		const slug = String(url.args?.['slug']);
 		const sort = url.query['sort'] ?? 'oldest';
 		this.storeVal(TITLE_KEY, `Tag: ${slug}`);
 
-		return new Response(`<p>url.args.slug is <code>${slug}</code>, url.query.sort is <code>${sort}</code></p>
-		 <form method="GET" action="/tags/${slug}" data-roads-pjax="form">
+		return new Response(`<p>url.args.slug is <code>${escapeHtml(slug)}</code>, url.query.sort is <code>${escapeHtml(sort)}</code></p>
+		 <form method="GET" action="/tags/${encodeURIComponent(slug)}" data-roads-pjax="form">
 			<select name="sort">
 				<option value="oldest">oldest</option>
 				<option value="newest">newest</option>

@@ -41,6 +41,7 @@ export default [
 				URLSearchParams: 'readonly',
 				FormData: 'readonly',
 				Headers: 'readonly',
+				RequestInit: 'readonly',
 				fetch: 'readonly',
 				Window: 'readonly',
 				URL: 'readonly',
