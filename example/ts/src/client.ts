@@ -6,7 +6,6 @@
  * This file is an example of using roads router in the client. It's bundled into public/client.js by `npm run build`
  */
 
-import { Request } from 'roads';
 import buildClientRoad from './buildClientRoad.js';
 
 const { pjax } = buildClientRoad(document, window);
@@ -16,10 +15,8 @@ pjax.register();
 // The home link is outside of the container, so PJAX needs to be told about it
 pjax.registerAdditionalElement(document.getElementById('home') as HTMLAnchorElement);
 
-// The Request class sends real HTTP requests. Its paths can't change the host it was created with.
-//		localhost and 127.0.0.1 are different origins, so whichever one this page isn't on is cross origin
-const otherOrigin = new Request(false, window.location.hostname === 'localhost' ? '127.0.0.1' : 'localhost',
-	Number(window.location.port));
+// localhost and 127.0.0.1 are different origins, so whichever one this page isn't on is cross origin
+const otherOrigin = `http://${window.location.hostname === 'localhost' ? '127.0.0.1' : 'localhost'}:${window.location.port}`;
 
 /**
  * Handles the button on /client-requests. We listen on the document because PJAX
@@ -35,13 +32,14 @@ document.addEventListener('click', (event) => {
 
 	// application/json isn't a "simple" content type, so the browser asks the API's CORS middleware
 	//		for permission with an OPTIONS request before it sends this
-	otherOrigin.request('POST', '/api/posts', JSON.stringify({ title: 'Made with CORS' }), {
-		'content-type': 'application/json'
+	fetch(`${otherOrigin}/api/posts`, {
+		method: 'POST',
+		headers: { 'content-type': 'application/json' },
+		body: JSON.stringify({ title: 'Made with CORS' })
 	})
-		.then((response) => {
-			// The Request class always resolves with a string body, so JSON needs to be parsed
-			const body: unknown = response.headers['content-type']?.includes('application/json') ?
-				JSON.parse(response.body.toString()) : response.body;
+		.then(async (response) => {
+			const body: unknown = response.headers.get('content-type')?.includes('application/json') ?
+				await response.json() : await response.text();
 			output.textContent = JSON.stringify({ status: response.status, body }, null, 2);
 		})
 		.catch((err: Error) => {
