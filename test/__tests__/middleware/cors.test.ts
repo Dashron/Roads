@@ -982,3 +982,53 @@ describe('CORS through a Road', () => {
 		expect(result.status).toBe(403);
 	});
 });
+
+describe('CORS responses that a cache could reuse for another origin', () => {
+	test('a request without an Origin header gets Vary: Origin in allowlist mode', async () => {
+		const middleware = build({ validOrigins: ['https://example.com'] });
+		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, { vary: 'Accept' }));
+
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', {}, mockNext));
+
+		expect(result.headers).toEqual({ vary: 'Accept, Origin' });
+	});
+
+	test('a request without an Origin header gets a wildcard allow origin in wildcard mode', async () => {
+		const middleware = build({ validOrigins: '*' });
+		const mockNext = vi.fn().mockResolvedValue('OK');
+
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', {}, mockNext));
+
+		expect(result).toEqual(new Response('OK', 200, { 'access-control-allow-origin': '*' }));
+	});
+
+	test('a request without an Origin header gets Vary: Origin when credentials depend on the origin', async () => {
+		const middleware = build({ validOrigins: '*', supportsCredentials: ['https://example.com'] });
+		const mockNext = vi.fn().mockResolvedValue(new Response('OK'));
+
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', {}, mockNext));
+
+		expect(result.headers).toEqual({ vary: 'Origin' });
+	});
+
+	test('a disallowed origin gets Vary: Origin when CORS errors are not returned', async () => {
+		const middleware = build({
+			validOrigins: ['https://example.com'], returnCorsErrors: false, logger: { log: () => {} }
+		});
+		const mockNext = vi.fn().mockResolvedValue(new Response('OK'));
+
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', { origin: 'https://evil.com' }, mockNext));
+
+		expect(result).toEqual(new Response('OK', 200, { vary: 'Origin' }));
+	});
+
+	test('a CORS error response gets Vary: Origin', async () => {
+		const middleware = build({ validOrigins: ['https://example.com'], logger: { log: () => {} } });
+
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', { origin: 'https://evil.com' },
+			vi.fn()));
+
+		expect(result.status).toEqual(403);
+		expect(result.headers['vary']).toEqual('Origin');
+	});
+});

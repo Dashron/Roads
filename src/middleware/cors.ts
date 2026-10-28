@@ -153,6 +153,13 @@ export function build (options: {
 	};
 
 	/*
+	 * The headers every response needs, even when it isn't a CORS response, so a cache doesn't reuse it for a
+	 * request from another origin. See "CORS protocol and HTTP caches" in the Fetch standard.
+	 */
+	const cacheHeaders: Record<string, string> = allowAllOrigins && !perOriginCredentials ?
+		{ 'access-control-allow-origin': '*' } : { vary: 'Origin' };
+
+	/*
 	 * Helper function to handle CORS errors consistently
 	 */
 	const handleCorsError = (next: () => Promise<string | Response>, errorType: string,
@@ -160,17 +167,12 @@ export function build (options: {
 		if (returnCorsErrors) {
 			const errorMessage = details ? `CORS Error: ${errorType} - ${details}` : `CORS Error: ${errorType}`;
 			logger.log(errorMessage);
-			return Promise.resolve(new Response(errorMessage, statusCode, {
+			return Promise.resolve(applyCorsHeaders(new Response(errorMessage, statusCode, {
 				'content-type': 'text/plain'
-			}));
+			}), cacheHeaders));
 		} else {
 			logger.log(`CORS ERROR: ${errorType}`, details);
-			return next().then(result => {
-				if (typeof result === 'string') {
-					return new Response(result, 200);
-				}
-				return result;
-			});
+			return next().then(result => applyCorsHeaders(result, cacheHeaders));
 		}
 	};
 
@@ -196,8 +198,8 @@ export function build (options: {
 		 *  "Preflight Requests":  If the Origin header is not present terminate this set of steps. The request is \
 		 * 		outside the scope of this specification. https://www.w3.org/TR/cors/#resource-preflight-requests
 		*/
-		if (!headers || !headers.origin) {
-			return next();
+		if (!headers.origin) {
+			return next().then(result => applyCorsHeaders(result, cacheHeaders));
 		}
 
 		const preflight = method === 'OPTIONS' && headers['access-control-request-method'];
