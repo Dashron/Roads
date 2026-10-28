@@ -37,9 +37,16 @@ export interface ResponseConstructor {
  *
  * @param {Promise<Response | string>} promise
  * @returns {Promise<unknown>}
+ * @throws {TypeError} If the request chain resolves to undefined or null, which usually means a middleware
+ * 	forgot to return a value (or forgot to return `next()`)
  */
 export function wrap (promise: Promise<Response | string>): Promise<Response> {
-	return promise.then((routeResponse) => {
+	return promise.then((routeResponse: Response | string | undefined | null) => {
+		if (routeResponse === undefined || routeResponse === null) {
+			throw new TypeError(`The request chain resolved to ${String(routeResponse)} instead of a Response or a string.` +
+				' Check that every middleware returns a value, including the result of next().');
+		}
+
 		return routeResponse instanceof Response ? routeResponse : new Response(routeResponse);
 	});
 }
