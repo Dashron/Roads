@@ -45,7 +45,7 @@ describe('KillSlashes tests', () => {
 			// the redirection needs the Response context
 			Response : Response
 		}, method, url, body, headers, next)).resolves.toEqual({
-			status : 302,
+			status : 308,
 			body : '',
 			headers : {
 				location : '/users'
@@ -88,7 +88,7 @@ describe('KillSlashes tests', () => {
 		};
 
 		return expect(middleware.call({}, method, url, body, headers, next)).resolves.toEqual({
-			status: 302,
+			status: 308,
 			body: '',
 			headers: {
 				location: '/users?page=2&sort=name'
@@ -110,7 +110,7 @@ describe('KillSlashes tests', () => {
 		};
 
 		return expect(middleware.call({}, method, url, body, headers, next)).resolves.toEqual({
-			status: 302,
+			status: 308,
 			body: '',
 			headers: {
 				location: '/users#section'
@@ -132,10 +132,28 @@ describe('KillSlashes tests', () => {
 		};
 
 		return expect(middleware.call({}, method, url, body, headers, next)).resolves.toEqual({
-			status: 302,
+			status: 308,
 			body: '',
 			headers: {
 				location: '/users?page=2#top'
+			}
+		});
+	});
+
+	/**
+	 * Test that non-GET requests get the same 308, so clients resend the method and body instead of switching to GET
+	 */
+	test.each(['POST', 'PUT', 'PATCH', 'DELETE'])('test remove slash redirects %s with a 308', (method) => {
+		expect.assertions(1);
+		const next = function () {
+			return Promise.resolve('should not be called');
+		};
+
+		return expect(middleware.call({}, method, '/users/', '{"name":"a"}', {}, next)).resolves.toEqual({
+			status: 308,
+			body: '',
+			headers: {
+				location: '/users'
 			}
 		});
 	});
@@ -164,7 +182,7 @@ describe('KillSlashes tests', () => {
 		};
 
 		return expect(middleware.call({}, 'GET', url, '', {}, next)).resolves.toEqual({
-			status: 302,
+			status: 308,
 			body: '',
 			headers: {
 				location
@@ -187,7 +205,7 @@ describe('KillSlashes tests', () => {
 			const response = await road.request('GET', url);
 			const location = String(response.headers['location']);
 
-			expect(response.status, url).toBe(302);
+			expect(response.status, url).toBe(308);
 			// A browser resolves the location against http://example.com, so the host must not change
 			expect(new URL(location, 'http://example.com').host, `${url} -> ${location}`).toBe('example.com');
 		}
