@@ -1,14 +1,15 @@
-module.exports['/'] = {
-	GET:  function () {
-		return 'root get successful';
+export default {
+	'/': {
+		GET: function () {
+			return 'root get successful';
+		},
+		POST: function () {
+			return 'root post successful';
+		}
 	},
-	POST: function () {
-		return 'root post successful';
-	}
-};
-
-module.exports['/test'] = {
-	GET: function () {
-		return 'test get successful';
+	'/test': {
+		GET: function () {
+			return 'test get successful';
+		}
 	}
 };

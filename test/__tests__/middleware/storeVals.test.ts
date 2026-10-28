@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { middleware } from '../../../src/middleware/storeVals.js';
+import { middleware, StoreValsContext } from '../../../src/middleware/storeVals.js';
 
 import { describe, expect, test } from 'vitest';
 
@@ -8,7 +7,7 @@ describe('Store Values', () => {
 	test('test storeVal and getVal functions are properly applied to middleware', () => {
 		expect.assertions(2);
 
-		const context: Record<string, any> = {};
+		const context = {} as StoreValsContext;
 
 
 		middleware.call(context, 'a', 'b', 'c', {}, function () { return Promise.resolve(''); });
@@ -23,7 +22,7 @@ describe('Store Values', () => {
 	test('test storeVal and getVal work as expected', () => {
 		expect.assertions(1);
 
-		const context: Record<string, any> = {};
+		const context = {} as StoreValsContext;
 
 
 		middleware.call(context, 'a', 'b', 'c', {}, function () { return Promise.resolve(''); });
@@ -34,14 +33,14 @@ describe('Store Values', () => {
 
 	test.each(['constructor', 'toString', 'hasOwnProperty', '__proto__'])(
 		'test getVal does not return the inherited %s', (field) => {
-			const context: Record<string, any> = {};
+			const context = {} as StoreValsContext;
 			middleware.call(context, 'a', 'b', 'c', {}, function () { return Promise.resolve(''); });
 
 			expect(context.getVal(field)).toBeUndefined();
 		});
 
 	test('test __proto__ is stored as an ordinary value', () => {
-		const context: Record<string, any> = {};
+		const context = {} as StoreValsContext;
 		middleware.call(context, 'a', 'b', 'c', {}, function () { return Promise.resolve(''); });
 
 		context.storeVal('__proto__', { polluted: true });
@@ -52,7 +51,7 @@ describe('Store Values', () => {
 	});
 
 	test('test getAllVals returns only stored values', () => {
-		const context: Record<string, any> = {};
+		const context = {} as StoreValsContext;
 		middleware.call(context, 'a', 'b', 'c', {}, function () { return Promise.resolve(''); });
 
 		context.storeVal('page-title', 'Home');

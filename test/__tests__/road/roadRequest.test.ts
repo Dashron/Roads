@@ -274,6 +274,24 @@ describe('road request', () => {
 	});
 
 	/**
+	 * Ensure that middleware receives an empty headers object when the request has no headers
+	 */
+	test('Request Without Headers Gives Middleware An Empty Object', () => {
+		expect.assertions(1);
+		const road = new Road();
+
+		road.use(function (method, url, body, headers) {
+			return JSON.stringify(headers);
+		});
+
+		return expect(road.request('GET', '/')).resolves.toEqual({
+			status: 200,
+			headers : {},
+			body : '{}'
+		});
+	});
+
+	/**
 	 * Ensure that passing a method to next changes the method for the rest of the request chain
 	 */
 	test('Next Can Override The Method For Later Middleware', () => {
@@ -402,5 +420,36 @@ describe('road request', () => {
 			},
 			body : 'done'
 		});
+	});
+
+	/**
+	 * Ensure that a middleware that forgets to return a value produces a descriptive error instead of an empty 200
+	 */
+	test('Middleware that returns nothing rejects with a descriptive error', async () => {
+		const road = new Road();
+
+		road.use(function (method: string, url: string, body: unknown, headers: unknown, next: () => unknown) {
+			// Forgot to return next()
+			next();
+		} as unknown as Middleware<Context>);
+
+		road.use(function () {
+			return 'unreachable through the first middleware';
+		});
+
+		await expect(road.request('GET', '/')).rejects.toThrow(/resolved to undefined/);
+	});
+
+	/**
+	 * Ensure that a null result is treated the same as undefined
+	 */
+	test('Middleware that returns null rejects with a descriptive error', async () => {
+		const road = new Road();
+
+		road.use(function () {
+			return null;
+		} as unknown as Middleware<Context>);
+
+		await expect(road.request('GET', '/')).rejects.toThrow(/resolved to null/);
 	});
 });

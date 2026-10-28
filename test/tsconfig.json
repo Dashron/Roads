@@ -2,7 +2,11 @@
 	"extends": "../tsconfig.json",
 	"compilerOptions": {
 		"rootDir": "..",
-		"types": ["node", "vitest/globals"]
+		"types": ["node", "vitest/globals"],
+		// Matches the alias in vitest.config.ts, so the example's tests are type checked against the source
+		"paths": {
+			"roads": ["../src/index.ts"]
+		}
 	},
 	"include": ["**/*.ts"],
 	"exclude": []
