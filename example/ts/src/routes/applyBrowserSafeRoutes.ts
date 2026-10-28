@@ -33,7 +33,7 @@ export default function applyBrowserSafeRoutes(
 		 <ul>
 			<li><a href="/browser-safe" data-roads-pjax="link">Browser safe page</a>: cookies, CSRF and a PJAX form</li>
 			<li><a href="/tags/roads?sort=newest" data-roads-pjax="link">/tags/$slug</a>: url variables and the query string</li>
-			<li><a href="/client-requests" data-roads-pjax="link">Client requests</a>: the Request class and CORS</li>
+			<li><a href="/client-requests" data-roads-pjax="link">Client requests</a>: fetch and CORS</li>
 			<li><a href="/server-only">Server only page</a>: sets cookies, and is not available in the browser road</li>
 			<li><a href="/posts">Posts</a>: the reroute, method override and modified since middleware</li>
 			<li><a href="/posts/abc">/posts/abc</a>: # variables only match numbers, so this is a 404</li>
@@ -102,7 +102,7 @@ export default function applyBrowserSafeRoutes(
 		 responds with JSON instead of a page.</p>
 		 <p>The API road is served at /api, and only allows requests from the origins listed in server.ts.
 		 Open this page at <code>127.0.0.1</code> instead of <code>localhost</code> (or the other way around)
-		 and this button uses the roads <code>Request</code> class to make a cross origin request.
+		 and this button uses <code>fetch</code> to make a cross origin request.
 		 Watch the network tab for the OPTIONS preflight request. This needs JavaScript.</p>
 		 <p><button type="button" data-example-action="create-post">POST JSON to the API on the other host</button></p>
 		 <pre id="request-output"></pre>`);
