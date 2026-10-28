@@ -10,7 +10,6 @@ import { Context, Middleware } from '../core/road.js';
 import { getSingleHeader } from '../util/headers.js';
 
 import * as contentTypeModule from 'content-type';
-import * as qsModule from 'fast-querystring';
 import Response from '../core/response.js';
 
 /**
@@ -29,6 +28,31 @@ export interface ParseBodyContext extends Context {
  * Thrown when the content-type header is not a valid media type
  */
 class InvalidMediaTypeError extends Error {}
+
+/**
+ * Parses a form encoded body. Repeated keys become an array of every value.
+ * 	The object has no prototype, so use `Object.hasOwn` to check for keys.
+ *
+ * @param body - The form encoded body
+ * @returns The parsed values
+ */
+function parseFormBody (body: string): Record<string, string | string[]> {
+	const values: Record<string, string | string[]> = Object.create(null);
+
+	for (const [key, value] of new URLSearchParams(body)) {
+		const existing = values[key];
+
+		if (existing === undefined) {
+			values[key] = value;
+		} else if (Array.isArray(existing)) {
+			existing.push(value);
+		} else {
+			values[key] = [existing, value];
+		}
+	}
+
+	return values;
+}
 
 /**
  * Translate the request body into a usable value.
@@ -55,7 +79,7 @@ function parseRequestBody (body: string | undefined, contentType?: string): unkn
 			return JSON.parse(body);
 		} else if (parsedContentType.type === 'application/x-www-form-urlencoded') {
 			// parse form encoded
-			return qsModule.parse(body);
+			return parseFormBody(body);
 		}
 	}
 
@@ -73,7 +97,7 @@ export const middleware: Middleware<ParseBodyContext, string | undefined> = func
 	this.rawBody = body;
 
 	try {
-		parsedBody = parseRequestBody(body, headers ? getSingleHeader(headers, 'content-type') : undefined);
+		parsedBody = parseRequestBody(body, getSingleHeader(headers, 'content-type'));
 	} catch (e) {
 		if (e instanceof InvalidMediaTypeError) {
 			return new Response('Invalid content-type header', 400);

@@ -141,11 +141,7 @@ function testSigner (sign: CSRFOptions['sign'], verify: CSRFOptions['verify']): 
  * 	Requests without any of these headers (such as non-browser clients) are let through,
  * 	and still have to pass the token check.
  */
-function isSameOrigin (headers: IncomingHeaders | undefined, trustedOrigins: string[]): boolean {
-	if (!headers) {
-		return true;
-	}
-
+function isSameOrigin (headers: IncomingHeaders, trustedOrigins: string[]): boolean {
 	const origin = getSingleHeader(headers, 'origin');
 
 	if (origin && trustedOrigins.includes(origin)) {

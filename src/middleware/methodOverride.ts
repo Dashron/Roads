@@ -81,7 +81,7 @@ export function build (options: MethodOverrideOptions = {}): Middleware<Context>
 			return next();
 		}
 
-		const override = (headers ? getSingleHeader(headers, METHOD_OVERRIDE_HEADER) : undefined) ||
+		const override = getSingleHeader(headers, METHOD_OVERRIDE_HEADER) ||
 			getBodyOverride(body) ||
 			getQueryOverride(url);
 

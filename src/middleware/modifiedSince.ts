@@ -37,7 +37,7 @@ export const middleware: Middleware<ModifiedSinceContext> = function (method, ur
 
 		// RFC 9110 13.1.3: if-modified-since only applies to GET and HEAD, and is ignored when
 		//		the request also has an if-none-match header
-		if ((method !== 'GET' && method !== 'HEAD') || !headers || headers['if-none-match']) {
+		if ((method !== 'GET' && method !== 'HEAD') || headers['if-none-match']) {
 			return false;
 		}
 

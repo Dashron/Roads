@@ -11,7 +11,7 @@ import { describe, expect, test, assert, vi } from 'vitest';
  * Calls the middleware directly and returns what it sent to next, along with the context and response.
  * 	`overrides` is undefined if next was never called
  */
-function callMiddleware (body: string | undefined, headers: IncomingHeaders | undefined) {
+function callMiddleware (body: string | undefined, headers: IncomingHeaders) {
 	const context = {} as ParseBodyContext;
 	let overrides: NextOverrides | undefined;
 
@@ -184,6 +184,19 @@ describe('Parse Request Body tests', () => {
 		const { overrides } = callMiddleware('name=John&age=30', {'content-type': 'application/x-www-form-urlencoded'});
 
 		expect(overrides).toEqual({ body: {name: 'John', age: '30'} });
+	});
+
+	test('test form-encoded body decodes values and collects repeated keys into an array', () => {
+		expect.assertions(2);
+
+		const { overrides } = callMiddleware('tag=a&tag=b&tag=c&name=John+Smith&city=S%C3%A3o%20Paulo&empty',
+			{'content-type': 'application/x-www-form-urlencoded'});
+
+		expect(overrides).toEqual({ body: {
+			tag: ['a', 'b', 'c'], name: 'John Smith', city: 'São Paulo', empty: ''
+		} });
+		// Keys like __proto__ are stored as plain values instead of changing the object's prototype
+		expect(Object.getPrototypeOf(overrides?.body)).toBeNull();
 	});
 
 	test('test array content-type header uses first value', () => {
