@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { serverMiddleware, buildClientMiddleware } from '../../../src/middleware/cookieMiddleware.js';
 
 import { CookieContext } from '../../../src/middleware/cookieMiddleware.js';
@@ -79,9 +78,9 @@ describe('cookie tests', () => {
 
 	test('test that getCookies still works with clientCookies', () => {
 		expect.assertions(2);
-		const context: Record<string, any> = {
+		const context = {
 			Response: Response
-		};
+		} as unknown as CookieContext;
 
 		const testDocument = {
 			cookie: 'foo=bar;abc=def'
@@ -141,6 +140,66 @@ describe('cookie tests', () => {
 		}, next.bind(context));
 
 		expect(testDocument.cookie).toEqual('foo=bar');
+	});
+
+	test('test setCookie works when destructured from the context', async () => {
+		expect.assertions(1);
+		const context = {
+			Response: Response
+		} as unknown as CookieContext;
+
+		const next: (this: CookieContext) => Promise<string> = function () {
+			const { setCookie } = this;
+			setCookie('foo', 'bar');
+			return Promise.resolve('test');
+		};
+
+		const result = await ensureResponse(serverMiddleware.call(context, 'a', 'b', 'c', {}, next.bind(context)));
+
+		expect(result.headers['set-cookie']).toEqual(['foo=bar']);
+	});
+
+	test('test setting a cookie to null removes it from the response and getCookies', async () => {
+		expect.assertions(2);
+		const context = {
+			Response: Response
+		} as unknown as CookieContext;
+
+		const next: (this: CookieContext) => Promise<string> = function () {
+			this.setCookie('foo', null, { path: '/', maxAge: 3600 });
+			expect(this.getCookies()).toEqual({
+				abc: 'def'
+			});
+			return Promise.resolve('test');
+		};
+
+		const result = await ensureResponse(serverMiddleware.call(context, 'a', 'b', 'c', {
+			cookie: 'foo=bar;abc=def'
+		}, next.bind(context)));
+
+		expect(result.headers['set-cookie']).toEqual([
+			'foo=; Max-Age=0; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT'
+		]);
+	});
+
+	test('test setting a cookie to null removes it from the document', async () => {
+		expect.assertions(1);
+		const context = {
+			Response: Response
+		} as unknown as CookieContext;
+
+		const testDocument = {
+			cookie: 'foo=bar'
+		};
+
+		const next: (this: CookieContext) => Promise<string> = function () {
+			this.setCookie('foo', null);
+			return Promise.resolve('test');
+		};
+
+		await buildClientMiddleware(testDocument as Document).call(context, 'a', 'b', 'c', {}, next.bind(context));
+
+		expect(testDocument.cookie).toEqual('foo=; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT');
 	});
 
 	test('test cookie middleware handles existing string Set-Cookie header', async () => {

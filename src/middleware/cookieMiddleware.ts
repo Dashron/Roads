@@ -23,8 +23,10 @@ export interface CookieContext extends Context {
 	/**
 	 * Calling this function will store your new cookies.
 	 * 	The parameters directly map to the [cookie](https://github.com/jshttp/cookie) module.
+	 * 	Pass null as the value to remove the cookie. When removing, pass the same path and
+	 * 	domain the cookie was set with.
 	 */
-	setCookie: (name: string, value?: string, options?: cookie.SerializeOptions) => void,
+	setCookie: (name: string, value?: string | null, options?: cookie.SerializeOptions) => void,
 	/**
 	 * Returns an object with all the cookies. It defaults to
 	 * 	all the request cookies, but merges anything applied via
@@ -35,37 +37,50 @@ export interface CookieContext extends Context {
 }
 
 interface SetCookies {[key: string]: string | undefined}
+// A null value means the cookie is being removed
 interface NewCookies {[key: string]: {
-	value: string,
+	value: string | null,
 	options: cookie.SerializeOptions
 }}
 
 /**
- * Translates all the cookies that have been set during this
- * 	request into a collection of key:value pairs. All the additional
- * 	metadata will be dropped.
+ * Merges all the cookies that have been set during this request on top
+ * 	of the request cookies, as a collection of key:value pairs. Removed cookies
+ * 	are left out, and all the additional metadata will be dropped.
  *
+ * @param requestCookies
  * @param newCookies
  * @returns
  */
-function getCookieValues(newCookies: NewCookies): SetCookies {
-	const cookies: SetCookies = {};
+function getCookieValues(requestCookies: SetCookies, newCookies: NewCookies): SetCookies {
+	const cookies: SetCookies = {...requestCookies};
 
 	for (const [key, newCookie] of Object.entries(newCookies)) {
-		cookies[key] = newCookie.value;
+		if (newCookie.value === null) {
+			delete cookies[key];
+		} else {
+			cookies[key] = newCookie.value;
+		}
 	}
 
 	return cookies;
 }
 
 /**
- * Builds a Set-Cookie header value from a cookie set via setCookie
+ * Builds a Set-Cookie header value from a cookie set via setCookie.
+ * 	Removed cookies are sent empty and already expired.
  *
  * @param name
  * @param newCookie
  * @returns
  */
 function serializeCookie(name: string, newCookie: NewCookies[string]): string {
+	if (newCookie.value === null) {
+		return cookie.stringifySetCookie({
+			...newCookie.options, name, value: '', expires: new Date(0), maxAge: 0
+		}, newCookie.options);
+	}
+
 	return cookie.stringifySetCookie({ ...newCookie.options, name, value: newCookie.value }, newCookie.options);
 }
 
@@ -86,29 +101,29 @@ export const serverMiddleware = function (
 	route_method: string,
 	route_path: string,
 	route_body: unknown,
-	route_headers: IncomingHeaders | undefined,
+	route_headers: IncomingHeaders,
 	next: NextCallback
 ): Promise<Response | string> {
 	let cookies: SetCookies = {};
 	this.newCookies = {};
 
 	// Find the cookies from the request and store them locally
-	if (route_headers && route_headers.cookie) {
+	if (route_headers.cookie) {
 		cookies = cookie.parseCookie(
 			Array.isArray(route_headers.cookie) ? route_headers.cookie.join('; ') : route_headers.cookie);
 	}
 
 	// Add a setCookie method to the middleware context
-	this.setCookie = function (name, value, options?) {
+	this.setCookie = (name, value, options?) => {
 		this.newCookies[name] = {
-			value: value ?? '',
+			value: value === undefined ? '' : value,
 			options: options ? options : {}
 		};
 	};
 
 	// adds a getCookies method to the middleware context
 	this.getCookies = () => {
-		return {...cookies, ...getCookieValues(this.newCookies)};
+		return getCookieValues(cookies, this.newCookies);
 	};
 
 	// Apply the cookie headers to the response
@@ -161,7 +176,7 @@ export const buildClientMiddleware: (pageDocument: Document) => Middleware<Cooki
 		return serverMiddleware.call(this, route_method, route_path, route_body, {
 			...route_headers, cookie: pageDocument.cookie
 		}, next)
-			.then((response: Response) => {
+			.then((response) => {
 
 				for (const [key, cookieValue] of Object.entries(this.newCookies)) {
 					if (cookieValue) {
