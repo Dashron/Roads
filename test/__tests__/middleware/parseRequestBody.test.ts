@@ -43,13 +43,13 @@ describe('Parse Request Body tests', () => {
 	/**
      * Test that valid json parsing works as expected
      */
-	test('test request with invalid json body', () => {
+	test('test request with invalid json body', async () => {
 		expect.assertions(2);
 		const context = {} as ParseBodyContext;
 		const body = '{hello ';
 
 
-		const response = middleware.call(context, '', '', body, {'content-type': 'application/json'}, () => {
+		const response = await middleware.call(context, '', '', body, {'content-type': 'application/json'}, () => {
 			assert.fail('Next should not be called if the request body can not be parsed');
 		});
 
@@ -102,7 +102,7 @@ describe('Parse Request Body tests', () => {
 
 		road.use(before);
 		road.use(middleware);
-		road.use(() => '');
+		road.use(async () => '');
 
 		await road.request('', '', body, {
 			'content-type' : 'application/json'
@@ -140,7 +140,7 @@ describe('Parse Request Body tests', () => {
 	});
 
 	// You can only have one content type for a request. Commas are not allowed.
-	test('test weird content-type', () => {
+	test('test weird content-type', async () => {
 		expect.assertions(2);
 
 		const { overrides, response } = callMiddleware('{"hello": "there"}', {
@@ -148,7 +148,7 @@ describe('Parse Request Body tests', () => {
 		});
 
 		expect(overrides).toBe(undefined);
-		expect(response).toEqual({
+		expect(await response).toEqual({
 			status: 400,
 			headers: {},
 			body: 'Invalid content-type header',
@@ -163,14 +163,14 @@ describe('Parse Request Body tests', () => {
 		expect(overrides).toEqual({ body: {hello: 'there'} });
 	});
 
-	test('test invalid json body is not logged', () => {
+	test('test invalid json body is not logged', async () => {
 		expect.assertions(2);
 		const consoleError = vi.spyOn(console, 'error').mockImplementation(() => { /* silence */ });
 
 		const { response } = callMiddleware('{hello ', {'content-type': 'application/json'});
 
 		expect(consoleError).not.toHaveBeenCalled();
-		expect(response).toEqual({
+		expect(await response).toEqual({
 			status: 400,
 			headers: {},
 			body: 'Invalid request body',
@@ -233,7 +233,7 @@ describe('Parse Request Body tests', () => {
 		expect(overrides).toEqual({ body: undefined });
 	});
 
-	test('test handles non-Error thrown objects safely', () => {
+	test('test handles non-Error thrown objects safely', async () => {
 		expect.assertions(1);
 		const context = {} as ParseBodyContext;
 		const body = '{"hello": "there"}';
@@ -251,7 +251,7 @@ describe('Parse Request Body tests', () => {
 		// Restore JSON.parse
 		JSON.parse = originalParse;
 
-		expect(response).toEqual({
+		expect(await response).toEqual({
 			status: 400,
 			headers: {},
 			body: 'Invalid request body',

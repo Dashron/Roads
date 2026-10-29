@@ -1,5 +1,3 @@
-import parse from 'url-parse';
-
 import { Router, Route, RouterURL } from '../../../src/middleware/router.js';
 import Road from '../../../src/core/road.js';
 import Response from '../../../src/core/response.js';
@@ -7,6 +5,7 @@ import { Context } from '../../../src/core/road.js';
 
 import { describe, expect, test, assert } from 'vitest';
 import { NextCallback } from '../../../src/core/requestChain.js';
+import { parseUrl } from '../../../src/util/url.js';
 
 const router_file_test_path = `${__dirname  }/../../resources/_router_file_test.js`;
 
@@ -75,12 +74,12 @@ describe('Router Tests', () => {
 		const path = '/';
 
 		const next: NextCallback = () => {
-			return Promise.resolve(new Response(''));
+			return Promise.resolve(new Response('Page not found', 404));
 		};
 
 		router.addRoute('POST', path, () => assert.fail('POST route should not run'));
 		return expect(router['_middleware'].call({}, router['_routes'], 'GET', path, '', {}, next))
-			.resolves.toEqual(new Response('Method Not Allowed', 405));
+			.resolves.toEqual(new Response('Method Not Allowed', 405, { allow: 'POST' }));
 	});
 
 	test('test middleware function ignores the x-http-method-override header on POST requests', () => {
@@ -239,7 +238,7 @@ describe('Router Tests', () => {
 	/**
 	 *
 	 */
-	test('test middleware function does not route to next on a missed http method but matching url', async () => {
+	test('test middleware function routes to next on a missed http method but matching url', async () => {
 		expect.assertions(3);
 		const router = new Router();
 		const path = '/';
@@ -257,9 +256,10 @@ describe('Router Tests', () => {
 			return Promise.resolve(new Response(''));
 		});
 
+		// Something later in the road handled the request, so its response is used instead of a 405
 		expect(route_hit).toEqual(false);
-		expect(next_hit).toEqual(false);
-		expect(response).toEqual(new Response('Method Not Allowed', 405));
+		expect(next_hit).toEqual(true);
+		expect(response).toEqual(new Response(''));
 	});
 
 	/**
@@ -277,7 +277,7 @@ describe('Router Tests', () => {
 		const route: Route<Context> = (request_method, request_url, request_body, request_headers) => {
 			expect(request_method).toEqual(method);
 			// parsed url
-			expect(request_url).toEqual(parse(path, true));
+			expect(request_url).toEqual(parseUrl(path));
 			// passthrough request body
 			expect(request_body).toEqual(body);
 			// passthrough headers
@@ -308,7 +308,7 @@ describe('Router Tests', () => {
 		const route: Route<Context> = (request_method, request_url, request_body, request_headers) => {
 			expect(request_method).toEqual(method);
 			// parsed url
-			const parsed_url: RouterURL = parse(req_path, true);
+			const parsed_url: RouterURL = parseUrl(req_path);
 			parsed_url.args = {numeric: 12345};
 			expect(request_url).toEqual(parsed_url);
 			// passthrough request body
@@ -341,7 +341,7 @@ describe('Router Tests', () => {
 		const route: Route<Context> = (request_method, request_url, request_body, request_headers) => {
 			expect(request_method).toEqual(method);
 			// parsed url
-			const parsed_url: RouterURL = parse(req_path, true);
+			const parsed_url: RouterURL = parseUrl(req_path);
 			parsed_url.args = {string: 'hello'};
 			expect(request_url).toEqual(parsed_url);
 			// passthrough request body
@@ -500,7 +500,7 @@ describe('Router Tests', () => {
 					expect(results[1]).toEqual(new Response('root post successful'));
 					expect(results[2]).toEqual(new Response('test get successful'));
 
-					expect(results[3]).toEqual(new Response('Method Not Allowed', 405));
+					expect(results[3]).toEqual(new Response('Method Not Allowed', 405, { allow: 'GET, HEAD' }));
 
 					expect(results[4]).toEqual(new Response('Page not found', 404));
 				});
@@ -529,7 +529,7 @@ describe('Router Tests', () => {
 					expect(results[1]).toEqual(new Response('root post successful'));
 					expect(results[2]).toEqual(new Response('test get successful'));
 
-					expect(results[3]).toEqual(new Response('Method Not Allowed', 405));
+					expect(results[3]).toEqual(new Response('Method Not Allowed', 405, { allow: 'GET, HEAD' }));
 
 					expect(results[4]).toEqual(new Response('Page not found', 404));
 				});
@@ -708,5 +708,152 @@ describe('Router Tests', () => {
 		const response = await road.request('POST', '/x');
 		expect(response.body).toEqual('post');
 		expect(args).toEqual({ b: 'x' });
+	});
+
+	test('test path params are percent-decoded', async () => {
+		const road = new Road();
+		const router = new Router(road);
+		let args: RouterURL['args'];
+
+		router.addRoute('GET', '/users/$name/#id', (method, url: RouterURL) => {
+			args = url.args;
+			return Promise.resolve(new Response('ok'));
+		});
+
+		await road.request('GET', '/users/a%20b%2Fc/%31%32');
+		expect(args).toEqual({ name: 'a b/c', id: 12 });
+	});
+
+	test('test literal path parts are matched after percent-decoding', async () => {
+		const road = new Road();
+		const router = new Router(road);
+
+		router.addRoute('GET', '/café', () => Promise.resolve(new Response('ok')));
+
+		expect((await road.request('GET', '/caf%C3%A9')).body).toEqual('ok');
+	});
+
+	test('test a path with malformed percent-encoding matches no route', async () => {
+		const road = new Road();
+		const router = new Router(road);
+
+		router.addRoute('GET', '/users/$name', () => Promise.resolve(new Response('ok')));
+
+		expect(await road.request('GET', '/users/%E0%A4%A')).toEqual(new Response('Page not found', 404));
+	});
+
+	test('test the url passed to routes has the parsed query string and hash', async () => {
+		const road = new Road();
+		const router = new Router(road);
+		let url: RouterURL | undefined;
+
+		router.addRoute('GET', '/search', (method, requestUrl: RouterURL) => {
+			url = requestUrl;
+			return Promise.resolve(new Response('ok'));
+		});
+
+		await road.request('GET', '/search?q=a+b&tag=x&tag=y#results');
+		expect(url?.pathname).toEqual('/search');
+		expect(url?.search).toEqual('?q=a+b&tag=x&tag=y');
+		expect(url?.hash).toEqual('#results');
+		expect({ ...url?.query }).toEqual({ q: 'a b', tag: 'x' });
+		expect(url?.searchParams.getAll('tag')).toEqual(['x', 'y']);
+	});
+
+	test('test HEAD requests get the GET route\'s status and headers without its body', async () => {
+		const road = new Road();
+		const router = new Router(road);
+		let method: string | undefined;
+
+		router.addRoute('GET', '/x', (requestMethod) => {
+			method = requestMethod;
+			return Promise.resolve(new Response('get', 201, { 'content-type': 'text/plain' }));
+		});
+
+		expect(await road.request('HEAD', '/x')).toEqual(new Response('', 201, { 'content-type': 'text/plain' }));
+		expect(method).toEqual('HEAD');
+	});
+
+	test('test HEAD requests to a GET route that returns a string get an empty body', async () => {
+		const road = new Road();
+		const router = new Router(road);
+
+		router.addRoute('GET', '/x', async () => 'get');
+
+		expect(await road.request('HEAD', '/x')).toEqual(new Response(''));
+	});
+
+	test('test a HEAD route is used over the GET route', async () => {
+		const road = new Road();
+		const router = new Router(road);
+
+		router.addRoute('GET', '/x', () => Promise.resolve(new Response('get')));
+		router.addRoute('HEAD', '/x', () => Promise.resolve(new Response('head')));
+
+		expect(await road.request('HEAD', '/x')).toEqual(new Response('head'));
+	});
+
+	test('test a 405 lists every allowed method, including HEAD for GET routes', async () => {
+		const road = new Road();
+		const router = new Router(road);
+
+		router.addRoute('GET', '/x', () => Promise.resolve(new Response('get')));
+		router.addRoute('PUT', '/x', () => Promise.resolve(new Response('put')));
+		router.addRoute('DELETE', '/$name', () => Promise.resolve(new Response('delete')));
+
+		expect(await road.request('POST', '/x'))
+			.toEqual(new Response('Method Not Allowed', 405, { allow: 'GET, PUT, DELETE, HEAD' }));
+	});
+
+	test('test a method missed by one router is handled by a later router', async () => {
+		const road = new Road();
+		const first = new Router(road);
+		const second = new Router(road);
+
+		first.addRoute('GET', '/x', () => Promise.resolve(new Response('get')));
+		second.addRoute('POST', '/x', () => Promise.resolve(new Response('post')));
+
+		expect(await road.request('GET', '/x')).toEqual(new Response('get'));
+		expect(await road.request('POST', '/x')).toEqual(new Response('post'));
+		expect(await road.request('DELETE', '/x'))
+			.toEqual(new Response('Method Not Allowed', 405, { allow: 'GET, HEAD, POST' }));
+	});
+
+	test('test a method miss is answered by later middleware that handles the request', async () => {
+		const road = new Road();
+		const router = new Router(road);
+
+		router.addRoute('GET', '/x', () => Promise.resolve(new Response('get')));
+		road.use(async () => new Response('fallback', 200));
+
+		expect(await road.request('POST', '/x')).toEqual(new Response('fallback', 200));
+	});
+
+	test('test routes loaded from a file URL', async () => {
+		const road = new Road();
+		const router = new Router(road);
+
+		await router.addRouteFile(new URL('../../resources/_router_file_test.js', import.meta.url));
+
+		expect(await road.request('GET', '/test')).toEqual(new Response('test get successful'));
+	});
+
+	test('test routes loaded from a module object', async () => {
+		const road = new Road();
+		const router = new Router(road);
+
+		await router.addRouteFile({
+			'/inline': {
+				GET: () => Promise.resolve(new Response('inline get'))
+			}
+		}, '/prefix');
+
+		expect(await road.request('GET', '/prefix/inline')).toEqual(new Response('inline get'));
+	});
+
+	test('test addRouteFile rejects relative paths', async () => {
+		const router = new Router();
+
+		await expect(router.addRouteFile('./routes.js')).rejects.toThrow(/relative path/);
 	});
 });

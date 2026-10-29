@@ -233,7 +233,7 @@ export function build (options: CSRFOptions): Middleware<CSRFMiddlewareContext> 
 		return payload as Record<string, unknown>;
 	}
 
-	return function csrfMiddleware (method, url, body, headers, next) {
+	return async function csrfMiddleware (method, url, body, headers, next) {
 		if (typeof this.getCookies !== 'function' || typeof this.setCookie !== 'function') {
 			throw new Error('The CSRF middleware requires the cookie middleware to be added to the road first');
 		}

@@ -29,7 +29,7 @@ function requestMethod (
 		return next();
 	});
 	road.use(build(options));
-	road.use((finalMethod) => finalMethod);
+	road.use(async (finalMethod) => finalMethod);
 
 	return road.request(method, url, body, headers);
 }
@@ -41,7 +41,7 @@ describe('method override tests', () => {
 		const road = new Road();
 		road.use(parseBodyMiddleware);
 		road.use(build());
-		road.use((method) => method);
+		road.use(async (method) => method);
 
 		// This is a GET with no override, to make sure a misconfigured road fails on any request
 		return expect(road.request('GET', '/')).rejects.toThrow(
@@ -56,7 +56,7 @@ describe('method override tests', () => {
 		road.use(parseBodyMiddleware);
 		road.use(buildClientCSRF({ cookie: '' } as Document));
 		road.use(build());
-		road.use((method) => method);
+		road.use(async (method) => method);
 
 		expect((await road.request('POST', '/', '_method=DELETE', FORM_HEADERS)).body).toEqual('DELETE');
 	});

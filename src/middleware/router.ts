@@ -7,11 +7,11 @@
  * 	It allows you to easily attach functionality to HTTP methods and paths.
  */
 
-import parse from 'url-parse';
 import { IncomingHeaders } from '../core/road.js';
 import Road, {Context} from '../core/road.js';
 import Response from '../core/response.js';
 import { NextCallback, RequestChain } from '../core/requestChain.js';
+import { ParsedURL, parseUrl } from '../util/url.js';
 
 
 /**
@@ -20,7 +20,7 @@ import { NextCallback, RequestChain } from '../core/requestChain.js';
  */
 export interface Route<ContextType extends Context, BodyType = unknown> {
 	(this: ContextType, method: string, path: RouterURL, body: BodyType,
-		headers: IncomingHeaders, next: NextCallback): Promise<Response>
+		headers: IncomingHeaders, next: NextCallback): Promise<Response | string>
 }
 
 interface RouteDetails {
@@ -29,8 +29,24 @@ interface RouteDetails {
 	method: string
 }
 
-export interface RouterURL extends ReturnType<typeof parse<Record<string, string | undefined>>> {
+/**
+ * The request url as received by routes. See `ParsedURL` for the url parts.
+ */
+export interface RouterURL extends ParsedURL {
+	/**
+	 * The values of any `#` or `$` variables in the route's path. `#` values are numbers, `$` values are
+	 * 	percent-decoded strings. Only present if the route's path has variables.
+	 */
 	args?: Record<string, string | number>
+}
+
+/**
+ * The contents of a route file. Each key is an HTTP path, and each value maps HTTP methods to route functions.
+ */
+export interface RouteFile {
+	[path: string]: {
+		[method: string]: Route<Context> | Route<Context>[]
+	}
 }
 /**
  * This is a router middleware for roads.
@@ -42,6 +58,13 @@ export interface RouterURL extends ReturnType<typeof parse<Record<string, string
  * 		All non-slash values will match this route.
  *
  * Any variables will be added to the route's request url object under the "args" object.
+ * Each part of the request path is percent-decoded before it is matched, so `/users/a%20b` matches
+ * 	`/users/$name` with `{ name: 'a b' }`. Requests whose path can't be decoded don't match any route.
+ *
+ * If a request's path matches a route but its method doesn't, the request continues down the road. If nothing
+ * 	after the router handles it (i.e. the rest of the road responds with a 404), the router responds with a 405
+ * 	and an `Allow` header. As RFC 9110 requires, HEAD requests are answered by the matching GET route if there is
+ * 	no HEAD route. The response keeps the GET route's status and headers, but its body is removed.
  *
  * e.g.
  * /users/#user_id will match /users/12345, not /users/abcde. If a request is made to /users/12345
@@ -112,11 +135,15 @@ export class Router<RouterContextType extends Context> {
 			paths = [paths];
 		}
 
+		// Each route declares the context and body it expects, and trusts earlier middleware to provide them.
+		// 		The router can't check that, so every route is stored with the base types.
+		const route = (Array.isArray(fn) ? new RequestChain(fn) : fn) as unknown as RouteDetails['route'];
+
 		paths.forEach((path) => {
 			this._routes.push({
 				path: path,
 				method: method,
-				route: Array.isArray(fn) ? new RequestChain(fn) : fn
+				route
 			});
 		});
 	}
@@ -124,22 +151,38 @@ export class Router<RouterContextType extends Context> {
 	/**
 	 * Add an entire file worth of routes.
 	 *
-	 * The file should be a node module that exposes an object.
+	 * The file should be a module whose default export is an object.
 	 * Each key should be an HTTP path, each value should be an object.
 	 * In that object, each key should be an HTTP method, and the value should be your route function.
 	 *
-	 * @param {string} filePath - The file path
+	 * @param {string | URL | RouteFile} file - The routes to add. Either the module itself (e.g. the result of
+	 * 		`import routes from './routes.js'`), a file URL (e.g. `new URL('./routes.js', import.meta.url)`), or an
+	 * 		absolute path. Relative paths are rejected, because `import()` would resolve them relative to roads
+	 * 		instead of your code.
 	 * @param {string} [prefix] - A string that will help namespace this file. e.g. if you call this on a file
 	 * 		with a route of "/posts", and the prefix "/users", the route will be assigned to "/users/posts"
 	 */
-	addRouteFile (filePath: string, prefix?: string): Promise<void> {
-		return import(filePath).then(routes => {
-			for (const path in routes) {
-				for (const method in routes[path]) {
-					this.addRoute(method, buildRouterPath(path, prefix), routes[path][method]);
-				}
+	async addRouteFile (file: string | URL | RouteFile, prefix?: string): Promise<void> {
+		let routes: RouteFile;
+
+		if (typeof file === 'string' || file instanceof URL) {
+			if (typeof file === 'string' && file.startsWith('.')) {
+				throw new TypeError(`addRouteFile can't load the relative path "${file}". Pass an absolute path, a file ` +
+					'URL such as new URL(\'./routes.js\', import.meta.url), or the imported module.');
 			}
-		});
+
+			const routeModule = await import(file.toString());
+			// ES modules expose the routes as their default export, and Node exposes module.exports there too
+			routes = 'default' in routeModule ? routeModule.default : routeModule;
+		} else {
+			routes = file;
+		}
+
+		for (const [path, methods] of Object.entries(routes)) {
+			for (const [method, route] of Object.entries(methods)) {
+				this.addRoute(method, buildRouterPath(path, prefix), route);
+			}
+		}
 	}
 
 	/**
@@ -152,49 +195,108 @@ export class Router<RouterContextType extends Context> {
 		request_headers: IncomingHeaders, next: NextCallback
 	): Promise<Response | string> {
 
-		let response: string | Response | Promise<string | Response> | null = null;
-		let hit = false;
-		let routeHitMethodFail = false;
+		const parsed_url: RouterURL = parseUrl(request_url);
+		const pathParts = splitPath(parsed_url.pathname);
 
-		const parsed_url: RouterURL = parse(request_url, true);
+		// Every method that a route accepts for this path, for the Allow header
+		const allowedMethods = new Set<string>();
+		let headFallback: { route: RouteDetails, args: Record<string, string | number> } | null = null;
 
-		for (let i = 0; i < routes.length; i++) {
-			const route = routes[i];
+		for (const route of routes) {
+			const args = pathParts ? matchRoutePath(route, pathParts) : null;
 
-			const args = route ? matchRoutePath(route, parsed_url) : null;
+			if (!args) {
+				continue;
+			}
 
-			if (route && args) {
-				// Check the method last, so we can give proper status codes
-				if (route.method === request_method) {
-					if (Object.keys(args).length > 0) {
-						parsed_url.args = args;
+			// Check the method last, so we can give proper status codes
+			if (route.method === request_method) {
+				return runRoute.call(this, route, args, parsed_url, request_method, request_body, request_headers, next);
+			}
+
+			allowedMethods.add(route.method);
+
+			// HEAD requests are answered by the GET route, unless a HEAD route for this path comes later
+			if (request_method === 'HEAD' && route.method === 'GET' && !headFallback) {
+				headFallback = { route, args };
+			}
+		}
+
+		// RFC 9110 9.3.2: HEAD is identical to GET, except the response has no body
+		if (headFallback) {
+			const response = await runRoute.call(this, headFallback.route, headFallback.args, parsed_url,
+				request_method, request_body, request_headers, next);
+
+			return response instanceof Response ? new Response('', response.status, response.headers) : new Response('');
+		}
+
+		if (!allowedMethods.size) {
+			return next();
+		}
+
+		// GET routes also answer HEAD requests (see above), so HEAD belongs in the Allow header
+		if (allowedMethods.has('GET')) {
+			allowedMethods.add('HEAD');
+		}
+
+		// The path matched, but not the method. Something later in the road (such as another router) might
+		// 		handle this method, so only respond with a 405 if nothing else does.
+		const response = await next();
+
+		if (!(response instanceof Response) || (response.status !== 404 && response.status !== 405)) {
+			return response;
+		}
+
+		// If a later router also missed on the method, include the methods it allows
+		for (const key of Object.keys(response.headers)) {
+			if (key.toLowerCase() === 'allow') {
+				for (const method of [response.headers[key] ?? []].flat().join(',').split(',')) {
+					if (method.trim()) {
+						allowedMethods.add(method.trim());
 					}
-
-					if (route.route instanceof RequestChain) {
-						response = route.route.getChainStart(next)(
-							this, request_method, parsed_url, request_body, request_headers);
-					} else {
-						response = (route.route).call(this, request_method, parsed_url, request_body, request_headers, next);
-					}
-
-					hit = true;
-					break;
-				} else {
-					routeHitMethodFail = true;
 				}
 			}
 		}
 
-		if (hit) {
-			// response is guaranteed to be non-null when hit is true
-			return response!;
-		}
+		return new Response('Method Not Allowed', 405, { allow: [...allowedMethods].join(', ') });
+	}
+}
 
-		if (routeHitMethodFail) {
-			return new Response('Method Not Allowed', 405);
-		}
+/**
+ * Runs a route that matched the request
+ */
+function runRoute (
+	this: Context, route: RouteDetails, args: Record<string, string | number>, parsed_url: RouterURL,
+	request_method: string, request_body: unknown, request_headers: IncomingHeaders, next: NextCallback
+): Promise<Response | string> {
+	if (Object.keys(args).length > 0) {
+		parsed_url.args = args;
+	}
 
-		return next();
+	if (route.route instanceof RequestChain) {
+		return route.route.getChainStart(next)(this, request_method, parsed_url, request_body, request_headers);
+	}
+
+	return route.route.call(this, request_method, parsed_url, request_body, request_headers, next);
+}
+
+/**
+ * Splits a request path into its percent-decoded parts
+ *
+ * @param pathname - The request path
+ * @returns The decoded parts, or null if the path isn't valid percent-encoding
+ */
+function splitPath (pathname: string): string[] | null {
+	let parts = pathname.split('/');
+	if (parts[0] === '') {
+		parts = parts.slice(1); // Slice kills the emptystring before the leading slash
+	}
+
+	try {
+		return parts.map((part) => decodeURIComponent(part));
+	} catch {
+		// e.g. "/users/%E0%A4%A"
+		return null;
 	}
 }
 
@@ -204,25 +306,16 @@ export class Router<RouterContextType extends Context> {
  *
  * @param {object} route - Route object from this router class
  * @param {object} route.path - HTTP path associated with this route
- * @param {object} request_url - Parsed HTTP request url
+ * @param {Array<string>} actual - The percent-decoded parts of the request path
  * @returns {object | null} - The url variables if the path matches, otherwise null
  */
 function matchRoutePath (
-	route: {path: string}, request_url: ReturnType<typeof parse>
+	route: {path: string}, actual: string[]
 ): Record<string, string | number> | null {
-
-	if (!request_url.pathname) {
-		return null;
-	}
 
 	let template = route.path.split('/');
 	if (template[0] === '') {
 		template = template.slice(1); // Slice kills the emptystring before the leading slash
-	}
-
-	let actual = request_url.pathname.split('/');
-	if (actual[0] === '') {
-		actual = actual.slice(1); // Slice kills the emptystring before the leading slash
 	}
 
 	if (template.length !== actual.length) {

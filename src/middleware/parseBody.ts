@@ -91,7 +91,9 @@ function parseRequestBody (body: string | undefined, contentType?: string): unkn
  * Attempts the parse the request body into a useful object. Every middleware and route after this one
  * 	receives the parsed body as its `body` parameter. The original string is kept on the context as `rawBody`.
  */
-export const middleware: Middleware<ParseBodyContext, string | undefined> = function (method, url, body, headers, next) {
+export const middleware: Middleware<ParseBodyContext, string | undefined> = async function (
+	method, url, body, headers, next
+) {
 	let parsedBody: unknown;
 
 	this.rawBody = body;

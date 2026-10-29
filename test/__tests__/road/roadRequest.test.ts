@@ -159,7 +159,7 @@ describe('road request', () => {
 			return next();
 		});
 
-		road.use(function () {
+		road.use(async function () {
 			step3 += 1;
 			return 'done';
 		});
@@ -200,7 +200,7 @@ describe('road request', () => {
 			return next();
 		});
 
-		road.use(function () {
+		road.use(async function () {
 			step4 += 1;
 			return 'done';
 		});
@@ -236,7 +236,7 @@ describe('road request', () => {
 			return next();
 		});
 
-		road.use(function () {
+		road.use(async function () {
 			step3 += 1;
 			return 'done';
 		});
@@ -259,7 +259,7 @@ describe('road request', () => {
 		expect.assertions(1);
 		const road = new Road();
 
-		road.use(function (method, url, body, headers) {
+		road.use(async function (method, url, body, headers) {
 			return JSON.stringify(headers);
 		});
 
@@ -280,7 +280,7 @@ describe('road request', () => {
 		expect.assertions(1);
 		const road = new Road();
 
-		road.use(function (method, url, body, headers) {
+		road.use(async function (method, url, body, headers) {
 			return JSON.stringify(headers);
 		});
 
@@ -309,7 +309,7 @@ describe('road request', () => {
 			return next();
 		});
 
-		road.use(function (method, url, body, headers) {
+		road.use(async function (method, url, body, headers) {
 			seen.push(method);
 			return `${url} ${body} ${JSON.stringify(headers)}`;
 		});
@@ -340,7 +340,7 @@ describe('road request', () => {
 			return next();
 		});
 
-		road.use(function (method, url, body, headers) {
+		road.use(async function (method, url, body, headers) {
 			seen.push(body);
 			return `${method} ${url} ${JSON.stringify(headers)}`;
 		});
@@ -364,7 +364,7 @@ describe('road request', () => {
 			return next({ method: 'PUT', body: undefined });
 		});
 
-		road.use(function (method, url, body) {
+		road.use(async function (method, url, body) {
 			return `${method} ${body}`;
 		});
 
@@ -386,7 +386,7 @@ describe('road request', () => {
 			return next();
 		});
 
-		road.use(function (method) {
+		road.use(async function (method) {
 			return method;
 		});
 
@@ -404,7 +404,7 @@ describe('road request', () => {
 		expect.assertions(1);
 		const road = new Road();
 
-		road.use(function () {
+		road.use(async function () {
 			return new Response('done', 200, {
 				'Content-Type': 'text/plain',
 				'set-cookie': 'a=1',
@@ -433,7 +433,7 @@ describe('road request', () => {
 			next();
 		} as unknown as Middleware<Context>);
 
-		road.use(function () {
+		road.use(async function () {
 			return 'unreachable through the first middleware';
 		});
 

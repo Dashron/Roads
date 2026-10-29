@@ -963,7 +963,7 @@ describe('CORS through a Road', () => {
 		road.use(build({
 			validOrigins: ['https://example.com']
 		}));
-		road.use(() => 'OK');
+		road.use(async () => 'OK');
 
 		const result = await road.request('GET', '/', undefined, { Origin: 'https://example.com' });
 
@@ -975,7 +975,7 @@ describe('CORS through a Road', () => {
 		road.use(build({
 			validOrigins: ['https://example.com']
 		}));
-		road.use(() => 'OK');
+		road.use(async () => 'OK');
 
 		const result = await road.request('GET', '/', undefined, { Origin: 'https://malicious.com' });
 

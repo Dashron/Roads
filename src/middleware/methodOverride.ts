@@ -69,7 +69,7 @@ function getBodyOverride (body: unknown): string | undefined {
 export function build (options: MethodOverrideOptions = {}): Middleware<Context> {
 	const methods = (options.methods ?? DEFAULT_METHODS).map((method) => method.toUpperCase());
 
-	return function methodOverrideMiddleware (method, url, body, headers, next) {
+	return async function methodOverrideMiddleware (method, url, body, headers, next) {
 		// We check this on every request, so a misconfigured road fails right away
 		//		instead of only when someone sends an override
 		if (this.csrfProtected !== true) {

@@ -22,7 +22,7 @@ export interface IncomingHeaders extends Record<string, string | Array<string> |
 export interface Middleware<MiddlewareContext extends Context, BodyType = unknown> {
 	(this: MiddlewareContext, method: string, path: string,
 		body: BodyType, headers: IncomingHeaders,
-		next: NextCallback): Promise<Response | string> | Response | string
+		next: NextCallback): Promise<Response | string>
 }
 
 export interface Context extends Record<string, unknown> {}

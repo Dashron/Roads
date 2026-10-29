@@ -25,7 +25,7 @@ function buildRoad (handler: (this: TestContext, method: string) => string, opti
 	road.use(storeValsMiddleware);
 	road.use(parseBodyMiddleware);
 	road.use(build({ sign, verify, ...options }));
-	road.use<TestContext>(function (method) {
+	road.use<TestContext>(async function (method) {
 		return handler.call(this, method);
 	});
 
@@ -238,7 +238,7 @@ describe('csrf tests', () => {
 				return { exp: secondsFromNow(60) };
 			}
 		}));
-		road.use<CSRFContext>(function () {
+		road.use<CSRFContext>(async function () {
 			return this.getCSRFFormElement();
 		});
 
@@ -313,7 +313,7 @@ describe('csrf tests', () => {
 			return next();
 		});
 		road.use(build({ sign, verify, cookieName: COOKIE_NAME, getUserId: (context: Context) => context.userID }));
-		road.use(() => 'hit');
+		road.use(async () => 'hit');
 
 		expect((await post(road, token, token)).body).toEqual('hit');
 	});
@@ -447,7 +447,7 @@ describe('csrf tests', () => {
 			expect.assertions(1);
 
 			const road = buildClientRoad('other=1; __Host-csrf=abc%22def');
-			road.use<CSRFContext>(function () {
+			road.use<CSRFContext>(async function () {
 				return JSON.stringify([this.getCSRFToken(), this.getCSRFFormElement(), this.csrfProtected]);
 			});
 
@@ -462,7 +462,7 @@ describe('csrf tests', () => {
 			expect.assertions(1);
 
 			const road = buildClientRoad('csrf=abc', 'csrf');
-			road.use<CSRFContext>(function () {
+			road.use<CSRFContext>(async function () {
 				return this.getCSRFToken();
 			});
 
@@ -473,7 +473,7 @@ describe('csrf tests', () => {
 			expect.assertions(1);
 
 			const road = buildClientRoad('');
-			road.use<CSRFContext>(function () {
+			road.use<CSRFContext>(async function () {
 				return this.getCSRFFormElement();
 			});
 
@@ -484,7 +484,7 @@ describe('csrf tests', () => {
 			expect.assertions(1);
 
 			const road = buildClientRoad('');
-			road.use(() => 'hit');
+			road.use(async () => 'hit');
 
 			expect((await road.request('POST', '/')).body).toEqual('hit');
 		});

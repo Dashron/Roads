@@ -196,7 +196,7 @@ describe('KillSlashes tests', () => {
 	test('test common middleware never redirects to another host', async () => {
 		const road = new Road();
 		attachCommonMiddleware(road);
-		road.use(() => 'ok');
+		road.use(async () => 'ok');
 
 		const attempts = ['//evil.com/', '//evil.com/a/b/', '///evil.com/', '/\\evil.com/', '\\\\evil.com/',
 			'/\\/\\evil.com/', '/\t/evil.com/', '//evil.com:8080/', '//user@evil.com/', '//evil.com/?next=/'];
