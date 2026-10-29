@@ -21,7 +21,7 @@ export interface IncomingHeaders extends Record<string, string | Array<string> |
  */
 export interface Middleware<MiddlewareContext extends Context, BodyType = unknown> {
 	(this: MiddlewareContext, method: string, path: string,
-		body: BodyType, headers: IncomingHeaders | undefined,
+		body: BodyType, headers: IncomingHeaders,
 		next: NextCallback): Promise<Response | string> | Response | string
 }
 
@@ -65,7 +65,7 @@ export default class Road {
 	 * | headers | object                       | The request's headers. This is an object of strings or arrays of strings.                        |
 	 * | next    | function(): Promise<Response | String>                                                                                          | The next step of the *request chain*. If there are no more steps in the *request chain* this does nothing. This method will always return a promise, which resolves to a `Response` object, or a string. Pass `{ method: 'DELETE' }` or `{ body: newBody }` to change the method or body that the rest of the chain receives. |
 	 *
-	 * Each middleware function must return a promise that resolves to a [Response](#response) object or a string. If you return a string it will be transformed into a response object using the default status code (200) and no headers.
+	 * Each middleware function must return a promise that resolves to a [Response](#response) object or a string. If you return a string it will be transformed into a response object using the default status code (200) and no headers. If the chain resolves to `undefined` or `null` (usually a middleware that forgot to `return next()`), `road.request` rejects with a `TypeError`.
 	 *
 	 * *See the readme for more information*
 	 *
@@ -73,7 +73,9 @@ export default class Road {
 	 * @returns {Road} this road object. Useful for chaining use statements.
 	 */
 	use<ContextType extends Context, BodyType = unknown> (fn: Middleware<ContextType, BodyType>): Road {
-		this._request_chain.add(fn);
+		// Each middleware declares the context and body it expects, and trusts earlier middleware to provide them.
+		// 		The road can't check that, so every middleware is stored with the base types.
+		this._request_chain.add(fn as unknown as Middleware<Context>);
 
 		return this;
 	}
@@ -97,7 +99,7 @@ export default class Road {
 		// Header names are case-insensitive, so we lower-case them on the way in and on the way out. This lets
 		// 		middleware and connectors look headers up by their lower-case name
 		return response_lib.wrap(this._request_chain.getChainStart()({}, method, url, body,
-			headers ? normalizeHeaders(headers) : headers))
+			headers ? normalizeHeaders(headers) : {}))
 			.then((response) => {
 				response.headers = normalizeHeaders(response.headers);
 				return response;
