@@ -44,16 +44,10 @@ export default function buildClientRoad (pageDocument: Document, pageWindow: Win
 	const router = new RouterMiddleware.Router<StoreValsMiddleware.StoreValsContext & SiteContext>(road);
 	applyBrowserSafeRoutes(router);
 
-	// The browser road only has some of the routes. Throwing when none of them matched makes RoadsPJAX
-	//		fall back to a normal page load, so the server renders the page instead
-	road.use(function (method, url, body, headers, next) {
-		return next().then((response) => {
-			if (!response) {
-				throw new Error(`The browser road has no route for ${method} ${url}`);
-			}
-
-			return response;
-		});
+	// The browser road only has some of the routes. The router only reaches this when none of them matched.
+	//		Throwing makes RoadsPJAX fall back to a normal page load, so the server renders the page instead
+	road.use(async function (method, url) {
+		throw new Error(`The browser road has no route for ${method} ${url}`);
 	});
 
 	return { road, pjax };

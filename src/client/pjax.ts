@@ -73,15 +73,14 @@ export default class RoadsPjax {
 	 * There are a couple of steps required to get page titles working properly with
 	 * 	PJAX.
 	 *
-	 * First you must use the `storeVals` middleware to manage your page title. In
-	 * 	the following example we are storing a page title of `"Homepage"`.
+	 * First call this function with the key you will store your page title under. This adds the
+	 * 	`storeVals` middleware and the title middleware to the end of the road, so call it before
+	 * 	you add your routes.
 	 *
-	 * Second you should have your server-side rendering put this value into the
-	 * 	`<title>` element of your layout. Check the typescript example for how that
-	 * 	could work with the Handlebars templating engine.
+	 * Second, store the page title in your routes, e.g. `this.storeVal('page-title', 'Homepage')`.
 	 *
-	 * Third you need to create your `RoadsPJAX` object and configure it to look for
-	 *  your `page-title` value.
+	 * Third you should have your server-side rendering put this value into the
+	 * 	`<title>` element of your layout. See `example/ts/src/middleware/addLayout.ts`.
 	 *
 	 * @param {titleKey} string - The key of the title as stored in the "storeVals" middleware.
 	 * @returns {RoadsPjax} Returns the PJAX object. This is provided to allow for easy function chaining.

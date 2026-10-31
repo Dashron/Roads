@@ -68,10 +68,13 @@ export const middleware: Middleware<ModifiedSinceContext> = function (method, ur
 
 	return next()
 		.then((response) => {
-			if (response instanceof Response && lastMod) {
-				response.headers['last-modified'] = lastMod.toUTCString();
+			if (!lastMod) {
+				return response;
 			}
 
-			return response;
+			// Wrap strings, so routes that return a plain string still get the header
+			const responseObject = response instanceof Response ? response : new Response(response);
+			responseObject.headers['last-modified'] = lastMod.toUTCString();
+			return responseObject;
 		});
 };

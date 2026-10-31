@@ -60,7 +60,7 @@ export default class Road {
 	 * | name    | type                         | description                                                                                      |
 	 * | ------- | ---------------------------- | ------------------------------------------------------------------------------------------------ |
 	 * | method  | string                       | The request's HTTP method                                                                        |
-	 * | url     | string                       | The request's URL. The `SimpleRouter` is included to help run different code for different URLs. |
+	 * | url     | string                       | The request's URL. The `Router` middleware is included to help run different code for different URLs. |
 	 * | body    | string                       | The request's body (as a string). If the `parseBodyMiddleware` runs earlier in the chain, this is the parsed body instead |
 	 * | headers | object                       | The request's headers. This is an object of strings or arrays of strings.                        |
 	 * | next    | function(): Promise<Response | String>                                                                                          | The next step of the *request chain*. If there are no more steps in the *request chain* this does nothing. This method will always return a promise, which resolves to a `Response` object, or a string. Pass `{ method: 'DELETE' }` or `{ body: newBody }` to change the method or body that the rest of the chain receives. |

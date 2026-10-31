@@ -87,7 +87,7 @@ export class Router<RouterContextType extends Context> {
 	}
 
 	/**
-	 * If you don't provide a road to the SimpleRouter constructor, your routes will not be executed.
+	 * If you don't provide a road to the Router constructor, your routes will not be executed.
 	 * 	If you have reason not to assign the road off the bat, you can assign it later with this function.
 	 *
 	 * @param  {Road} road - The road that will receive the Router middleware

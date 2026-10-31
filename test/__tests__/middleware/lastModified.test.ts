@@ -143,6 +143,25 @@ describe('modified sine tests', () => {
 		expect(notModified).toBe(false);
 	});
 
+	test('test a string response is wrapped so it gets the last-modified header', async () => {
+		const context: ModifiedSinceContext = {} as ModifiedSinceContext;
+		const response = await ensureResponse(middleware.call(context, 'GET', '/', undefined, {}, () => {
+			context.shouldReturnNotModifiedResponse('Wed, 01 Jan 2020 00:00:00 GMT');
+			return Promise.resolve('hi');
+		}));
+
+		expect(response.status).toBe(200);
+		expect(response.body).toBe('hi');
+		expect(response.headers['last-modified']).toBe('Wed, 01 Jan 2020 00:00:00 GMT');
+	});
+
+	test('test a string response is left alone when no date was checked', async () => {
+		const context: ModifiedSinceContext = {} as ModifiedSinceContext;
+		const response = await middleware.call(context, 'GET', '/', undefined, {}, () => Promise.resolve('hi'));
+
+		expect(response).toBe('hi');
+	});
+
 	test('test the first of several if-modified-since values is used', async () => {
 		const { notModified } = await check('GET', {
 			'if-modified-since': ['Fri, 01 Jan 2021 00:00:00 GMT', 'Mon, 01 Jan 1990 00:00:00 GMT']

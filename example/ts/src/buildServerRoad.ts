@@ -14,7 +14,7 @@ import {
 } from 'roads';
 
 import addLayout from './middleware/addLayout.js';
-import emptyTo404 from './middleware/emptyTo404.js';
+import notFound from './middleware/notFound.js';
 import applyBrowserSafeRoutes from './routes/applyBrowserSafeRoutes.js';
 import applyServerOnlyRoutes from './routes/applyServerOnlyRoutes.js';
 import { sign, verify } from './csrfSigner.js';
@@ -71,7 +71,7 @@ export default function buildServerRoad (apiRoad: Road): Road {
 	applyBrowserSafeRoutes(router);
 	applyServerOnlyRoutes(router);
 	// This runs when no route matched. It comes after the router, so its 404 still gets the layout
-	road.use(emptyTo404);
+	road.use(notFound);
 
 	return road;
 }
