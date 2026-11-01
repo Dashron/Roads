@@ -47,7 +47,7 @@
     "cookie": "^2.0.1"
   },
   "engines": {
-    "node": ">=22.23.4"
+    "node": ">=22"
   },
   "packageManager": "npm@11.6.2",
   "license": "MIT",

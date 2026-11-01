@@ -9,7 +9,8 @@ jobs:
     strategy:
       matrix:
         # 20.x and lower are end-of-life and not supported by cookie, content-type or vitest
-        node-version: [22.x, 24.x]
+        # 22.13.0 is the oldest 22 release supported by all of our dev tools (eslint and jsdom)
+        node-version: [22.13.0, 22.x, 24.x, 26.x]
 
     steps:
       - uses: actions/checkout@v4
