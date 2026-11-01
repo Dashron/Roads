@@ -58,8 +58,11 @@ export interface RouteFile {
  * 		All non-slash values will match this route.
  *
  * Any variables will be added to the route's request url object under the "args" object.
- * Each part of the request path is percent-decoded before it is matched, so `/users/a%20b` matches
- * 	`/users/$name` with `{ name: 'a b' }`. Requests whose path can't be decoded don't match any route.
+ * Variables are percent-decoded, so `/users/a%20b` matches `/users/$name` with `{ name: 'a b' }`.
+ * 	Requests whose path can't be decoded don't match any route.
+ * Literal path parts only match their exact text or its standard encoding, so `/caf%C3%A9` matches `/café`, but
+ * 	`/%61pi` does not match `/api`. This way a middleware that checks the request url for `/api/` sees every
+ * 	request that reaches those routes.
  *
  * If a request's path matches a route but its method doesn't, the request continues down the road. If nothing
  * 	after the router handles it (i.e. the rest of the road responds with a 404), the router responds with a 405
@@ -281,19 +284,27 @@ function runRoute (
 }
 
 /**
- * Splits a request path into its percent-decoded parts
+ * A single part of the request path
+ */
+interface PathPart {
+	raw: string,
+	decoded: string
+}
+
+/**
+ * Splits a request path into its parts, both as received and percent-decoded
  *
  * @param pathname - The request path
- * @returns The decoded parts, or null if the path isn't valid percent-encoding
+ * @returns The parts, or null if the path isn't valid percent-encoding
  */
-function splitPath (pathname: string): string[] | null {
+function splitPath (pathname: string): PathPart[] | null {
 	let parts = pathname.split('/');
 	if (parts[0] === '') {
 		parts = parts.slice(1); // Slice kills the emptystring before the leading slash
 	}
 
 	try {
-		return parts.map((part) => decodeURIComponent(part));
+		return parts.map((part) => ({ raw: part, decoded: decodeURIComponent(part) }));
 	} catch {
 		// e.g. "/users/%E0%A4%A"
 		return null;
@@ -306,11 +317,11 @@ function splitPath (pathname: string): string[] | null {
  *
  * @param {object} route - Route object from this router class
  * @param {object} route.path - HTTP path associated with this route
- * @param {Array<string>} actual - The percent-decoded parts of the request path
+ * @param {Array<PathPart>} actual - The parts of the request path
  * @returns {object | null} - The url variables if the path matches, otherwise null
  */
 function matchRoutePath (
-	route: {path: string}, actual: string[]
+	route: {path: string}, actual: PathPart[]
 ): Record<string, string | number> | null {
 
 	let template = route.path.split('/');
@@ -331,26 +342,28 @@ function matchRoutePath (
 		// Process variables first
 		if (template_part?.[0] === '#') {
 			// # templates only accept non-negative integers
-			if (actual_part === undefined || !/^\d+$/.test(actual_part)) {
+			if (actual_part === undefined || !/^\d+$/.test(actual_part.decoded)) {
 				return null;
 			}
 
-			args[template_part.substring(1)] = Number(actual_part);
+			args[template_part.substring(1)] = Number(actual_part.decoded);
 			continue;
 		}
 
 		if (template_part?.[0] === '$') {
 			// $ templates accept any non-empty segment
-			if (!actual_part) {
+			if (!actual_part?.decoded) {
 				return null;
 			}
 
-			args[template_part.substring(1)] = actual_part;
+			args[template_part.substring(1)] = actual_part.decoded;
 			continue;
 		}
 
-		// Process exact matches second
-		if (actual_part === template_part) {
+		// Process exact matches second. These are compared before decoding, otherwise /%61pi would reach /api
+		//		routes without passing any middleware that checks the request url for /api
+		if (template_part !== undefined && actual_part !== undefined &&
+			(actual_part.raw === template_part || actual_part.raw === encodeURIComponent(template_part))) {
 			continue;
 		}
 

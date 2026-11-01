@@ -1,6 +1,27 @@
-import { parseUrl } from '../../../src/util/url.js';
+import { parseUrl, toOriginForm } from '../../../src/util/url.js';
 
 import { describe, expect, test } from 'vitest';
+
+describe('toOriginForm', () => {
+	test.each([
+		['http://h/a?b', '/a?b'],
+		['http://h?x=1', '/?x=1'],
+		['http://h#top', '/#top'],
+		['http://h', '/'],
+		['http://', '/'],
+		['HTTP://h/a', '/a'],
+		// Dot segments and extra slashes are kept, the same as a url that was only a path
+		['http://h/x/../a', '/x/../a'],
+		['http://h//a', '//a'],
+		// These are not absolute urls
+		['/a', '/a'],
+		['//h/a', '//h/a'],
+		['/a?u=http://h/b', '/a?u=http://h/b'],
+		['', '']
+	])('reduces %s to %s', (url, expected) => {
+		expect(toOriginForm(url)).toEqual(expected);
+	});
+});
 
 describe('parseUrl', () => {
 	test.each([
@@ -24,6 +45,14 @@ describe('parseUrl', () => {
 
 	test('does not treat a leading double slash as a host', () => {
 		expect(parseUrl('//evil.com/users').pathname).toEqual('//evil.com/users');
+	});
+
+	test('does not throw on an absolute url without a host', () => {
+		expect(parseUrl('http://').pathname).toEqual('/');
+	});
+
+	test('does not collapse dot segments in an absolute url', () => {
+		expect(parseUrl('http://h/x/../a').pathname).toEqual('/x/../a');
 	});
 
 	test('leaves the path percent-encoded', () => {

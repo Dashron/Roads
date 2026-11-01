@@ -733,6 +733,52 @@ describe('Router Tests', () => {
 		expect((await road.request('GET', '/caf%C3%A9')).body).toEqual('ok');
 	});
 
+	test.each(['/%61pi/v0', '/api/%76%30', '/%61%70%69/v0'])(
+		'test literal path parts do not match the alternate encoding %s', async (path) => {
+			const road = new Road();
+			const router = new Router(road);
+
+			router.addRoute('GET', '/api/v0', () => Promise.resolve(new Response('ok')));
+
+			expect(await road.request('GET', path)).toEqual(new Response('Page not found', 404));
+		});
+
+	test.each([
+		'/api/v0',
+		'/api/v0?a=b',
+		'http://example.com/api/v0',
+		'HTTP://example.com/api/v0?a=b'
+	])('test a middleware that checks the url prefix runs before the route for %s', async (url) => {
+		const road = new Road();
+		let authRan = false;
+
+		road.use(function (method, requestUrl, body, headers, next) {
+			authRan = requestUrl.startsWith('/api/');
+			return next();
+		});
+
+		const router = new Router(road);
+		router.addRoute('GET', '/api/v0', () => Promise.resolve(new Response('ok')));
+
+		expect((await road.request('GET', url)).body).toEqual('ok');
+		expect(authRan).toEqual(true);
+	});
+
+	test.each([
+		'/%61pi/v0',
+		'/x/../api/v0',
+		'//api/v0',
+		'http://example.com/%61pi/v0',
+		'http://example.com/x/../api/v0'
+	])('test %s can not reach a route without passing a url prefix check', async (url) => {
+		const road = new Road();
+		const router = new Router(road);
+
+		router.addRoute('GET', '/api/v0', () => Promise.resolve(new Response('ok')));
+
+		expect(await road.request('GET', url)).toEqual(new Response('Page not found', 404));
+	});
+
 	test('test a path with malformed percent-encoding matches no route', async () => {
 		const road = new Road();
 		const router = new Router(road);
@@ -791,6 +837,32 @@ describe('Router Tests', () => {
 		router.addRoute('HEAD', '/x', () => Promise.resolve(new Response('head')));
 
 		expect(await road.request('HEAD', '/x')).toEqual(new Response('head'));
+	});
+
+	test('test a HEAD route stops the GET route from running', async () => {
+		const road = new Road();
+		const router = new Router(road);
+		let getRan = false;
+
+		router.addRoute('GET', '/x', () => {
+			getRan = true;
+			return Promise.resolve(new Response('get'));
+		});
+		router.addRoute('HEAD', '/x', () => Promise.resolve(new Response('', 405, { allow: 'GET' })));
+
+		expect(await road.request('HEAD', '/x')).toEqual(new Response('', 405, { allow: 'GET' }));
+		expect(getRan).toEqual(false);
+	});
+
+	test('test a 405 replaces a 404 page from later in the road', async () => {
+		const road = new Road();
+		const router = new Router(road);
+
+		router.addRoute('GET', '/x', () => Promise.resolve(new Response('get')));
+		road.use(() => Promise.resolve(new Response('<html>Not found</html>', 404, { 'content-type': 'text/html' })));
+
+		expect(await road.request('POST', '/x'))
+			.toEqual(new Response('Method Not Allowed', 405, { allow: 'GET, HEAD' }));
 	});
 
 	test('test a 405 lists every allowed method, including HEAD for GET routes', async () => {

@@ -30,8 +30,29 @@ export interface ParsedURL {
 	searchParams: URLSearchParams
 }
 
-// e.g. "https://", "http://". Request urls are usually just a path, but some servers pass the full url.
-const ABSOLUTE_URL = /^[a-zA-Z][a-zA-Z\d+.-]*:\/\//;
+// e.g. "https://example.com". Request urls are usually just a path, but some servers pass the full url.
+const URL_SCHEME_AND_HOST = /^[a-zA-Z][a-zA-Z\d+.-]*:\/\/[^/?#]*/;
+
+/**
+ * Removes the scheme and host from an absolute url, leaving the path, query string and hash.
+ * 	Any other url is returned as-is.
+ *
+ * Dot segments are left in place, the same as a url that was only a path. `new URL` would collapse them,
+ * 	so `http://a.com/x/../admin` could reach a route that `/x/../admin` can't.
+ *
+ * @param url - A request url
+ * @returns The url without its scheme and host
+ */
+export function toOriginForm(url: string): string {
+	const schemeAndHost = URL_SCHEME_AND_HOST.exec(url);
+
+	if (!schemeAndHost) {
+		return url;
+	}
+
+	const rest = url.substring(schemeAndHost[0].length);
+	return rest.startsWith('/') ? rest : `/${rest}`;
+}
 
 /**
  * Splits a request url into its path, query string and hash.
@@ -43,32 +64,23 @@ const ABSOLUTE_URL = /^[a-zA-Z][a-zA-Z\d+.-]*:\/\//;
  * @returns The parts of the url
  */
 export function parseUrl(url: string): ParsedURL {
-	let pathname: string;
-	let search: string;
-	let hash: string;
+	const originFormUrl = toOriginForm(url);
 
-	if (ABSOLUTE_URL.test(url)) {
-		const parsed = new URL(url);
-		pathname = parsed.pathname;
-		search = parsed.search;
-		hash = parsed.hash;
-	} else {
-		const hashIndex = url.indexOf('#');
-		hash = hashIndex === -1 ? '' : url.substring(hashIndex);
-		const withoutHash = hashIndex === -1 ? url : url.substring(0, hashIndex);
+	const hashIndex = originFormUrl.indexOf('#');
+	let hash = hashIndex === -1 ? '' : originFormUrl.substring(hashIndex);
+	const withoutHash = hashIndex === -1 ? originFormUrl : originFormUrl.substring(0, hashIndex);
 
-		const searchIndex = withoutHash.indexOf('?');
-		search = searchIndex === -1 ? '' : withoutHash.substring(searchIndex);
-		pathname = searchIndex === -1 ? withoutHash : withoutHash.substring(0, searchIndex);
+	const searchIndex = withoutHash.indexOf('?');
+	let search = searchIndex === -1 ? '' : withoutHash.substring(searchIndex);
+	const pathname = searchIndex === -1 ? withoutHash : withoutHash.substring(0, searchIndex);
 
-		// A bare "?" or "#" carries no information, the same as the URL class
-		if (search === '?') {
-			search = '';
-		}
+	// A bare "?" or "#" carries no information, the same as the URL class
+	if (search === '?') {
+		search = '';
+	}
 
-		if (hash === '#') {
-			hash = '';
-		}
+	if (hash === '#') {
+		hash = '';
 	}
 
 	const searchParams = new URLSearchParams(search);

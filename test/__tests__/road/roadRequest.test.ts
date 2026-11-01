@@ -21,6 +21,30 @@ describe('road request', () => {
 		});
 	});
 
+	test('middleware receives the path of an absolute url', async () => {
+		const road = new Road();
+		let receivedUrl: string | undefined;
+
+		road.use(function (method, url) {
+			receivedUrl = url;
+			return Promise.resolve(new Response('ok'));
+		});
+
+		await road.request('GET', 'http://example.com/x/../a?b=c');
+
+		expect(receivedUrl).toEqual('/x/../a?b=c');
+	});
+
+	test('multiple set-cookie values stay separate', async () => {
+		const road = new Road();
+
+		road.use(function () {
+			return Promise.resolve(new Response('ok', 200, { 'Set-Cookie': ['a=1', 'b=2'] }));
+		});
+
+		expect((await road.request('GET', '/')).headers).toEqual({ 'set-cookie': ['a=1', 'b=2'] });
+	});
+
 	/**
 	 * Ensure that route errors naturally bubble up through the promise catch
 	 */
