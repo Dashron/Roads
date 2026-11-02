@@ -8,7 +8,7 @@
 
 import * as cookie from 'cookie';
 import { Context, IncomingHeaders, Middleware } from '../core/road.js';
-import Response from '../core/response.js';
+import RoadsResponse from '../core/response.js';
 import { CookieContext } from './cookieMiddleware.js';
 import { StoreValsContext } from './storeVals.js';
 import { getSingleHeader } from '../util/headers.js';
@@ -327,7 +327,7 @@ export function build (options: CSRFOptions): Middleware<CSRFMiddlewareContext> 
 
 		if ((method === 'POST' || method === 'PUT' || method === 'DELETE' || method === 'PATCH') &&
 			!this.isValidCSRFToken()) {
-			return new Response(
+			return new RoadsResponse(
 				// eslint-disable-next-line max-len
 				'You\'ve encountered an unexpected error. Please let us know you encountered this issue by contacting support.',
 				403

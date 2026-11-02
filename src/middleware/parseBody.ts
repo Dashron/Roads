@@ -10,7 +10,7 @@ import { Context, Middleware } from '../core/road.js';
 import { getSingleHeader } from '../util/headers.js';
 
 import * as contentTypeModule from 'content-type';
-import Response from '../core/response.js';
+import RoadsResponse from '../core/response.js';
 
 /**
  * When using typescript you can pass this when adding middleware or
@@ -102,10 +102,10 @@ export const middleware: Middleware<ParseBodyContext, string | undefined> = asyn
 		parsedBody = parseRequestBody(body, getSingleHeader(headers, 'content-type'));
 	} catch (e) {
 		if (e instanceof InvalidMediaTypeError) {
-			return new Response('Invalid content-type header', 400);
+			return new RoadsResponse('Invalid content-type header', 400);
 		}
 
-		return new Response('Invalid request body', 400);
+		return new RoadsResponse('Invalid request body', 400);
 	}
 	return next({ body: parsedBody });
 };

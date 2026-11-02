@@ -1,8 +1,6 @@
 import Road from './core/road.js';
 
-// Response shares its name with the fetch API's global. RoadResponse is the same class under a name that doesn't
-//		shadow it.
-export { default as Response, default as RoadResponse } from './core/response.js';
+export { default as RoadsResponse } from './core/response.js';
 export { default as Road } from './core/road.js';
 export * as RoadModule from './core/road.js';
 

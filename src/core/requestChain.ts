@@ -1,5 +1,5 @@
 /* eslint-disable max-len */
-import Response from './response.js';
+import RoadsResponse from './response.js';
 import { Context } from './road.js';
 
 /**
@@ -13,7 +13,7 @@ export interface NextOverrides {
 
 export interface NextCallback {
 
-	(overrides?: NextOverrides): Promise<Response | string>
+	(overrides?: NextOverrides): Promise<RoadsResponse | string>
 }
 
 // eslint-disable-next-line
@@ -45,7 +45,7 @@ export class RequestChain<fn extends Function> {
 	 *
 	 * The function chain is executed in order, with each function in the chain being called with the parameters provided to the function.
 	 *
-	 * The function function returns a Promise that resolves to a Response object or a string.
+	 * The function function returns a Promise that resolves to a RoadsResponse object or a string.
 	 *
 	 * @param end - Called when the last function in the chain calls next. Without it, that next returns a 404.
 	 */
@@ -53,7 +53,7 @@ export class RequestChain<fn extends Function> {
 
 		// Each step is given its own index, so the next callback handed to a function always runs the
 		//		function after it, no matter how many times it is called
-		const run = async (index: number, context: Context, ...args: unknown[]): Promise<Response | string> => {
+		const run = async (index: number, context: Context, ...args: unknown[]): Promise<RoadsResponse | string> => {
 			const currentFunction = this._function_chain[index];
 
 			if (currentFunction) {
@@ -85,7 +85,7 @@ export class RequestChain<fn extends Function> {
 
 			// If next is called and there is nothing next, we should still return a promise,
 			//		it just shouldn't do anything
-			return new Response('Page not found', 404);
+			return new RoadsResponse('Page not found', 404);
 		};
 
 		return (context: Context, ...args: unknown[]) => run(0, context, ...args);

@@ -16,7 +16,7 @@
  */
 
 import Road, { Middleware } from '../core/road.js';
-import Response from '../core/response.js';
+import RoadsResponse from '../core/response.js';
 import { StoreValsContext, middleware as storeValsMiddleware} from '../middleware/storeVals.js';
 
 const REDIRECT_STATUSES = [301, 302, 303, 307, 308];
@@ -40,7 +40,7 @@ export default class RoadsPjax {
 	 * The page title stored by the title middleware, for each response. Keying the title by response means a
 	 * 	response from an older navigation can never change the title used by a newer one.
 	 */
-	protected _page_titles = new WeakMap<Response, string>();
+	protected _page_titles = new WeakMap<RoadsResponse, string>();
 	protected _window: Window;
 	protected _container_element: HTMLElement;
 
@@ -99,7 +99,7 @@ export default class RoadsPjax {
 				}
 
 				// Wrap strings now, so the title can be attached to the response object the road returns
-				const responseObject = response instanceof Response ? response : new Response(response);
+				const responseObject = response instanceof RoadsResponse ? response : new RoadsResponse(response);
 				pjaxObj._page_titles.set(responseObject, title);
 				return responseObject;
 			});
@@ -152,9 +152,9 @@ export default class RoadsPjax {
 	/**
 	 * Renders the response into the container
 	 *
-	 * @param {Response} response_object
+	 * @param {RoadsResponse} response_object
 	 */
-	render (response_object: Response): void {
+	render (response_object: RoadsResponse): void {
 		if (response_object.body !== undefined) {
 			// response.body will never be a buffer here, because it's on the client
 			this._container_element.innerHTML = response_object.body as string;
@@ -391,7 +391,7 @@ export default class RoadsPjax {
 	 * 	and the path is then the absolute url to send the browser to.
 	 */
 	protected async _requestFollowingRedirects (request: PjaxRequest): Promise<{
-		response: Response | null, path: string, redirected: boolean
+		response: RoadsResponse | null, path: string, redirected: boolean
 	}> {
 		let { method, path, body, headers } = request;
 		let response = await this._road.request(method, path, body, headers);

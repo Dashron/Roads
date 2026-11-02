@@ -8,7 +8,7 @@
  */
 
 import * as response_lib from './response.js';
-import Response from './response.js';
+import RoadsResponse from './response.js';
 import { NextCallback, RequestChain } from './requestChain.js';
 import { normalizeHeaders } from '../util/headers.js';
 import { toOriginForm } from '../util/url.js';
@@ -23,7 +23,7 @@ export interface IncomingHeaders extends Record<string, string | Array<string> |
 export interface Middleware<MiddlewareContext extends Context, BodyType = unknown> {
 	(this: MiddlewareContext, method: string, path: string,
 		body: BodyType, headers: IncomingHeaders,
-		next: NextCallback): Promise<Response | string>
+		next: NextCallback): Promise<RoadsResponse | string>
 }
 
 export interface Context extends Record<string, unknown> {}
@@ -55,7 +55,7 @@ export default class Road {
 	 * *Middleware*
 	 * Each function in the request chain is called middleware. Each middleware function must match the following function signature.
 	 *
-	 * **function (method: *string*, url: *string*, body: *string*, headers: *object*, next: *next*): Promise<Response | string>**
+	 * **function (method: *string*, url: *string*, body: *string*, headers: *object*, next: *next*): Promise<RoadsResponse | string>**
 	 *
 	 * Parameters
 	 * | name    | type                         | description                                                                                      |
@@ -64,9 +64,9 @@ export default class Road {
 	 * | url     | string                       | The request's URL. The `Router` middleware is included to help run different code for different URLs. |
 	 * | body    | string                       | The request's body (as a string). If the `parseBodyMiddleware` runs earlier in the chain, this is the parsed body instead |
 	 * | headers | object                       | The request's headers. This is an object of strings or arrays of strings.                        |
-	 * | next    | function(): Promise<Response | String>                                                                                          | The next step of the *request chain*. If there are no more steps in the *request chain* this does nothing. This method will always return a promise, which resolves to a `Response` object, or a string. Pass `{ method: 'DELETE' }` or `{ body: newBody }` to change the method or body that the rest of the chain receives. |
+	 * | next    | function(): Promise<RoadsResponse | String>                                                                                          | The next step of the *request chain*. If there are no more steps in the *request chain* this does nothing. This method will always return a promise, which resolves to a `RoadsResponse` object, or a string. Pass `{ method: 'DELETE' }` or `{ body: newBody }` to change the method or body that the rest of the chain receives. |
 	 *
-	 * Each middleware function must return a promise that resolves to a [Response](#response) object or a string. If you return a string it will be transformed into a response object using the default status code (200) and no headers. If the chain resolves to `undefined` or `null` (usually a middleware that forgot to `return next()`), `road.request` rejects with a `TypeError`.
+	 * Each middleware function must return a promise that resolves to a [RoadsResponse](#response) object or a string. If you return a string it will be transformed into a response object using the default status code (200) and no headers. If the chain resolves to `undefined` or `null` (usually a middleware that forgot to `return next()`), `road.request` rejects with a `TypeError`.
 	 *
 	 * *See the readme for more information*
 	 *
@@ -86,7 +86,7 @@ export default class Road {
 	 * Execute the resource method associated with the request parameters.
 	 *
 	 * This function will execute the *request chain* in the order they were assigned via
-	 * 	[use](#roadusefunction-fn) and return a Promise that resolves to a [Response](#response)
+	 * 	[use](#roadusefunction-fn) and return a Promise that resolves to a [RoadsResponse](#response)
 	 *
 	 * Make sure to catch any errors in the promise!
 	 *
@@ -94,9 +94,9 @@ export default class Road {
 	 * @param {string} url - HTTP request url
 	 * @param {string} [body] - HTTP request body
 	 * @param {object} [headers] - HTTP request headers
-	 * @returns {Promise} this promise will resolve to a Response object
+	 * @returns {Promise} this promise will resolve to a RoadsResponse object
 	 */
-	request (method: string, url: string, body?: string, headers?: IncomingHeaders): Promise<Response> {
+	request (method: string, url: string, body?: string, headers?: IncomingHeaders): Promise<RoadsResponse> {
 		// Servers can receive absolute urls. We reduce them to the path here so a middleware that checks the url
 		// 		and the router that matches it can't disagree about which path was requested.
 		// Header names are case-insensitive, so we lower-case them on the way in and on the way out. This lets

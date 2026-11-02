@@ -1,5 +1,5 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
-import { Road, Response, StoreValsMiddleware, ApplyToContextMiddleware } from 'roads';
+import { Road, RoadsResponse, StoreValsMiddleware, ApplyToContextMiddleware } from 'roads';
 import addLayout from '../../../example/ts/src/middleware/addLayout.js';
 import buildServerRoad from '../../../example/ts/src/buildServerRoad.js';
 import buildApiRoad from '../../../example/ts/src/api/buildApiRoad.js';
@@ -16,7 +16,7 @@ const buildLayoutRoad = (title?: string) => {
 			this.storeVal(TITLE_KEY, title);
 		}
 
-		return Promise.resolve(new Response('<p>Body</p>'));
+		return Promise.resolve(new RoadsResponse('<p>Body</p>'));
 	});
 
 	return road;

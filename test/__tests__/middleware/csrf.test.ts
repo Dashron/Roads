@@ -5,7 +5,7 @@ import { serverMiddleware as cookieMiddleware, CookieContext } from '../../../sr
 import { middleware as parseBodyMiddleware } from '../../../src/middleware/parseBody.js';
 import { middleware as storeValsMiddleware, StoreValsContext } from '../../../src/middleware/storeVals.js';
 import Road, { Context, IncomingHeaders } from '../../../src/core/road.js';
-import Response from '../../../src/core/response.js';
+import RoadsResponse from '../../../src/core/response.js';
 import { sign, verify, secondsFromNow } from '../../resources/fakeSigner.js';
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -501,7 +501,7 @@ describe('csrf tests', () => {
 
 		const response = await road.request('POST', '/');
 
-		expect(response).toBeInstanceOf(Response);
+		expect(response).toBeInstanceOf(RoadsResponse);
 		expect(hit).toEqual(false);
 	});
 

@@ -9,7 +9,7 @@
 
 import { IncomingHeaders } from '../core/road.js';
 import Road, {Context} from '../core/road.js';
-import Response from '../core/response.js';
+import RoadsResponse from '../core/response.js';
 import { NextCallback, RequestChain } from '../core/requestChain.js';
 import { ParsedURL, parseUrl } from '../util/url.js';
 
@@ -20,7 +20,7 @@ import { ParsedURL, parseUrl } from '../util/url.js';
  */
 export interface Route<ContextType extends Context, BodyType = unknown> {
 	(this: ContextType, method: string, path: RouterURL, body: BodyType,
-		headers: IncomingHeaders, next: NextCallback): Promise<Response | string>
+		headers: IncomingHeaders, next: NextCallback): Promise<RoadsResponse | string>
 }
 
 interface RouteDetails {
@@ -196,7 +196,7 @@ export class Router<RouterContextType extends Context> {
 	protected async _middleware (
 		this: Context, routes: RouteDetails[], request_method: string, request_url: string, request_body: unknown,
 		request_headers: IncomingHeaders, next: NextCallback
-	): Promise<Response | string> {
+	): Promise<RoadsResponse | string> {
 
 		const parsed_url: RouterURL = parseUrl(request_url);
 		const pathParts = splitPath(parsed_url.pathname);
@@ -230,7 +230,9 @@ export class Router<RouterContextType extends Context> {
 			const response = await runRoute.call(this, headFallback.route, headFallback.args, parsed_url,
 				request_method, request_body, request_headers, next);
 
-			return response instanceof Response ? new Response('', response.status, response.headers) : new Response('');
+			return response instanceof RoadsResponse
+				? new RoadsResponse('', response.status, response.headers)
+				: new RoadsResponse('');
 		}
 
 		if (!allowedMethods.size) {
@@ -246,7 +248,7 @@ export class Router<RouterContextType extends Context> {
 		// 		handle this method, so only respond with a 405 if nothing else does.
 		const response = await next();
 
-		if (!(response instanceof Response) || (response.status !== 404 && response.status !== 405)) {
+		if (!(response instanceof RoadsResponse) || (response.status !== 404 && response.status !== 405)) {
 			return response;
 		}
 
@@ -261,7 +263,7 @@ export class Router<RouterContextType extends Context> {
 			}
 		}
 
-		return new Response('Method Not Allowed', 405, { allow: [...allowedMethods].join(', ') });
+		return new RoadsResponse('Method Not Allowed', 405, { allow: [...allowedMethods].join(', ') });
 	}
 }
 
@@ -271,7 +273,7 @@ export class Router<RouterContextType extends Context> {
 function runRoute (
 	this: Context, route: RouteDetails, args: Record<string, string | number>, parsed_url: RouterURL,
 	request_method: string, request_body: unknown, request_headers: IncomingHeaders, next: NextCallback
-): Promise<Response | string> {
+): Promise<RoadsResponse | string> {
 	if (Object.keys(args).length > 0) {
 		parsed_url.args = args;
 	}

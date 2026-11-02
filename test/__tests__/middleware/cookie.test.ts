@@ -1,18 +1,20 @@
 import { serverMiddleware, buildClientMiddleware } from '../../../src/middleware/cookieMiddleware.js';
 
 import { CookieContext } from '../../../src/middleware/cookieMiddleware.js';
-import Response from '../../../src/core/response.js';
+import RoadsResponse from '../../../src/core/response.js';
 
 import { describe, expect, test } from 'vitest';
 
 /**
- * Helper function to ensure middleware returns a Response object
- * Throws an error if the result is not a Response object
+ * Helper function to ensure middleware returns a RoadsResponse object
+ * Throws an error if the result is not a RoadsResponse object
  */
-async function ensureResponse(middlewarePromise: Promise<Response | string> | Response | string): Promise<Response> {
+async function ensureResponse(
+	middlewarePromise: Promise<RoadsResponse | string> | RoadsResponse | string
+): Promise<RoadsResponse> {
 	const result = await middlewarePromise;
-	if (!(result instanceof Response)) {
-		throw new Error(`Expected Response object but got: ${typeof result}`);
+	if (!(result instanceof RoadsResponse)) {
+		throw new Error(`Expected RoadsResponse object but got: ${typeof result}`);
 	}
 	return result;
 }
@@ -21,7 +23,7 @@ describe('cookie tests', () => {
 	test('test cookie middleware parses cookies into context', () => {
 		expect.assertions(2);
 		const context = {
-			Response: Response
+			RoadsResponse: RoadsResponse
 		} as unknown as CookieContext;
 
 		serverMiddleware.call(context, 'a', 'b', 'c', {
@@ -35,7 +37,7 @@ describe('cookie tests', () => {
 	test('test cookie middleware will update the response headers', async () => {
 		expect.assertions(1);
 		const context = {
-			Response: Response
+			RoadsResponse: RoadsResponse
 		} as unknown as CookieContext;
 
 		const next: (this: CookieContext) => Promise<string> = function () {
@@ -45,7 +47,7 @@ describe('cookie tests', () => {
 
 
 		expect(await serverMiddleware.call(context, 'a', 'b', 'c', {}, next.bind(context)))
-			.toEqual(new Response('test', 200, {
+			.toEqual(new RoadsResponse('test', 200, {
 
 				'set-cookie': ['foo=bar']
 			}));
@@ -54,7 +56,7 @@ describe('cookie tests', () => {
 	test('test that getCookies merges new and old cookies together and properly sets outgoing header', async () => {
 		expect.assertions(2);
 		const context = {
-			Response: Response
+			RoadsResponse: RoadsResponse
 		} as unknown as CookieContext;
 
 		const next: (this: CookieContext) => Promise<string> = function () {
@@ -70,7 +72,7 @@ describe('cookie tests', () => {
 		expect(await serverMiddleware.call(context, 'a', 'b', 'c', {
 			cookie: 'abc=def'
 		}, next.bind(context)))
-			.toEqual(new Response('test', 200, {
+			.toEqual(new RoadsResponse('test', 200, {
 
 				'set-cookie': ['foo=bar']
 			}));
@@ -79,7 +81,7 @@ describe('cookie tests', () => {
 	test('test that getCookies still works with clientCookies', () => {
 		expect.assertions(2);
 		const context = {
-			Response: Response
+			RoadsResponse: RoadsResponse
 		} as unknown as CookieContext;
 
 		const testDocument = {
@@ -97,7 +99,7 @@ describe('cookie tests', () => {
 	test('test that setCookies still works with clientCookies', async () => {
 		expect.assertions(1);
 		const context = {
-			Response: Response
+			RoadsResponse: RoadsResponse
 		} as unknown as CookieContext;
 
 		const testDocument = {
@@ -117,7 +119,7 @@ describe('cookie tests', () => {
 	test('test that getCookies merges new and old cookies together and properly sets document', async () => {
 		expect.assertions(2);
 		const context = {
-			Response: Response
+			RoadsResponse: RoadsResponse
 		} as unknown as CookieContext;
 
 		const next: (this: CookieContext) => Promise<string> = function () {
@@ -145,7 +147,7 @@ describe('cookie tests', () => {
 	test('test setCookie works when destructured from the context', async () => {
 		expect.assertions(1);
 		const context = {
-			Response: Response
+			RoadsResponse: RoadsResponse
 		} as unknown as CookieContext;
 
 		const next: (this: CookieContext) => Promise<string> = function () {
@@ -162,7 +164,7 @@ describe('cookie tests', () => {
 	test('test setting a cookie to null removes it from the response and getCookies', async () => {
 		expect.assertions(2);
 		const context = {
-			Response: Response
+			RoadsResponse: RoadsResponse
 		} as unknown as CookieContext;
 
 		const next: (this: CookieContext) => Promise<string> = function () {
@@ -185,7 +187,7 @@ describe('cookie tests', () => {
 	test('test setting a cookie to null removes it from the document', async () => {
 		expect.assertions(1);
 		const context = {
-			Response: Response
+			RoadsResponse: RoadsResponse
 		} as unknown as CookieContext;
 
 		const testDocument = {
@@ -205,12 +207,12 @@ describe('cookie tests', () => {
 	test('test cookie middleware handles existing string Set-Cookie header', async () => {
 		expect.assertions(1);
 		const context = {
-			Response: Response
+			RoadsResponse: RoadsResponse
 		} as unknown as CookieContext;
 
-		const next: (this: CookieContext) => Promise<Response> = function () {
+		const next: (this: CookieContext) => Promise<RoadsResponse> = function () {
 			this.setCookie('new', 'cookie');
-			return Promise.resolve(new Response('test', 200, {
+			return Promise.resolve(new RoadsResponse('test', 200, {
 				'Set-Cookie': 'existing=value'  // String instead of array
 			}));
 		};
@@ -223,12 +225,12 @@ describe('cookie tests', () => {
 	test('test cookie middleware merges every casing of an existing set-cookie header', async () => {
 		expect.assertions(1);
 		const context = {
-			Response: Response
+			RoadsResponse: RoadsResponse
 		} as unknown as CookieContext;
 
-		const next: (this: CookieContext) => Promise<Response> = function () {
+		const next: (this: CookieContext) => Promise<RoadsResponse> = function () {
 			this.setCookie('new', 'cookie');
-			return Promise.resolve(new Response('test', 200, {
+			return Promise.resolve(new RoadsResponse('test', 200, {
 				'set-cookie': 'lower=value',
 				'Set-Cookie': ['upper=value']
 			}));

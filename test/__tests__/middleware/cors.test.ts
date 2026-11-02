@@ -1,16 +1,18 @@
 import { build } from '../../../src/middleware/cors.js';
-import Response from '../../../src/core/response.js';
+import RoadsResponse from '../../../src/core/response.js';
 import Road from '../../../src/core/road.js';
 import { describe, expect, test, vi } from 'vitest';
 
 /**
- * Helper function to ensure middleware returns a Response object
- * Throws an error if the result is not a Response object
+ * Helper function to ensure middleware returns a RoadsResponse object
+ * Throws an error if the result is not a RoadsResponse object
  */
-async function ensureResponse(middlewarePromise: Promise<Response | string> | Response | string): Promise<Response> {
+async function ensureResponse(
+	middlewarePromise: Promise<RoadsResponse | string> | RoadsResponse | string
+): Promise<RoadsResponse> {
 	const result = await middlewarePromise;
-	if (!(result instanceof Response)) {
-		throw new Error(`Expected Response object but got: ${typeof result}`);
+	if (!(result instanceof RoadsResponse)) {
+		throw new Error(`Expected RoadsResponse object but got: ${typeof result}`);
 	}
 	return result;
 }
@@ -23,12 +25,12 @@ describe('CORS Comprehensive Tests', () => {
 
 	test('handles requests without origin header - calls next without CORS headers', async () => {
 		const middleware = build({});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', {}, mockNext));
 
 		expect(mockNext).toHaveBeenCalled();
-		expect(result).toBeInstanceOf(Response);
+		expect(result).toBeInstanceOf(RoadsResponse);
 		expect(result.headers['access-control-allow-origin']).toBeUndefined();
 	});
 
@@ -36,7 +38,7 @@ describe('CORS Comprehensive Tests', () => {
 		const middleware = build({
 			validOrigins: ['https://example.com', 'https://test.com']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'https://example.com' };
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
@@ -50,7 +52,7 @@ describe('CORS Comprehensive Tests', () => {
 		const middleware = build({
 			validOrigins: ['https://example.com']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'https://malicious.com' };
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
@@ -65,7 +67,7 @@ describe('CORS Comprehensive Tests', () => {
 		const middleware = build({
 			validOrigins: ['*']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'https://any-domain.com' };
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
@@ -90,7 +92,7 @@ describe('CORS Comprehensive Tests', () => {
 		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
 		expect(mockNext).not.toHaveBeenCalled(); // Should not call next for valid preflight
-		expect(result).toBeInstanceOf(Response);
+		expect(result).toBeInstanceOf(RoadsResponse);
 		expect(result.status).toBe(204);
 		expect(result.body).toBe('');
 		expect(result.headers['access-control-allow-origin']).toBe('*');
@@ -103,7 +105,7 @@ describe('CORS Comprehensive Tests', () => {
 			validOrigins: ['*'],
 			allowedMethods: ['GET', 'POST']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('Method not allowed', 405));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('Method not allowed', 405));
 
 		const headers = {
 			origin: 'https://example.com',
@@ -124,7 +126,7 @@ describe('CORS Comprehensive Tests', () => {
 			allowedMethods: ['POST'],
 			allowedRequestHeaders: ['Content-Type']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('Invalid headers', 400));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('Invalid headers', 400));
 
 		const headers = {
 			origin: 'https://example.com',
@@ -145,7 +147,7 @@ describe('CORS Comprehensive Tests', () => {
 			validOrigins: ['https://example.com'],
 			supportsCredentials: true
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'https://example.com' };
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
@@ -159,7 +161,7 @@ describe('CORS Comprehensive Tests', () => {
 			validOrigins: ['*'],
 			supportsCredentials: false
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'https://example.com' };
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
@@ -225,7 +227,7 @@ describe('CORS Comprehensive Tests', () => {
 			validOrigins: ['*'],
 			allowedResponseHeaders: ['X-Custom-Header', 'X-Another-Header']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'https://example.com' };
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
@@ -255,7 +257,7 @@ describe('CORS Comprehensive Tests', () => {
 		const middleware = build({
 			validOrigins: ['https://example.com']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = {
 			origin: ['https://example.com', 'https://other.com']
@@ -290,7 +292,7 @@ describe('CORS Comprehensive Tests', () => {
 			validOrigins: ['*'],
 			allowedMethods: ['POST']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('Method not allowed', 405));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('Method not allowed', 405));
 
 		const headers = {
 			origin: 'https://example.com',
@@ -332,7 +334,7 @@ describe('CORS Comprehensive Tests', () => {
 			allowedMethods: ['POST'],
 			allowedRequestHeaders: ['Content-Type']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('Invalid headers', 400));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('Invalid headers', 400));
 
 		const headers = {
 			origin: 'https://example.com',
@@ -361,7 +363,7 @@ describe('CORS Comprehensive Tests', () => {
 			allowedRequestHeaders: ['x-other-header'],
 			allowedResponseHeaders: ['x-exposed']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'https://example.com', ...extraHeaders };
 		const result = await ensureResponse(middleware.call({}, method, '/', '', headers, mockNext));
@@ -378,7 +380,7 @@ describe('CORS Comprehensive Tests', () => {
 			allowedMethods: ['GET'],
 			allowedRequestHeaders: ['x-other-header']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = {
 			origin: 'https://example.com',
@@ -395,7 +397,7 @@ describe('CORS Comprehensive Tests', () => {
 			validOrigins: ['https://example.com'],
 			returnCorsErrors: false
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'https://malicious.com' };
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
@@ -407,18 +409,18 @@ describe('CORS Comprehensive Tests', () => {
 		expect(result.headers['access-control-allow-origin']).toBeUndefined();
 	});
 
-	test.each(['GET', 'POST'])('handles middleware returning string instead of Response - %s request', async (method) => {
+	test.each(['GET', 'POST'])('handles middleware returning a string, not a RoadsResponse - %s request', async (method) => {
 		const middleware = build({
 			validOrigins: ['https://example.com']
 		});
-		// Mock next() to return a string instead of a Response
+		// Mock next() to return a string instead of a RoadsResponse
 		const mockNext = vi.fn().mockResolvedValue('Hello World');
 
 		const headers = { origin: 'https://example.com' };
 		const result = await ensureResponse(middleware.call({}, method, '/', '', headers, mockNext));
 
 		expect(mockNext).toHaveBeenCalled();
-		expect(result).toBeInstanceOf(Response);
+		expect(result).toBeInstanceOf(RoadsResponse);
 		expect(result.body).toBe('Hello World');
 		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
 	});
@@ -428,7 +430,7 @@ describe('CORS Comprehensive Tests', () => {
 		const middleware = build({
 			validOrigins: ['null', 'https://example.com']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'null' };
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
@@ -442,7 +444,7 @@ describe('CORS Comprehensive Tests', () => {
 		const middleware = build({
 			validOrigins: ['*']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'null' };
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
@@ -455,7 +457,7 @@ describe('CORS Comprehensive Tests', () => {
 		const middleware = build({
 			validOrigins: ['https://example.com']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'null' };
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
@@ -492,7 +494,7 @@ describe('CORS Comprehensive Tests', () => {
 		const middleware = build({
 			validOrigins: ['*']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'not-a-valid-origin' };
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
@@ -506,7 +508,7 @@ describe('CORS Comprehensive Tests', () => {
 		const middleware = build({
 			validOrigins: ['*']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'https://example.com/some/path' };
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
@@ -520,7 +522,7 @@ describe('CORS Comprehensive Tests', () => {
 		const middleware = build({
 			validOrigins: ['*']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'https://example.com?query=param' };
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
@@ -534,7 +536,7 @@ describe('CORS Comprehensive Tests', () => {
 		const middleware = build({
 			validOrigins: ['*']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'https://example.com#fragment' };
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
@@ -548,7 +550,7 @@ describe('CORS Comprehensive Tests', () => {
 		const middleware = build({
 			validOrigins: ['https://example.com:8080']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'https://example.com:8080' };
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
@@ -561,7 +563,7 @@ describe('CORS Comprehensive Tests', () => {
 /**
  * Collects every Vary field name on the response, lowercased, regardless of how the header name is cased
  */
-function varyValues(response: Response): string[] {
+function varyValues(response: RoadsResponse): string[] {
 	const values: string[] = [];
 	for (const key in response.headers) {
 		if (key.toLowerCase() === 'vary') {
@@ -578,7 +580,7 @@ function varyValues(response: Response): string[] {
 /**
  * Finds every header name on the response that is some casing of "vary"
  */
-function varyKeys(response: Response): string[] {
+function varyKeys(response: RoadsResponse): string[] {
 	return Object.keys(response.headers).filter(key => key.toLowerCase() === 'vary');
 }
 
@@ -613,7 +615,7 @@ describe('CORS wildcard origin with credentials', () => {
 		const middleware = build({
 			validOrigins: '*'
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'https://any-domain.com' };
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
@@ -634,7 +636,7 @@ describe('CORS wildcard origin with credentials', () => {
 		const middleware = build({
 			validOrigins: ['*']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'https://any-domain.com' };
 		const result = await ensureResponse(middleware.call({}, method, '/', '', headers, mockNext));
@@ -649,7 +651,7 @@ describe('CORS wildcard origin with credentials', () => {
 			validOrigins: ['*'],
 			allowedMethods: ['GET', 'PUT']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = {
 			origin: 'https://any-domain.com',
@@ -701,7 +703,7 @@ describe('CORS preserves an existing Vary header', () => {
 		const middleware = build({
 			validOrigins: ['https://example.com']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, { vary: 'Accept-Encoding' }));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, { vary: 'Accept-Encoding' }));
 
 		const headers = { origin: 'https://example.com' };
 		const result = await ensureResponse(middleware.call({}, method, '/', '', headers, mockNext));
@@ -714,7 +716,7 @@ describe('CORS preserves an existing Vary header', () => {
 		const middleware = build({
 			validOrigins: ['https://example.com']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, { Vary: 'Accept-Encoding' }));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, { Vary: 'Accept-Encoding' }));
 
 		const headers = { origin: 'https://example.com' };
 		const result = await ensureResponse(middleware.call({}, method, '/', '', headers, mockNext));
@@ -728,7 +730,9 @@ describe('CORS preserves an existing Vary header', () => {
 		const middleware = build({
 			validOrigins: ['https://example.com']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, { vary: 'Accept-Encoding, Accept-Language' }));
+		const mockNext = vi.fn().mockResolvedValue(
+			new RoadsResponse('OK', 200, { vary: 'Accept-Encoding, Accept-Language' })
+		);
 
 		const headers = { origin: 'https://example.com' };
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
@@ -740,7 +744,7 @@ describe('CORS preserves an existing Vary header', () => {
 		const middleware = build({
 			validOrigins: ['https://example.com']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, { vary: 'Origin, Accept-Encoding' }));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, { vary: 'Origin, Accept-Encoding' }));
 
 		const headers = { origin: 'https://example.com' };
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
@@ -752,7 +756,7 @@ describe('CORS preserves an existing Vary header', () => {
 		const middleware = build({
 			validOrigins: ['https://example.com']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {
 			vary: ['Accept-Encoding', 'Accept-Language']
 		}));
 
@@ -767,7 +771,7 @@ describe('CORS preserves an existing Vary header', () => {
 		const middleware = build({
 			validOrigins: ['https://example.com']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, { vary: '*' }));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, { vary: '*' }));
 
 		const headers = { origin: 'https://example.com' };
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
@@ -779,7 +783,7 @@ describe('CORS preserves an existing Vary header', () => {
 		const middleware = build({
 			validOrigins: '*'
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, { vary: 'Accept-Encoding' }));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, { vary: 'Accept-Encoding' }));
 
 		const headers = { origin: 'https://example.com' };
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
@@ -791,7 +795,7 @@ describe('CORS preserves an existing Vary header', () => {
 		const middleware = build({
 			validOrigins: ['https://example.com']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'https://example.com' };
 		const result = await ensureResponse(middleware.call({}, 'PUT', '/', '', headers, mockNext));
@@ -810,7 +814,7 @@ describe('CORS credentials for specific origins', () => {
 			validOrigins: '*',
 			supportsCredentials: [trusted]
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const result = await ensureResponse(middleware.call({}, method, '/', '', { origin: trusted }, mockNext));
 
@@ -846,7 +850,7 @@ describe('CORS credentials for specific origins', () => {
 			validOrigins: '*',
 			supportsCredentials: [trusted]
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', { origin: other }, mockNext));
 
@@ -885,7 +889,7 @@ describe('CORS credentials for specific origins', () => {
 			supportsCredentials: allowCredentials
 		});
 		// Each request needs its own response, the middleware adds its headers to the object it is given
-		const mockNext = vi.fn().mockImplementation(() => Promise.resolve(new Response('OK', 200, {})));
+		const mockNext = vi.fn().mockImplementation(() => Promise.resolve(new RoadsResponse('OK', 200, {})));
 
 		const trustedResult = await ensureResponse(middleware.call({}, 'GET', '/', '', { origin: trusted }, mockNext));
 		const otherResult = await ensureResponse(middleware.call({}, 'GET', '/', '', { origin: other }, mockNext));
@@ -904,7 +908,7 @@ describe('CORS credentials for specific origins', () => {
 			supportsCredentials: [trusted]
 		});
 		// Each request needs its own response, the middleware adds its headers to the object it is given
-		const mockNext = vi.fn().mockImplementation(() => Promise.resolve(new Response('OK', 200, {})));
+		const mockNext = vi.fn().mockImplementation(() => Promise.resolve(new RoadsResponse('OK', 200, {})));
 
 		const trustedResult = await ensureResponse(middleware.call({}, 'GET', '/', '', { origin: trusted }, mockNext));
 		const otherResult = await ensureResponse(middleware.call({}, 'GET', '/', '', { origin: other }, mockNext));
@@ -920,7 +924,7 @@ describe('CORS credentials for specific origins', () => {
 			validOrigins: [other],
 			supportsCredentials: [trusted]
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', { origin: trusted }, mockNext));
 
@@ -935,7 +939,7 @@ describe('CORS credentials for specific origins', () => {
 			validOrigins: '*',
 			supportsCredentials: []
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', { origin: other }, mockNext));
 
@@ -986,7 +990,7 @@ describe('CORS through a Road', () => {
 describe('CORS responses that a cache could reuse for another origin', () => {
 	test('a request without an Origin header gets Vary: Origin in allowlist mode', async () => {
 		const middleware = build({ validOrigins: ['https://example.com'] });
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, { vary: 'Accept' }));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, { vary: 'Accept' }));
 
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', {}, mockNext));
 
@@ -999,12 +1003,12 @@ describe('CORS responses that a cache could reuse for another origin', () => {
 
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', {}, mockNext));
 
-		expect(result).toEqual(new Response('OK', 200, { 'access-control-allow-origin': '*' }));
+		expect(result).toEqual(new RoadsResponse('OK', 200, { 'access-control-allow-origin': '*' }));
 	});
 
 	test('a request without an Origin header gets Vary: Origin when credentials depend on the origin', async () => {
 		const middleware = build({ validOrigins: '*', supportsCredentials: ['https://example.com'] });
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK'));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK'));
 
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', {}, mockNext));
 
@@ -1015,11 +1019,11 @@ describe('CORS responses that a cache could reuse for another origin', () => {
 		const middleware = build({
 			validOrigins: ['https://example.com'], returnCorsErrors: false, logger: { log: () => {} }
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK'));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK'));
 
 		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', { origin: 'https://evil.com' }, mockNext));
 
-		expect(result).toEqual(new Response('OK', 200, { vary: 'Origin' }));
+		expect(result).toEqual(new RoadsResponse('OK', 200, { vary: 'Origin' }));
 	});
 
 	test('a CORS error response gets Vary: Origin', async () => {

@@ -6,7 +6,7 @@ import { serverMiddleware as cookieMiddleware } from '../../../src/middleware/co
 import { middleware as parseBodyMiddleware } from '../../../src/middleware/parseBody.js';
 import { Router } from '../../../src/middleware/router.js';
 import Road, { IncomingHeaders } from '../../../src/core/road.js';
-import Response from '../../../src/core/response.js';
+import RoadsResponse from '../../../src/core/response.js';
 import { sign, verify, secondsFromNow } from '../../resources/fakeSigner.js';
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -19,7 +19,7 @@ const FORM_HEADERS = { 'content-type': 'application/x-www-form-urlencoded' };
  */
 function requestMethod (
 	method: string, url: string, body?: string, headers?: IncomingHeaders, options: MethodOverrideOptions = {}
-): Promise<Response> {
+): Promise<RoadsResponse> {
 	const road = new Road();
 
 	road.use(parseBodyMiddleware);
@@ -124,7 +124,7 @@ describe('method override tests', () => {
 			expect.assertions(1);
 
 			await expect(requestMethod('POST', `/?_method=${override}`)).resolves.toEqual(
-				new Response('Invalid method override', 400)
+				new RoadsResponse('Invalid method override', 400)
 			);
 		}
 	);
@@ -169,8 +169,8 @@ describe('method override tests', () => {
 			road.use(build());
 
 			const router = new Router(road);
-			router.addRoute('POST', '/posts/#id', async () => new Response('created'));
-			router.addRoute('DELETE', '/posts/#id', async (method, url) => new Response(`${method} ${url.args?.id}`));
+			router.addRoute('POST', '/posts/#id', async () => new RoadsResponse('created'));
+			router.addRoute('DELETE', '/posts/#id', async (method, url) => new RoadsResponse(`${method} ${url.args?.id}`));
 
 			return road;
 		}
@@ -183,7 +183,7 @@ describe('method override tests', () => {
 				...FORM_HEADERS, cookie: `${COOKIE_NAME}=${token}`
 			});
 
-			expect(response).toEqual(new Response('DELETE 12', 200));
+			expect(response).toEqual(new RoadsResponse('DELETE 12', 200));
 		});
 
 		test('a form POST without _method still reaches the POST route', async () => {

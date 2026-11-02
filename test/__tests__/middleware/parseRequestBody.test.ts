@@ -3,7 +3,7 @@ import { middleware, ParseBodyContext } from '../../../src/middleware/parseBody.
 import { Context, IncomingHeaders, Middleware as MiddlewareType } from '../../../src/core/road.js';
 import { NextOverrides } from '../../../src/core/requestChain.js';
 import { Road } from '../../../src/index.js';
-import Response from '../../../src/core/response.js';
+import RoadsResponse from '../../../src/core/response.js';
 
 import { describe, expect, test, assert, vi } from 'vitest';
 
@@ -76,7 +76,7 @@ describe('Parse Request Body tests', () => {
 			expect(this.rawBody).toEqual(body);
 			// The parsed body is no longer added to the context
 			expect(this.body).toBe(undefined);
-			return Promise.resolve(new Response(''));
+			return Promise.resolve(new RoadsResponse(''));
 		};
 
 		road.use(middleware2);

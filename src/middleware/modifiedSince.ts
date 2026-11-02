@@ -6,11 +6,11 @@
  * This file exposes middleware that helps manage the if-modified-since caching headers
  */
 import { Context, Middleware } from '../core/road.js';
-import Response from '../core/response.js';
+import RoadsResponse from '../core/response.js';
 
 export interface ModifiedSinceContext extends Context {
 	shouldReturnNotModifiedResponse: (lastModifiedTime: string | Date) => boolean;
-	buildNotModifiedResponse: () => Response;
+	buildNotModifiedResponse: () => RoadsResponse;
 }
 
 /**
@@ -63,7 +63,7 @@ export const middleware: Middleware<ModifiedSinceContext> = function (method, ur
 	};
 
 	this.buildNotModifiedResponse = () => {
-		return new Response('', 304);
+		return new RoadsResponse('', 304);
 	};
 
 	return next()
@@ -73,7 +73,7 @@ export const middleware: Middleware<ModifiedSinceContext> = function (method, ur
 			}
 
 			// Wrap strings, so routes that return a plain string still get the header
-			const responseObject = response instanceof Response ? response : new Response(response);
+			const responseObject = response instanceof RoadsResponse ? response : new RoadsResponse(response);
 			responseObject.headers['last-modified'] = lastMod.toUTCString();
 			return responseObject;
 		});

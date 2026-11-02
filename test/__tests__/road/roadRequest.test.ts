@@ -1,6 +1,6 @@
 import { Road } from '../../../src/index.js';
 import { Context, Middleware } from '../../../src/core/road.js';
-import { Response } from '../../../src/index.js';
+import { RoadsResponse } from '../../../src/index.js';
 
 import { describe, expect, test } from 'vitest';
 
@@ -27,7 +27,7 @@ describe('road request', () => {
 
 		road.use(function (method, url) {
 			receivedUrl = url;
-			return Promise.resolve(new Response('ok'));
+			return Promise.resolve(new RoadsResponse('ok'));
 		});
 
 		await road.request('GET', 'http://example.com/x/../a?b=c');
@@ -39,7 +39,7 @@ describe('road request', () => {
 		const road = new Road();
 
 		road.use(function () {
-			return Promise.resolve(new Response('ok', 200, { 'Set-Cookie': ['a=1', 'b=2'] }));
+			return Promise.resolve(new RoadsResponse('ok', 200, { 'Set-Cookie': ['a=1', 'b=2'] }));
 		});
 
 		expect((await road.request('GET', '/')).headers).toEqual({ 'set-cookie': ['a=1', 'b=2'] });
@@ -147,7 +147,7 @@ describe('road request', () => {
 		const middleware: Middleware<Context> = function (method, url, body, headers, next) {
 			return next()
 				.catch(function (error: Error) {
-					return new Response(JSON.stringify({error : error.message}), 200);
+					return new RoadsResponse(JSON.stringify({error : error.message}), 200);
 				});
 		};
 
@@ -424,12 +424,12 @@ describe('road request', () => {
 	/**
 	 * Ensure that response header names are lower-cased, and that names differing only by case are merged
 	 */
-	test('Response Header Names Are Lower-Cased And Merged', () => {
+	test('RoadsResponse Header Names Are Lower-Cased And Merged', () => {
 		expect.assertions(1);
 		const road = new Road();
 
 		road.use(async function () {
-			return new Response('done', 200, {
+			return new RoadsResponse('done', 200, {
 				'Content-Type': 'text/plain',
 				'set-cookie': 'a=1',
 				'Set-Cookie': ['b=2']

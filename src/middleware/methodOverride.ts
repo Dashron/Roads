@@ -8,7 +8,7 @@
  */
 
 import { Context, Middleware } from '../core/road.js';
-import Response from '../core/response.js';
+import RoadsResponse from '../core/response.js';
 import { getSingleHeader } from '../util/headers.js';
 
 const DEFAULT_METHODS = ['PUT', 'PATCH', 'DELETE'];
@@ -92,7 +92,7 @@ export function build (options: MethodOverrideOptions = {}): Middleware<Context>
 		const newMethod = override.toUpperCase();
 
 		if (!methods.includes(newMethod)) {
-			return new Response('Invalid method override', 400);
+			return new RoadsResponse('Invalid method override', 400);
 		}
 
 		return next({ method: newMethod });

@@ -2,7 +2,7 @@
 import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest';
 import RoadsPjax from '../../../src/client/pjax.js';
 import Road from '../../../src/core/road.js';
-import Response from '../../../src/core/response.js';
+import RoadsResponse from '../../../src/core/response.js';
 import { StoreValsContext } from '../../../src/middleware/storeVals.js';
 
 interface RecordedRequest {
@@ -20,7 +20,7 @@ describe('RoadsPjax Tests', () => {
 	let road: Road;
 	let pjax: RoadsPjax;
 	let requests: RecordedRequest[];
-	let routes: Record<string, () => Response | Promise<Response>>;
+	let routes: Record<string, () => RoadsResponse | Promise<RoadsResponse>>;
 
 	// Records whether the browser's default action would have run for link clicks and form submits.
 	//	Document listeners run after the container's, so this sees pjax's decision, then stops jsdom
@@ -52,7 +52,7 @@ describe('RoadsPjax Tests', () => {
 		road.use((method, path, body, headers) => {
 			requests.push({ method, path, body, headers });
 			const route = routes[`${method} ${path}`];
-			return Promise.resolve(route ? route() : new Response('Not found', 404));
+			return Promise.resolve(route ? route() : new RoadsResponse('Not found', 404));
 		});
 
 		pjax = new RoadsPjax(road, container, window);
@@ -101,20 +101,20 @@ describe('RoadsPjax Tests', () => {
 
 	describe('render', () => {
 		test('render updates container innerHTML', () => {
-			pjax.render(new Response('Hello World', 200));
+			pjax.render(new RoadsResponse('Hello World', 200));
 			expect(container.innerHTML).toBe('Hello World');
 		});
 
 		test('render handles undefined body', () => {
 			container.innerHTML = 'existing content';
-			pjax.render(new Response(undefined as unknown as string, 200));
+			pjax.render(new RoadsResponse(undefined as unknown as string, 200));
 			expect(container.innerHTML).toBe('');
 		});
 	});
 
 	describe('links', () => {
 		test('a pjax link is requested through the road with its path, query and hash', async () => {
-			routes['GET /users/123?page=2#section'] = () => new Response('User content');
+			routes['GET /users/123?page=2#section'] = () => new RoadsResponse('User content');
 			container.innerHTML = '<a href="http://localhost:3000/users/123?page=2#section" data-roads-pjax="link">User</a>';
 			pjax.register();
 
@@ -129,7 +129,7 @@ describe('RoadsPjax Tests', () => {
 		});
 
 		test('a click on an element inside a pjax link is handled', async () => {
-			routes['GET /inner'] = () => new Response('Inner content');
+			routes['GET /inner'] = () => new RoadsResponse('Inner content');
 			container.innerHTML = '<a href="/inner" data-roads-pjax="link"><span><b>Text</b></span></a>';
 			pjax.register();
 
@@ -174,7 +174,7 @@ describe('RoadsPjax Tests', () => {
 		});
 
 		test('a link with target="_self" is handled', async () => {
-			routes['GET /page'] = () => new Response('Page');
+			routes['GET /page'] = () => new RoadsResponse('Page');
 			container.innerHTML = '<a href="/page" target="_self" data-roads-pjax="link">Page</a>';
 			pjax.register();
 
@@ -185,9 +185,9 @@ describe('RoadsPjax Tests', () => {
 		});
 
 		test('a link follows redirects and puts the final url in the url bar', async () => {
-			routes['GET /old'] = () => new Response('', 302, { location: '/middle?x=1' });
-			routes['GET /middle?x=1'] = () => new Response('', 301, { location: 'http://localhost:3000/new' });
-			routes['GET /new'] = () => new Response('New content');
+			routes['GET /old'] = () => new RoadsResponse('', 302, { location: '/middle?x=1' });
+			routes['GET /middle?x=1'] = () => new RoadsResponse('', 301, { location: 'http://localhost:3000/new' });
+			routes['GET /new'] = () => new RoadsResponse('New content');
 			container.innerHTML = '<a href="/old" data-roads-pjax="link">Old</a>';
 			pjax.register();
 
@@ -201,7 +201,7 @@ describe('RoadsPjax Tests', () => {
 
 		test('a redirect to another origin sends the browser there', async () => {
 			const navigations = recordNavigation();
-			routes['GET /out'] = () => new Response('', 302, { location: 'https://example.com/landing' });
+			routes['GET /out'] = () => new RoadsResponse('', 302, { location: 'https://example.com/landing' });
 			container.innerHTML = '<a href="/out" data-roads-pjax="link">Out</a>';
 			pjax.register();
 
@@ -215,7 +215,7 @@ describe('RoadsPjax Tests', () => {
 
 		test('a redirect loop falls back to a normal page load', async () => {
 			const navigations = recordNavigation();
-			routes['GET /loop'] = () => new Response('', 302, { location: '/loop' });
+			routes['GET /loop'] = () => new RoadsResponse('', 302, { location: '/loop' });
 			container.innerHTML = '<a href="/loop" data-roads-pjax="link">Loop</a>';
 			pjax.register();
 
@@ -239,9 +239,9 @@ describe('RoadsPjax Tests', () => {
 		});
 
 		test('a slow response does not replace a newer one', async () => {
-			let finishSlow: (response: Response) => void = () => undefined;
-			routes['GET /slow'] = () => new Promise<Response>(resolve => { finishSlow = resolve; });
-			routes['GET /fast'] = () => new Response('Fast content');
+			let finishSlow: (response: RoadsResponse) => void = () => undefined;
+			routes['GET /slow'] = () => new Promise<RoadsResponse>(resolve => { finishSlow = resolve; });
+			routes['GET /fast'] = () => new RoadsResponse('Fast content');
 			container.innerHTML = '<a id="slow" href="/slow" data-roads-pjax="link">Slow</a>'
 				+ '<a id="fast" href="/fast" data-roads-pjax="link">Fast</a>';
 			pjax.register();
@@ -250,7 +250,7 @@ describe('RoadsPjax Tests', () => {
 			await settle();
 			click(container.querySelector('#fast') as Element);
 			await settle();
-			finishSlow(new Response('Slow content'));
+			finishSlow(new RoadsResponse('Slow content'));
 			await settle();
 
 			expect(container.innerHTML).toBe('Fast content');
@@ -260,8 +260,8 @@ describe('RoadsPjax Tests', () => {
 		test('a slow failure does not fall back to a normal page load after a newer navigation', async () => {
 			const navigations = recordNavigation();
 			let failSlow: (err: Error) => void = () => undefined;
-			routes['GET /slow'] = () => new Promise<Response>((resolve, reject) => { failSlow = reject; });
-			routes['GET /fast'] = () => new Response('Fast content');
+			routes['GET /slow'] = () => new Promise<RoadsResponse>((resolve, reject) => { failSlow = reject; });
+			routes['GET /fast'] = () => new RoadsResponse('Fast content');
 			container.innerHTML = '<a id="slow" href="/slow" data-roads-pjax="link">Slow</a>'
 				+ '<a id="fast" href="/fast" data-roads-pjax="link">Fast</a>';
 			pjax.register();
@@ -279,9 +279,9 @@ describe('RoadsPjax Tests', () => {
 
 		test('a slow redirect to another origin does not send the browser away after a newer navigation', async () => {
 			const navigations = recordNavigation();
-			let finishSlow: (response: Response) => void = () => undefined;
-			routes['GET /slow'] = () => new Promise<Response>(resolve => { finishSlow = resolve; });
-			routes['GET /fast'] = () => new Response('Fast content');
+			let finishSlow: (response: RoadsResponse) => void = () => undefined;
+			routes['GET /slow'] = () => new Promise<RoadsResponse>(resolve => { finishSlow = resolve; });
+			routes['GET /fast'] = () => new RoadsResponse('Fast content');
 			container.innerHTML = '<a id="slow" href="/slow" data-roads-pjax="link">Slow</a>'
 				+ '<a id="fast" href="/fast" data-roads-pjax="link">Fast</a>';
 			pjax.register();
@@ -290,7 +290,7 @@ describe('RoadsPjax Tests', () => {
 			await settle();
 			click(container.querySelector('#fast') as Element);
 			await settle();
-			finishSlow(new Response('', 302, { location: 'https://example.com/landing' }));
+			finishSlow(new RoadsResponse('', 302, { location: 'https://example.com/landing' }));
 			await settle();
 
 			expect(navigations.href).toEqual([]);
@@ -300,7 +300,7 @@ describe('RoadsPjax Tests', () => {
 
 	describe('page titles', () => {
 		test('the title is left alone when the route does not set one', async () => {
-			routes['GET /untitled'] = () => new Response('Untitled');
+			routes['GET /untitled'] = () => new RoadsResponse('Untitled');
 			container.innerHTML = '<a href="/untitled" data-roads-pjax="link">Untitled</a>';
 			pjax.register();
 
@@ -317,7 +317,7 @@ describe('RoadsPjax Tests', () => {
 			pjax.addTitleMiddleware('page-title');
 			titledRoad.use(function (this: StoreValsContext) {
 				this.storeVal('page-title', 'New Title');
-				return Promise.resolve(new Response('Titled'));
+				return Promise.resolve(new RoadsResponse('Titled'));
 			});
 			container.innerHTML = '<a href="/titled" data-roads-pjax="link">Titled</a>';
 			pjax.register();
@@ -330,7 +330,7 @@ describe('RoadsPjax Tests', () => {
 		});
 
 		test('back and forward use the title saved in the history entry when the route has none', async () => {
-			routes['GET /page'] = () => new Response('Page');
+			routes['GET /page'] = () => new RoadsResponse('Page');
 			pjax.register();
 			window.history.pushState({ page_title: 'Saved Title', pjax: true }, '', '/page');
 
@@ -348,8 +348,8 @@ describe('RoadsPjax Tests', () => {
 			const pending: Record<string, () => void> = {};
 			titledRoad.use(function (this: StoreValsContext, method, path) {
 				this.storeVal('page-title', `Title ${path}`);
-				return new Promise<Response>((resolve) => {
-					pending[path] = () => resolve(new Response(`Content ${path}`));
+				return new Promise<RoadsResponse>((resolve) => {
+					pending[path] = () => resolve(new RoadsResponse(`Content ${path}`));
 				});
 			});
 
@@ -373,7 +373,7 @@ describe('RoadsPjax Tests', () => {
 
 	describe('back and forward', () => {
 		test('a pjax history entry is requested with its query string and hash', async () => {
-			routes['GET /search?q=roads#results'] = () => new Response('Search results');
+			routes['GET /search?q=roads#results'] = () => new RoadsResponse('Search results');
 			pjax.register();
 			window.history.pushState({ pjax: true }, '', '/search?q=roads#results');
 
@@ -385,7 +385,7 @@ describe('RoadsPjax Tests', () => {
 		});
 
 		test('back and forward do not add history entries', async () => {
-			routes['GET /page'] = () => new Response('Page');
+			routes['GET /page'] = () => new RoadsResponse('Page');
 			const pushState = vi.spyOn(window.history, 'pushState');
 			pjax.register();
 			window.history.replaceState({ pjax: true }, '', '/page');
@@ -425,8 +425,8 @@ describe('RoadsPjax Tests', () => {
 		test('a slow failure on back or forward does not reload the page after a newer navigation', async () => {
 			const navigations = recordNavigation();
 			let failSlow: (err: Error) => void = () => undefined;
-			routes['GET /slow'] = () => new Promise<Response>((resolve, reject) => { failSlow = reject; });
-			routes['GET /fast'] = () => new Response('Fast content');
+			routes['GET /slow'] = () => new Promise<RoadsResponse>((resolve, reject) => { failSlow = reject; });
+			routes['GET /fast'] = () => new RoadsResponse('Fast content');
 			container.innerHTML = '<a href="/fast" data-roads-pjax="link">Fast</a>';
 			pjax.register();
 			window.history.replaceState({ pjax: true }, '', '/slow');
@@ -445,7 +445,7 @@ describe('RoadsPjax Tests', () => {
 
 	describe('forms', () => {
 		test('a GET form sends its fields, including the submit button, as a query string', async () => {
-			routes['GET /search?q=roads&sort=new'] = () => new Response('Results');
+			routes['GET /search?q=roads&sort=new'] = () => new RoadsResponse('Results');
 			container.innerHTML = `<form method="get" action="http://localhost:3000/search?old=1" data-roads-pjax="form">
 				<input name="q" value="roads">
 				<button name="sort" value="new" data-roads-pjax="submit">Go</button>
@@ -464,7 +464,7 @@ describe('RoadsPjax Tests', () => {
 		});
 
 		test('a POST form sends its fields as a urlencoded body and leaves the url alone', async () => {
-			routes['POST /messages'] = () => new Response('Sent');
+			routes['POST /messages'] = () => new RoadsResponse('Sent');
 			container.innerHTML = `<form method="post" action="/messages" data-roads-pjax="form">
 				<input name="message" value="hello world">
 				<input type="submit" name="action" value="send" data-roads-pjax="submit">
@@ -512,7 +512,7 @@ describe('RoadsPjax Tests', () => {
 		});
 
 		test('a file input in a urlencoded form sends the file name, like the browser', async () => {
-			routes['POST /upload'] = () => new Response('Sent');
+			routes['POST /upload'] = () => new RoadsResponse('Sent');
 			container.innerHTML = `<form method="post" action="/upload" data-roads-pjax="form">
 				<input type="file" name="upload">
 				<button data-roads-pjax="submit">Upload</button>
@@ -527,8 +527,8 @@ describe('RoadsPjax Tests', () => {
 		});
 
 		test('a POST form that redirects renders the redirect target and puts it in the url bar', async () => {
-			routes['POST /messages'] = () => new Response('', 303, { location: '/messages/1' });
-			routes['GET /messages/1'] = () => new Response('Message 1');
+			routes['POST /messages'] = () => new RoadsResponse('', 303, { location: '/messages/1' });
+			routes['GET /messages/1'] = () => new RoadsResponse('Message 1');
 			container.innerHTML = `<form method="post" action="/messages" data-roads-pjax="form">
 				<button data-roads-pjax="submit">Send</button>
 			</form>`;
@@ -544,8 +544,8 @@ describe('RoadsPjax Tests', () => {
 		});
 
 		test('a 307 redirect keeps the method and body', async () => {
-			routes['POST /old'] = () => new Response('', 307, { location: '/new' });
-			routes['POST /new'] = () => new Response('Saved');
+			routes['POST /old'] = () => new RoadsResponse('', 307, { location: '/new' });
+			routes['POST /new'] = () => new RoadsResponse('Saved');
 			container.innerHTML = `<form method="post" action="/old" data-roads-pjax="form">
 				<input name="a" value="1">
 				<button data-roads-pjax="submit">Save</button>
@@ -565,7 +565,7 @@ describe('RoadsPjax Tests', () => {
 		});
 
 		test('the submit button\'s formmethod and formaction are used', async () => {
-			routes['DELETE /posts/1'] = () => new Response('Deleted');
+			routes['DELETE /posts/1'] = () => new RoadsResponse('Deleted');
 			container.innerHTML = `<form method="post" action="/posts" data-roads-pjax="form">
 				<button formmethod="delete" formaction="/posts/1" data-roads-pjax="submit">Delete</button>
 			</form>`;
@@ -578,7 +578,7 @@ describe('RoadsPjax Tests', () => {
 		});
 
 		test('a form submitted without a submit button is handled', async () => {
-			routes['POST /save'] = () => new Response('Saved');
+			routes['POST /save'] = () => new RoadsResponse('Saved');
 			container.innerHTML = `<form method="post" action="/save" data-roads-pjax="form">
 				<input name="a" value="1">
 			</form>`;
@@ -644,8 +644,8 @@ describe('RoadsPjax Tests', () => {
 		test('a slow POST failure is not logged after a newer navigation', async () => {
 			const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
 			let failSlow: (err: Error) => void = () => undefined;
-			routes['POST /save'] = () => new Promise<Response>((resolve, reject) => { failSlow = reject; });
-			routes['GET /fast'] = () => new Response('Fast content');
+			routes['POST /save'] = () => new Promise<RoadsResponse>((resolve, reject) => { failSlow = reject; });
+			routes['GET /fast'] = () => new RoadsResponse('Fast content');
 			container.innerHTML = `<form method="post" action="/save" data-roads-pjax="form">
 				<button data-roads-pjax="submit">Save</button>
 			</form>
@@ -681,8 +681,8 @@ describe('RoadsPjax Tests', () => {
 		});
 
 		test('an additional element registered after register handles links and forms', async () => {
-			routes['GET /outside'] = () => new Response('Outside link');
-			routes['POST /outside-form'] = () => new Response('Outside form');
+			routes['GET /outside'] = () => new RoadsResponse('Outside link');
+			routes['POST /outside-form'] = () => new RoadsResponse('Outside form');
 			document.body.insertAdjacentHTML('beforeend', `<nav id="nav">
 				<a href="/outside" data-roads-pjax="link">Outside</a>
 				<form method="post" action="/outside-form" data-roads-pjax="form">

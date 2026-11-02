@@ -1,18 +1,20 @@
 
 
 import { middleware, ModifiedSinceContext } from '../../../src/middleware/modifiedSince.js';
-import Response from '../../../src/core/response.js';
+import RoadsResponse from '../../../src/core/response.js';
 
 import { describe, expect, test } from 'vitest';
 
 /**
- * Helper function to ensure middleware returns a Response object
- * Throws an error if the result is not a Response object
+ * Helper function to ensure middleware returns a RoadsResponse object
+ * Throws an error if the result is not a RoadsResponse object
  */
-async function ensureResponse(middlewarePromise: Promise<Response | string> | Response | string): Promise<Response> {
+async function ensureResponse(
+	middlewarePromise: Promise<RoadsResponse | string> | RoadsResponse | string
+): Promise<RoadsResponse> {
 	const result = await middlewarePromise;
-	if (!(result instanceof Response)) {
-		throw new Error(`Expected Response object but got: ${typeof result}`);
+	if (!(result instanceof RoadsResponse)) {
+		throw new Error(`Expected RoadsResponse object but got: ${typeof result}`);
 	}
 	return result;
 }
@@ -42,7 +44,7 @@ describe('modified sine tests', () => {
 			'if-modified-since': 'Mon, 01 Jan 1990 00:00:00 GMT'
 		}, () => {
 			expect(context.shouldReturnNotModifiedResponse('Wed, 01 Jan 2020 00:00:00 GMT')).toBe(false);
-			return Promise.resolve(new Response('hi', 200));
+			return Promise.resolve(new RoadsResponse('hi', 200));
 		}));
 
 		expect(response.status).toBe(200);
@@ -75,7 +77,7 @@ describe('modified sine tests', () => {
 
 		const response = await ensureResponse(middleware.call(context, method, '/', undefined, headers, () => {
 			notModified = context.shouldReturnNotModifiedResponse(lastModified);
-			return Promise.resolve(new Response('hi', 200));
+			return Promise.resolve(new RoadsResponse('hi', 200));
 		}));
 
 		return { notModified, response };

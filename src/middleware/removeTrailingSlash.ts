@@ -11,11 +11,11 @@
  * 	with Location: [url_without_slash]). A 308 keeps the method and body, so a POST stays a POST.
  */
 import { Context, Middleware } from '../core/road.js';
-import Response from '../core/response.js';
+import RoadsResponse from '../core/response.js';
 import { parseUrl } from '../util/url.js';
 
 /**
- * Any requests with trailing slashes will immediately return a Response object redirecting to a non-trailing-slash path
+ * Any requests with trailing slashes will immediately return a RoadsResponse object redirecting to a non-trailing-slash path
  */
 export const middleware: Middleware<Context> = function (method, url, body, headers, next) {
 	const parsedUrl = parseUrl(url);
@@ -30,7 +30,7 @@ export const middleware: Middleware<Context> = function (method, url, body, head
 		// Collapse any leading run of slashes, backslashes or whitespace that browsers ignore. Otherwise a request
 		//		for //evil.com/ would redirect to //evil.com, which browsers treat as a protocol-relative URL
 		const newPath = parsedPath.substring(0, parsedPath.length - 1).replace(/^[/\\\t\n\r]+/, '/');
-		return Promise.resolve(new Response('', 308, {
+		return Promise.resolve(new RoadsResponse('', 308, {
 			location : newPath + parsedUrl.search + parsedUrl.hash
 		}));
 	}

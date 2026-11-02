@@ -8,7 +8,7 @@
 import * as cookie from 'cookie';
 import { Context, IncomingHeaders, Middleware } from '../core/road.js';
 import { NextCallback } from '../core/requestChain.js';
-import Response from '../core/response.js';
+import RoadsResponse from '../core/response.js';
 
 /**
  * The Cookie Context represents the request context when either the
@@ -103,7 +103,7 @@ export const serverMiddleware = function (
 	route_body: unknown,
 	route_headers: IncomingHeaders,
 	next: NextCallback
-): Promise<Response | string> {
+): Promise<RoadsResponse | string> {
 	let cookies: SetCookies = {};
 	this.newCookies = {};
 
@@ -127,14 +127,14 @@ export const serverMiddleware = function (
 	};
 
 	// Apply the cookie headers to the response
-	return next().then((response: Response | string) => {
+	return next().then((response: RoadsResponse | string) => {
 		const newCookiesEntries = Object.entries(this.newCookies);
 
 		// If there are new cookies to transmit
 		if (newCookiesEntries.length) {
 			// Ensure we're dealing with a response object and not a string
-			if (!(response instanceof Response)) {
-				response = new Response(response);
+			if (!(response instanceof RoadsResponse)) {
+				response = new RoadsResponse(response);
 			}
 
 			// Header names are case-insensitive, so collect every casing of set-cookie the route might have used

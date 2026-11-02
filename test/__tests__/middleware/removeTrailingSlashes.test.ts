@@ -1,6 +1,6 @@
 import { middleware } from '../../../src/middleware/removeTrailingSlash.js';
 
-import Response from '../../../src/core/response.js';
+import RoadsResponse from '../../../src/core/response.js';
 import Road from '../../../src/core/road.js';
 import { attachCommonMiddleware } from '../../../src/index.js';
 
@@ -42,8 +42,8 @@ describe('KillSlashes tests', () => {
 		};
 
 		return expect(middleware.call({
-			// the redirection needs the Response context
-			Response : Response
+			// the redirection needs the RoadsResponse context
+			RoadsResponse : RoadsResponse
 		}, method, url, body, headers, next)).resolves.toEqual({
 			status : 308,
 			body : '',

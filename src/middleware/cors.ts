@@ -7,7 +7,7 @@
  */
 
 import { Context, Middleware } from '../core/road.js';
-import Response from '../core/response.js';
+import RoadsResponse from '../core/response.js';
 import { appendVary, getSingleHeader } from '../util/headers.js';
 
 /**
@@ -138,9 +138,11 @@ export function build (options: {
 	/*
 	 * Helper function to add the cors headers to the response of the rest of the middleware chain
 	 */
-	const applyCorsHeaders = (result: string | Response, corsResponseHeaders: Record<string, string>): Response => {
-		// Ensure we have a Response object
-		const response = result instanceof Response ? result : new Response(result);
+	const applyCorsHeaders = (
+		result: string | RoadsResponse, corsResponseHeaders: Record<string, string>
+	): RoadsResponse => {
+		// Ensure we have a RoadsResponse object
+		const response = result instanceof RoadsResponse ? result : new RoadsResponse(result);
 		for (const key in corsResponseHeaders) {
 			if (key === 'vary') {
 				// The route might already vary on other headers, so we add to the list instead of replacing it
@@ -162,12 +164,12 @@ export function build (options: {
 	/*
 	 * Helper function to handle CORS errors consistently
 	 */
-	const handleCorsError = (next: () => Promise<string | Response>, errorType: string,
-		details?: string, statusCode = 403): Promise<Response> => {
+	const handleCorsError = (next: () => Promise<string | RoadsResponse>, errorType: string,
+		details?: string, statusCode = 403): Promise<RoadsResponse> => {
 		if (returnCorsErrors) {
 			const errorMessage = details ? `CORS Error: ${errorType} - ${details}` : `CORS Error: ${errorType}`;
 			logger.log(errorMessage);
-			return Promise.resolve(applyCorsHeaders(new Response(errorMessage, statusCode, {
+			return Promise.resolve(applyCorsHeaders(new RoadsResponse(errorMessage, statusCode, {
 				'content-type': 'text/plain'
 			}), cacheHeaders));
 		} else {
@@ -367,7 +369,7 @@ export function build (options: {
 			corsResponseHeaders['vary'] = corsResponseHeaders['vary'] ?
 				`${corsResponseHeaders['vary']}, ${preflightVary}` : preflightVary;
 
-			return Promise.resolve(new Response('', 204, corsResponseHeaders));
+			return Promise.resolve(new RoadsResponse('', 204, corsResponseHeaders));
 		}
 
 		return next()

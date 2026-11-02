@@ -3,7 +3,7 @@
 import { build } from '../../../src/middleware/reroute.js';
 import Road from '../../../src/core/road.js';
 import { Context, Middleware as MiddlewareType } from '../../../src/core/road.js';
-import Response from '../../../src/core/response.js';
+import RoadsResponse from '../../../src/core/response.js';
 
 import { describe, expect, test } from 'vitest';
 
@@ -16,7 +16,7 @@ describe('Reroute middleware tests', () => {
 		expect.assertions(3);
 
 		const request: MiddlewareType<Context> = function () {
-			return Promise.resolve(new Response('banana'));
+			return Promise.resolve(new RoadsResponse('banana'));
 		};
 
 		const mockRoad = {
@@ -32,6 +32,6 @@ describe('Reroute middleware tests', () => {
 		middleware.call(context, 'a', 'b', 'c', {}, function () { return Promise.resolve(''); });
 
 		expect(typeof(context[key])).toEqual('function');
-		return expect(context[key]()).resolves.toEqual(new Response('banana'));
+		return expect(context[key]()).resolves.toEqual(new RoadsResponse('banana'));
 	});
 });
