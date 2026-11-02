@@ -8,7 +8,7 @@
 
 import * as fs from 'fs';
 import {
-	CookieMiddleware, CSRFMiddleware, ModifiedSinceMiddleware, StoreValsMiddleware, RouterMiddleware, Response
+	CookieMiddleware, CSRFMiddleware, ModifiedSinceMiddleware, StoreValsMiddleware, RouterMiddleware, RoadsResponse
 } from 'roads';
 import { ApiContext, Post } from '../api/buildApiRoad.js';
 import { IGNORE_LAYOUT_KEY, SiteContext, TITLE_KEY } from '../shared.js';
@@ -35,7 +35,7 @@ export default function applyServerOnlyRoutes(router: RouterMiddleware.Router<Ro
 			httpOnly: false
 		});
 
-		return new Response(
+		return new RoadsResponse(
 			`This is a server only resource. It's available to the server, but is not built in the client!
 			It just set two cookies. Visit the <a href="/browser-safe" data-roads-pjax="link">browser safe page</a>
 			and only the one without httpOnly shows up in the browser.<br />`);
@@ -43,7 +43,7 @@ export default function applyServerOnlyRoutes(router: RouterMiddleware.Router<Ro
 
 	// addLayout skips any response that isn't text/html, so JSON doesn't get wrapped in the layout
 	router.addRoute('GET', '/server-only-json', async function () {
-		return new Response(JSON.stringify({'server-only-success': true}), 200, {
+		return new RoadsResponse(JSON.stringify({'server-only-success': true}), 200, {
 			'content-type': 'application/json'
 		});
 	});
@@ -52,7 +52,7 @@ export default function applyServerOnlyRoutes(router: RouterMiddleware.Router<Ro
 		// This response has a content type, so addLayout would skip it anyway. IGNORE_LAYOUT_KEY is how
 		//		a route skips the layout for any other response
 		this.storeVal(IGNORE_LAYOUT_KEY, true);
-		return new Response(fs.readFileSync(`${__dirname}/../../../public/client.js`).toString('utf-8'), 200, {
+		return new RoadsResponse(fs.readFileSync(`${__dirname}/../../../public/client.js`).toString('utf-8'), 200, {
 			'content-type': 'application/javascript; charset=UTF-8'
 		});
 	});
@@ -74,7 +74,7 @@ export default function applyServerOnlyRoutes(router: RouterMiddleware.Router<Ro
 			</form>
 		</li>`).join('');
 
-		return new Response(`<ul>${list}</ul>
+		return new RoadsResponse(`<ul>${list}</ul>
 		 <form method="POST" action="/posts">
 			${this.getCSRFFormElement()}
 			Title: <input type="text" name="title">
@@ -88,10 +88,10 @@ export default function applyServerOnlyRoutes(router: RouterMiddleware.Router<Ro
 		});
 
 		if (response.status !== 201) {
-			return new Response(`Could not create the post: ${response.body.toString()}`, response.status);
+			return new RoadsResponse(`Could not create the post: ${response.body.toString()}`, response.status);
 		}
 
-		return new Response('', 303, { location: '/posts' });
+		return new RoadsResponse('', 303, { location: '/posts' });
 	});
 
 	// A route can be an array of functions. They run in order like middleware, and each one calls next()
@@ -101,13 +101,13 @@ export default function applyServerOnlyRoutes(router: RouterMiddleware.Router<Ro
 			const response = await this.api('GET', `/posts/${url.args?.['id']}`);
 
 			if (response.status !== 200) {
-				return new Response('Post not found', 404);
+				return new RoadsResponse('Post not found', 404);
 			}
 
 			this.storeVal('post', JSON.parse(response.body.toString()));
-			// next() can resolve with a string, but routes must resolve with a Response
+			// next() can resolve with a string, but routes must resolve with a RoadsResponse
 			const result = await next();
-			return result instanceof Response ? result : new Response(result);
+			return result instanceof RoadsResponse ? result : new RoadsResponse(result);
 		},
 		async function () {
 			const post = this.getVal('post') as Post;
@@ -121,7 +121,7 @@ export default function applyServerOnlyRoutes(router: RouterMiddleware.Router<Ro
 
 			this.storeVal(TITLE_KEY, post.title);
 			// The middleware adds the last-modified header to this response
-			return new Response(`<h1>${post.title}</h1>
+			return new RoadsResponse(`<h1>${post.title}</h1>
 			 <p>Last updated ${post.updatedAt}</p>
 			 <a href="/posts">Back to all posts</a>`, 200, {
 				// Without this the browser may reuse the page without asking the server, so you wouldn't see the 304
@@ -132,7 +132,7 @@ export default function applyServerOnlyRoutes(router: RouterMiddleware.Router<Ro
 
 	router.addRoute<ApiContext>('DELETE', '/posts/#id', async function (method, url) {
 		await this.api('DELETE', `/posts/${url.args?.['id']}`);
-		return new Response('', 303, { location: '/posts' });
+		return new RoadsResponse('', 303, { location: '/posts' });
 	});
 
 	// Errors thrown by a route reject the promise from road.request. The Express connector passes them to

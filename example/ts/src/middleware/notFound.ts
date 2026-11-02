@@ -6,7 +6,7 @@
  * This file is an example of a middleware that ends the request chain
  */
 
-import { Response, RoadModule } from 'roads';
+import { RoadsResponse, RoadModule } from 'roads';
 
 
 /**
@@ -19,7 +19,7 @@ import { Response, RoadModule } from 'roads';
  * @param {object} headers - HTTP request headers
  */
 const notFound: RoadModule.Middleware<RoadModule.Context> = async function (method, url) {
-	return new Response(`Page not found: ${method} ${url}`, 404);
+	return new RoadsResponse(`Page not found: ${method} ${url}`, 404);
 };
 
 export default notFound;

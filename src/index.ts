@@ -9,6 +9,8 @@ export type { Context, Middleware } from './core/road.js';
 export type { NextCallback, NextOverrides } from './core/requestChain.js';
 export type { ParsedURL } from './util/url.js';
 export { default as RoadsPJAX } from './client/pjax.js';
+export { expressConnector } from './server/expressConnector.js';
+export type { ExpressRequest, ExpressResponse } from './server/expressConnector.js';
 
 export * as ApplyToContextMiddleware from './middleware/applyToContext.js';
 // This is not part of the common middleware because it uses different middleware depending on client or server

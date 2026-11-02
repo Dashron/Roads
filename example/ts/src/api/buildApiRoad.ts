@@ -8,7 +8,7 @@
  *  - Directly from the web road through the reroute middleware, without any network request (see buildServerRoad.ts)
  */
 
-import { Road, Response, CorsMiddleware, ParseBodyMiddleware, RouterMiddleware, RoadModule } from 'roads';
+import { Road, RoadsResponse, CorsMiddleware, ParseBodyMiddleware, RouterMiddleware, RoadModule } from 'roads';
 
 export interface Post {
 	id: number,
@@ -21,7 +21,7 @@ export interface Post {
  * 	sends the request straight into this road and resolves with its response
  */
 export interface ApiContext extends RoadModule.Context {
-	api: (method: string, path: string, body?: string, headers?: RoadModule.IncomingHeaders) => Promise<Response>
+	api: (method: string, path: string, body?: string, headers?: RoadModule.IncomingHeaders) => Promise<RoadsResponse>
 }
 
 // In the real world this would be a database
@@ -31,8 +31,8 @@ const posts: Post[] = [
 ];
 let nextId = 3;
 
-function json (data: unknown, status = 200): Response {
-	return new Response(JSON.stringify(data), status, { 'content-type': 'application/json' });
+function json (data: unknown, status = 200): RoadsResponse {
+	return new RoadsResponse(JSON.stringify(data), status, { 'content-type': 'application/json' });
 }
 
 /**
@@ -72,7 +72,7 @@ export default function buildApiRoad (validOrigins: string[]): Road {
 			return json({ error: 'Post not found' }, 404);
 		}
 
-		return new Response(JSON.stringify(post), 200, {
+		return new RoadsResponse(JSON.stringify(post), 200, {
 			'content-type': 'application/json',
 			'last-modified': post.updatedAt
 		});
@@ -98,7 +98,7 @@ export default function buildApiRoad (validOrigins: string[]): Road {
 		}
 
 		posts.splice(index, 1);
-		return new Response('', 204);
+		return new RoadsResponse('', 204);
 	});
 
 	// Anything the router didn't handle

@@ -7,9 +7,9 @@
  */
 
 import express from 'express';
+import { expressConnector } from 'roads';
 import buildApiRoad from './api/buildApiRoad.js';
 import buildServerRoad from './buildServerRoad.js';
-import { expressConnector } from './middleware/expressConnector.js';
 
 // Browsers resolve localhost to this address too, so http://localhost and http://127.0.0.1 both reach the server
 const host = '127.0.0.1';

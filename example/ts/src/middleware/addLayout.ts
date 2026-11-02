@@ -6,7 +6,7 @@
  * This file is an example of how to apply HTML layouts via a middleware system
  */
 
-import { Response, RoadModule, StoreValsMiddleware } from 'roads';
+import { RoadsResponse, RoadModule, StoreValsMiddleware } from 'roads';
 import { escapeHtml, IGNORE_LAYOUT_KEY, SiteContext, TITLE_KEY } from '../shared.js';
 
 /**
@@ -36,10 +36,10 @@ function wrapLayout(body: string | Buffer, title: string, siteName: string) {
 /**
  * Returns true if the response should be sent as is, without the layout
  *
- * @param {Response} response - The response from the rest of the request chain
+ * @param {RoadsResponse} response - The response from the rest of the request chain
  * @param {boolean} ignoreLayout - True if the route asked to skip the layout
  */
-function skipLayout(response: Response, ignoreLayout: boolean): boolean {
+function skipLayout(response: RoadsResponse, ignoreLayout: boolean): boolean {
 	const contentType = response.headers['content-type'];
 
 	return ignoreLayout ||
@@ -64,8 +64,8 @@ const addLayoutMiddleware: RoadModule.Middleware<StoreValsMiddleware.StoreValsCo
 	function addLayoutMiddleware (method, url, body, headers, next) {
 		return next()
 			.then((response) => {
-				if (!(response instanceof Response)) {
-					response = new Response(response);
+				if (!(response instanceof RoadsResponse)) {
+					response = new RoadsResponse(response);
 				}
 
 				if (skipLayout(response, this.getVal(IGNORE_LAYOUT_KEY) === true)) {

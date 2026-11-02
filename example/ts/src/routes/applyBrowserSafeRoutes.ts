@@ -6,7 +6,7 @@
  * This file is an example of how to assign some browser safe routes to a roads server
  */
 
-import { Response, RoadModule, RouterMiddleware, StoreValsMiddleware, CookieMiddleware, CSRFMiddleware } from 'roads';
+import { RoadsResponse, RoadModule, RouterMiddleware, StoreValsMiddleware, CookieMiddleware, CSRFMiddleware } from 'roads';
 import { escapeHtml, SiteContext, TITLE_KEY } from '../shared.js';
 
 interface ExampleRequestBody {
@@ -27,7 +27,7 @@ export default function applyBrowserSafeRoutes(
 		this.storeVal(TITLE_KEY, 'Root Resource');
 
 		// In the real world the body of the response should be created from a template engine.
-		return new Response(`<h1>Welcome to ${this.siteName}</h1>
+		return new RoadsResponse(`<h1>Welcome to ${this.siteName}</h1>
 		 <p>Links with <code>data-roads-pjax="link"</code> are rendered in the browser. Ctrl-click any of them
 		 to load the page from the server instead. Check your console to see which one ran.</p>
 		 <ul>
@@ -64,7 +64,7 @@ export default function applyBrowserSafeRoutes(
 			<input type="submit" value="Send message" data-roads-pjax="submit">
 		 </form>`;
 
-		return new Response(html);
+		return new RoadsResponse(html);
 	});
 
 	// ParseBodyMiddleware turned the form body into an object, so the second type parameter describes it.
@@ -72,7 +72,7 @@ export default function applyBrowserSafeRoutes(
 	router.addRoute<RoadModule.Context, ExampleRequestBody | undefined>('POST', '/postdata', async function (method, url, body) {
 		console.log(`You sent the message: ${body?.message}`);
 		// RoadsPJAX follows the redirect and renders /browser-safe
-		return new Response('', 302, { location: '/browser-safe' });
+		return new RoadsResponse('', 302, { location: '/browser-safe' });
 	});
 
 	// $ matches any value in that part of the path, and # only matches numbers. Matches are in url.args.
@@ -82,7 +82,7 @@ export default function applyBrowserSafeRoutes(
 		const sort = url.query['sort'] ?? 'oldest';
 		this.storeVal(TITLE_KEY, `Tag: ${slug}`);
 
-		return new Response(`<p>url.args.slug is <code>${escapeHtml(slug)}</code>, url.query.sort is <code>${escapeHtml(sort)}</code></p>
+		return new RoadsResponse(`<p>url.args.slug is <code>${escapeHtml(slug)}</code>, url.query.sort is <code>${escapeHtml(sort)}</code></p>
 		 <form method="GET" action="/tags/${encodeURIComponent(slug)}" data-roads-pjax="form">
 			<select name="sort">
 				<option value="oldest">oldest</option>
@@ -98,7 +98,7 @@ export default function applyBrowserSafeRoutes(
 		this.storeVal(TITLE_KEY, 'Client Requests');
 
 		// /server-only-json isn't in the browser road, so the link doesn't have data-roads-pjax
-		return new Response(`<p><a href="/server-only-json">/server-only-json</a> is a server only route that
+		return new RoadsResponse(`<p><a href="/server-only-json">/server-only-json</a> is a server only route that
 		 responds with JSON instead of a page.</p>
 		 <p>The API road is served at /api, and only allows requests from the origins listed in server.ts.
 		 Open this page at <code>127.0.0.1</code> instead of <code>localhost</code> (or the other way around)
