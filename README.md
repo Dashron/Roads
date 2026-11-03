@@ -2,7 +2,7 @@
 
 Roads is an isomorphic web framework that lets you share routing logic between your server and browser. The same code that handles requests on your Node.js server can power client-side navigation and be tested without any HTTP overhead.
 
-```javascript
+```typescript
 import { Road } from 'roads';
 
 const road = new Road();
@@ -18,7 +18,7 @@ console.log(response.body); // Hello from /users!
 
 A Node.js server and a browser can call the same road, so you only write your routes once. Code that runs in both places like this is often called isomorphic.
 
-```javascript
+```typescript
 // On a Node.js server, pass each incoming request to the road
 const response = await road.request(req.method, req.url, req.body, req.headers);
 
@@ -26,6 +26,8 @@ const response = await road.request(req.method, req.url, req.body, req.headers);
 const pjax = new RoadsPJAX(road, document.body, window);
 pjax.register();
 ```
+
+The [example/readme](example/readme) folder has a full, runnable version of this example.
 
 ## What Roads gives you
 
@@ -43,9 +45,10 @@ pjax.register();
 - [Run on a server and in the browser](#serve-your-routes-with-express) - Express and PJAX
 
 **API Reference**
-- [Road](#road) and [Response](#response) - Method signatures and options
+- [Road](#road) and [RoadsResponse](#roadsresponse) - Method signatures and options
 - [Router](#router) - Routes, path variables and the url object
 - [Bundled Middleware](#bundled-middleware) - Cookies, CORS, body parsing, and more
+- [expressConnector](#expressconnectorroad-road) - Serve a road with Express
 - [RoadsPJAX](#roadspjaxroad-road-containerelement-htmlelement-window-window) - Links, forms and page titles in the browser
 
 [![Node CI](https://github.com/Dashron/roads/actions/workflows/nodejs.yml/badge.svg)](https://github.com/Dashron/roads/actions/workflows/nodejs.yml)
@@ -102,7 +105,7 @@ Next, run `node hello.js`. You should see this output:
 200 Hello, Roads!
 ```
 
-Here's what happened. First, `road.use` added your function to the start of a chain of middleware functions. Next, `road.request` processed your request directly, without a server, and called your middleware with the request's method, path, body and headers. Finally, your middleware returned a string, so Roads turned it into a [Response](#response) with a status of 200.
+Here's what happened. First, `road.use` added your function to the start of a chain of middleware functions. Next, `road.request` processed your request directly, without a server, and called your middleware with the request's method, path, body and headers. Finally, your middleware returned a string, so Roads turned it into a [RoadsResponse](#roadsresponse) with a status of 200.
 
 Because `road.request` doesn't need a server, you can also use it for automated testing.
 
@@ -138,12 +141,13 @@ GET /hello
 
 The logging middleware ran first and printed the first line, because middleware run in the order you added them with `road.use`. This ordered list of middleware is called the **request chain**. The call to `next()` then ran the second middleware, and the response from the second middleware came back through `next()` to `road.request`.
 
-What a middleware returns decides whether the request continues to the next middleware:
+What a middleware returns or throws decides whether the request continues to the next middleware:
 
 - **To continue**, `return next()`. The next middleware runs, and `next()` gives you the response it produced. If there is no middleware left, `next()` gives you a 404 response.
-- **To stop**, return a string or a [Response](#response) without calling `next`. The remaining middleware don't run, and the value you returned becomes the response.
+- **To stop**, return a string or a [RoadsResponse](#roadsresponse) without calling `next`. The remaining middleware don't run, and the value you returned becomes the response.
+- **If it throws an error**, the remaining middleware won't run, and the error can be caught by one of the previously assigned middleware.
 
-If you write `next();` without the `return`, your middleware returns nothing, so the road has no response to give you. `road.request` then rejects with `The request chain resolved to undefined`. The [Middleware](#middleware) reference covers the rest of what middleware can do.
+If you write `next();` without the `return`, your middleware returns nothing, so the road has no response to give you. `road.request` then rejects with `The request chain resolved to undefined`. The [Middleware](#middleware) reference has an example that catches errors, and covers the rest of what middleware can do.
 
 ## Add routes with the Router
 
@@ -193,7 +197,7 @@ GET /nope
 
 First, `/hello?from=readme` matched the `/hello` route, because the router ignores the query string. Next, `/users/dashron` matched the second route. The `$name` part of that route is a **path variable**, which matches any value in that part of the path, so the router put `dashron` in `url.args.name`. Finally, no route matched `/nope`. The router called `next()`, no middleware was left, and the response was a 404.
 
-Add the router after your other middleware. These routes return without calling `next`, so the request stops there, and middleware added after the router doesn't run for it. The [Router](#router) reference covers the other kinds of path variable.
+Always make sure to add the router after your other middleware. These routes return without calling `next`, so the request stops there, and middleware added after the router doesn't run. The [Router](#router) reference covers the other kinds of path variable.
 
 ## Serve your routes with Express
 
@@ -231,11 +235,12 @@ Roads doesn't include a web server, so install Express.
 npm install express
 ```
 
-Next, create `server.js`. Express has its own middleware, which is separate from the middleware in your road. The last `app.use` in this file adds an Express middleware that passes every request to `road.request`, then copies the status, headers and body of the response into the Express response.
+Next, create `server.js`. Express has its own middleware, which is separate from the middleware in your road. [expressConnector](#expressconnectorroad-road) creates an Express middleware that passes every request to `road.request`, then copies the status, headers and body of the response into the Express response.
 
 ```javascript
 // server.js
 import express from 'express';
+import { expressConnector } from 'roads';
 import road from './road.js';
 
 const app = express();
@@ -243,24 +248,7 @@ const app = express();
 // Roads expects the request body as a string. The parse body middleware in your road turns JSON and forms into objects
 app.use(express.text({ type: '*/*' }));
 
-app.use(async (req, res, next) => {
-    try {
-        const body = typeof req.body === 'string' ? req.body : undefined;
-        const response = await road.request(req.method, req.url, body, req.headers);
-
-        res.status(response.status);
-
-        for (const [name, value] of Object.entries(response.headers)) {
-            if (value !== undefined) {
-                res.header(name, value);
-            }
-        }
-
-        res.send(response.body);
-    } catch (err) {
-        next(err);
-    }
-});
+app.use(expressConnector(road));
 
 app.listen(3000);
 console.log('Server running at http://localhost:3000/hello');
