@@ -3,5 +3,11 @@
 import { RoadsPJAX } from 'roads';
 import road from './road.js';
 
-const pjax = new RoadsPJAX(road, document.body, window);
+const container = document.getElementById('container');
+
+if (!container) {
+    throw new Error('The page has no element with id="container"');
+}
+
+const pjax = new RoadsPJAX(road, container, window);
 pjax.register();

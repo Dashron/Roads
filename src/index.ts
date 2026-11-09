@@ -20,6 +20,8 @@ export * as CorsMiddleware from './middleware/cors.js';
 // This is not part of the common middleware because it requires configuration
 export * as CSRFMiddleware from './middleware/csrf.js';
 // This is not part of the common middleware because it requires the CSRF middleware
+// This is not part of the common middleware because it requires configuration, and usually only runs on the server
+export * as LayoutMiddleware from './middleware/layout.js';
 export * as MethodOverrideMiddleware from './middleware/methodOverride.js';
 export * as RemoveTrailingSlashMiddleware from './middleware/removeTrailingSlash.js';
 import * as RemoveTrailingSlashMiddleware from './middleware/removeTrailingSlash.js';

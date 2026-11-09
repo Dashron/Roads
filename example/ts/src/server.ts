@@ -24,8 +24,7 @@ const road = buildServerRoad(apiRoad);
 const app = express();
 
 app.set('etag', false);
-// Roads expects the raw body as a string, and ParseBodyMiddleware handles JSON and forms
-app.use(express.text({ type: '*/*' }));
+// expressConnector reads the raw body itself, and ParseBodyMiddleware in each road handles JSON and forms
 // Express removes the /api prefix from req.url, so /api/posts reaches the API road as /posts
 app.use('/api', expressConnector(apiRoad));
 app.use(expressConnector(road));
