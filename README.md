@@ -256,7 +256,7 @@ app.listen(3000);
 console.log('Server running at http://localhost:3000/hello');
 ```
 
-Run `node server.js` and visit `http://localhost:3000/hello`. The page shows `Hello, Roads!`, and your terminal prints `GET /hello`. Your terminal may also print `GET /favicon.ico`, because browsers request that file on their own.
+Run `node server.ts` and visit `http://localhost:3000/hello`. The page shows `Hello, Roads!`, and your terminal prints `GET /hello`. Your terminal may also print `GET /favicon.ico`, because browsers request that file on their own.
 
 ## Run the same routes in the browser
 
@@ -306,6 +306,7 @@ router.addRoute('GET', '/hello', async function (method, url, body, headers, nex
 });
 
 router.addRoute('GET', '/users/$name', async function (method, url, body, headers, next) {
+    // CAREFUL: This isn't safe! This works for an example but you need to escape the name.
     return `Hello, ${url.args?.name}!`;
 });
 
@@ -314,9 +315,9 @@ export default road;
 
 Here's what changed. First, the [layout middleware](#layout) wraps each response in the parts that every page shares: the container and the script tag. Your routes now only return what goes inside the container. Next, the `/hello` route returns a heading and the link.
 
-`road.js` runs in two places: on the server and, after step 2, in the browser. The browser already has the full page, so only the server should add the layout. The `typeof window === 'undefined'` check does that, because `window` only exists in the browser.
+Note: As the comment suggests above, you should not put url parameters directly onto the page. This can lead to various attacks. Make sure to escape any data that you render on the page (react does this automatically for you!).
 
-Stop the server with Ctrl+C, run `node server.js` again, and visit `http://localhost:3000/hello`. You should see the heading and the link. If you click the link now, the browser loads a whole new page, because the browser code doesn't exist yet.
+Stop the server with Ctrl+C, run `node server.ts` again, and visit `http://localhost:3000/hello`. You should see the heading and the link. If you click the link now, the browser loads a whole new page, because the browser code doesn't exist yet.
 
 ### Step 2: Write the code that runs in the browser
 
@@ -454,7 +455,7 @@ road.use(async function (method, path, body, headers, next) {
 //	continues through the request chain
 road.use(async function (method, path, body, headers, next) {
     if (path != '/' && path[path.length - 1] === '/') {
-        return new Response('', 302, {
+        return new RoadsResponse('', 302, {
             location: path.substring(0, path.length - 1)
         });
     }
@@ -733,8 +734,8 @@ The options object supports the following properties.
 
 | name                   | type                       | required | description                                                                                                                                              |
 | ---------------------- | -------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| validOrigins           | array or `'*'`             | no       | An array of origin urls that can send requests to this API, or the string `'*'` to allow every origin. Defaults to an empty array, which rejects every request that has an `Origin` header with a 403. |
-| supportsCredentials    | boolean, array or function | no       | True if every valid origin can send cookies to this endpoint. An array of origin urls, or a function `(origin) => boolean`, limits cookies to those origins. Defaults to false. |
+| validOrigins           | array or `'*'`             | no       | An array of origin URLs that can send requests to this API, or the string `'*'` to allow every origin. Defaults to an empty array, which rejects every request that has an `Origin` header with a 403. |
+| supportsCredentials    | boolean, array or function | no       | True if every valid origin can send cookies to this endpoint. An array of origin URLs, or a function `(origin) => boolean`, limits cookies to those origins. Defaults to false. |
 | allowedResponseHeaders | array                      | no       | Response headers the browser can expose to the page, sent as `Access-Control-Expose-Headers`. Defaults to an empty array, and the header is not sent.    |
 | allowedRequestHeaders  | array                      | no       | Request headers the browser can send, sent as `Access-Control-Allow-Headers` on preflight responses. Defaults to an empty array, which rejects any preflight request that asks for a header with a 403. |
 | allowedMethods         | array                      | no       | HTTP methods the browser can send, sent as `Access-Control-Allow-Methods` on preflight responses. Defaults to an empty array, which rejects every preflight request with a 405. |
@@ -1145,8 +1146,8 @@ Following [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110#section-13.1.3), thi
 
 If `date` is a string, it should be a value that can be passed to the `Date(string)` constructor. See [If-Modified-Since caching](#if-modified-since-caching) for an example of how to use this function.
 
-### buildNotModifiedResponse()
-This function returns a `304` Response with no body. This is the proper response when the document has not been modified since the `if-modified-since` header. See [If-Modified-Since caching](#if-modified-since-caching) for an example of how to use this function.
+#### buildNotModifiedResponse()
+This function returns a `304` RoadsResponse with no body. This is the proper response when the document has not been modified since the `if-modified-since` header. See [If-Modified-Since caching](#if-modified-since-caching) for an example of how to use this function.
 
 ## Middleware helpers
 
@@ -1326,9 +1327,9 @@ Submit button attributes
 
 PJAX listens for the form's `submit` event, so the browser's validation (`required` and so on) runs first, and pressing enter in a field works too. Submit buttons without `data-roads-pjax="submit"` submit the form normally. A form with a `target` other than `_self`, or that submits to another origin, is also left to the browser.
 
-- The submit button's `name` and `value` are sent with the form, and its `formmethod` and `formaction` attributes are honoured.
-- `GET` forms send their fields as the query string and put the new url in the url bar. If the road throws, the browser loads that url normally.
-- Other methods send the fields as an `application/x-www-form-urlencoded` body. Redirects are followed as with links, and the url bar only changes if the response redirects. If the road throws the error is logged and the form is not submitted again, so it is never sent twice.
+- The submit button's `name` and `value` are sent with the form, and its `formmethod` and `formaction` attributes are honored.
+- `GET` forms send their fields as the query string and put the new URL in the address bar. If the road throws, the browser loads that URL normally.
+- Other methods send the fields as an `application/x-www-form-urlencoded` body. Redirects are followed as with links, and the address bar only changes if the response redirects. If the road throws the error is logged and the form is not submitted again, so it is never sent twice.
 - Road request bodies are strings, so forms with `enctype="multipart/form-data"` (or a submit button with `formenctype="multipart/form-data"`) are left to the browser. Use this for file uploads. File inputs in other forms send the file's name, as browsers do.
 
 e.g.
