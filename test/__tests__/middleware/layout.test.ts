@@ -82,4 +82,85 @@ describe('Layout middleware tests', () => {
 		expect(response.status).toBe(404);
 		expect(response.body).toBe('<main>Page not found</main>');
 	});
+
+	describe('onError', () => {
+		const fail = () => Promise.reject(new Error('Broken'));
+
+		test('passes errors to onError with the context, and wraps a string result in a 500', async () => {
+			const road = new Road();
+			road.use(function (this: Context, method, path, body, headers, next) {
+				this['siteName'] = 'Site';
+				return next();
+			});
+			road.use(build(wrap, (error, context) =>
+				`${String(context['siteName'])}: ${(error as Error).message}`));
+			road.use(fail);
+
+			const response = await road.request('GET', '/');
+
+			expect(response.status).toBe(500);
+			expect(response.body).toBe('<main>Site: Broken</main>');
+		});
+
+		test('keeps the status of a response from onError, and waits for an async onError', async () => {
+			const road = new Road();
+			road.use(build(wrap, async () => new RoadsResponse('Missing', 404)));
+			road.use(fail);
+
+			const response = await road.request('GET', '/');
+
+			expect(response.status).toBe(404);
+			expect(response.body).toBe('<main>Missing</main>');
+		});
+
+		test('does not wrap a non-HTML response from onError', async () => {
+			const road = new Road();
+			road.use(build(wrap, () => new RoadsResponse('{}', 500, { 'content-type': 'application/json' })));
+			road.use(fail);
+
+			const response = await road.request('GET', '/');
+
+			expect(response.status).toBe(500);
+			expect(response.body).toBe('{}');
+		});
+
+		test('does not call onError when nothing throws', async () => {
+			const road = new Road();
+			road.use(build(wrap, () => 'Error page'));
+			road.use(() => Promise.resolve('Hi'));
+
+			const response = await road.request('GET', '/');
+
+			expect(response.status).toBe(200);
+			expect(response.body).toBe('<main>Hi</main>');
+		});
+
+		test('lets errors pass through without onError', async () => {
+			const road = new Road();
+			road.use(build(wrap));
+			road.use(fail);
+
+			await expect(road.request('GET', '/')).rejects.toThrow('Broken');
+		});
+
+		test('lets errors thrown by onError pass through', async () => {
+			const road = new Road();
+			road.use(build(wrap, () => {
+				throw new Error('onError broke');
+			}));
+			road.use(fail);
+
+			await expect(road.request('GET', '/')).rejects.toThrow('onError broke');
+		});
+
+		test('lets errors thrown by the layout while wrapping the error page pass through', async () => {
+			const road = new Road();
+			road.use(build(() => {
+				throw new Error('Layout broke');
+			}, () => 'Error page'));
+			road.use(fail);
+
+			await expect(road.request('GET', '/')).rejects.toThrow('Layout broke');
+		});
+	});
 });

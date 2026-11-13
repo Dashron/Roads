@@ -1,6 +1,8 @@
 # Roads readme example
 
-This is the full version of the example at the top of the [Roads readme](../../README.md), written in TypeScript. One road, in `src/road.ts`, handles requests in three places: a plain Node.js script, an Express server, and the browser.
+This is the finished code from the [Getting Started guide](../../README.md#getting-started) in the Roads readme, written in TypeScript. One road, in `src/road.ts`, handles requests in three places: a plain Node.js script, an Express server, and the browser.
+
+The code in `src/` matches the guide's `road.ts`, `server.ts`, `client.ts` and `serverRoutes.ts`, with one difference. The guide runs its files directly with Node, so its imports end in `.ts`. This example compiles with `tsc` first and runs the compiled JavaScript, so its imports end in `.js`.
 
 ## Install the example
 
@@ -26,27 +28,29 @@ npm install
 npm run direct
 ```
 
-You should see this output after the build output. The first line comes from the logging middleware in `src/road.ts`.
+After the build output, you should see these two lines. The first line comes from the logging middleware in `src/road.ts`. The script isn't running in the browser, so the road wraps the response in the full page.
 
 ```
-GET /users
-200 <h1>Hello from /users!</h1><a href="/users" data-roads-pjax="link">Go to /users</a>
+GET /users/dashron
+200 <!doctype html><body><div id="container">Hello, dashron!</div><script src="/client.js"></script></body>
 ```
 
 ## Run the road on a server
 
-`src/server.ts` uses `expressConnector` to pass each request that Express receives to the road, and wraps each response in a page that loads the browser bundle. `npm start` compiles the example, builds the browser bundle, then starts the server.
+`src/server.ts` uses `expressConnector` to pass each request that Express receives to the road. It also uses `express.static` to send the browser bundle from the `public` folder, and adds the server-only routes from `src/serverRoutes.ts`. `npm start` compiles the example, builds the browser bundle, then starts the server.
 
 ```bash
 npm start
 ```
 
-Visit `http://localhost:3000/hello`. The page shows `Hello from /hello!`, and your terminal prints `GET /hello`. Your terminal may also print `GET /favicon.ico`, because browsers request that file on their own.
+Visit `http://localhost:3000/hello`. The page shows **Hello, Roads!** and a link, and your terminal prints `GET /hello`. Your terminal may also print `GET /favicon.ico`, because browsers request that file on their own.
+
+Visit `http://localhost:3000/secret`. The page shows `Only the server has this route.` Only `src/server.ts` imports `src/serverRoutes.ts`, so this route isn't in the browser bundle.
 
 ## Run the road in the browser
 
 `src/client.ts` runs the same road in the browser when someone clicks a link that has the `data-roads-pjax="link"` attribute.
 
-Click **Go to /users** on the page. The page shows `Hello from /users!`, the url changes to `/users`, and the browser's console logs `GET /users`. Your terminal doesn't print `GET /users`, because the road ran in the browser.
+Click **Say hello to dashron**. The page shows `Hello, dashron!` and the address bar changes to `/users/dashron`, but the page doesn't reload. The browser's console prints `GET /users/dashron`, and your terminal doesn't, because the road ran in the browser.
 
-If your terminal prints `GET /users`, the browser loaded a whole new page. Check that `http://localhost:3000/client.js` loads.
+If your terminal prints `GET /users/dashron`, the browser loaded a whole new page instead. Check that `http://localhost:3000/client.js` shows JavaScript code.

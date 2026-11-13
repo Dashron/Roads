@@ -338,11 +338,11 @@ const pjax = new RoadsPJAX(road, container, window);
 pjax.register();
 ```
 
-`new RoadsPJAX` takes three things: your road, the container to put each response into, and the browser's `window`. `pjax.register()` then starts watching for clicks on PJAX links inside the container.
+First, `document.getElementById` finds the container. It returns `null` if the page has no element with that id, so the `if` stops with a clear error instead. Next, `new RoadsPJAX` takes three things: your road, the container to put each response into, and the browser's `window`. Finally, `pjax.register()` starts watching for clicks on PJAX links inside the container.
 
 ### Step 3: Bundle the browser code
 
-`client.js` imports `roads`. Node knows to look for `roads` in your `node_modules` folder, but the browser doesn't, so the browser can't load `client.js` as it is. A **bundler** fixes this. It reads `client.js`, follows every import, and combines all of that code into one file that the browser can load. This guide uses a bundler called esbuild.
+The browser can't load `client.ts` as it is, for two reasons. First, browsers don't run TypeScript. Second, `client.ts` imports `roads`, and Node knows to look for `roads` in your `node_modules` folder, but the browser doesn't. A **bundler** fixes both. It reads `client.ts`, follows every import, removes the types, and combines all of that code into one JavaScript file that the browser can load. This guide uses a bundler called esbuild.
 
 Install esbuild, then run it.
 
@@ -355,28 +355,58 @@ esbuild creates `public/client.js`. Run the second command again whenever you ch
 
 ### Step 4: Send the bundle to the browser
 
-```javascript
+The script tag asks the server for `/client.js`, but so far your server only answers with your road's routes. Express can also send files straight from a folder. In `server.ts`, add this line above the `expressConnector` line.
+
+```typescript
 app.use(express.static('public'));
 ```
 
-In the same file, replace `res.send(response.body);` with this line, which wraps each response in a page that has the `container` element and loads the bundle.
+Now Express checks the `public` folder first. If the requested file is there, as `client.js` is, Express sends it. Otherwise, the request goes on to your road.
 
-```javascript
-res.send(`<!doctype html><div id="container">${response.body}</div><script src="/client.js"></script>`);
-```
+### Try it
 
-Restart the server, visit `http://localhost:3000/hello`, and click the link. The page shows `Hello, dashron!`, the url changes to `/users/dashron`, and the browser's console logs `GET /users/dashron`. Your terminal doesn't print `GET /users/dashron`, because the road ran in the browser.
+Stop the server with Ctrl+C, run `node server.ts` again, and visit `http://localhost:3000/hello`. Click the link. The page shows `Hello, dashron!` and the address bar changes to `/users/dashron`, but the page doesn't reload.
 
-If your terminal prints `GET /users/dashron`, the browser loaded a whole new page. Check that the link has the `data-roads-pjax="link"` attribute, and that `http://localhost:3000/client.js` loads.
+To check that the route ran in the browser, compare two places:
+
+- **Your terminal** doesn't print `GET /users/dashron`, because the server never received that request.
+- **The browser's console** prints `GET /users/dashron`, because your logging middleware ran in the browser.
+
+If your terminal prints `GET /users/dashron`, the browser loaded a whole new page instead. Check two things:
+
+- The link has the `data-roads-pjax="link"` attribute.
+- `http://localhost:3000/client.js` shows JavaScript code. If it shows `Page not found`, make sure you ran the esbuild command, and that the `express.static` line is above the `expressConnector` line.
 
 ## Keep server-only code out of the browser
 
-A real project usually has code that must never reach the browser, such as database calls. These steps keep that code on the server, and the [example/ts](example/ts) folder shows them in more detail.
+The bundle contains everything that `client.ts` imports, and everything those files import. `client.ts` imports `road.ts`, so every route in `road.ts` ends up in the browser, where anyone can read it. That's fine for the routes in this guide. A real project usually also has code that must stay on the server, such as code that reads a database or uses a password.
 
-1. Keep any route that is unsafe to run in the browser in separate files from the rest.
-2. Create two initialization scripts. One starts the server, and the other is bundled and loaded in the browser.
-3. Bundle the browser script. The TypeScript example uses esbuild.
-4. Load the browser script on any server side page that should enable PJAX.
+To keep that code on the server, put it in a file that only `server.ts` imports. Create `serverRoutes.ts`, which adds a second router to the same road.
+
+```typescript
+// serverRoutes.ts
+import { Road, RouterMiddleware } from 'roads';
+
+export default function addServerRoutes(road: Road) {
+    const router = new RouterMiddleware.Router(road);
+
+    router.addRoute('GET', '/secret', async function (method, url, body, headers, next) {
+        return 'Only the server has this route.';
+    });
+}
+```
+
+Then, in `server.ts`, import the file and add the routes above the `app.use` lines.
+
+```typescript
+import addServerRoutes from './serverRoutes.ts';
+
+addServerRoutes(road);
+```
+
+Restart the server and visit `http://localhost:3000/secret`. The page shows `Only the server has this route.`
+
+The browser's road doesn't have these routes, so links to them must not have the `data-roads-pjax="link"` attribute. Without it, the browser asks the server for the page, as it normally would. The [example/ts](example/ts) folder shows a larger version of this setup.
 
 ## What's next?
 
@@ -861,6 +891,141 @@ Returns true if the request came from your own origin, and the request body's to
 ##### csrfProtected
 Always `true` once this middleware has run. Other middleware can check this to require CSRF protection.
 
+### Layout
+**Middleware to wrap each HTML response in a layout, such as a full HTML page**
+
+Most pages on a site share the same outer HTML: the doctype, the `<head>`, the scripts. The layout middleware keeps that HTML in one place. Each route returns only its own content, and every page stays consistent.
+
+#### Add a layout to every page
+
+`LayoutMiddleware.build` takes a function, called the **layout function**, and returns a middleware that you add to roads with `road.use`. After a route is complete and returns HTML, you can add your layout via the layout function.
+
+Here's a road with one route and a layout.
+
+```typescript
+import { Road, RouterMiddleware, LayoutMiddleware } from 'roads';
+
+const road = new Road();
+
+road.use(LayoutMiddleware.build(function (body) {
+    // This is the layout function.
+    // We apply the layout wrapper here and return it up the request chain
+    return `<!doctype html><html><body><div id="container">${body}</div></body></html>`;
+}));
+
+const router = new RouterMiddleware.Router(road);
+
+router.addRoute('GET', '/', async function () {
+    return '<h1>Home</h1>';
+});
+```
+
+A request for `/` now returns this body:
+
+```html
+<!doctype html><html><body><div id="container"><h1>Home</h1></div></body></html>
+```
+
+The layout changes only the body. The status and headers stay as the route set them.
+
+#### Add the layout before your router
+
+The layout middleware wraps only what runs after it in the request chain. If you add it after the router, the layout middleware never runs, and the browser receives `<h1>Home</h1>` with no page around it.
+
+#### Include variables in your layout
+
+The layout above gives every page the same markup, but most sites need part of it to change on each page, such as the `<title>`. For that, the layout function receives a second argument: the request [context](#context). The context is the same object your routes use as `this`, so a route can save a value on it, and the layout function can read that value after the route returns.
+
+This example adds [Store Values](#store-values), which gives the context `storeVal` and `getVal`.
+
+```typescript
+import { Road, RouterMiddleware, LayoutMiddleware, StoreValsMiddleware } from 'roads';
+
+const road = new Road();
+road.use(StoreValsMiddleware.middleware);
+
+road.use(LayoutMiddleware.build<StoreValsMiddleware.StoreValsContext>(function (body, context) {
+    const title = context.getVal('page-title') ?? 'My site';
+    // Escape the title if it can contain anything from the request
+    return `<!doctype html><html><head><title>${title}</title></head><body><div id="container">${body}</div></body></html>`;
+}));
+
+const router = new RouterMiddleware.Router<StoreValsMiddleware.StoreValsContext>(road);
+
+router.addRoute('GET', '/', async function () {
+    this.storeVal('page-title', 'Home');
+    return '<h1>Home</h1>';
+});
+```
+
+Three things changed from the first example. First, Store Values is added before the layout. Next, the layout function takes `context` and reads the title. Finally, the route applies the title to the final HTML.
+
+#### Show errors inside the layout
+
+Error responses get the layout like any other page. A route that returns a `RoadsResponse` with a `404` status gets the layout, and the response keeps its `404` status.
+
+A thrown error is different. When a route throws, there's no response to wrap, so the error passes through the layout middleware. To show an error page inside the layout, pass a second function to `LayoutMiddleware.build`, called `onError`. `onError` receives the error and the request context, and returns what to send instead.
+
+```typescript
+road.use(LayoutMiddleware.build(
+    function (body) {
+        return `<!doctype html><html><body><div id="container">${body}</div></body></html>`;
+    },
+    function (error) {
+        console.error(error);
+        return '<h1>Something went wrong</h1>';
+    }
+));
+```
+
+When a route throws, the layout middleware passes the error to `onError`. The string that `onError` returns becomes the body of a `500` response, and the layout function wraps it like any other page. Roads doesn't log the error for you, so log it in `onError`.
+
+To send a different status, return a `RoadsResponse` from `onError`. The layout uses the same rules for this response as for any other, so a JSON response skips the layout. If your road also serves JSON, have those routes save a value on the context, and check it in `onError`:
+
+```typescript
+function (error, context) {
+    console.error(error);
+
+    if (context.getVal('json')) {
+        return new RoadsResponse('{"error":"Something went wrong"}', 500, { 'content-type': 'application/json' });
+    }
+
+    return '<h1>Something went wrong</h1>';
+}
+```
+
+#### Send some responses without the layout
+
+Some responses shouldn't be wrapped in an HTML layout. The layout middleware returns these responses as they are, without calling your layout function:
+
+- Redirects (any `3xx` status), including `304 Not Modified`. These responses must not have a body.
+- Responses with a `content-type` header other than `text/html`, such as `application/json`. A JSON response wrapped in HTML would no longer be valid JSON.
+
+A response without a `content-type` header is treated as HTML, so a route that returns a plain string gets the layout.
+
+To skip the layout for any other response, return `body` unchanged from your layout function. For example, a route can save a `no-layout` value, and the layout function can check for it:
+
+```typescript
+road.use(LayoutMiddleware.build<StoreValsMiddleware.StoreValsContext>(function (body, context) {
+    if (context.getVal('no-layout')) {
+        return body;
+    }
+
+    return `<!doctype html><html><body><div id="container">${body}</div></body></html>`;
+}));
+```
+
+#### Use the layout only on the server
+
+In the browser, [RoadsPJAX](#roadspjaxroad-road-containerelement-htmlelement-window-window) swaps each new page into the container that's already on screen. The server sent that page with the layout already around it, so the browser needs only what goes inside the container. If the browser's road added the layout too, every click would put a full copy of the page, layout and all, inside the container, nested over and over again.
+
+Add the layout middleware only to the road that runs on your server. [Run the same routes in the browser](#run-the-same-routes-in-the-browser) shows how to do that.
+
+| name    | type                                                                                                    | required | description |
+| ------- | ------------------------------------------------------------------------------------------------------- | -------- | ----------- |
+| layout  | function(body: *string*, context: *object*): *string \| Promise<string>*                                 | yes      | The layout function. It receives the response body and the request context, and returns the new body. It can return a promise, so you can render the page with an async template engine. |
+| onError | function(error: *unknown*, context: *object*): *string \| RoadsResponse \| Promise<string \| RoadsResponse>* | no       | Receives an error thrown by middleware added after the layout, and the request context. It returns the response to send instead. A string becomes the body of a `500` response. Without `onError`, errors pass through the layout middleware. |
+
 ### Method override
 **Middleware to let HTML forms reach PUT, PATCH and DELETE routes**
 
@@ -970,34 +1135,65 @@ const road = new Road();
 road.use(RemoveTrailingSlashMiddleware.middleware);
 ```
 
-## Router
-This is a Router middleware for roads. It allows you to easily attach functionality to HTTP methods and paths.
+### Router
+The Router is a middleware that runs different code for each HTTP method and path.
 
-Here's how you use it.
+For a walkthrough, see [Add routes with the Router](#add-routes-with-the-router).
 
-1. Create your road (see [Getting Started](#getting-started))
-2. Create your Router
+Add the router after your other middleware. Nothing added to the chain after the router will run. If you want to run something after the router, add the middleware before the router and run the code after `await next()`.
 
-```JavaScript
-    import { RouterMiddleware, Road } from 'roads';
-    const road = new Road();
-    const router = new RouterMiddleware.Router(road);
+If you need HTML forms to reach `PUT`, `PATCH` or `DELETE` routes, add the [method override middleware](#method-override) before the router.
+
+#### new Router(road?: *Road*)
+Creates a Router, and adds it to the end of the road's request chain.
+
+```typescript
+import { RouterMiddleware, Road } from 'roads';
+
+const road = new Road();
+const router = new RouterMiddleware.Router(road);
 ```
 
 #### applyMiddleware(road: *Road*)
 If you create the Router without a road, add it to one later with `applyMiddleware`. Until then, its routes don't run.
 
 #### addRoute(method: *string*, path: *string | string[]*, fn: *function | function[]*)
+
+This is where you want to write the majority of your webservice. The `fn` parameter should contain the actions you want to perform when a certain `path` and HTTP `method` are accessed via the `road` object. Pass an array of paths to attach the same `fn` to each of them.
+
+**Note:** Do not use an arrow function if you want to interact with `this`. An arrow function does not have access to the request context.
+
+
+Each part of the path between slashes is one of three types. Variables are added to `url.args`.
+ - `#name` is a numeric variable. It only matches digits, and the value is converted to a number. `/users/#userId` matches `/users/12345` with `url.args.userId === 12345`, but not `/users/abcde`.
+ - `$name` is a string variable. It matches any non-empty part. `/posts/$postSlug` matches `/posts/my-post` with `url.args.postSlug === 'my-post'`.
+ - Anything else is a literal, and only matches that exact text. `/posts` only matches `/posts`.
+
+If more than one route matches a request, the route you added first runs. If you add `/posts/$postSlug` before `/posts/#postId`, the `$postSlug` route handles `/posts/12345`, so add the more specific route first.
+
+Variables are percent-decoded, so `/posts/my%20post` matches `/posts/$postSlug` with `url.args.postSlug === 'my post'`. Decoded values can contain any character, including `/`, `<`, line breaks and `../`, so check or escape them before putting them in HTML, a `Location` or other header, or a file path. Paths with invalid percent-encoding don't match any route.
+
+The `url` object has these properties:
+
+| name         | type            | description                                                                                                 |
+| ------------ | --------------- | ----------------------------------------------------------------------------------------------------------- |
+| pathname     | string          | The path, without the query string or hash. It is not percent-decoded.                                      |
+| search       | string          | The query string including the leading `?`, or an empty string                                              |
+| hash         | string          | The hash including the leading `#`, or an empty string                                                      |
+| query        | object          | The decoded query string. If a key is repeated this holds the first value. The object has no prototype.     |
+| searchParams | URLSearchParams | The query string, for reading every value of a repeated key (`url.searchParams.getAll('tag')`)              |
 | args         | object          | The path variables, if the route has any                                                                    |
 
-If the path of a request matches a route but the method doesn't, the request continues down the road, so another router or middleware can handle that method. If nothing does (the rest of the road responds with a 404), the router responds with a `405 Method Not Allowed` and an `Allow` header listing the methods that path supports. As RFC 9110 requires, `HEAD` requests are answered by the `GET` route if there is no `HEAD` route. The response keeps the `GET` route's status and headers, but its body is removed. A `HEAD` route you add yourself is used as-is.
+If a path matches but the method doesn't, and nothing later in the road handles the request, the router responds with `405 Method Not Allowed`.
 
-```JavaScript
-    // This is a simple route with no URI variables
-    router.addRoute('GET', '/posts', function (method, url, body, headers, next) {
-        // url is a parsed URL object with pathname, query, etc.
-        return 'All posts';
-    });
+If a path has a `GET` route but no `HEAD` route, `HEAD` requests run the `GET` route and drop the body. If your `GET` route has side effects, add a `HEAD` route.
+
+```typescript
+// This route has no URI variables
+router.addRoute('GET', '/posts', async function (method, url, body, headers, next) {
+    // url is a parsed URL object with pathname, query, etc.
+    return 'All posts';
+});
 
 // This route supports numeric variables
 router.addRoute('GET', '/posts/#postId', async function (method, url, body, headers, next) {
@@ -1213,12 +1409,36 @@ Retrieves a previously stored value from the context.
 Retrieves all stored values as an object.
 
 
-# RoadsPJAX(road: *Road*, containerElement: *HTMLElement*, window: *Window*)
-**A helper object to easily enable PJAX on your website using roads**
+## expressConnector(road: *Road*, options?: *object*)
+**Creates an Express middleware that sends each request through a road's request chain**
 
-PJAX is a technique for speeding up webpages by automatically replacing links or form submission with AJAX calls. This allows for clean, quick page refreshes via JavaScript, with a simple fallback if JavaScript is disabled.
+A road doesn't listen for HTTP requests on its own. It's a function that takes a method, a URL, a body and headers, and returns a response. To put your road on the web, something has to turn each incoming HTTP request into a call to `road.request`, then turn the result back into an HTTP response. `expressConnector` does that work for you, so you don't have to read request bodies, copy headers or handle errors yourself. Because it's ordinary Express middleware, you can also use it alongside other Express middleware, such as `express.static`, or add your road to an existing Express app.
 
-PJAX looks in the containerElement at each anchor tag with the  `data-roads-pjax="link"` attribute and changes it from a normal link into a link that uses the road.
+```typescript
+import express from 'express';
+import { expressConnector, Road } from 'roads';
+
+const road = new Road();
+// Add your routes here...
+
+const app = express();
+app.use(expressConnector(road));
+app.listen(3000);
+```
+
+| name          | type   | required | description                                                                                                  |
+| ------------- | ------ | -------- | ------------------------------------------------------------------------------------------------------------ |
+| road          | Road   | yes      | The road that handles each request                                                                           |
+| options.limit | number | no       | The largest request body, in bytes. Defaults to 100kb, the same as Express's body parsers. A larger body is passed to Express as an error with a status of 413, so Express responds with a 413 |
+
+When you mount the middleware on a path, Express removes that path from the url. With `app.use('/api', expressConnector(road))`, a request for `/api/posts` reaches the road as `/posts`.
+
+## RoadsPJAX(road: *Road*, containerElement: *HTMLElement*, window: *Window*)
+**A helper object to enable PJAX on your website using roads**
+
+PJAX updates part of a page without a full page load. `RoadsPJAX` runs your road in the browser when someone clicks a link or submits a form, then puts the response in the container. If JavaScript is turned off, links and forms load a whole new page, as they normally would.
+
+`RoadsPJAX` handles links inside `containerElement` that have the `data-roads-pjax="link"` attribute. Other links work normally.
 
 | Name             | Type        | Description                                                     |
 | ---------------- | ----------- | --------------------------------------------------------------- |
@@ -1261,9 +1481,17 @@ Removes every listener added by `register` and `registerAdditionalElement`, so l
 pjax.unregister();
 ```
 
-## PJAX.registerAdditionalElement(element: *HTMLElement*)
+### PJAX.addTitleMiddleware(titleKey: *string*)
 
-If you would like PJAX to work on links or forms that are not within the container you must call this function. It can be called before or after `register`.
+Adds the `storeVals` middleware and a title middleware to the end of the road, so call this before you add your routes. `titleKey` is the key your routes store the page title under. This returns the `RoadsPJAX` object. See [PJAX Page titles](#pjax-page-titles) for the full setup.
+
+### PJAX.render(response: *RoadsResponse*)
+
+Replaces the contents of the container with the response body. PJAX calls this for you after each navigation.
+
+### PJAX.registerAdditionalElement(element: *HTMLElement*)
+
+If you would like PJAX to work on links or forms that are not within the container, pass an element that holds them to this function. The links and forms still need their `data-roads-pjax` attributes. It can be called before or after `register`.
 
 ```HTML
 <nav id="menu">

@@ -18,6 +18,14 @@ export interface LayoutFunction<ContextType extends Context> {
 }
 
 /**
+ * Receives an error thrown later in the request chain and the request context, and returns the response to send.
+ * 	A string becomes the body of a 500 response
+ */
+export interface LayoutErrorFunction<ContextType extends Context> {
+	(error: unknown, context: ContextType): string | RoadsResponse | Promise<string | RoadsResponse>
+}
+
+/**
  * Returns true if the response should be sent as is, without the layout
  *
  * @param {RoadsResponse} response - The response from the rest of the request chain
@@ -39,16 +47,38 @@ function skipLayout (response: RoadsResponse): boolean {
  * Redirects, 304 Not Modified responses and responses with a content type other than `text/html` are returned
  * 	as is. To skip the layout for any other response, return the body unchanged from your layout function.
  *
+ * If you pass `onError`, the middleware catches errors thrown later in the request chain and passes them to
+ * 	`onError`. The response it returns goes through the same rules as any other response, so an HTML error page
+ * 	gets the layout. Without `onError`, errors pass through the middleware. Errors thrown by `onError`, or by the
+ * 	layout while it wraps the error page, also pass through.
+ *
  * The layout usually belongs only on the server. In the browser, RoadsPJAX renders each response into a
  * 	page that already has the layout.
  *
  * @param {function} layout - Receives the response body and the request context, and returns the new body.
  * 	It can return a promise
+ * @param {function} [onError] - Receives an error thrown later in the request chain and the request context, and
+ * 	returns a string or a RoadsResponse. A string becomes the body of a 500 response. It can return a promise
  * @return {function} The middleware function. This value should be passed to road.use(fn);
  */
-export function build<ContextType extends Context = Context> (layout: LayoutFunction<ContextType>): Middleware<ContextType> {
+export function build<ContextType extends Context = Context> (
+	layout: LayoutFunction<ContextType>, onError?: LayoutErrorFunction<ContextType>
+): Middleware<ContextType> {
 	const layoutMiddleware: Middleware<ContextType> = async function (method, path, body, headers, next) {
-		const result = await next();
+		let result: RoadsResponse | string;
+
+		if (onError) {
+			try {
+				result = await next();
+			} catch (error) {
+				// Errors thrown by onError are not caught, so they pass through to earlier middleware
+				const errorResult = await onError(error, this);
+				result = errorResult instanceof RoadsResponse ? errorResult : new RoadsResponse(errorResult, 500);
+			}
+		} else {
+			result = await next();
+		}
+
 		// Routes can return strings, so turn them into a response before changing the body
 		const response = result instanceof RoadsResponse ? result : new RoadsResponse(result);
 
