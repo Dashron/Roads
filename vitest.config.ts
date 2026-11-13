@@ -1,6 +1,12 @@
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+	resolve: {
+		// The example imports the package by name. Point it at the source, so its tests don't need a build
+		alias: {
+			roads: new URL('./src/index.ts', import.meta.url).pathname
+		}
+	},
 	test: {
 		// Test file patterns
 		include: ['test/__tests__/**/*.test.ts'],

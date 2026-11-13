@@ -1,6 +1,6 @@
 
-import { Road } from '../../../src/index';
-import { Context } from '../../../src/core/road';
+import { Road } from '../../../src/index.js';
+import { Context } from '../../../src/core/road.js';
 
 import { describe, expect, test } from 'vitest';
 
@@ -26,7 +26,7 @@ describe('Road Context', () => {
 			return next();
 		});
 
-		road.use(function (this: Context & confirmContext) {
+		road.use(async function (this: Context & confirmContext) {
 			return this.confirmString();
 		});
 
@@ -55,7 +55,7 @@ describe('Road Context', () => {
 			return await next();
 		});
 
-		road.use(function (this: Context & confirmContext) {
+		road.use(async function (this: Context & confirmContext) {
 			return this.confirmString();
 		});
 

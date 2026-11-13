@@ -1,19 +1,28 @@
 import Road from './core/road.js';
 
-export { default as Response } from './core/response.js';
+export { default as RoadsResponse } from './core/response.js';
 export { default as Road } from './core/road.js';
 export * as RoadModule from './core/road.js';
 
 // Export types
 export type { Context, Middleware } from './core/road.js';
+export type { NextCallback, NextOverrides } from './core/requestChain.js';
+export type { ParsedURL } from './util/url.js';
 export { default as RoadsPJAX } from './client/pjax.js';
-export { default as Request } from './client/request.js';
+export { expressConnector } from './server/expressConnector.js';
+export type { ExpressRequest, ExpressResponse } from './server/expressConnector.js';
 
 export * as ApplyToContextMiddleware from './middleware/applyToContext.js';
 // This is not part of the common middleware because it uses different middleware depending on client or server
 export * as CookieMiddleware from './middleware/cookieMiddleware.js';
 // This is not part of the common middleware because it requires configuration
 export * as CorsMiddleware from './middleware/cors.js';
+// This is not part of the common middleware because it requires configuration
+export * as CSRFMiddleware from './middleware/csrf.js';
+// This is not part of the common middleware because it requires configuration, and usually only runs on the server
+export * as LayoutMiddleware from './middleware/layout.js';
+// This is not part of the common middleware because it requires the CSRF middleware
+export * as MethodOverrideMiddleware from './middleware/methodOverride.js';
 export * as RemoveTrailingSlashMiddleware from './middleware/removeTrailingSlash.js';
 import * as RemoveTrailingSlashMiddleware from './middleware/removeTrailingSlash.js';
 export * as ParseBodyMiddleware from './middleware/parseBody.js';

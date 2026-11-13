@@ -7,16 +7,20 @@
  * 	It allows you to easily attach functionality to HTTP methods and paths.
  */
 
-import parse from 'url-parse';
 import { IncomingHeaders } from '../core/road.js';
 import Road, {Context} from '../core/road.js';
-import Response from '../core/response.js';
+import RoadsResponse from '../core/response.js';
 import { NextCallback, RequestChain } from '../core/requestChain.js';
+import { ParsedURL, parseUrl } from '../util/url.js';
 
 
-export interface Route<ContextType extends Context> {
-	(this: ContextType, method: string, path: RouterURL, body: string,
-		headers: IncomingHeaders, next: NextCallback): Promise<Response>
+/**
+ * `BodyType` is the type of the request body this route receives. If you use the parse body middleware
+ * 	this is the parsed body, otherwise it is the request body string.
+ */
+export interface Route<ContextType extends Context, BodyType = unknown> {
+	(this: ContextType, method: string, path: RouterURL, body: BodyType,
+		headers: IncomingHeaders, next: NextCallback): Promise<RoadsResponse | string>
 }
 
 interface RouteDetails {
@@ -25,8 +29,24 @@ interface RouteDetails {
 	method: string
 }
 
-export interface RouterURL extends ReturnType<typeof parse<Record<string, string | undefined>>> {
+/**
+ * The request url as received by routes. See `ParsedURL` for the url parts.
+ */
+export interface RouterURL extends ParsedURL {
+	/**
+	 * The values of any `#` or `$` variables in the route's path. `#` values are numbers, `$` values are
+	 * 	percent-decoded strings. Only present if the route's path has variables.
+	 */
 	args?: Record<string, string | number>
+}
+
+/**
+ * The contents of a route file. Each key is an HTTP path, and each value maps HTTP methods to route functions.
+ */
+export interface RouteFile {
+	[path: string]: {
+		[method: string]: Route<Context> | Route<Context>[]
+	}
 }
 /**
  * This is a router middleware for roads.
@@ -38,6 +58,16 @@ export interface RouterURL extends ReturnType<typeof parse<Record<string, string
  * 		All non-slash values will match this route.
  *
  * Any variables will be added to the route's request url object under the "args" object.
+ * Variables are percent-decoded, so `/users/a%20b` matches `/users/$name` with `{ name: 'a b' }`.
+ * 	Requests whose path can't be decoded don't match any route.
+ * Literal path parts only match their exact text or its standard encoding, so `/caf%C3%A9` matches `/café`, but
+ * 	`/%61pi` does not match `/api`. This way a middleware that checks the request url for `/api/` sees every
+ * 	request that reaches those routes.
+ *
+ * If a request's path matches a route but its method doesn't, the request continues down the road. If nothing
+ * 	after the router handles it (i.e. the rest of the road responds with a 404), the router responds with a 405
+ * 	and an `Allow` header. As RFC 9110 requires, HEAD requests are answered by the matching GET route if there is
+ * 	no HEAD route. The response keeps the GET route's status and headers, but its body is removed.
  *
  * e.g.
  * /users/#user_id will match /users/12345, not /users/abcde. If a request is made to /users/12345
@@ -60,7 +90,7 @@ export class Router<RouterContextType extends Context> {
 	}
 
 	/**
-	 * If you don't provide a road to the SimpleRouter constructor, your routes will not be executed.
+	 * If you don't provide a road to the Router constructor, your routes will not be executed.
 	 * 	If you have reason not to assign the road off the bat, you can assign it later with this function.
 	 *
 	 * @param  {Road} road - The road that will receive the Router middleware
@@ -99,20 +129,24 @@ export class Router<RouterContextType extends Context> {
 	 * @param {(string|array)} paths - One or many URL paths that will trigger the provided function
 	 * @param {function} fn - The function containing all of your route logic
 	 */
-	addRoute<RouteContextType extends Context> (
+	addRoute<RouteContextType extends Context, BodyType = unknown> (
 		method: string,
 		paths: string | string[],
-		fn: Route<RouterContextType & RouteContextType> | Route<RouterContextType & RouteContextType>[]
+		fn: Route<RouterContextType & RouteContextType, BodyType> | Route<RouterContextType & RouteContextType, BodyType>[]
 	): void {
 		if (!Array.isArray(paths)) {
 			paths = [paths];
 		}
 
+		// Each route declares the context and body it expects, and trusts earlier middleware to provide them.
+		// 		The router can't check that, so every route is stored with the base types.
+		const route = (Array.isArray(fn) ? new RequestChain(fn) : fn) as unknown as RouteDetails['route'];
+
 		paths.forEach((path) => {
 			this._routes.push({
 				path: path,
 				method: method,
-				route: Array.isArray(fn) ? new RequestChain(fn) : fn
+				route
 			});
 		});
 	}
@@ -120,22 +154,38 @@ export class Router<RouterContextType extends Context> {
 	/**
 	 * Add an entire file worth of routes.
 	 *
-	 * The file should be a node module that exposes an object.
+	 * The file should be a module whose default export is an object.
 	 * Each key should be an HTTP path, each value should be an object.
 	 * In that object, each key should be an HTTP method, and the value should be your route function.
 	 *
-	 * @param {string} filePath - The file path
+	 * @param {string | URL | RouteFile} file - The routes to add. Either the module itself (e.g. the result of
+	 * 		`import routes from './routes.js'`), a file URL (e.g. `new URL('./routes.js', import.meta.url)`), or an
+	 * 		absolute path. Relative paths are rejected, because `import()` would resolve them relative to roads
+	 * 		instead of your code.
 	 * @param {string} [prefix] - A string that will help namespace this file. e.g. if you call this on a file
 	 * 		with a route of "/posts", and the prefix "/users", the route will be assigned to "/users/posts"
 	 */
-	addRouteFile (filePath: string, prefix?: string): Promise<void> {
-		return import(filePath).then(routes => {
-			for (const path in routes) {
-				for (const method in routes[path]) {
-					this.addRoute(method, buildRouterPath(path, prefix), routes[path][method]);
-				}
+	async addRouteFile (file: string | URL | RouteFile, prefix?: string): Promise<void> {
+		let routes: RouteFile;
+
+		if (typeof file === 'string' || file instanceof URL) {
+			if (typeof file === 'string' && file.startsWith('.')) {
+				throw new TypeError(`addRouteFile can't load the relative path "${file}". Pass an absolute path, a file ` +
+					'URL such as new URL(\'./routes.js\', import.meta.url), or the imported module.');
 			}
-		});
+
+			const routeModule = await import(file.toString());
+			// ES modules expose the routes as their default export, and Node exposes module.exports there too
+			routes = 'default' in routeModule ? routeModule.default : routeModule;
+		} else {
+			routes = file;
+		}
+
+		for (const [path, methods] of Object.entries(routes)) {
+			for (const [method, route] of Object.entries(methods)) {
+				this.addRoute(method, buildRouterPath(path, prefix), route);
+			}
+		}
 	}
 
 	/**
@@ -144,91 +194,148 @@ export class Router<RouterContextType extends Context> {
 	 * from the roads context
 	 */
 	protected async _middleware (
-		this: Context, routes: RouteDetails[], request_method: string, request_url: string, request_body: string,
-		request_headers: IncomingHeaders, next: () => Promise<Response | string>
-	): Promise<Response | string> {
+		this: Context, routes: RouteDetails[], request_method: string, request_url: string, request_body: unknown,
+		request_headers: IncomingHeaders, next: NextCallback
+	): Promise<RoadsResponse | string> {
 
-		let realMethod = request_method;
+		const parsed_url: RouterURL = parseUrl(request_url);
+		const pathParts = splitPath(parsed_url.pathname);
 
-		let response = null;
-		let hit = false;
-		let routeHitMethodFail = false;
+		// Every method that a route accepts for this path, for the Allow header
+		const allowedMethods = new Set<string>();
+		let headFallback: { route: RouteDetails, args: Record<string, string | number> } | null = null;
 
-		const parsed_url = parse(request_url, true);
+		for (const route of routes) {
+			const args = pathParts ? matchRoutePath(route, pathParts) : null;
 
-		// Only override on POST methods
-		if (realMethod === 'POST') {
-			const methodOverrideHeader = request_headers?.['x-http-method-override'];
-			const methodOverrideQuery = parsed_url.query?.['_method'];
+			if (!args) {
+				continue;
+			}
 
-			if (methodOverrideHeader) {
-				realMethod = Array.isArray(methodOverrideHeader) ? methodOverrideHeader.join('') : methodOverrideHeader ;
-			} else if (methodOverrideQuery) {
-				realMethod = Array.isArray(methodOverrideQuery) ? methodOverrideQuery.join('') : methodOverrideQuery ;
+			// Check the method last, so we can give proper status codes
+			if (route.method === request_method) {
+				return runRoute.call(this, route, args, parsed_url, request_method, request_body, request_headers, next);
+			}
+
+			allowedMethods.add(route.method);
+
+			// HEAD requests are answered by the GET route, unless a HEAD route for this path comes later
+			if (request_method === 'HEAD' && route.method === 'GET' && !headFallback) {
+				headFallback = { route, args };
 			}
 		}
 
-		for (let i = 0; i < routes.length; i++) {
-			const route = routes[i];
+		// RFC 9110 9.3.2: HEAD is identical to GET, except the response has no body
+		if (headFallback) {
+			const response = await runRoute.call(this, headFallback.route, headFallback.args, parsed_url,
+				request_method, request_body, request_headers, next);
 
-			if (route && compareRouteAndApplyArgs(route, parsed_url)) {
-				// Check the method last, so we can give proper status codes
-				if (route.method === realMethod) {
-					if (route.route instanceof RequestChain) {
-						response = route.route.getChainStart()(this, realMethod, parsed_url, request_body, request_headers);
-					} else {
-						response = (route.route).call(this, realMethod, parsed_url, request_body, request_headers, next);
+			return response instanceof RoadsResponse
+				? new RoadsResponse('', response.status, response.headers)
+				: new RoadsResponse('');
+		}
+
+		if (!allowedMethods.size) {
+			return next();
+		}
+
+		// GET routes also answer HEAD requests (see above), so HEAD belongs in the Allow header
+		if (allowedMethods.has('GET')) {
+			allowedMethods.add('HEAD');
+		}
+
+		// The path matched, but not the method. Something later in the road (such as another router) might
+		// 		handle this method, so only respond with a 405 if nothing else does.
+		const response = await next();
+
+		if (!(response instanceof RoadsResponse) || (response.status !== 404 && response.status !== 405)) {
+			return response;
+		}
+
+		// If a later router also missed on the method, include the methods it allows
+		for (const key of Object.keys(response.headers)) {
+			if (key.toLowerCase() === 'allow') {
+				for (const method of [response.headers[key] ?? []].flat().join(',').split(',')) {
+					if (method.trim()) {
+						allowedMethods.add(method.trim());
 					}
-
-					hit = true;
-					break;
-				} else {
-					routeHitMethodFail = true;
 				}
 			}
 		}
 
-		if (hit) {
-			return response;
-		}
-
-		if (routeHitMethodFail) {
-			return new Response('Method Not Allowed', 405);
-		}
-
-		return next();
+		return new RoadsResponse('Method Not Allowed', 405, { allow: [...allowedMethods].join(', ') });
 	}
 }
 
 /**
- * Checks to see if the route matches the request, and if true assigns any applicable url variables and returns the route
+ * Runs a route that matched the request
+ */
+function runRoute (
+	this: Context, route: RouteDetails, args: Record<string, string | number>, parsed_url: RouterURL,
+	request_method: string, request_body: unknown, request_headers: IncomingHeaders, next: NextCallback
+): Promise<RoadsResponse | string> {
+	if (Object.keys(args).length > 0) {
+		parsed_url.args = args;
+	}
+
+	if (route.route instanceof RequestChain) {
+		return route.route.getChainStart(next)(this, request_method, parsed_url, request_body, request_headers);
+	}
+
+	return route.route.call(this, request_method, parsed_url, request_body, request_headers, next);
+}
+
+/**
+ * A single part of the request path
+ */
+interface PathPart {
+	raw: string,
+	decoded: string
+}
+
+/**
+ * Splits a request path into its parts, both as received and percent-decoded
+ *
+ * @param pathname - The request path
+ * @returns The parts, or null if the path isn't valid percent-encoding
+ */
+function splitPath (pathname: string): PathPart[] | null {
+	let parts = pathname.split('/');
+	if (parts[0] === '') {
+		parts = parts.slice(1); // Slice kills the emptystring before the leading slash
+	}
+
+	try {
+		return parts.map((part) => ({ raw: part, decoded: decodeURIComponent(part) }));
+	} catch {
+		// e.g. "/users/%E0%A4%A"
+		return null;
+	}
+}
+
+/**
+ * Checks to see if the route's path matches the request, and if true returns any url variables.
+ * The args are not applied to the url, so a route that fails to match (by path or method) can't leak them.
  *
  * @param {object} route - Route object from this router class
- * @param {object} route.method - HTTP method associated with this route
  * @param {object} route.path - HTTP path associated with this route
- * @param {object} request_url - Parsed HTTP request url
- * @param {string} request_method - HTTP request method
- * @returns {boolean}
+ * @param {Array<PathPart>} actual - The parts of the request path
+ * @returns {object | null} - The url variables if the path matches, otherwise null
  */
-function compareRouteAndApplyArgs (route: {method: string, path: string}, request_url: ReturnType<typeof parse>): boolean {
-
-	if (!request_url.pathname) {
-		return false;
-	}
+function matchRoutePath (
+	route: {path: string}, actual: PathPart[]
+): Record<string, string | number> | null {
 
 	let template = route.path.split('/');
 	if (template[0] === '') {
 		template = template.slice(1); // Slice kills the emptystring before the leading slash
 	}
 
-	let actual = request_url.pathname.split('/');
-	if (actual[0] === '') {
-		actual = actual.slice(1); // Slice kills the emptystring before the leading slash
+	if (template.length !== actual.length) {
+		return null;
 	}
 
-	if (template.length != actual.length) {
-		return false;
-	}
+	const args: Record<string, string | number> = {};
 
 	for (let i = 0; i < template.length; i++) {
 		const actual_part = actual[i];
@@ -236,54 +343,36 @@ function compareRouteAndApplyArgs (route: {method: string, path: string}, reques
 
 		// Process variables first
 		if (template_part?.[0] === '#') {
-			// # templates only accept numbers
-			if (isNaN(Number(actual_part))) {
-				return false;
+			// # templates only accept non-negative integers
+			if (actual_part === undefined || !/^\d+$/.test(actual_part.decoded)) {
+				return null;
 			}
 
-			// TODO: get rid of this `as`
-			applyArg(request_url as RouterURL, template_part.substring(1), Number(actual_part));
+			args[template_part.substring(1)] = Number(actual_part.decoded);
 			continue;
 		}
 
 		if (template_part?.[0] === '$') {
-			// $ templates accept any non-slash alphanumeric character
-			// TODO: get rid of this `as`
-			applyArg(request_url as RouterURL, template_part.substring(1), String(actual_part));
-			// Continue so that
+			// $ templates accept any non-empty segment
+			if (!actual_part?.decoded) {
+				return null;
+			}
+
+			args[template_part.substring(1)] = actual_part.decoded;
 			continue;
 		}
 
-		// Process exact matches second
-		if (actual_part === template_part) {
+		// Process exact matches second. These are compared before decoding, otherwise /%61pi would reach /api
+		//		routes without passing any middleware that checks the request url for /api
+		if (template_part !== undefined && actual_part !== undefined &&
+			(actual_part.raw === template_part || actual_part.raw === encodeURIComponent(template_part))) {
 			continue;
 		}
 
-		return false;
+		return null;
 	}
 
-	return true;
-}
-
-/**
- * Assigns a value to the parsed request urls args parameter
- *
- * @param {object} request_url - The parsed url object
- * @param {string} template_part - The template variable
- * @param {*} actual_part - The url value
- */
-function applyArg(request_url: RouterURL, template_part: string, actual_part: string | number): void {
-	if (request_url.args === undefined) {
-		request_url.args = {};
-	}
-
-	if (typeof request_url.args !== 'object') {
-		throw new Error(`The request url's args have already been defined as a ${typeof request_url.args  }
-			and we expected an object. For safety we are throwing this error instead of overwriting your
-			existing data. Please use a different field name in your code`);
-	}
-
-	request_url.args[template_part] = actual_part;
+	return args;
 }
 
 /**

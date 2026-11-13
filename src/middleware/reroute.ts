@@ -22,10 +22,6 @@ import Road from '../core/road.js';
 export function build (key: string, road: Road): Middleware<Context> {
 	const reroute: Middleware<Context> = function (route_method, route_path, route_body, route_headers, next) {
 		this[key] = function (method: string, path: string, body?: string, headers?: IncomingHeaders) {
-			if (!headers) {
-				headers = {};
-			}
-
 			return road.request(method, path, body, headers);
 		};
 

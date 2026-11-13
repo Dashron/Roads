@@ -1,6 +1,21 @@
 import { build } from '../../../src/middleware/cors.js';
-import Response from '../../../src/core/response.js';
+import RoadsResponse from '../../../src/core/response.js';
+import Road from '../../../src/core/road.js';
 import { describe, expect, test, vi } from 'vitest';
+
+/**
+ * Helper function to ensure middleware returns a RoadsResponse object
+ * Throws an error if the result is not a RoadsResponse object
+ */
+async function ensureResponse(
+	middlewarePromise: Promise<RoadsResponse | string> | RoadsResponse | string
+): Promise<RoadsResponse> {
+	const result = await middlewarePromise;
+	if (!(result instanceof RoadsResponse)) {
+		throw new Error(`Expected RoadsResponse object but got: ${typeof result}`);
+	}
+	return result;
+}
 
 describe('CORS Comprehensive Tests', () => {
 	test('builds cors middleware function', () => {
@@ -10,12 +25,12 @@ describe('CORS Comprehensive Tests', () => {
 
 	test('handles requests without origin header - calls next without CORS headers', async () => {
 		const middleware = build({});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
-		const result = await middleware.call({}, 'GET', '/', {}, {}, mockNext);
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', {}, mockNext));
 
 		expect(mockNext).toHaveBeenCalled();
-		expect(result).toBeInstanceOf(Response);
+		expect(result).toBeInstanceOf(RoadsResponse);
 		expect(result.headers['access-control-allow-origin']).toBeUndefined();
 	});
 
@@ -23,10 +38,10 @@ describe('CORS Comprehensive Tests', () => {
 		const middleware = build({
 			validOrigins: ['https://example.com', 'https://test.com']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'https://example.com' };
-		const result = await middleware.call({}, 'GET', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
 
 		expect(mockNext).toHaveBeenCalled();
 		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
@@ -37,10 +52,10 @@ describe('CORS Comprehensive Tests', () => {
 		const middleware = build({
 			validOrigins: ['https://example.com']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'https://malicious.com' };
-		const result = await middleware.call({}, 'GET', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
 
 		expect(mockNext).not.toHaveBeenCalled();
 		expect(result.status).toBe(403);
@@ -52,12 +67,12 @@ describe('CORS Comprehensive Tests', () => {
 		const middleware = build({
 			validOrigins: ['*']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'https://any-domain.com' };
-		const result = await middleware.call({}, 'GET', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
 
-		expect(result.headers['access-control-allow-origin']).toBe('https://any-domain.com');
+		expect(result.headers['access-control-allow-origin']).toBe('*');
 	});
 
 	test('handles preflight OPTIONS request - returns preflight response', async () => {
@@ -74,13 +89,13 @@ describe('CORS Comprehensive Tests', () => {
 			'access-control-request-headers': 'Content-Type,Authorization'
 		};
 
-		const result = await middleware.call({}, 'OPTIONS', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
 		expect(mockNext).not.toHaveBeenCalled(); // Should not call next for valid preflight
-		expect(result).toBeInstanceOf(Response);
-		expect(result.status).toBe(200);
+		expect(result).toBeInstanceOf(RoadsResponse);
+		expect(result.status).toBe(204);
 		expect(result.body).toBe('');
-		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
+		expect(result.headers['access-control-allow-origin']).toBe('*');
 		expect(result.headers['access-control-allow-methods']).toBe('GET, POST, PUT');
 		expect(result.headers['access-control-allow-headers']).toBe('Content-Type, Authorization');
 	});
@@ -90,14 +105,14 @@ describe('CORS Comprehensive Tests', () => {
 			validOrigins: ['*'],
 			allowedMethods: ['GET', 'POST']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('Method not allowed', 405));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('Method not allowed', 405));
 
 		const headers = {
 			origin: 'https://example.com',
 			'access-control-request-method': 'DELETE'
 		};
 
-		const result = await middleware.call({}, 'OPTIONS', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
 		expect(mockNext).not.toHaveBeenCalled();
 		expect(result.status).toBe(405);
@@ -111,7 +126,7 @@ describe('CORS Comprehensive Tests', () => {
 			allowedMethods: ['POST'],
 			allowedRequestHeaders: ['Content-Type']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('Invalid headers', 400));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('Invalid headers', 400));
 
 		const headers = {
 			origin: 'https://example.com',
@@ -119,7 +134,7 @@ describe('CORS Comprehensive Tests', () => {
 			'access-control-request-headers': 'Authorization'
 		};
 
-		const result = await middleware.call({}, 'OPTIONS', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
 		expect(mockNext).not.toHaveBeenCalled();
 		expect(result.status).toBe(403);
@@ -129,13 +144,13 @@ describe('CORS Comprehensive Tests', () => {
 
 	test('adds credentials support when enabled', async () => {
 		const middleware = build({
-			validOrigins: ['*'],
+			validOrigins: ['https://example.com'],
 			supportsCredentials: true
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'https://example.com' };
-		const result = await middleware.call({}, 'GET', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
 
 		expect(result.headers['access-control-allow-credentials']).toBe('true');
 		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
@@ -146,10 +161,10 @@ describe('CORS Comprehensive Tests', () => {
 			validOrigins: ['*'],
 			supportsCredentials: false
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'https://example.com' };
-		const result = await middleware.call({}, 'GET', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
 
 		expect(result.headers['access-control-allow-credentials']).toBeUndefined();
 	});
@@ -167,9 +182,27 @@ describe('CORS Comprehensive Tests', () => {
 			'access-control-request-method': 'GET'
 		};
 
-		const result = await middleware.call({}, 'OPTIONS', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
 		expect(result.headers['access-control-max-age']).toBe('3600');
+	});
+
+	test('adds a cache max age of 0 for preflight', async () => {
+		const middleware = build({
+			validOrigins: ['*'],
+			allowedMethods: ['GET'],
+			cacheMaxAge: 0
+		});
+		const mockNext = vi.fn();
+
+		const headers = {
+			origin: 'https://example.com',
+			'access-control-request-method': 'GET'
+		};
+
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
+
+		expect(result.headers['access-control-max-age']).toBe('0');
 	});
 
 	test('does not add cache max age when not specified', async () => {
@@ -184,7 +217,7 @@ describe('CORS Comprehensive Tests', () => {
 			'access-control-request-method': 'GET'
 		};
 
-		const result = await middleware.call({}, 'OPTIONS', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
 		expect(result.headers['access-control-max-age']).toBeUndefined();
 	});
@@ -194,10 +227,10 @@ describe('CORS Comprehensive Tests', () => {
 			validOrigins: ['*'],
 			allowedResponseHeaders: ['X-Custom-Header', 'X-Another-Header']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'https://example.com' };
-		const result = await middleware.call({}, 'GET', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
 
 		expect(result.headers['access-control-expose-headers']).toBe('X-Custom-Header, X-Another-Header');
 	});
@@ -215,21 +248,21 @@ describe('CORS Comprehensive Tests', () => {
 			'access-control-request-method': 'POST'
 		};
 
-		const result = await middleware.call({}, 'OPTIONS', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
 		expect(result.headers['access-control-expose-headers']).toBeUndefined();
 	});
 
 	test('handles array headers correctly - uses first value', async () => {
 		const middleware = build({
-			validOrigins: ['*']
+			validOrigins: ['https://example.com']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = {
 			origin: ['https://example.com', 'https://other.com']
 		};
-		const result = await middleware.call({}, 'GET', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
 
 		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
 	});
@@ -248,9 +281,9 @@ describe('CORS Comprehensive Tests', () => {
 			// No access-control-request-headers header
 		};
 
-		const result = await middleware.call({}, 'OPTIONS', '/', {}, headers, mockNext) ;
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
-		expect(result.status).toBe(200);
+		expect(result.status).toBe(204);
 		expect(result.headers['access-control-allow-headers']).toBe('Content-Type');
 	});
 
@@ -259,14 +292,14 @@ describe('CORS Comprehensive Tests', () => {
 			validOrigins: ['*'],
 			allowedMethods: ['POST']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('Method not allowed', 405));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('Method not allowed', 405));
 
 		const headers = {
 			origin: 'https://example.com',
 			'access-control-request-method': 'post' // lowercase should be rejected
 		};
 
-		const result = await middleware.call({}, 'OPTIONS', '/', {}, headers, mockNext);
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
 		expect(mockNext).not.toHaveBeenCalled();
 		expect(result.status).toBe(405);
@@ -288,10 +321,10 @@ describe('CORS Comprehensive Tests', () => {
 			'access-control-request-headers': 'content-type,AUTHORIZATION' // different casing
 		};
 
-		const result = await middleware.call({}, 'OPTIONS', '/', {}, headers, mockNext);
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
 		expect(mockNext).not.toHaveBeenCalled();
-		expect(result.status).toBe(200);
+		expect(result.status).toBe(204);
 		expect(result.headers['access-control-allow-headers']).toBe('Content-Type, Authorization');
 	});
 
@@ -301,7 +334,7 @@ describe('CORS Comprehensive Tests', () => {
 			allowedMethods: ['POST'],
 			allowedRequestHeaders: ['Content-Type']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('Invalid headers', 400));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('Invalid headers', 400));
 
 		const headers = {
 			origin: 'https://example.com',
@@ -309,7 +342,7 @@ describe('CORS Comprehensive Tests', () => {
 			'access-control-request-headers': 'X-Custom-Header' // not in allowed list
 		};
 
-		const result = await middleware.call({}, 'OPTIONS', '/', {}, headers, mockNext);
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
 
 		expect(mockNext).not.toHaveBeenCalled();
 		expect(result.status).toBe(403);
@@ -317,20 +350,23 @@ describe('CORS Comprehensive Tests', () => {
 		expect(result.headers['access-control-allow-headers']).toBeUndefined();
 	});
 
-	test('optimizes simple GET request - skips full validation', async () => {
+	// allowedMethods and allowedRequestHeaders are only checked on preflight requests. Browsers enforce them by
+	//	not sending the actual request when the preflight fails, so actual requests always get CORS headers.
+	test.each([
+		['GET', { accept: 'text/html' }],
+		['POST', { 'content-type': 'application/x-www-form-urlencoded' }],
+		['PUT', { accept: 'text/html' }]
+	])('a %s request gets CORS headers even when its method is not in allowedMethods', async (method, extraHeaders) => {
 		const middleware = build({
 			validOrigins: ['https://example.com'],
-			allowedMethods: ['POST', 'PUT'], // Intentionally don't include GET
-			allowedRequestHeaders: ['x-custom-header'], // Intentionally restrictive
+			allowedMethods: ['PATCH'],
+			allowedRequestHeaders: ['x-other-header'],
 			allowedResponseHeaders: ['x-exposed']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
-		const headers = {
-			origin: 'https://example.com',
-			accept: 'text/html' // Safe header
-		};
-		const result = await middleware.call({}, 'GET', '/', {}, headers, mockNext);
+		const headers = { origin: 'https://example.com', ...extraHeaders };
+		const result = await ensureResponse(middleware.call({}, method, '/', '', headers, mockNext));
 
 		expect(mockNext).toHaveBeenCalled();
 		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
@@ -338,59 +374,20 @@ describe('CORS Comprehensive Tests', () => {
 		expect(result.headers['vary']).toBe('Origin');
 	});
 
-	test('optimizes simple POST request with form data - skips full validation', async () => {
-		const middleware = build({
-			validOrigins: ['https://example.com'],
-			allowedMethods: ['PUT'], // Intentionally don't include POST
-			allowedRequestHeaders: ['x-custom-header'] // Intentionally restrictive
-		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
-
-		const headers = {
-			origin: 'https://example.com',
-			'content-type': 'application/x-www-form-urlencoded'
-		};
-		const result = await middleware.call({}, 'POST', '/', {}, headers, mockNext);
-
-		expect(mockNext).toHaveBeenCalled();
-		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
-	});
-
-	test('does not optimize non-simple request with custom headers', async () => {
+	test('a request gets CORS headers even when it sends a header not in allowedRequestHeaders', async () => {
 		const middleware = build({
 			validOrigins: ['https://example.com'],
 			allowedMethods: ['GET'],
-			allowedRequestHeaders: ['x-custom-header']
+			allowedRequestHeaders: ['x-other-header']
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = {
 			origin: 'https://example.com',
-			'x-custom-header': 'test' // Non-simple header
+			'x-custom-header': 'test'
 		};
-		const result = await middleware.call({}, 'GET', '/', {}, headers, mockNext);
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
 
-		// Should go through full validation, which would allow this since it's in allowedRequestHeaders
-		expect(mockNext).toHaveBeenCalled();
-		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
-	});
-
-	test('does not optimize PUT request - uses full validation', async () => {
-		const middleware = build({
-			validOrigins: ['https://example.com'],
-			allowedMethods: ['GET'], // Don't allow PUT
-			allowedRequestHeaders: []
-		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
-
-		const headers = {
-			origin: 'https://example.com',
-			accept: 'text/html'
-		};
-		const result = await middleware.call({}, 'PUT', '/', {}, headers, mockNext);
-
-		// PUT is not a simple method, so it goes through full validation but still gets CORS headers
-		// since it's not a preflight request - actual method blocking happens at the server level
 		expect(mockNext).toHaveBeenCalled();
 		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
 	});
@@ -400,15 +397,642 @@ describe('CORS Comprehensive Tests', () => {
 			validOrigins: ['https://example.com'],
 			returnCorsErrors: false
 		});
-		const mockNext = vi.fn().mockResolvedValue(new Response('OK', 200, {}));
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
 
 		const headers = { origin: 'https://malicious.com' };
-		const result = await middleware.call({}, 'GET', '/', {}, headers, mockNext);
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
 
 		// With returnCorsErrors: false, should call next() like the old behavior
 		expect(mockNext).toHaveBeenCalled();
 		expect(result.status).toBe(200);
 		expect(result.body).toBe('OK');
 		expect(result.headers['access-control-allow-origin']).toBeUndefined();
+	});
+
+	test.each(['GET', 'POST'])('handles middleware returning a string, not a RoadsResponse - %s request', async (method) => {
+		const middleware = build({
+			validOrigins: ['https://example.com']
+		});
+		// Mock next() to return a string instead of a RoadsResponse
+		const mockNext = vi.fn().mockResolvedValue('Hello World');
+
+		const headers = { origin: 'https://example.com' };
+		const result = await ensureResponse(middleware.call({}, method, '/', '', headers, mockNext));
+
+		expect(mockNext).toHaveBeenCalled();
+		expect(result).toBeInstanceOf(RoadsResponse);
+		expect(result.body).toBe('Hello World');
+		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
+	});
+
+	// "null" origin tests - for sandboxed contexts (file://, data:, sandboxed iframes)
+	test('handles "null" origin from sandboxed context - accepts when in allowlist', async () => {
+		const middleware = build({
+			validOrigins: ['null', 'https://example.com']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
+
+		const headers = { origin: 'null' };
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+
+		expect(mockNext).toHaveBeenCalled();
+		expect(result.headers['access-control-allow-origin']).toBe('null');
+		expect(result.headers['vary']).toBe('Origin');
+	});
+
+	test('handles "null" origin with wildcard - accepts', async () => {
+		const middleware = build({
+			validOrigins: ['*']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
+
+		const headers = { origin: 'null' };
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+
+		expect(mockNext).toHaveBeenCalled();
+		expect(result.headers['access-control-allow-origin']).toBe('*');
+	});
+
+	test('blocks "null" origin when not in allowlist', async () => {
+		const middleware = build({
+			validOrigins: ['https://example.com']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
+
+		const headers = { origin: 'null' };
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+
+		expect(mockNext).not.toHaveBeenCalled();
+		expect(result.status).toBe(403);
+		expect(result.body).toContain('CORS Error: origin not allowed');
+	});
+
+	test('handles "null" origin in preflight request', async () => {
+		const middleware = build({
+			validOrigins: ['null'],
+			allowedMethods: ['POST'],
+			allowedRequestHeaders: ['Content-Type']
+		});
+		const mockNext = vi.fn();
+
+		const headers = {
+			origin: 'null',
+			'access-control-request-method': 'POST',
+			'access-control-request-headers': 'Content-Type'
+		};
+
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
+
+		expect(mockNext).not.toHaveBeenCalled();
+		expect(result.status).toBe(204);
+		expect(result.headers['access-control-allow-origin']).toBe('null');
+		expect(result.headers['access-control-allow-methods']).toBe('POST');
+	});
+
+	// Invalid origin format tests
+	test('rejects invalid origin format - not a URL', async () => {
+		const middleware = build({
+			validOrigins: ['*']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
+
+		const headers = { origin: 'not-a-valid-origin' };
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+
+		expect(mockNext).not.toHaveBeenCalled();
+		expect(result.status).toBe(400);
+		expect(result.body).toContain('CORS Error: invalid origin format');
+	});
+
+	test('rejects invalid origin format - origin with path', async () => {
+		const middleware = build({
+			validOrigins: ['*']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
+
+		const headers = { origin: 'https://example.com/some/path' };
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+
+		expect(mockNext).not.toHaveBeenCalled();
+		expect(result.status).toBe(400);
+		expect(result.body).toContain('CORS Error: invalid origin format');
+	});
+
+	test('rejects invalid origin format - origin with query string', async () => {
+		const middleware = build({
+			validOrigins: ['*']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
+
+		const headers = { origin: 'https://example.com?query=param' };
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+
+		expect(mockNext).not.toHaveBeenCalled();
+		expect(result.status).toBe(400);
+		expect(result.body).toContain('CORS Error: invalid origin format');
+	});
+
+	test('rejects invalid origin format - origin with fragment', async () => {
+		const middleware = build({
+			validOrigins: ['*']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
+
+		const headers = { origin: 'https://example.com#fragment' };
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+
+		expect(mockNext).not.toHaveBeenCalled();
+		expect(result.status).toBe(400);
+		expect(result.body).toContain('CORS Error: invalid origin format');
+	});
+
+	test('accepts valid origin with port', async () => {
+		const middleware = build({
+			validOrigins: ['https://example.com:8080']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
+
+		const headers = { origin: 'https://example.com:8080' };
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+
+		expect(mockNext).toHaveBeenCalled();
+		expect(result.headers['access-control-allow-origin']).toBe('https://example.com:8080');
+	});
+});
+
+/**
+ * Collects every Vary field name on the response, lowercased, regardless of how the header name is cased
+ */
+function varyValues(response: RoadsResponse): string[] {
+	const values: string[] = [];
+	for (const key in response.headers) {
+		if (key.toLowerCase() === 'vary') {
+			const value = response.headers[key];
+			const list = Array.isArray(value) ? value : [value ?? ''];
+			for (const item of list) {
+				values.push(...item.split(',').map(field => field.trim().toLowerCase()).filter(field => field));
+			}
+		}
+	}
+	return values;
+}
+
+/**
+ * Finds every header name on the response that is some casing of "vary"
+ */
+function varyKeys(response: RoadsResponse): string[] {
+	return Object.keys(response.headers).filter(key => key.toLowerCase() === 'vary');
+}
+
+describe('CORS wildcard origin with credentials', () => {
+	test('build throws when wildcard origin is combined with credentials', () => {
+		expect(() => build({
+			validOrigins: ['*'],
+			supportsCredentials: true
+		})).toThrow();
+	});
+
+	test('build throws when wildcard string is combined with credentials', () => {
+		expect(() => build({
+			validOrigins: '*',
+			supportsCredentials: true
+		})).toThrow();
+	});
+
+	test('build throws when wildcard is mixed with other origins - wildcard first', () => {
+		expect(() => build({
+			validOrigins: ['*', 'https://example.com']
+		})).toThrow();
+	});
+
+	test('build throws when wildcard is mixed with other origins - wildcard last', () => {
+		expect(() => build({
+			validOrigins: ['https://example.com', '*']
+		})).toThrow();
+	});
+
+	test('wildcard string allows all origins and sends a literal *', async () => {
+		const middleware = build({
+			validOrigins: '*'
+		});
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
+
+		const headers = { origin: 'https://any-domain.com' };
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+
+		expect(mockNext).toHaveBeenCalled();
+		expect(result.headers['access-control-allow-origin']).toBe('*');
+		expect(varyValues(result)).toEqual([]);
+	});
+
+	test('build does not throw when credentials are combined with an explicit allowlist', () => {
+		expect(() => build({
+			validOrigins: ['https://example.com'],
+			supportsCredentials: true
+		})).not.toThrow();
+	});
+
+	test.each(['GET', 'PUT'])('wildcard without credentials sends a literal * - %s request', async (method) => {
+		const middleware = build({
+			validOrigins: ['*']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
+
+		const headers = { origin: 'https://any-domain.com' };
+		const result = await ensureResponse(middleware.call({}, method, '/', '', headers, mockNext));
+
+		expect(mockNext).toHaveBeenCalled();
+		expect(result.headers['access-control-allow-origin']).toBe('*');
+		expect(result.headers['access-control-allow-credentials']).toBeUndefined();
+	});
+
+	test('wildcard without credentials sends a literal * - preflight', async () => {
+		const middleware = build({
+			validOrigins: ['*'],
+			allowedMethods: ['GET', 'PUT']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
+
+		const headers = {
+			origin: 'https://any-domain.com',
+			'access-control-request-method': 'PUT'
+		};
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
+
+		expect(mockNext).not.toHaveBeenCalled();
+		expect(result.headers['access-control-allow-origin']).toBe('*');
+		expect(result.headers['access-control-allow-credentials']).toBeUndefined();
+	});
+
+	test('wildcard preflight varies on the requested method and headers', async () => {
+		const middleware = build({
+			validOrigins: '*',
+			allowedMethods: ['PUT']
+		});
+		const mockNext = vi.fn();
+
+		const headers = {
+			origin: 'https://any-domain.com',
+			'access-control-request-method': 'PUT'
+		};
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
+
+		expect(varyValues(result)).toEqual(['access-control-request-method', 'access-control-request-headers']);
+	});
+
+	test('allowlist preflight varies on the origin and the requested method and headers', async () => {
+		const middleware = build({
+			validOrigins: ['https://example.com'],
+			allowedMethods: ['PUT']
+		});
+		const mockNext = vi.fn();
+
+		const headers = {
+			origin: 'https://example.com',
+			'access-control-request-method': 'PUT'
+		};
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
+
+		expect(result.status).toBe(204);
+		expect(varyValues(result)).toEqual(['origin', 'access-control-request-method', 'access-control-request-headers']);
+	});
+});
+
+describe('CORS preserves an existing Vary header', () => {
+	test.each(['GET', 'PUT'])('appends Origin to an existing vary header - %s request', async (method) => {
+		const middleware = build({
+			validOrigins: ['https://example.com']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, { vary: 'Accept-Encoding' }));
+
+		const headers = { origin: 'https://example.com' };
+		const result = await ensureResponse(middleware.call({}, method, '/', '', headers, mockNext));
+
+		expect(varyValues(result)).toEqual(expect.arrayContaining(['accept-encoding', 'origin']));
+		expect(varyKeys(result)).toHaveLength(1);
+	});
+
+	test.each(['GET', 'PUT'])('appends Origin to a differently cased Vary header - %s request', async (method) => {
+		const middleware = build({
+			validOrigins: ['https://example.com']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, { Vary: 'Accept-Encoding' }));
+
+		const headers = { origin: 'https://example.com' };
+		const result = await ensureResponse(middleware.call({}, method, '/', '', headers, mockNext));
+
+		expect(varyValues(result)).toEqual(expect.arrayContaining(['accept-encoding', 'origin']));
+		// Two differently cased keys would overwrite each other when written to the node response
+		expect(varyKeys(result)).toHaveLength(1);
+	});
+
+	test('keeps multiple existing vary values', async () => {
+		const middleware = build({
+			validOrigins: ['https://example.com']
+		});
+		const mockNext = vi.fn().mockResolvedValue(
+			new RoadsResponse('OK', 200, { vary: 'Accept-Encoding, Accept-Language' })
+		);
+
+		const headers = { origin: 'https://example.com' };
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+
+		expect(varyValues(result)).toEqual(expect.arrayContaining(['accept-encoding', 'accept-language', 'origin']));
+	});
+
+	test('does not duplicate Origin when the existing vary header already lists it', async () => {
+		const middleware = build({
+			validOrigins: ['https://example.com']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, { vary: 'Origin, Accept-Encoding' }));
+
+		const headers = { origin: 'https://example.com' };
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+
+		expect(varyValues(result).sort()).toEqual(['accept-encoding', 'origin']);
+	});
+
+	test('merges an existing vary header given as an array', async () => {
+		const middleware = build({
+			validOrigins: ['https://example.com']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {
+			vary: ['Accept-Encoding', 'Accept-Language']
+		}));
+
+		const headers = { origin: 'https://example.com' };
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+
+		expect(varyValues(result).sort()).toEqual(['accept-encoding', 'accept-language', 'origin']);
+		expect(varyKeys(result)).toHaveLength(1);
+	});
+
+	test('leaves an existing vary: * header alone', async () => {
+		const middleware = build({
+			validOrigins: ['https://example.com']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, { vary: '*' }));
+
+		const headers = { origin: 'https://example.com' };
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+
+		expect(result.headers['vary']).toBe('*');
+	});
+
+	test('does not overwrite the route vary header when all origins are allowed', async () => {
+		const middleware = build({
+			validOrigins: '*'
+		});
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, { vary: 'Accept-Encoding' }));
+
+		const headers = { origin: 'https://example.com' };
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', headers, mockNext));
+
+		expect(result.headers['vary']).toBe('Accept-Encoding');
+	});
+
+	test('still sets vary to Origin when the route sets no vary header', async () => {
+		const middleware = build({
+			validOrigins: ['https://example.com']
+		});
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
+
+		const headers = { origin: 'https://example.com' };
+		const result = await ensureResponse(middleware.call({}, 'PUT', '/', '', headers, mockNext));
+
+		expect(varyValues(result)).toEqual(['origin']);
+	});
+});
+
+
+describe('CORS credentials for specific origins', () => {
+	const trusted = 'https://app.example.com';
+	const other = 'https://third-party.example.org';
+
+	test.each(['GET', 'PUT'])('wildcard with a credentials list - listed origin gets credentials on %s', async (method) => {
+		const middleware = build({
+			validOrigins: '*',
+			supportsCredentials: [trusted]
+		});
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
+
+		const result = await ensureResponse(middleware.call({}, method, '/', '', { origin: trusted }, mockNext));
+
+		expect(mockNext).toHaveBeenCalled();
+		expect(result.headers['access-control-allow-origin']).toBe(trusted);
+		expect(result.headers['access-control-allow-credentials']).toBe('true');
+		expect(varyValues(result)).toEqual(['origin']);
+	});
+
+	test('wildcard with a credentials list - listed origin gets credentials on preflight', async () => {
+		const middleware = build({
+			validOrigins: '*',
+			supportsCredentials: [trusted],
+			allowedMethods: ['GET', 'PUT']
+		});
+		const mockNext = vi.fn();
+
+		const headers = {
+			origin: trusted,
+			'access-control-request-method': 'PUT'
+		};
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
+
+		expect(mockNext).not.toHaveBeenCalled();
+		expect(result.status).toBe(204);
+		expect(result.headers['access-control-allow-origin']).toBe(trusted);
+		expect(result.headers['access-control-allow-credentials']).toBe('true');
+		expect(varyValues(result)).toEqual(['origin', 'access-control-request-method', 'access-control-request-headers']);
+	});
+
+	test('wildcard with a credentials list - other origins are allowed without credentials', async () => {
+		const middleware = build({
+			validOrigins: '*',
+			supportsCredentials: [trusted]
+		});
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
+
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', { origin: other }, mockNext));
+
+		expect(mockNext).toHaveBeenCalled();
+		expect(result.status).toBe(200);
+		expect(result.headers['access-control-allow-origin']).toBe(other);
+		expect(result.headers['access-control-allow-credentials']).toBeUndefined();
+		// The response now depends on the origin, so caches need to know even for origins without credentials
+		expect(varyValues(result)).toEqual(['origin']);
+	});
+
+	test('wildcard with a credentials list - other origins get no credentials on preflight', async () => {
+		const middleware = build({
+			validOrigins: '*',
+			supportsCredentials: [trusted],
+			allowedMethods: ['GET', 'PUT']
+		});
+		const mockNext = vi.fn();
+
+		const headers = {
+			origin: other,
+			'access-control-request-method': 'PUT'
+		};
+		const result = await ensureResponse(middleware.call({}, 'OPTIONS', '/', '', headers, mockNext));
+
+		expect(result.status).toBe(204);
+		expect(result.headers['access-control-allow-origin']).toBe(other);
+		expect(result.headers['access-control-allow-credentials']).toBeUndefined();
+		expect(varyValues(result)).toEqual(['origin', 'access-control-request-method', 'access-control-request-headers']);
+	});
+
+	test('wildcard with a credentials function - the function decides per origin', async () => {
+		const allowCredentials = vi.fn((origin: string) => origin.endsWith('.example.com'));
+		const middleware = build({
+			validOrigins: '*',
+			supportsCredentials: allowCredentials
+		});
+		// Each request needs its own response, the middleware adds its headers to the object it is given
+		const mockNext = vi.fn().mockImplementation(() => Promise.resolve(new RoadsResponse('OK', 200, {})));
+
+		const trustedResult = await ensureResponse(middleware.call({}, 'GET', '/', '', { origin: trusted }, mockNext));
+		const otherResult = await ensureResponse(middleware.call({}, 'GET', '/', '', { origin: other }, mockNext));
+
+		expect(allowCredentials).toHaveBeenCalledWith(trusted);
+		expect(allowCredentials).toHaveBeenCalledWith(other);
+		expect(trustedResult.headers['access-control-allow-origin']).toBe(trusted);
+		expect(trustedResult.headers['access-control-allow-credentials']).toBe('true');
+		expect(otherResult.headers['access-control-allow-origin']).toBe(other);
+		expect(otherResult.headers['access-control-allow-credentials']).toBeUndefined();
+	});
+
+	test('allowlist with a credentials list - only origins in both lists get credentials', async () => {
+		const middleware = build({
+			validOrigins: [trusted, other],
+			supportsCredentials: [trusted]
+		});
+		// Each request needs its own response, the middleware adds its headers to the object it is given
+		const mockNext = vi.fn().mockImplementation(() => Promise.resolve(new RoadsResponse('OK', 200, {})));
+
+		const trustedResult = await ensureResponse(middleware.call({}, 'GET', '/', '', { origin: trusted }, mockNext));
+		const otherResult = await ensureResponse(middleware.call({}, 'GET', '/', '', { origin: other }, mockNext));
+
+		expect(trustedResult.headers['access-control-allow-origin']).toBe(trusted);
+		expect(trustedResult.headers['access-control-allow-credentials']).toBe('true');
+		expect(otherResult.headers['access-control-allow-origin']).toBe(other);
+		expect(otherResult.headers['access-control-allow-credentials']).toBeUndefined();
+	});
+
+	test('allowlist with a credentials list - an origin missing from validOrigins is still blocked', async () => {
+		const middleware = build({
+			validOrigins: [other],
+			supportsCredentials: [trusted]
+		});
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
+
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', { origin: trusted }, mockNext));
+
+		expect(mockNext).not.toHaveBeenCalled();
+		expect(result.status).toBe(403);
+		expect(result.headers['access-control-allow-origin']).toBeUndefined();
+		expect(result.headers['access-control-allow-credentials']).toBeUndefined();
+	});
+
+	test('wildcard with an empty credentials list behaves like no credentials', async () => {
+		const middleware = build({
+			validOrigins: '*',
+			supportsCredentials: []
+		});
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, {}));
+
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', { origin: other }, mockNext));
+
+		expect(result.headers['access-control-allow-origin']).toBe('*');
+		expect(result.headers['access-control-allow-credentials']).toBeUndefined();
+		expect(varyValues(result)).toEqual([]);
+	});
+
+	test('build throws when the credentials list contains a wildcard', () => {
+		expect(() => build({
+			validOrigins: '*',
+			supportsCredentials: ['*']
+		})).toThrow();
+
+		expect(() => build({
+			validOrigins: [trusted],
+			supportsCredentials: [trusted, '*']
+		})).toThrow();
+	});
+});
+
+describe('CORS through a Road', () => {
+	test('a capitalised Origin header name still gets CORS headers', async () => {
+		const road = new Road();
+		road.use(build({
+			validOrigins: ['https://example.com']
+		}));
+		road.use(async () => 'OK');
+
+		const result = await road.request('GET', '/', undefined, { Origin: 'https://example.com' });
+
+		expect(result.headers['access-control-allow-origin']).toBe('https://example.com');
+	});
+
+	test('a capitalised Origin header name is still checked against the allowlist', async () => {
+		const road = new Road();
+		road.use(build({
+			validOrigins: ['https://example.com']
+		}));
+		road.use(async () => 'OK');
+
+		const result = await road.request('GET', '/', undefined, { Origin: 'https://malicious.com' });
+
+		expect(result.status).toBe(403);
+	});
+});
+
+describe('CORS responses that a cache could reuse for another origin', () => {
+	test('a request without an Origin header gets Vary: Origin in allowlist mode', async () => {
+		const middleware = build({ validOrigins: ['https://example.com'] });
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK', 200, { vary: 'Accept' }));
+
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', {}, mockNext));
+
+		expect(result.headers).toEqual({ vary: 'Accept, Origin' });
+	});
+
+	test('a request without an Origin header gets a wildcard allow origin in wildcard mode', async () => {
+		const middleware = build({ validOrigins: '*' });
+		const mockNext = vi.fn().mockResolvedValue('OK');
+
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', {}, mockNext));
+
+		expect(result).toEqual(new RoadsResponse('OK', 200, { 'access-control-allow-origin': '*' }));
+	});
+
+	test('a request without an Origin header gets Vary: Origin when credentials depend on the origin', async () => {
+		const middleware = build({ validOrigins: '*', supportsCredentials: ['https://example.com'] });
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK'));
+
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', {}, mockNext));
+
+		expect(result.headers).toEqual({ vary: 'Origin' });
+	});
+
+	test('a disallowed origin gets Vary: Origin when CORS errors are not returned', async () => {
+		const middleware = build({
+			validOrigins: ['https://example.com'], returnCorsErrors: false, logger: { log: () => {} }
+		});
+		const mockNext = vi.fn().mockResolvedValue(new RoadsResponse('OK'));
+
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', { origin: 'https://evil.com' }, mockNext));
+
+		expect(result).toEqual(new RoadsResponse('OK', 200, { vary: 'Origin' }));
+	});
+
+	test('a CORS error response gets Vary: Origin', async () => {
+		const middleware = build({ validOrigins: ['https://example.com'], logger: { log: () => {} } });
+
+		const result = await ensureResponse(middleware.call({}, 'GET', '/', '', { origin: 'https://evil.com' },
+			vi.fn()));
+
+		expect(result.status).toEqual(403);
+		expect(result.headers['vary']).toEqual('Origin');
 	});
 });

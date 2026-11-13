@@ -32,12 +32,24 @@ export default [
 				HTMLFormElement: 'readonly',
 				MouseEvent: 'readonly',
 				PopStateEvent: 'readonly',
+				SubmitEvent: 'readonly',
+				Event: 'readonly',
+				MouseEventInit: 'readonly',
+				Element: 'readonly',
+				EventTarget: 'readonly',
+				EventListener: 'readonly',
 				URLSearchParams: 'readonly',
 				FormData: 'readonly',
 				Headers: 'readonly',
+				RequestInit: 'readonly',
 				fetch: 'readonly',
 				Window: 'readonly',
-				URL: 'readonly'
+				URL: 'readonly',
+				// Timer globals
+				setTimeout: 'readonly',
+				clearTimeout: 'readonly',
+				setInterval: 'readonly',
+				clearInterval: 'readonly'
 			}
 		},
 		plugins: {

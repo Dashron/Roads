@@ -4,3 +4,4 @@ dist
 types
 *.tsbuildinfo
 coverage
+.claude

@@ -6,8 +6,9 @@
  * Middleware for managing cookies
  */
 import * as cookie from 'cookie';
-import { Context, Middleware } from '../core/road.js';
-import Response from '../core/response.js';
+import { Context, IncomingHeaders, Middleware } from '../core/road.js';
+import { NextCallback } from '../core/requestChain.js';
+import RoadsResponse from '../core/response.js';
 
 /**
  * The Cookie Context represents the request context when either the
@@ -22,8 +23,10 @@ export interface CookieContext extends Context {
 	/**
 	 * Calling this function will store your new cookies.
 	 * 	The parameters directly map to the [cookie](https://github.com/jshttp/cookie) module.
+	 * 	Pass null as the value to remove the cookie. When removing, pass the same path and
+	 * 	domain the cookie was set with.
 	 */
-	setCookie: (name: string, value?: string, options?: cookie.SerializeOptions) => void,
+	setCookie: (name: string, value?: string | null, options?: cookie.SerializeOptions) => void,
 	/**
 	 * Returns an object with all the cookies. It defaults to
 	 * 	all the request cookies, but merges anything applied via
@@ -34,27 +37,51 @@ export interface CookieContext extends Context {
 }
 
 interface SetCookies {[key: string]: string | undefined}
+// A null value means the cookie is being removed
 interface NewCookies {[key: string]: {
-	value: string,
+	value: string | null,
 	options: cookie.SerializeOptions
 }}
 
 /**
- * Translates all the cookies that have been set during this
- * 	request into a collection of key:value pairs. All the additional
- * 	metadata will be dropped.
+ * Merges all the cookies that have been set during this request on top
+ * 	of the request cookies, as a collection of key:value pairs. Removed cookies
+ * 	are left out, and all the additional metadata will be dropped.
  *
+ * @param requestCookies
  * @param newCookies
  * @returns
  */
-function getCookieValues(newCookies: NewCookies): SetCookies {
-	const cookies: SetCookies = {};
+function getCookieValues(requestCookies: SetCookies, newCookies: NewCookies): SetCookies {
+	const cookies: SetCookies = {...requestCookies};
 
 	for (const [key, newCookie] of Object.entries(newCookies)) {
-		cookies[key] = newCookie.value;
+		if (newCookie.value === null) {
+			delete cookies[key];
+		} else {
+			cookies[key] = newCookie.value;
+		}
 	}
 
 	return cookies;
+}
+
+/**
+ * Builds a Set-Cookie header value from a cookie set via setCookie.
+ * 	Removed cookies are sent empty and already expired.
+ *
+ * @param name
+ * @param newCookie
+ * @returns
+ */
+function serializeCookie(name: string, newCookie: NewCookies[string]): string {
+	if (newCookie.value === null) {
+		return cookie.stringifySetCookie({
+			...newCookie.options, name, value: '', expires: new Date(0), maxAge: 0
+		}, newCookie.options);
+	}
+
+	return cookie.stringifySetCookie({ ...newCookie.options, name, value: newCookie.value }, newCookie.options);
 }
 
 /**
@@ -69,55 +96,64 @@ function getCookieValues(newCookies: NewCookies): SetCookies {
  * @param next
  * @returns
  */
-export const serverMiddleware: Middleware<CookieContext> =
-function (route_method, route_path, route_body, route_headers, next) {
+export const serverMiddleware = function (
+	this: CookieContext,
+	route_method: string,
+	route_path: string,
+	route_body: unknown,
+	route_headers: IncomingHeaders,
+	next: NextCallback
+): Promise<RoadsResponse | string> {
 	let cookies: SetCookies = {};
 	this.newCookies = {};
 
 	// Find the cookies from the request and store them locally
-	if (route_headers && route_headers.cookie) {
-		cookies = cookie.parse(
+	if (route_headers.cookie) {
+		cookies = cookie.parseCookie(
 			Array.isArray(route_headers.cookie) ? route_headers.cookie.join('; ') : route_headers.cookie);
 	}
 
 	// Add a setCookie method to the middleware context
-	this.setCookie = function (name, value, options?) {
+	this.setCookie = (name, value, options?) => {
 		this.newCookies[name] = {
-			value: value ?? '',
+			value: value === undefined ? '' : value,
 			options: options ? options : {}
 		};
 	};
 
 	// adds a getCookies method to the middleware context
 	this.getCookies = () => {
-		return {...cookies, ...getCookieValues(this.newCookies)};
+		return getCookieValues(cookies, this.newCookies);
 	};
 
 	// Apply the cookie headers to the response
-	return next().then((response) => {
+	return next().then((response: RoadsResponse | string) => {
 		const newCookiesEntries = Object.entries(this.newCookies);
 
 		// If there are new cookies to transmit
 		if (newCookiesEntries.length) {
 			// Ensure we're dealing with a response object and not a string
-			if (!(response instanceof Response)) {
-				response = new Response(response);
+			if (!(response instanceof RoadsResponse)) {
+				response = new RoadsResponse(response);
 			}
 
-			// Force the set cookie response header to be an array, for ease of applying them below.
-			if (!response.headers['Set-Cookie']) {
-				response.headers['Set-Cookie'] = [];
-			}
+			// Header names are case-insensitive, so collect every casing of set-cookie the route might have used
+			// 		into one array. This way we end up with a single header and none of the cookies are lost.
+			let setCookies: Array<string> = [];
 
-			if (typeof response.headers['Set-Cookie'] === 'string') {
-				response.headers['Set-Cookie'] = [response.headers['Set-Cookie']];
+			for (const key of Object.keys(response.headers)) {
+				if (key.toLowerCase() === 'set-cookie') {
+					setCookies = setCookies.concat(response.headers[key] || []);
+					delete response.headers[key];
+				}
 			}
 
 			// Apply all the cookies
 			for (const [cookieKey, cookieValue] of newCookiesEntries) {
-				(response.headers['Set-Cookie']).push(
-					cookie.serialize(cookieKey, cookieValue.value, cookieValue.options));
+				setCookies.push(serializeCookie(cookieKey, cookieValue));
 			}
+
+			response.headers['set-cookie'] = setCookies;
 		}
 
 		return response;
@@ -140,11 +176,11 @@ export const buildClientMiddleware: (pageDocument: Document) => Middleware<Cooki
 		return serverMiddleware.call(this, route_method, route_path, route_body, {
 			...route_headers, cookie: pageDocument.cookie
 		}, next)
-			.then((response: Response) => {
+			.then((response) => {
 
 				for (const [key, cookieValue] of Object.entries(this.newCookies)) {
 					if (cookieValue) {
-						pageDocument.cookie = cookie.serialize(key, cookieValue.value, cookieValue.options);
+						pageDocument.cookie = serializeCookie(key, cookieValue);
 					}
 				}
 

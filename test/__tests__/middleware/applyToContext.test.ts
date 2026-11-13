@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { build } from '../../../src/middleware/applyToContext';
+import { build } from '../../../src/middleware/applyToContext.js';
 import { describe, expect, test } from 'vitest';
 
 describe('ApplyToContext tests', () => {
@@ -13,12 +13,14 @@ describe('ApplyToContext tests', () => {
 		expect(typeof(fn)).toEqual('function');
 
 
-		fn.call(context, 'a', 'b', 'c', 'd', function () {});
+		fn.call(context, 'a', 'b', 'c', {}, function () {
+			return Promise.resolve('');
+		});
 
 		expect(val).toEqual(context[key]);
 	});
 
-	test('test apply to context calls next', () => {
+	test('test apply to context calls next', async () => {
 		expect.assertions(2);
 		const key = 'foo';
 		const val = 'bar';
@@ -27,8 +29,8 @@ describe('ApplyToContext tests', () => {
 		const fn = build(key, val);
 		expect(typeof(fn)).toEqual('function');
 
-		const custom = fn.call(context, 'a', 'b', 'c', 'd', function () {
-			return 'custom data';
+		const custom = await fn.call(context, 'a', 'b', 'c', {}, function () {
+			return Promise.resolve('custom data');
 		});
 
 		expect(custom).toEqual('custom data');

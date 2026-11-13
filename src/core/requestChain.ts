@@ -1,10 +1,19 @@
 /* eslint-disable max-len */
-import Response from './response.js';
+import RoadsResponse from './response.js';
 import { Context } from './road.js';
+
+/**
+ * Values that a function in the chain can change for every function after it.
+ * 	Anything left out is passed along unchanged.
+ */
+export interface NextOverrides {
+	method?: string,
+	body?: unknown
+}
 
 export interface NextCallback {
 
-	(): Promise<Response | string>
+	(overrides?: NextOverrides): Promise<RoadsResponse | string>
 }
 
 // eslint-disable-next-line
@@ -36,29 +45,49 @@ export class RequestChain<fn extends Function> {
 	 *
 	 * The function chain is executed in order, with each function in the chain being called with the parameters provided to the function.
 	 *
-	 * The function function returns a Promise that resolves to a Response object or a string.
+	 * The function function returns a Promise that resolves to a RoadsResponse object or a string.
 	 *
+	 * @param end - Called when the last function in the chain calls next. Without it, that next returns a 404.
 	 */
-	getChainStart () {
+	getChainStart (end?: NextCallback) {
 
-		let progress = 0;
-		const next: (context: Context, ...args: unknown[]) => Promise<Response | string> = async (context, ...args) => {
+		// Each step is given its own index, so the next callback handed to a function always runs the
+		//		function after it, no matter how many times it is called
+		const run = async (index: number, context: Context, ...args: unknown[]): Promise<RoadsResponse | string> => {
+			const currentFunction = this._function_chain[index];
 
-			if (this._function_chain.length && progress < this._function_chain.length) {
-				const currentFunction = this._function_chain[progress];
-				if (currentFunction) {
-					return currentFunction.call(context, ...args, () => {
-						progress += 1;
-						return next(context, ...args);
-					});
-				}
+			if (currentFunction) {
+				return currentFunction.call(context, ...args, (overrides?: NextOverrides) => {
+					if (!overrides) {
+						return run(index + 1, context, ...args);
+					}
+
+					// The method is always the first argument of the chain, and the body is always the third
+					const newArgs = [...args];
+
+					if (overrides.method) {
+						newArgs[0] = overrides.method;
+					}
+
+					// We check for the key so the body can be replaced with an empty string or undefined
+					if ('body' in overrides) {
+						newArgs[2] = overrides.body;
+					}
+
+					return run(index + 1, context, ...newArgs);
+				});
+			}
+
+			// Hand off to whatever comes after this chain, carrying along any method or body overrides
+			if (end) {
+				return end({ method: args[0] as string, body: args[2] });
 			}
 
 			// If next is called and there is nothing next, we should still return a promise,
 			//		it just shouldn't do anything
-			return new Response('Page not found', 404);
+			return new RoadsResponse('Page not found', 404);
 		};
 
-		return next;
+		return (context: Context, ...args: unknown[]) => run(0, context, ...args);
 	}
 }

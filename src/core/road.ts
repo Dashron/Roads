@@ -8,15 +8,22 @@
  */
 
 import * as response_lib from './response.js';
-import Response from './response.js';
+import RoadsResponse from './response.js';
 import { NextCallback, RequestChain } from './requestChain.js';
+import { normalizeHeaders } from '../util/headers.js';
+import { toOriginForm } from '../util/url.js';
 
 export interface IncomingHeaders extends Record<string, string | Array<string> | undefined> {}
 
-export interface Middleware<MiddlewareContext extends Context> {
+/**
+ * `BodyType` is the type of the request body this middleware receives. It starts out as a string (or undefined),
+ * 	but any earlier middleware can replace it via `next({ body })`, which is how the parse body middleware
+ * 	passes along the parsed body.
+ */
+export interface Middleware<MiddlewareContext extends Context, BodyType = unknown> {
 	(this: MiddlewareContext, method: string, path: string,
-		body: string | undefined, headers: IncomingHeaders | undefined,
-		next: NextCallback): Promise<Response | string> | Response | string
+		body: BodyType, headers: IncomingHeaders,
+		next: NextCallback): Promise<RoadsResponse | string>
 }
 
 export interface Context extends Record<string, unknown> {}
@@ -48,28 +55,28 @@ export default class Road {
 	 * *Middleware*
 	 * Each function in the request chain is called middleware. Each middleware function must match the following function signature.
 	 *
-	 * **function (method: *string*, url: *string*, body: *string*, headers: *object*, next: *next*): Promise<Response | string>**
+	 * **function (method: *string*, url: *string*, body: *string*, headers: *object*, next: *next*): Promise<RoadsResponse | string>**
 	 *
 	 * Parameters
 	 * | name    | type                         | description                                                                                      |
 	 * | ------- | ---------------------------- | ------------------------------------------------------------------------------------------------ |
 	 * | method  | string                       | The request's HTTP method                                                                        |
-	 * | url     | string                       | The request's URL. The `SimpleRouter` is included to help run different code for different URLs. |
-	 * | body    | string                       | The request's body (as a string). To parse this check out the `parseBodyMiddleware`              |
+	 * | url     | string                       | The request's URL. The `Router` middleware is included to help run different code for different URLs. |
+	 * | body    | string                       | The request's body (as a string). If the `parseBodyMiddleware` runs earlier in the chain, this is the parsed body instead |
 	 * | headers | object                       | The request's headers. This is an object of strings or arrays of strings.                        |
-	 * | next    | function(): Promise<Response | String>                                                                                          | The next step of the *request chain*. If there are no more steps in the *request chain* this does nothing. This method will always return a promise, which resolves to a `Response` object, or a string. |
+	 * | next    | function(): Promise<RoadsResponse | String>                                                                                          | The next step of the *request chain*. If there are no more steps in the *request chain* this does nothing. This method will always return a promise, which resolves to a `RoadsResponse` object, or a string. Pass `{ method: 'DELETE' }` or `{ body: newBody }` to change the method or body that the rest of the chain receives. |
 	 *
-	 * Each middleware function must return a promise that resolves to a [Response](#response) object or a string. If you return a string it will be transformed into a response object using the default status code (200) and no headers.
+	 * Each middleware function must return a promise that resolves to a [RoadsResponse](#response) object or a string. If you return a string it will be transformed into a response object using the default status code (200) and no headers. If the chain resolves to `undefined` or `null` (usually a middleware that forgot to `return next()`), `road.request` rejects with a `TypeError`.
 	 *
 	 * *See the readme for more information*
 	 *
 	 * @param {Function} fn - A callback (function or async function) that will be executed every time a request is made.
 	 * @returns {Road} this road object. Useful for chaining use statements.
 	 */
-	use<ContextType extends Context> (fn: Middleware<ContextType>): Road {
-		// Currently we pass everything through the coroutine wrapper to be save. Let that library decide
-		// 		what does and does not actually need to be wrapped
-		this._request_chain.add(fn);
+	use<ContextType extends Context, BodyType = unknown> (fn: Middleware<ContextType, BodyType>): Road {
+		// Each middleware declares the context and body it expects, and trusts earlier middleware to provide them.
+		// 		The road can't check that, so every middleware is stored with the base types.
+		this._request_chain.add(fn as unknown as Middleware<Context>);
 
 		return this;
 	}
@@ -79,7 +86,7 @@ export default class Road {
 	 * Execute the resource method associated with the request parameters.
 	 *
 	 * This function will execute the *request chain* in the order they were assigned via
-	 * 	[use](#roadusefunction-fn) and return a Promise that resolves to a [Response](#response)
+	 * 	[use](#roadusefunction-fn) and return a Promise that resolves to a [RoadsResponse](#response)
 	 *
 	 * Make sure to catch any errors in the promise!
 	 *
@@ -87,9 +94,18 @@ export default class Road {
 	 * @param {string} url - HTTP request url
 	 * @param {string} [body] - HTTP request body
 	 * @param {object} [headers] - HTTP request headers
-	 * @returns {Promise} this promise will resolve to a Response object
+	 * @returns {Promise} this promise will resolve to a RoadsResponse object
 	 */
-	request (method: string, url: string, body?: string, headers?: IncomingHeaders): Promise<Response> {
-		return response_lib.wrap(this._request_chain.getChainStart()({}, method, url, body, headers));
+	request (method: string, url: string, body?: string, headers?: IncomingHeaders): Promise<RoadsResponse> {
+		// Servers can receive absolute urls. We reduce them to the path here so a middleware that checks the url
+		// 		and the router that matches it can't disagree about which path was requested.
+		// Header names are case-insensitive, so we lower-case them on the way in and on the way out. This lets
+		// 		middleware and connectors look headers up by their lower-case name
+		return response_lib.wrap(this._request_chain.getChainStart()({}, method, toOriginForm(url), body,
+			headers ? normalizeHeaders(headers) : {}))
+			.then((response) => {
+				response.headers = normalizeHeaders(response.headers);
+				return response;
+			});
 	}
 }

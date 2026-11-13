@@ -1,33 +1,55 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import {  middleware } from '../../../src/middleware/parseBody';
+import { middleware, ParseBodyContext } from '../../../src/middleware/parseBody.js';
 
-import { Context, Middleware as MiddlewareType } from '../../../src/core/road';
-import { Road } from '../../../src/index';
-import Response from '../../../src/core/response';
+import { Context, IncomingHeaders, Middleware as MiddlewareType } from '../../../src/core/road.js';
+import { NextOverrides } from '../../../src/core/requestChain.js';
+import { Road } from '../../../src/index.js';
+import RoadsResponse from '../../../src/core/response.js';
 
-import { describe, expect, test, assert } from 'vitest';
+import { describe, expect, test, assert, vi } from 'vitest';
+
+/**
+ * Calls the middleware directly and returns what it sent to next, along with the context and response.
+ * 	`overrides` is undefined if next was never called
+ */
+function callMiddleware (body: string | undefined, headers: IncomingHeaders) {
+	const context = {} as ParseBodyContext;
+	let overrides: NextOverrides | undefined;
+
+	const response = middleware.call(context, '', '', body, headers, (nextOverrides) => {
+		overrides = nextOverrides;
+		return Promise.resolve('');
+	});
+
+	return { context, overrides, response };
+}
 
 describe('Parse Request Body tests', () => {
 	test('test request with valid json body', () => {
 		expect.assertions(1);
-		const context: Record<string, any> = {};
-		const body = '{"hello": "there"}';
 
+		const { overrides } = callMiddleware('{"hello": "there"}', {'content-type': 'application/json'});
 
-		middleware.call(context, '', '', body, {'content-type': 'application/json'}, () => {});
-		expect(context.body).toEqual({hello: 'there'});
+		expect(overrides).toEqual({ body: {hello: 'there'} });
+	});
+
+	test('test the raw body is kept on the context', () => {
+		expect.assertions(1);
+
+		const { context } = callMiddleware('{"hello": "there"}', {'content-type': 'application/json'});
+
+		expect(context.rawBody).toEqual('{"hello": "there"}');
 	});
 
 	/**
      * Test that valid json parsing works as expected
      */
-	test('test request with invalid json body', () => {
+	test('test request with invalid json body', async () => {
 		expect.assertions(2);
-		const context: Record<string, any> = {};
+		const context = {} as ParseBodyContext;
 		const body = '{hello ';
 
 
-		const response = middleware.call(context, '', '', body, {'content-type': 'application/json'}, () => {
+		const response = await middleware.call(context, '', '', body, {'content-type': 'application/json'}, () => {
 			assert.fail('Next should not be called if the request body can not be parsed');
 		});
 
@@ -42,21 +64,47 @@ describe('Parse Request Body tests', () => {
 	/**
      * Test that valid json parsing works as expected with roads
      */
-	test('test used request with valid json body', () => {
-		expect.assertions(1);
+	test('test used request with valid json body', async () => {
+		expect.assertions(3);
 
 		const road = new Road();
 		road.use(middleware);
 		const body = '{"hello": "there"}';
 
-		const middleware2: MiddlewareType<Context> = function () {
-			expect(this.body).toEqual({hello: 'there'});
-			return Promise.resolve(new Response(''));
+		const middleware2: MiddlewareType<ParseBodyContext> = function (method, url, parsedBody) {
+			expect(parsedBody).toEqual({hello: 'there'});
+			expect(this.rawBody).toEqual(body);
+			// The parsed body is no longer added to the context
+			expect(this.body).toBe(undefined);
+			return Promise.resolve(new RoadsResponse(''));
 		};
 
 		road.use(middleware2);
 
-		road.request('', '', body, {
+		await road.request('', '', body, {
+			'content-type' : 'application/json'
+		});
+	});
+
+	/**
+     * Test that middleware added before the parser still receives the body as a string
+     */
+	test('test middleware before the parser receives the string body', async () => {
+		expect.assertions(1);
+
+		const road = new Road();
+		const body = '{"hello": "there"}';
+
+		const before: MiddlewareType<Context> = function (method, url, stringBody, headers, next) {
+			expect(stringBody).toEqual(body);
+			return next();
+		};
+
+		road.use(before);
+		road.use(middleware);
+		road.use(async () => '');
+
+		await road.request('', '', body, {
 			'content-type' : 'application/json'
 		});
 	});
@@ -85,66 +133,128 @@ describe('Parse Request Body tests', () => {
      */
 	test('test content type with parameters', () => {
 		expect.assertions(1);
-		const context: Record<string, any> = {};
-		const body = '{"hello": "there"}';
 
+		const { overrides } = callMiddleware('{"hello": "there"}', {'content-type': 'application/json; charset=utf-8'});
 
-		middleware.call(context, '', '', body, {'content-type': 'application/json; charset=utf-8'}, () => {});
-		expect(context.body).toEqual({hello: 'there'});
+		expect(overrides).toEqual({ body: {hello: 'there'} });
 	});
 
 	// You can only have one content type for a request. Commas are not allowed.
-	test('test weird content-type', () => {
-		expect.assertions(1);
-		const context: Record<string, any> = {};
-		const body = '{"hello": "there"}';
+	test('test weird content-type', async () => {
+		expect.assertions(2);
 
-
-		expect(middleware.call(context, '', '', body, {
+		const { overrides, response } = callMiddleware('{"hello": "there"}', {
 			'content-type': 'text/html,application/x-www-form-urlencoded'
+		});
 
-		}, () => {})).toEqual({
+		expect(overrides).toBe(undefined);
+		expect(await response).toEqual({
 			status: 400,
 			headers: {},
 			body: 'Invalid content-type header',
 		});
 	});
 
+	test('test +json content type is parsed as json', () => {
+		expect.assertions(1);
+
+		const { overrides } = callMiddleware('{"hello": "there"}', {'content-type': 'application/vnd.api+json'});
+
+		expect(overrides).toEqual({ body: {hello: 'there'} });
+	});
+
+	test('test invalid json body is not logged', async () => {
+		expect.assertions(2);
+		const consoleError = vi.spyOn(console, 'error').mockImplementation(() => { /* silence */ });
+
+		const { response } = callMiddleware('{hello ', {'content-type': 'application/json'});
+
+		expect(consoleError).not.toHaveBeenCalled();
+		expect(await response).toEqual({
+			status: 400,
+			headers: {},
+			body: 'Invalid request body',
+		});
+		consoleError.mockRestore();
+	});
+
 	test('test form-encoded body parsing', () => {
 		expect.assertions(1);
-		const context: Record<string, any> = {};
-		const body = 'name=John&age=30';
 
-		middleware.call(context, '', '', body, {'content-type': 'application/x-www-form-urlencoded'}, () => {});
-		expect(context.body).toEqual({name: 'John', age: '30'});
+		const { overrides } = callMiddleware('name=John&age=30', {'content-type': 'application/x-www-form-urlencoded'});
+
+		expect(overrides).toEqual({ body: {name: 'John', age: '30'} });
+	});
+
+	test('test form-encoded body decodes values and collects repeated keys into an array', () => {
+		expect.assertions(2);
+
+		const { overrides } = callMiddleware('tag=a&tag=b&tag=c&name=John+Smith&city=S%C3%A3o%20Paulo&empty',
+			{'content-type': 'application/x-www-form-urlencoded'});
+
+		expect(overrides).toEqual({ body: {
+			tag: ['a', 'b', 'c'], name: 'John Smith', city: 'São Paulo', empty: ''
+		} });
+		// Keys like __proto__ are stored as plain values instead of changing the object's prototype
+		expect(Object.getPrototypeOf(overrides?.body)).toBeNull();
 	});
 
 	test('test array content-type header uses first value', () => {
 		expect.assertions(1);
-		const context: Record<string, any> = {};
-		const body = '{"hello": "there"}';
 
-		middleware.call(context, '', '', body, {
+		const { overrides } = callMiddleware('{"hello": "there"}', {
 			'content-type': ['application/json', 'text/plain']
-		}, () => {});
-		expect(context.body).toEqual({hello: 'there'});
+		});
+
+		expect(overrides).toEqual({ body: {hello: 'there'} });
 	});
 
 	test('test unknown content-type returns literal body', () => {
 		expect.assertions(1);
-		const context: Record<string, any> = {};
-		const body = 'raw text content';
 
-		middleware.call(context, '', '', body, {'content-type': 'text/plain'}, () => {});
-		expect(context.body).toBe('raw text content');
+		const { overrides } = callMiddleware('raw text content', {'content-type': 'text/plain'});
+
+		expect(overrides).toEqual({ body: 'raw text content' });
 	});
 
 	test('test no content-type returns literal body', () => {
 		expect.assertions(1);
-		const context: Record<string, any> = {};
-		const body = 'raw text content';
 
-		middleware.call(context, '', '', body, {}, () => {});
-		expect(context.body).toBe('raw text content');
+		const { overrides } = callMiddleware('raw text content', {});
+
+		expect(overrides).toEqual({ body: 'raw text content' });
+	});
+
+	test('test no body passes along undefined', () => {
+		expect.assertions(1);
+
+		const { overrides } = callMiddleware(undefined, {'content-type': 'application/json'});
+
+		expect(overrides).toEqual({ body: undefined });
+	});
+
+	test('test handles non-Error thrown objects safely', async () => {
+		expect.assertions(1);
+		const context = {} as ParseBodyContext;
+		const body = '{"hello": "there"}';
+
+		// Mock JSON.parse to throw a non-Error object
+		const originalParse = JSON.parse;
+		JSON.parse = () => {
+			throw 'string error'; // Not an Error object
+		};
+
+		const response = middleware.call(context, '', '', body, {'content-type': 'application/json'}, () => {
+			assert.fail('Next should not be called if the request body can not be parsed');
+		});
+
+		// Restore JSON.parse
+		JSON.parse = originalParse;
+
+		expect(await response).toEqual({
+			status: 400,
+			headers: {},
+			body: 'Invalid request body',
+		});
 	});
 });

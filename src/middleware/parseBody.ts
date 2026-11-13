@@ -6,38 +6,59 @@
  * Exposes a single middleware function to help parse request bodies
  */
 
-import { Context, IncomingHeaders, Middleware } from '../core/road.js';
+import { Context, Middleware } from '../core/road.js';
+import { getSingleHeader } from '../util/headers.js';
 
 import * as contentTypeModule from 'content-type';
-import * as qsModule from 'fast-querystring';
-import Response, { OutgoingHeaders } from '../core/response.js';
+import RoadsResponse from '../core/response.js';
 
 /**
  * When using typescript you can pass this when adding middleware or
  * 	routes to see proper typing on `this`.
  *
- * This context specifically adds one variable `body` which will match
- * 	the structure passed to `BodyType`.
+ * This context specifically adds one variable `rawBody`, which is the request body
+ * 	exactly as it was received. The parsed body is not on the context, it replaces the
+ * 	`body` parameter of every middleware and route that runs after this one.
  */
-export interface ParseBodyContext<BodyType> extends Context {
-	body?: BodyType
+export interface ParseBodyContext extends Context {
+	rawBody: string | undefined
 }
 
-function getSingleHeader(headers: IncomingHeaders | OutgoingHeaders, key: string): string | undefined {
-	// This is a little weirder than I would like, but it works better with typescript
-	const val = headers[key];
+/**
+ * Thrown when the content-type header is not a valid media type
+ */
+class InvalidMediaTypeError extends Error {}
 
-	if (Array.isArray(val)) {
-		return val[0];
+/**
+ * Parses a form encoded body. Repeated keys become an array of every value.
+ * 	The object has no prototype, so use `Object.hasOwn` to check for keys.
+ *
+ * @param body - The form encoded body
+ * @returns The parsed values
+ */
+function parseFormBody (body: string): Record<string, string | string[]> {
+	const values: Record<string, string | string[]> = Object.create(null);
+
+	for (const [key, value] of new URLSearchParams(body)) {
+		const existing = values[key];
+
+		if (existing === undefined) {
+			values[key] = value;
+		} else if (Array.isArray(existing)) {
+			existing.push(value);
+		} else {
+			values[key] = [existing, value];
+		}
 	}
 
-	return val;
+	return values;
 }
 
 /**
  * Translate the request body into a usable value.
  *
- * If the content type is application/json this will attempt to parse that json
+ * If the content type is application/json, or any +json type (e.g. application/vnd.api+json), this will
+ * 	attempt to parse that json
  * If application/x-www-form-urlencoded this will attempt to parse it as a query format
  * Otherwise this will return a string
  *
@@ -48,12 +69,17 @@ function getSingleHeader(headers: IncomingHeaders | OutgoingHeaders, key: string
 function parseRequestBody (body: string | undefined, contentType?: string): unknown {
 	if (contentType && body) {
 		const parsedContentType = contentTypeModule.parse(contentType);
-		if (parsedContentType.type === 'application/json') {
+		// content-type v3 no longer throws on invalid media types, so validate explicitly
+		if (!contentTypeModule.isTypeValid(parsedContentType.type)) {
+			throw new InvalidMediaTypeError('invalid media type');
+		}
+
+		if (parsedContentType.type === 'application/json' || parsedContentType.type.endsWith('+json')) {
 			// parse json
 			return JSON.parse(body);
 		} else if (parsedContentType.type === 'application/x-www-form-urlencoded') {
 			// parse form encoded
-			return qsModule.parse(body);
+			return parseFormBody(body);
 		}
 	}
 
@@ -62,18 +88,24 @@ function parseRequestBody (body: string | undefined, contentType?: string): unkn
 }
 
 /**
- * Attempts the parse the request body into a useful object
+ * Attempts the parse the request body into a useful object. Every middleware and route after this one
+ * 	receives the parsed body as its `body` parameter. The original string is kept on the context as `rawBody`.
  */
-export const middleware: Middleware<Context> = function (method, url, body, headers, next) {
+export const middleware: Middleware<ParseBodyContext, string | undefined> = async function (
+	method, url, body, headers, next
+) {
+	let parsedBody: unknown;
+
+	this.rawBody = body;
+
 	try {
-		this.body = parseRequestBody(body, headers ? getSingleHeader(headers, 'content-type') : undefined);
+		parsedBody = parseRequestBody(body, getSingleHeader(headers, 'content-type'));
 	} catch (e) {
-		if (e.message === 'invalid media type') {
-			return new Response('Invalid content-type header', 400);
+		if (e instanceof InvalidMediaTypeError) {
+			return new RoadsResponse('Invalid content-type header', 400);
 		}
 
-		console.error(e);
-		return new Response('Invalid request body', 400);
+		return new RoadsResponse('Invalid request body', 400);
 	}
-	return next();
+	return next({ body: parsedBody });
 };

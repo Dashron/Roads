@@ -3,32 +3,47 @@
  * Copyright(c) 2021 Aaron Hedges <aaron@dashron.com>
  * MIT Licensed
  *
- * This file is an example of using roads router in the client
+ * This file is an example of using roads router in the client. It's bundled into public/client.js by `npm run build`
  */
 
-import { Road, RoadsPJAX, ParseBodyMiddleware, RouterMiddleware, CookieMiddleware, Request } from 'roads';
-import applyPublicRoutes from './routes/applyPublicRoutes.js';
-import emptyTo404 from './middleware/emptyTo404.js';
+import buildClientRoad from './buildClientRoad.js';
 
-const road = new Road();
+const { pjax } = buildClientRoad(document, window);
 
-road.use(function (method, url, body, headers, next) {
-	console.log(`fake ${  method  } request to...`, url);
-	return next();
-});
-
-const pjax = new RoadsPJAX(road, document.getElementById('container') as HTMLAnchorElement, window);
-pjax.addTitleMiddleware('roads-title');
-road.use(emptyTo404);
-road.use(ParseBodyMiddleware.middleware);
-// Todo: get this set up properly, then check cokie and stor val on the server
-road.use(CookieMiddleware.buildClientMiddleware(document));
+// Start handling clicks on links and forms that have a data-roads-pjax attribute
 pjax.register();
+// The home link is outside of the container, so PJAX needs to be told about it
 pjax.registerAdditionalElement(document.getElementById('home') as HTMLAnchorElement);
-const router = new RouterMiddleware.Router(road);
-applyPublicRoutes(router);
 
-const testRequest = new Request(false, 'localhost', 8081);
-testRequest.request('GET', '/').then(response => {
-	console.log('root request test', response);
+// localhost and 127.0.0.1 are different origins, so whichever one this page isn't on is cross origin
+const otherOrigin = `http://${window.location.hostname === 'localhost' ? '127.0.0.1' : 'localhost'}:${window.location.port}`;
+
+/**
+ * Handles the button on /client-requests. We listen on the document because PJAX
+ * 	replaces the page content, which would remove listeners added to the button itself
+ */
+document.addEventListener('click', (event) => {
+	const button = event.target instanceof Element ? event.target.closest('[data-example-action="create-post"]') : null;
+	const output = document.getElementById('request-output');
+
+	if (!button || !output) {
+		return;
+	}
+
+	// application/json isn't a "simple" content type, so the browser asks the API's CORS middleware
+	//		for permission with an OPTIONS request before it sends this
+	fetch(`${otherOrigin}/api/posts`, {
+		method: 'POST',
+		headers: { 'content-type': 'application/json' },
+		body: JSON.stringify({ title: 'Made with CORS' })
+	})
+		.then(async (response) => {
+			const body: unknown = response.headers.get('content-type')?.includes('application/json') ?
+				await response.json() : await response.text();
+			output.textContent = JSON.stringify({ status: response.status, body }, null, 2);
+		})
+		.catch((err: Error) => {
+			// fetch rejects when CORS blocks the request
+			output.textContent = `Request failed: ${err.message}`;
+		});
 });

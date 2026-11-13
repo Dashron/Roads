@@ -1,0 +1,23 @@
+{
+  "name": "roads-example-readme",
+  "version": "1.0.0",
+  "description": "One road that runs in a script, on a server and in the browser",
+  "devDependencies": {
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.0.0",
+    "esbuild": "0.24.2",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "roads": "file:../../"
+  },
+  "private": true,
+  "scripts": {
+    "build": "tsc && esbuild src/client.ts --bundle --outfile=public/client.js",
+    "direct": "npm run build && node dist/node/direct.js",
+    "start": "npm run build && node dist/node/server.js"
+  },
+  "type": "module",
+  "license": "MIT"
+}

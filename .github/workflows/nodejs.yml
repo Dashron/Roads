@@ -8,11 +8,9 @@ jobs:
 
     strategy:
       matrix:
-        # 8.x and lower not supported due to lack of URL object
-        # 10.x not supported with the current version of EJS. If you need it, it will probably run fine
-        # 14.x and 15.x are not supported by vitest
-        # 19.x and up the request UA is `undici` and affected the tests
-        node-version: [18.x, 20.x, 22.x]
+        # 20.x and lower are end-of-life and not supported by cookie, content-type or vitest
+        # 22.13.0 is the oldest 22 release supported by all of our dev tools (eslint and jsdom)
+        node-version: [22.13.0, 22.x, 24.x, 26.x]
 
     steps:
       - uses: actions/checkout@v4
@@ -20,9 +18,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-      - name: npm install, build, and test
+      - name: npm ci, build, and test
         run: |
-          npm install
+          npm ci
           npm run build --if-present
           npm test
         env:
