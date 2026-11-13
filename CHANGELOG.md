@@ -1,6 +1,6 @@
 # Changelog
 
-## 9.0.0
+## 9.0.0-beta.1
 
 9.0.0 requires Node 22 or later. Most apps need only a few changes. Work through the "Breaking changes" list below, then check the "Behaviour changes" list for anything your app relies on.
 
@@ -63,6 +63,7 @@
 ### New
 
 - `MethodOverrideMiddleware` and `CSRFMiddleware`.
+- `LayoutMiddleware` wraps each HTML response in a layout, such as a full HTML page. Redirects, `304` responses and responses with a non-HTML `content-type` are sent without the layout. An optional `onError` function turns errors thrown later in the request chain into an error page inside the layout.
 - `expressConnector(road)` creates an Express middleware that sends each request through a road.
 - `next()` accepts `{ method, body }` to change the method or body that the rest of the chain receives.
 - The `NextOverrides` and `ParsedURL` types are exported.

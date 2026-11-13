@@ -5,6 +5,7 @@
 
 | Version | Supported          |
 | ------- | ------------------ |
+| 9.x (beta) | :white_check_mark: |
 | 8.x     | :white_check_mark: |
 | < 8.0.0 | :x:                |
 

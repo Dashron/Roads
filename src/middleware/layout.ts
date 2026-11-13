@@ -34,7 +34,7 @@ function skipLayout (response: RoadsResponse): boolean {
 	// The road only lower-cases header names after the request chain finishes, so a route may have set Content-Type
 	const contentType = getSingleHeader(normalizeHeaders(response.headers), 'content-type');
 
-	// Redirects and 304 Not Modified responses must not have a body
+	// The browser doesn't show the body of a redirect, and a 304 Not Modified response must not have a body
 	return (response.status >= 300 && response.status < 400) ||
 		// Only HTML gets the HTML layout. Responses without a content type are assumed to be HTML
 		(contentType !== undefined && !contentType.toLowerCase().startsWith('text/html'));

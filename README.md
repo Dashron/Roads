@@ -62,7 +62,7 @@ By the end of this guide you'll have one piece of code that handles requests in 
 
 ## Requirements
 
-- Node.js 22 or later if compiling typescript with tsc, otherwise 22.18.
+- Node.js 22.18 or later. This guide runs TypeScript files directly with `node`, which needs 22.18. If you compile with `tsc` first, any Node.js 22 works.
 
 ## Install Roads
 
@@ -73,13 +73,13 @@ mkdir my-road
 cd my-road
 npm init -y
 npm pkg set type=module
-npm install roads
+npm install roads@beta
 ```
 
 To add Roads to an existing project, run this command:
 
 ```bash
-npm install roads
+npm install roads@beta
 ```
 
 ## Create your first Road
@@ -315,7 +315,7 @@ export default road;
 
 Here's what changed. First, the [layout middleware](#layout) wraps each response in the parts that every page shares: the container and the script tag. Your routes now only return what goes inside the container. Next, the `/hello` route returns a heading and the link.
 
-Note: As the comment suggests above, you should not put url parameters directly onto the page. This can lead to various attacks. Make sure to escape any data that you render on the page (react does this automatically for you!).
+A path variable can contain `<`, `"` and other HTML characters, because the router decodes it. Returning it unescaped lets a link like `/users/%3Cscript%3E...` run a script on your page. Escape any value from the request before you put it in HTML.
 
 Stop the server with Ctrl+C, run `node server.ts` again, and visit `http://localhost:3000/hello`. You should see the heading and the link. If you click the link now, the browser loads a whole new page, because the browser code doesn't exist yet.
 
@@ -898,7 +898,7 @@ Most pages on a site share the same outer HTML: the doctype, the `<head>`, the s
 
 #### Add a layout to every page
 
-`LayoutMiddleware.build` takes a function, called the **layout function**, and returns a middleware that you add to roads with `road.use`. After a route is complete and returns HTML, you can add your layout via the layout function.
+`LayoutMiddleware.build` takes a function, called the **layout function**, and returns a middleware that you add to roads with `road.use`. The middleware calls the layout function with the HTML that the route returned.
 
 Here's a road with one route and a layout.
 
@@ -958,7 +958,7 @@ router.addRoute('GET', '/', async function () {
 });
 ```
 
-Three things changed from the first example. First, Store Values is added before the layout. Next, the layout function takes `context` and reads the title. Finally, the route applies the title to the final HTML.
+Three things changed from the first example. First, Store Values is added before the layout. Next, the layout function takes `context` and reads the title. Finally, the route saves the title with `this.storeVal`. The layout function runs after the route returns, so it can read that title and put it in the `<title>` tag.
 
 #### Show errors inside the layout
 
@@ -998,7 +998,7 @@ function (error, context) {
 
 Some responses shouldn't be wrapped in an HTML layout. The layout middleware returns these responses as they are, without calling your layout function:
 
-- Redirects (any `3xx` status), including `304 Not Modified`. These responses must not have a body.
+- Responses with a `3xx` status. This covers redirects, where the browser follows the `location` header and doesn't show the body, and `304 Not Modified`, which must not have a body.
 - Responses with a `content-type` header other than `text/html`, such as `application/json`. A JSON response wrapped in HTML would no longer be valid JSON.
 
 A response without a `content-type` header is treated as HTML, so a route that returns a plain string gets the layout.
