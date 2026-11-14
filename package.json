@@ -1,6 +1,6 @@
 {
   "name": "roads",
-  "version": "9.0.0-beta.1",
+  "version": "9.0.0-beta.2",
   "author": {
     "name": "Aaron Hedges",
     "email": "aaron@dashron.com",
@@ -33,11 +33,13 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/express": "^5.0.6",
     "@types/node": "^22.20.4",
     "@typescript-eslint/eslint-plugin": "^8.71.0",
     "@typescript-eslint/parser": "^8.71.0",
     "@vitest/coverage-v8": "^5.0.3",
     "eslint": "^10.11.0",
+    "express": "^5.3.0",
     "jsdom": "^29.1.1",
     "typescript": "^6.0.3",
     "vitest": "^5.0.3"

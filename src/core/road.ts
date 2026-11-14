@@ -100,7 +100,8 @@ export default class Road {
 		// Servers can receive absolute urls. We reduce them to the path here so a middleware that checks the url
 		// 		and the router that matches it can't disagree about which path was requested.
 		// Header names are case-insensitive, so we lower-case them on the way in and on the way out. This lets
-		// 		middleware and connectors look headers up by their lower-case name
+		// 		middleware and connectors look headers up by their lower-case name.
+		// Each request gets its own context
 		return response_lib.wrap(this._request_chain.getChainStart()({}, method, toOriginForm(url), body,
 			headers ? normalizeHeaders(headers) : {}))
 			.then((response) => {

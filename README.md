@@ -1076,6 +1076,8 @@ This middleware looks at the Content-Type header and uses that information to at
 
 If the `content-type` header is not a valid media type, or the body can't be parsed, the middleware responds with a 400 and the request does not continue down the road.
 
+The 400 is a plain-text response with no `content-type` header, like the router's 405. A middleware added before this one can replace it with your app's own error format.
+
 Middleware added before this one still receives the string.
 
 ```typescript
@@ -1116,10 +1118,11 @@ Roads does not check that the request matches this structure, so validate anythi
 
 #### Parse Body Context
 
-`ParseBodyContext`
-When using TypeScript you can pass this when adding middleware or routes to see proper typing on `this`.
+When using TypeScript, pass `ParseBodyMiddleware.ParseBodyContext` as the first generic of `road.use` or `router.addRoute` to get proper typing on `this`.
 
-This context adds one variable, `rawBody`, which is the request body string exactly as it was received. This is useful when you need the original text, such as when checking a webhook signature.
+The context has one property, `rawBody`, which is the request body string exactly as it was received. Use `rawBody` when you need the original text, such as when checking a webhook signature. `rawBody` is `undefined` if the request had no body.
+
+The parse body middleware sets `rawBody`, so middleware added before it can't read `rawBody`.
 
 ### Remove trailing slash
 **Middleware to redirect URLs that end with a slash to the same URL without it**
@@ -1429,9 +1432,47 @@ app.listen(3000);
 | name          | type   | required | description                                                                                                  |
 | ------------- | ------ | -------- | ------------------------------------------------------------------------------------------------------------ |
 | road          | Road   | yes      | The road that handles each request                                                                           |
-| options.limit | number | no       | The largest request body, in bytes. Defaults to 100kb, the same as Express's body parsers. A larger body is passed to Express as an error with a status of 413, so Express responds with a 413 |
+| options.limit | number | no       | The largest request body, in bytes. Defaults to 100kb, the same as Express's body parsers. See [Request bodies over the limit](#request-bodies-over-the-limit) |
+| options.onBodyTooLarge | function | no | Builds the response for a request with a body over the limit. See [Request bodies over the limit](#request-bodies-over-the-limit) |
 
 When you mount the middleware on a path, Express removes that path from the url. With `app.use('/api', expressConnector(road))`, a request for `/api/posts` reaches the road as `/posts`.
+
+Errors thrown by your road, and errors reading the request body, are passed to Express with `next(err)`.
+
+### Request bodies over the limit
+
+When a request body is larger than `options.limit`, the connector does not keep it, and the request does not reach your road. The connector finds an oversized body in one of two ways:
+
+- If the `content-length` header is over the limit, the connector rejects the request without reading the body.
+- If the `content-length` header is missing or smaller than the real body, the connector counts the bytes as they arrive. Once the count passes the limit, the connector throws away what it has read and ignores the rest, so it never holds more than the limit in memory.
+
+By default, the connector passes an error with a `status` of 413 to Express with `next(err)`, and Express's error handling responds. This is also what Express's own body parsers do.
+
+To send your own response, pass an `onBodyTooLarge` function. The connector calls `onBodyTooLarge` with the Express request, and sends the response the function returns.
+
+```typescript
+import { expressConnector, RoadsResponse } from 'roads';
+
+app.use(expressConnector(road, {
+    onBodyTooLarge: (req) => {
+        console.warn(`${req.method} ${req.url} sent a request body over the limit`);
+
+        return new RoadsResponse(JSON.stringify({ error: 'Request body too large' }), 413, {
+            'content-type': 'application/json'
+        });
+    }
+}));
+```
+
+`onBodyTooLarge` can return any of these:
+
+- A [RoadsResponse](#roadsresponse), which is sent with its own status and headers.
+- A string, which is sent as the body of a 413 with no `content-type` header.
+- A promise that resolves to either one.
+
+If `onBodyTooLarge` throws, the error is passed to Express with `next(err)`.
+
+`onBodyTooLarge` runs outside the road, so no middleware has run and there is no [request context](#context). `req.headers` is available, but the body is not.
 
 ## RoadsPJAX(road: *Road*, containerElement: *HTMLElement*, window: *Window*)
 **A helper object to enable PJAX on your website using roads**
