@@ -89,6 +89,16 @@ export interface CSRFOptions {
 	 * 	so a token created before logging in will not work afterwards.
 	 */
 	getUserId?: (context: Context) => unknown;
+	/**
+	 * An object with a `log(key, data)` function, called every time a request fails validation.
+	 * 	By default failures are logged with `console.error`.
+	 */
+	logger?: { log: (key: string, data?: unknown) => void };
+	/**
+	 * Builds the response for a request that failed validation. `reason` describes which check failed,
+	 * 	and is meant for your logs, not your users. Defaults to a plain text 403.
+	 */
+	onFailure?: (reason: string, context: Context) => Promise<RoadsResponse | string> | RoadsResponse | string;
 }
 
 type CSRFMiddlewareContext = CSRFContext & CookieContext & Partial<StoreValsContext>;
@@ -179,7 +189,8 @@ function isSameOrigin (headers: IncomingHeaders, trustedOrigins: string[]): bool
  * 	the parse body middleware. It can only be used on the server. In the browser use `buildClientMiddleware`.
  *
  * Every POST, PUT, PATCH and DELETE request must come from this origin, and include a `csrf_token` body field
- * 	that matches the CSRF cookie, otherwise the request is rejected with a 403.
+ * 	that matches the CSRF cookie, otherwise the request is rejected with a 403. Use the `onFailure` option
+ * 	to send your own response.
  *
  * @param {CSRFOptions} options
  * @returns {Middleware} The middleware function. This value should be passed to road.use(fn);
@@ -190,6 +201,8 @@ export function build (options: CSRFOptions): Middleware<CSRFMiddlewareContext> 
 	const cookieName = options.cookieName ?? (insecureCookie ? CSRF_INSECURE_COOKIE_NAME : CSRF_COOKIE_NAME);
 	const trustedOrigins = options.trustedOrigins ?? [];
 	const expiresIn = options.expiresIn ?? DEFAULT_EXPIRY_SECONDS;
+	// Failures are always reported somewhere, because a silent failure hides both attacks and broken forms
+	const logger = options.logger ?? { log: (key: string, data?: unknown) => console.error(key, data) };
 
 	if (typeof document !== 'undefined') {
 		throw new Error('The CSRF middleware can not be built in the browser, because your signing secret ' +
@@ -278,60 +291,74 @@ export function build (options: CSRFOptions): Middleware<CSRFMiddlewareContext> 
 			return element;
 		};
 
-		this.isValidCSRFToken = () => {
-			const fail = (reason: string) => {
-				console.error(`CSRF validation failed: ${reason}`, { path: url, method });
-				return false;
-			};
-
+		/**
+		 * Returns the reason this request fails validation, or undefined if it is valid
+		 */
+		const findFailure = (): string | undefined => {
 			if (!isSameOrigin(headers, trustedOrigins)) {
-				return fail('request came from another origin');
+				return 'request came from another origin';
 			}
 
 			const bodyToken: unknown = body && typeof body === 'object' ?
 				(body as Record<string, unknown>)[CSRF_BODY_NAME] : undefined;
 
 			if (Array.isArray(bodyToken)) {
-				return fail('more than one CSRF token found in the request body');
+				return 'more than one CSRF token found in the request body';
 			}
 
 			if (typeof bodyToken !== 'string' || !bodyToken) {
-				return fail('no CSRF token found in the request body');
+				return 'no CSRF token found in the request body';
 			}
 
 			const cookieToken = this.getCookies()[cookieName];
 
 			if (!cookieToken) {
-				return fail('missing cookie');
+				return 'missing cookie';
 			}
 
 			// The form must send back the exact token that is in the cookie. Checking the signature alone
 			//		is not enough, because anyone can get a validly signed token of their own from the site
 			if (bodyToken !== cookieToken) {
-				return fail('body token does not match the cookie');
+				return 'body token does not match the cookie';
 			}
 
 			const payload = readToken(cookieToken);
 
 			if (!payload) {
-				return fail('token is expired or has a bad signature');
+				return 'token is expired or has a bad signature';
 			}
 
 			// we don't ensure there's a user ID here because we might use csrf on logged out pages
 			if (payload.userId !== userId) {
-				return fail('token belongs to a different user');
+				return 'token belongs to a different user';
 			}
 
-			return true;
+			return undefined;
 		};
 
-		if ((method === 'POST' || method === 'PUT' || method === 'DELETE' || method === 'PATCH') &&
-			!this.isValidCSRFToken()) {
-			return new RoadsResponse(
-				// eslint-disable-next-line max-len
-				'You\'ve encountered an unexpected error. Please let us know you encountered this issue by contacting support.',
-				403
-			);
+		/**
+		 * Logs the failure, if there is one, before handing it back
+		 */
+		const validate = (): string | undefined => {
+			const reason = findFailure();
+
+			if (reason) {
+				logger.log(`CSRF validation failed: ${reason}`, { path: url, method });
+			}
+
+			return reason;
+		};
+
+		this.isValidCSRFToken = () => {
+			return validate() === undefined;
+		};
+
+		if (method === 'POST' || method === 'PUT' || method === 'DELETE' || method === 'PATCH') {
+			const reason = validate();
+
+			if (reason) {
+				return options.onFailure ? options.onFailure(reason, this) : new RoadsResponse('Forbidden', 403);
+			}
 		}
 
 		return next();

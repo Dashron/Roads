@@ -65,8 +65,10 @@
 - `MethodOverrideMiddleware` and `CSRFMiddleware`.
 - `LayoutMiddleware` wraps each HTML response in a layout, such as a full HTML page. Redirects, `304` responses and responses with a non-HTML `content-type` are sent without the layout. An optional `onError` function turns errors thrown later in the request chain into an error page inside the layout.
 - `expressConnector(road)` creates an Express middleware that sends each request through a road.
+  - A request body over `options.limit` (100kb by default) is not kept, and the road does not run. The connector passes an error with a status of 413 to Express with `next(err)`.
+  - To send your own response for an oversized body, pass `options.onBodyTooLarge`. The connector calls it with the Express request and sends the `RoadsResponse` or string it returns.
 - `next()` accepts `{ method, body }` to change the method or body that the rest of the chain receives.
-- The `NextOverrides` and `ParsedURL` types are exported.
+- The `NextOverrides`, `ParsedURL`, `IncomingHeaders` and `OutgoingHeaders` types are exported.
 - `RoadsPJAX.unregister()`. `registerAdditionalElement` accepts any `HTMLElement`, handles forms as well as links, and can be called after `register`.
 - The package includes its TypeScript sources, so "go to definition" opens the source instead of a declaration file.
 

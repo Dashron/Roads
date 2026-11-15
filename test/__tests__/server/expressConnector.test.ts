@@ -1,4 +1,4 @@
-import { Road, RoadsResponse, expressConnector } from '../../../src/index.js';
+import { ParseBodyMiddleware, Road, RoadsResponse, expressConnector } from '../../../src/index.js';
 
 import { PassThrough } from 'node:stream';
 import { describe, expect, test, vi } from 'vitest';
@@ -121,29 +121,128 @@ describe('expressConnector tests', () => {
 			expect(res.send).toHaveBeenCalledWith('no body');
 		});
 
-		test('a body over the limit is a 413 error', async () => {
-			const req = buildStreamReq();
-			const res = buildRes();
-			const next = vi.fn();
-			const done = expressConnector(echoRoad(), { limit: 5 })(req, res, next);
+		describe('a body over the limit', () => {
+			// Records whether the road ran
+			const buildTooLargeRoad = () => {
+				const log: unknown[] = [];
+				const road = new Road();
 
-			req.write('abc');
-			req.write('def');
-			await done;
+				road.use(ParseBodyMiddleware.middleware);
+				road.use(async function (method, path, body) {
+					log.push(body);
+					return 'route ran';
+				});
 
-			expect(next).toHaveBeenCalledWith(expect.objectContaining({ status: 413, statusCode: 413 }));
-			expect(res.send).not.toHaveBeenCalled();
-		});
+				return { road, log };
+			};
 
-		test('a content-length over the limit is a 413 error without reading the body', async () => {
-			const req = buildStreamReq({ 'content-length': '6' });
-			const res = buildRes();
-			const next = vi.fn();
+			test('found while reading the stream, the road does not run and Express gets a 413 error', async () => {
+				const { road, log } = buildTooLargeRoad();
+				const req = buildStreamReq();
+				const res = buildRes();
+				const next = vi.fn();
+				const done = expressConnector(road, { limit: 5 })(req, res, next);
 
-			await expressConnector(echoRoad(), { limit: 5 })(req, res, next);
+				req.write('abc');
+				req.write('def');
+				await done;
 
-			expect(next).toHaveBeenCalledWith(expect.objectContaining({ status: 413 }));
-			expect(req.readableDidRead).toBe(false);
+				expect(log).toEqual([]);
+				expect(next).toHaveBeenCalledWith(expect.objectContaining({ status: 413, statusCode: 413 }));
+				expect(res.send).not.toHaveBeenCalled();
+				// The stream is not destroyed, so the connection can still send the response. The rest of the
+				// 	body is read and thrown away
+				expect(req.destroyed).toBe(false);
+				expect(req.readableFlowing).toBe(true);
+				expect(req.listenerCount('data')).toBe(0);
+			});
+
+			test('declared by content-length, the body is not read and Express gets a 413 error', async () => {
+				const { road, log } = buildTooLargeRoad();
+				const req = buildStreamReq({ 'content-length': '6' });
+				const res = buildRes();
+				const next = vi.fn();
+
+				await expressConnector(road, { limit: 5 })(req, res, next);
+
+				expect(log).toEqual([]);
+				expect(next).toHaveBeenCalledWith(expect.objectContaining({ status: 413, statusCode: 413 }));
+				expect(res.send).not.toHaveBeenCalled();
+				expect(req.readableDidRead).toBe(false);
+			});
+
+			test('a content-length that understates the body is caught while reading the stream', async () => {
+				const { road, log } = buildTooLargeRoad();
+				const req = buildStreamReq({ 'content-length': '3' });
+				const next = vi.fn();
+				const done = expressConnector(road, { limit: 5 })(req, buildRes(), next);
+
+				req.write('abcdef');
+				await done;
+
+				expect(log).toEqual([]);
+				expect(next).toHaveBeenCalledWith(expect.objectContaining({ status: 413 }));
+			});
+
+			test('onBodyTooLarge receives the request, and its response is sent', async () => {
+				const { road, log } = buildTooLargeRoad();
+				const req = buildStreamReq({ 'content-length': '6' });
+				const res = buildRes();
+				const next = vi.fn();
+				const onBodyTooLarge = vi.fn(async () => new RoadsResponse('{"error":"too large"}', 413, {
+					'content-type': 'application/json'
+				}));
+
+				await expressConnector(road, { limit: 5, onBodyTooLarge })(req, res, next);
+
+				expect(onBodyTooLarge).toHaveBeenCalledWith(req);
+				expect(log).toEqual([]);
+				expect(next).not.toHaveBeenCalled();
+				expect(res.status).toHaveBeenCalledWith(413);
+				expect(res.header).toHaveBeenCalledWith('content-type', 'application/json');
+				expect(res.send).toHaveBeenCalledWith('{"error":"too large"}');
+			});
+
+			test('a string from onBodyTooLarge is sent with a status of 413', async () => {
+				const { road } = buildTooLargeRoad();
+				const res = buildRes();
+				const done = expressConnector(road, { limit: 5, onBodyTooLarge: () => 'Too much' })(
+					buildStreamReq({ 'content-length': '6' }), res, vi.fn());
+				await done;
+
+				expect(res.status).toHaveBeenCalledWith(413);
+				expect(res.header).not.toHaveBeenCalled();
+				expect(res.send).toHaveBeenCalledWith('Too much');
+			});
+
+			test('an error thrown by onBodyTooLarge is passed to Express', async () => {
+				const { road } = buildTooLargeRoad();
+				const res = buildRes();
+				const next = vi.fn();
+				const error = new Error('hook failed');
+
+				await expressConnector(road, { limit: 5, onBodyTooLarge: () => {
+					throw error;
+				} })(buildStreamReq({ 'content-length': '6' }), res, next);
+
+				expect(next).toHaveBeenCalledWith(error);
+				expect(res.send).not.toHaveBeenCalled();
+			});
+
+			test('onBodyTooLarge is not called for a body within the limit', async () => {
+				const { road, log } = buildTooLargeRoad();
+				const onBodyTooLarge = vi.fn(() => 'Too much');
+				const res = buildRes();
+				const req = buildStreamReq();
+				const done = expressConnector(road, { limit: 5, onBodyTooLarge })(req, res, vi.fn());
+
+				req.end('abc');
+				await done;
+
+				expect(onBodyTooLarge).not.toHaveBeenCalled();
+				expect(log).toEqual(['abc']);
+				expect(res.send).toHaveBeenCalledWith('route ran');
+			});
 		});
 
 		test('a body at the limit is read', async () => {

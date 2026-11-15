@@ -837,6 +837,41 @@ road.use(CSRFMiddleware.build({
 | trustedOrigins | string[]                          | no       | Other origins that may send forms to this one, e.g. `['https://www.example.com']`. Also needed if a proxy changes the `Host` header. These requests still need a valid token. |
 | expiresIn      | number                            | no       | How long a token is valid for, in seconds. Defaults to one day. Roads adds an `exp` field to the token data.  |
 | getUserId      | function(context: object)         | no       | Returns the ID of the logged in user. A token created for one user (or while logged out) won't work for another. |
+| logger         | object                            | no       | An object with a `log(key, data)` function, called every time a request fails validation. By default failures are logged with `console.error`. |
+| onFailure      | function(reason: string, context: object): RoadsResponse \| string | no | Builds the response for a request that failed validation. Can return a promise. Defaults to a plain-text 403 with no `content-type`. |
+
+#### Routes that don't need CSRF protection
+
+The middleware checks every `POST`, `PUT`, `PATCH` and `DELETE` request on its road, and there is no option to skip some of them. If part of your app doesn't need the check, such as an API, give it a road of its own. 
+
+Build one road for your site and one for your API. If you're using the express connector it might look like this:
+
+```typescript
+import express from 'express';
+import { expressConnector, Road } from 'roads';
+
+// Cookies, parse body, CSRF, method override and your site's router
+const siteRoad = new Road();
+// Parse body and your API's router. No cookies, CSRF or method override
+const apiRoad = new Road();
+
+const app = express();
+app.use('/api', expressConnector(apiRoad));
+app.use(expressConnector(siteRoad));
+```
+
+#### Failed requests
+
+By default a request that fails validation gets a plain-text 403, and the failure is logged with `console.error`. Pass an object to `logger` to send the failures to your own logging tool, and `onFailure` to send your own response.
+
+```typescript
+road.use(CSRFMiddleware.build({
+    sign,
+    verify,
+    logger: { log: (key, data) => myLogger.warn(key, data) },
+    onFailure: () => new RoadsResponse('Your session has expired. Go back, reload the page and try again.', 403)
+}));
+```
 
 #### Safety checks
 
@@ -886,7 +921,7 @@ router.addRoute<CSRFMiddleware.CSRFContext>('GET', '/posts/new', async function 
 Returns the token on its own, creating it and its cookie if the user doesn't have a usable one yet. `data` is added to the token only when a new one is created.
 
 ##### isValidCSRFToken()
-Returns true if the request came from your own origin, and the request body's token matches the cookie, has a valid signature, has not expired and belongs to the current user. The middleware calls this for you on unsafe methods, and logs the reason for each failure with `console.error`. The browser version always returns true.
+Returns true if the request came from your own origin, and the request body's token matches the cookie, has a valid signature, has not expired and belongs to the current user. The middleware calls this for you on unsafe methods. Each failure is sent to the `logger` option, including failures from your own calls. The browser version always returns true.
 
 ##### csrfProtected
 Always `true` once this middleware has run. Other middleware can check this to require CSRF protection.
@@ -1076,7 +1111,11 @@ This middleware looks at the Content-Type header and uses that information to at
 
 If the `content-type` header is not a valid media type, or the body can't be parsed, the middleware responds with a 400 and the request does not continue down the road.
 
+The 400 is a plain-text response with no `content-type` header, like the router's 405. A middleware added before this one can replace it with your app's own error format.
+
 Middleware added before this one still receives the string.
+
+If the middleware receives a body that is not a string, it logs a warning with `console.warn`. This usually means it was added to the road more than once, such as directly and with `attachCommonMiddleware`, and makes every JSON request fail with a 400. If you want an object passed in for some reason, build the middleware yourself with `ParseBodyMiddleware.build({ warnOnNonStringBody: false })` and add that in place of `ParseBodyMiddleware.middleware`.
 
 ```typescript
 import { ParseBodyMiddleware, Road } from 'roads';
@@ -1116,10 +1155,11 @@ Roads does not check that the request matches this structure, so validate anythi
 
 #### Parse Body Context
 
-`ParseBodyContext`
-When using TypeScript you can pass this when adding middleware or routes to see proper typing on `this`.
+When using TypeScript, pass `ParseBodyMiddleware.ParseBodyContext` as the first generic of `road.use` or `router.addRoute` to get proper typing on `this`.
 
-This context adds one variable, `rawBody`, which is the request body string exactly as it was received. This is useful when you need the original text, such as when checking a webhook signature.
+The context has one property, `rawBody`, which is the request body string exactly as it was received. Use `rawBody` when you need the original text, such as when checking a webhook signature. `rawBody` is `undefined` if the request had no body.
+
+The parse body middleware sets `rawBody`, so middleware added before it can't read `rawBody`.
 
 ### Remove trailing slash
 **Middleware to redirect URLs that end with a slash to the same URL without it**
@@ -1429,9 +1469,47 @@ app.listen(3000);
 | name          | type   | required | description                                                                                                  |
 | ------------- | ------ | -------- | ------------------------------------------------------------------------------------------------------------ |
 | road          | Road   | yes      | The road that handles each request                                                                           |
-| options.limit | number | no       | The largest request body, in bytes. Defaults to 100kb, the same as Express's body parsers. A larger body is passed to Express as an error with a status of 413, so Express responds with a 413 |
+| options.limit | number | no       | The largest request body, in bytes. Defaults to 100kb, the same as Express's body parsers. See [Request bodies over the limit](#request-bodies-over-the-limit) |
+| options.onBodyTooLarge | function | no | Builds the response for a request with a body over the limit. See [Request bodies over the limit](#request-bodies-over-the-limit) |
 
 When you mount the middleware on a path, Express removes that path from the url. With `app.use('/api', expressConnector(road))`, a request for `/api/posts` reaches the road as `/posts`.
+
+Errors thrown by your road, and errors reading the request body, are passed to Express with `next(err)`.
+
+### Request bodies over the limit
+
+When a request body is larger than `options.limit`, the connector does not keep it, and the request does not reach your road. The connector finds an oversized body in one of two ways:
+
+- If the `content-length` header is over the limit, the connector rejects the request without reading the body.
+- If the `content-length` header is missing or smaller than the real body, the connector counts the bytes as they arrive. Once the count passes the limit, the connector throws away what it has read and ignores the rest, so it never holds more than the limit in memory.
+
+By default, the connector passes an error with a `status` of 413 to Express with `next(err)`, and Express's error handling responds. This is also what Express's own body parsers do.
+
+To send your own response, pass an `onBodyTooLarge` function. The connector calls `onBodyTooLarge` with the Express request, and sends the response the function returns.
+
+```typescript
+import { expressConnector, RoadsResponse } from 'roads';
+
+app.use(expressConnector(road, {
+    onBodyTooLarge: (req) => {
+        console.warn(`${req.method} ${req.url} sent a request body over the limit`);
+
+        return new RoadsResponse(JSON.stringify({ error: 'Request body too large' }), 413, {
+            'content-type': 'application/json'
+        });
+    }
+}));
+```
+
+`onBodyTooLarge` can return any of these:
+
+- A [RoadsResponse](#roadsresponse), which is sent with its own status and headers.
+- A string, which is sent as the body of a 413 with no `content-type` header.
+- A promise that resolves to either one.
+
+If `onBodyTooLarge` throws, the error is passed to Express with `next(err)`.
+
+`onBodyTooLarge` runs outside the road, so no middleware has run and there is no [request context](#context). `req.headers` is available, but the body is not.
 
 ## RoadsPJAX(road: *Road*, containerElement: *HTMLElement*, window: *Window*)
 **A helper object to enable PJAX on your website using roads**

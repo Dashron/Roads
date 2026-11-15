@@ -1,4 +1,4 @@
-import { middleware, ParseBodyContext } from '../../../src/middleware/parseBody.js';
+import { build, middleware, ParseBodyContext } from '../../../src/middleware/parseBody.js';
 
 import { Context, IncomingHeaders, Middleware as MiddlewareType } from '../../../src/core/road.js';
 import { NextOverrides } from '../../../src/core/requestChain.js';
@@ -153,6 +153,54 @@ describe('Parse Request Body tests', () => {
 			headers: {},
 			body: 'Invalid content-type header',
 		});
+	});
+
+	test('test a road with the middleware added twice warns and responds with a 400 for json', async () => {
+		expect.assertions(3);
+		const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => { /* silence */ });
+
+		const road = new Road();
+		road.use(middleware);
+		road.use(middleware);
+		road.use(async () => 'hit');
+
+		const response = await road.request('POST', '/users', '{"hello": "there"}', {'content-type': 'application/json'});
+
+		expect(response.status).toEqual(400);
+		expect(consoleWarn).toHaveBeenCalledTimes(1);
+		expect(consoleWarn).toHaveBeenCalledWith(
+			expect.stringContaining('added to the road more than once'), { path: '/users', method: 'POST' }
+		);
+		consoleWarn.mockRestore();
+	});
+
+	test('test the warning can be turned off', async () => {
+		expect.assertions(2);
+		const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => { /* silence */ });
+
+		const quietMiddleware = build({ warnOnNonStringBody: false });
+		const road = new Road();
+		road.use(quietMiddleware);
+		road.use(quietMiddleware);
+		road.use(async () => 'hit');
+
+		const response = await road.request('POST', '/users', '{"hello": "there"}', {'content-type': 'application/json'});
+
+		expect(response.status).toEqual(400);
+		expect(consoleWarn).not.toHaveBeenCalled();
+		consoleWarn.mockRestore();
+	});
+
+	test('test string and missing bodies do not warn', async () => {
+		expect.assertions(1);
+		const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => { /* silence */ });
+
+		await callMiddleware('{"hello": "there"}', {'content-type': 'application/json'}).response;
+		await callMiddleware('', {'content-type': 'application/json'}).response;
+		await callMiddleware(undefined, {}).response;
+
+		expect(consoleWarn).not.toHaveBeenCalled();
+		consoleWarn.mockRestore();
 	});
 
 	test('test +json content type is parsed as json', () => {
