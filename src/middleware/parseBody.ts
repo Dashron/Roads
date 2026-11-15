@@ -87,14 +87,42 @@ function parseRequestBody (body: string | undefined, contentType?: string): unkn
 	return body;
 }
 
+export interface ParseBodyOptions {
+	/**
+	 * The middleware logs a warning with `console.warn` when it receives a body that is not a string, which
+	 * 	usually means it was added to the road more than once. Set this to false to turn the warning off.
+	 * 	Defaults to true.
+	 */
+	warnOnNonStringBody?: boolean;
+}
+
 /**
- * Attempts the parse the request body into a useful object. Every middleware and route after this one
- * 	receives the parsed body as its `body` parameter. The original string is kept on the context as `rawBody`.
+ * Creates the parse body middleware with your own options. Use `middleware` if you don't need to change any.
+ *
+ * @param {ParseBodyOptions} [options]
+ * @returns {Middleware} The middleware function. This value should be passed to road.use(fn);
  */
-export const middleware: Middleware<ParseBodyContext, string | undefined> = async function (
-	method, url, body, headers, next
-) {
+export function build (options: ParseBodyOptions = {}): Middleware<ParseBodyContext, string | undefined> {
+	const warnOnNonStringBody = options.warnOnNonStringBody !== false;
+
+	return async function parseBodyMiddleware (method, url, body, headers, next) {
+		return parseBody.call(this, warnOnNonStringBody, method, url, body, headers, next);
+	};
+}
+
+async function parseBody (
+	this: ParseBodyContext, warnOnNonStringBody: boolean,
+	...[method, url, body, headers, next]: Parameters<Middleware<ParseBodyContext, string | undefined>>
+): Promise<RoadsResponse | string> {
 	let parsedBody: unknown;
+
+	// The road always starts with a string body, so anything else means an earlier middleware already replaced it.
+	//		That is nearly always this middleware being added twice, which makes JSON requests fail below
+	if (warnOnNonStringBody && body !== undefined && typeof (body as unknown) !== 'string') {
+		console.warn('The parse body middleware received a body that is not a string. This usually means it was ' +
+			'added to the road more than once. attachCommonMiddleware already adds it, so remove any extra ' +
+			'road.use(ParseBodyMiddleware.middleware)', { path: url, method });
+	}
 
 	this.rawBody = body;
 
@@ -108,4 +136,12 @@ export const middleware: Middleware<ParseBodyContext, string | undefined> = asyn
 		return new RoadsResponse('Invalid request body', 400);
 	}
 	return next({ body: parsedBody });
-};
+}
+
+/**
+ * Attempts the parse the request body into a useful object. Every middleware and route after this one
+ * 	receives the parsed body as its `body` parameter. The original string is kept on the context as `rawBody`.
+ *
+ * This is the middleware with its default options. Use `build` to change them.
+ */
+export const middleware: Middleware<ParseBodyContext, string | undefined> = build();

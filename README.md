@@ -837,6 +837,41 @@ road.use(CSRFMiddleware.build({
 | trustedOrigins | string[]                          | no       | Other origins that may send forms to this one, e.g. `['https://www.example.com']`. Also needed if a proxy changes the `Host` header. These requests still need a valid token. |
 | expiresIn      | number                            | no       | How long a token is valid for, in seconds. Defaults to one day. Roads adds an `exp` field to the token data.  |
 | getUserId      | function(context: object)         | no       | Returns the ID of the logged in user. A token created for one user (or while logged out) won't work for another. |
+| logger         | object                            | no       | An object with a `log(key, data)` function, called every time a request fails validation. By default failures are logged with `console.error`. |
+| onFailure      | function(reason: string, context: object): RoadsResponse \| string | no | Builds the response for a request that failed validation. Can return a promise. Defaults to a plain-text 403 with no `content-type`. |
+
+#### Routes that don't need CSRF protection
+
+The middleware checks every `POST`, `PUT`, `PATCH` and `DELETE` request on its road, and there is no option to skip some of them. If part of your app doesn't need the check, such as an API, give it a road of its own. 
+
+Build one road for your site and one for your API. If you're using the express connector it might look like this:
+
+```typescript
+import express from 'express';
+import { expressConnector, Road } from 'roads';
+
+// Cookies, parse body, CSRF, method override and your site's router
+const siteRoad = new Road();
+// Parse body and your API's router. No cookies, CSRF or method override
+const apiRoad = new Road();
+
+const app = express();
+app.use('/api', expressConnector(apiRoad));
+app.use(expressConnector(siteRoad));
+```
+
+#### Failed requests
+
+By default a request that fails validation gets a plain-text 403, and the failure is logged with `console.error`. Pass an object to `logger` to send the failures to your own logging tool, and `onFailure` to send your own response.
+
+```typescript
+road.use(CSRFMiddleware.build({
+    sign,
+    verify,
+    logger: { log: (key, data) => myLogger.warn(key, data) },
+    onFailure: () => new RoadsResponse('Your session has expired. Go back, reload the page and try again.', 403)
+}));
+```
 
 #### Safety checks
 
@@ -886,7 +921,7 @@ router.addRoute<CSRFMiddleware.CSRFContext>('GET', '/posts/new', async function 
 Returns the token on its own, creating it and its cookie if the user doesn't have a usable one yet. `data` is added to the token only when a new one is created.
 
 ##### isValidCSRFToken()
-Returns true if the request came from your own origin, and the request body's token matches the cookie, has a valid signature, has not expired and belongs to the current user. The middleware calls this for you on unsafe methods, and logs the reason for each failure with `console.error`. The browser version always returns true.
+Returns true if the request came from your own origin, and the request body's token matches the cookie, has a valid signature, has not expired and belongs to the current user. The middleware calls this for you on unsafe methods. Each failure is sent to the `logger` option, including failures from your own calls. The browser version always returns true.
 
 ##### csrfProtected
 Always `true` once this middleware has run. Other middleware can check this to require CSRF protection.
@@ -1079,6 +1114,8 @@ If the `content-type` header is not a valid media type, or the body can't be par
 The 400 is a plain-text response with no `content-type` header, like the router's 405. A middleware added before this one can replace it with your app's own error format.
 
 Middleware added before this one still receives the string.
+
+If the middleware receives a body that is not a string, it logs a warning with `console.warn`. This usually means it was added to the road more than once, such as directly and with `attachCommonMiddleware`, and makes every JSON request fail with a 400. If you want an object passed in for some reason, build the middleware yourself with `ParseBodyMiddleware.build({ warnOnNonStringBody: false })` and add that in place of `ParseBodyMiddleware.middleware`.
 
 ```typescript
 import { ParseBodyMiddleware, Road } from 'roads';

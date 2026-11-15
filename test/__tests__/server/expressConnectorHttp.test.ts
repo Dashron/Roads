@@ -1,9 +1,12 @@
-import { ParseBodyMiddleware, Road, expressConnector } from '../../../src/index.js';
+import {
+	CookieMiddleware, CSRFMiddleware, ParseBodyMiddleware, Road, expressConnector
+} from '../../../src/index.js';
+import { sign, verify } from '../../resources/fakeSigner.js';
 
 import express from 'express';
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
 const LIMIT = 1000;
 
@@ -112,6 +115,45 @@ describe('expressConnector over HTTP', () => {
 			expect(routeBodies).toEqual(['hello']);
 		} finally {
 			agent.destroy();
+		}
+	});
+
+	test('an API road mounted on its own path skips the CSRF check that the site road enforces', async () => {
+		// Failed validations are logged, which we don't need to see in the test output
+		const consoleError = vi.spyOn(console, 'error').mockImplementation(() => { /* silence */ });
+
+		const siteRoad = new Road();
+		siteRoad.use(CookieMiddleware.serverMiddleware);
+		siteRoad.use(ParseBodyMiddleware.middleware);
+		siteRoad.use(CSRFMiddleware.build({ sign, verify }));
+		siteRoad.use(async (method, path) => `site ${method} ${path}`);
+
+		const apiRoad = new Road();
+		apiRoad.use(ParseBodyMiddleware.middleware);
+		apiRoad.use(async (method, path) => `api ${method} ${path}`);
+
+		const app = express();
+		app.use('/api', expressConnector(apiRoad));
+		app.use(expressConnector(siteRoad));
+
+		const listening = app.listen(0);
+		server = listening;
+		await new Promise((resolve) => listening.once('listening', resolve));
+		const origin = `http://localhost:${(listening.address() as AddressInfo).port}`;
+
+		try {
+			// The API road never sees the /api prefix, and has no CSRF middleware to reject the request
+			const apiResponse = await fetch(`${origin}/api/posts`, { method: 'POST' });
+			expect(apiResponse.status).toEqual(200);
+			expect(await apiResponse.text()).toEqual('api POST /posts');
+
+			const siteResponse = await fetch(`${origin}/posts`, { method: 'POST' });
+			expect(siteResponse.status).toEqual(403);
+			expect(await siteResponse.text()).toEqual('Forbidden');
+
+			expect(await (await fetch(`${origin}/posts`)).text()).toEqual('site GET /posts');
+		} finally {
+			consoleError.mockRestore();
 		}
 	});
 });

@@ -434,6 +434,98 @@ describe('csrf tests', () => {
 		expect((await post(road, token, token, { ...trusted, origin: 'https://blog.example.com' })).status).toEqual(403);
 	});
 
+	test('a rejected request gets a plain 403 and is logged with console.error by default', async () => {
+		expect.assertions(2);
+
+		const road = buildRoad(() => 'hit');
+
+		expect(await post(road)).toEqual(new RoadsResponse('Forbidden', 403));
+		expect(console.error).toHaveBeenCalledExactlyOnceWith(
+			'CSRF validation failed: no CSRF token found in the request body', { path: '/', method: 'POST' }
+		);
+	});
+
+	test('a custom logger replaces console.error', async () => {
+		expect.assertions(2);
+
+		const log = vi.fn();
+		const road = buildRoad(() => 'hit', { logger: { log } });
+
+		await post(road);
+
+		expect(log).toHaveBeenCalledTimes(1);
+		expect(console.error).not.toHaveBeenCalled();
+	});
+
+	test('the logger is told why a request was rejected', async () => {
+		expect.assertions(2);
+
+		const log = vi.fn();
+		const road = buildRoad(() => 'hit', { logger: { log } });
+
+		await post(road, undefined, sign({ exp: secondsFromNow(60) }));
+
+		expect(log).toHaveBeenCalledTimes(1);
+		expect(log).toHaveBeenCalledWith(
+			'CSRF validation failed: no CSRF token found in the request body', { path: '/', method: 'POST' }
+		);
+	});
+
+	test('the logger is not called for valid requests', async () => {
+		expect.assertions(2);
+
+		const log = vi.fn();
+		const token = sign({ exp: secondsFromNow(60) });
+		const road = buildRoad(() => 'hit', { logger: { log } });
+
+		expect((await post(road, token, token)).body).toEqual('hit');
+		expect(log).not.toHaveBeenCalled();
+	});
+
+	test('the logger is called when a route calls isValidCSRFToken itself', async () => {
+		expect.assertions(2);
+
+		const log = vi.fn();
+		const road = buildRoad(function () {
+			return String(this.isValidCSRFToken());
+		}, { logger: { log } });
+
+		expect((await road.request('GET', '/')).body).toEqual('false');
+		expect(log).toHaveBeenCalledTimes(1);
+	});
+
+	test.each([
+		['a response', (reason: string) => new RoadsResponse(`custom: ${reason}`, 419)],
+		['a promise', async (reason: string) => new RoadsResponse(`custom: ${reason}`, 419)]
+	])('onFailure builds the rejection from %s', async (description, onFailure) => {
+		expect.assertions(1);
+
+		const road = buildRoad(() => 'hit', { onFailure });
+
+		expect(await post(road)).toEqual(new RoadsResponse('custom: no CSRF token found in the request body', 419));
+	});
+
+	test('onFailure receives the request context and can return a string', async () => {
+		expect.assertions(1);
+
+		const road = buildRoad(() => 'hit', {
+			onFailure: (reason, context) => `protected: ${context.csrfProtected}`
+		});
+
+		expect((await post(road)).body).toEqual('protected: true');
+	});
+
+	test('onFailure is not called for valid requests', async () => {
+		expect.assertions(2);
+
+		const onFailure = vi.fn(() => 'failed');
+		const token = sign({ exp: secondsFromNow(60) });
+		const road = buildRoad(() => 'hit', { onFailure });
+
+		expect((await post(road, token, token)).body).toEqual('hit');
+		expect(onFailure).not.toHaveBeenCalled();
+	});
+
 	describe('client middleware', () => {
 		function buildClientRoad (cookies: string, cookieName?: string) {
 			const road = new Road();
