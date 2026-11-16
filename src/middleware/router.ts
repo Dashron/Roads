@@ -7,11 +7,11 @@
  * 	It allows you to easily attach functionality to HTTP methods and paths.
  */
 
-import { IncomingHeaders } from '../core/road.js';
 import Road, {Context} from '../core/road.js';
 import RoadsResponse from '../core/response.js';
 import { NextCallback, RequestChain } from '../core/requestChain.js';
 import { ParsedURL, parseUrl } from '../util/url.js';
+import type { RoadsHeaders } from '../util/headers.js';
 
 
 /**
@@ -20,7 +20,7 @@ import { ParsedURL, parseUrl } from '../util/url.js';
  */
 export interface Route<ContextType extends Context, BodyType = unknown> {
 	(this: ContextType, method: string, path: RouterURL, body: BodyType,
-		headers: IncomingHeaders, next: NextCallback): Promise<RoadsResponse | string>
+		headers: RoadsHeaders, next: NextCallback): Promise<RoadsResponse | string>
 }
 
 interface RouteDetails {
@@ -195,7 +195,7 @@ export class Router<RouterContextType extends Context> {
 	 */
 	protected async _middleware (
 		this: Context, routes: RouteDetails[], request_method: string, request_url: string, request_body: unknown,
-		request_headers: IncomingHeaders, next: NextCallback
+		request_headers: RoadsHeaders, next: NextCallback
 	): Promise<RoadsResponse | string> {
 
 		const parsed_url: RouterURL = parseUrl(request_url);
@@ -272,7 +272,7 @@ export class Router<RouterContextType extends Context> {
  */
 function runRoute (
 	this: Context, route: RouteDetails, args: Record<string, string | number>, parsed_url: RouterURL,
-	request_method: string, request_body: unknown, request_headers: IncomingHeaders, next: NextCallback
+	request_method: string, request_body: unknown, request_headers: RoadsHeaders, next: NextCallback
 ): Promise<RoadsResponse | string> {
 	if (Object.keys(args).length > 0) {
 		parsed_url.args = args;

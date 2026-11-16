@@ -13,8 +13,8 @@ attachCommonMiddleware(road);
 
 // Wrap each response in a full page, but only on the server, because the browser already has the page
 if (typeof window === 'undefined') {
-    road.use(LayoutMiddleware.build(function (body) {
-        return `<!doctype html><body><div id="container">${body}</div><script src="/client.js"></script></body>`;
+    road.use(LayoutMiddleware.build(function (response) {
+        return `<!doctype html><body><div id="container">${response.body}</div><script src="/client.js"></script></body>`;
     }));
 }
 
@@ -25,6 +25,8 @@ router.addRoute('GET', '/hello', async function (method, url, body, headers, nex
 });
 
 router.addRoute('GET', '/users/$name', async function (method, url, body, headers, next) {
+    // CAREFUL: This isn't safe! The name comes from the request, and nothing escapes it.
+    //   A real site should build its HTML with a template engine that escapes values, such as React.
     return `Hello, ${url.args?.name}!`;
 });
 

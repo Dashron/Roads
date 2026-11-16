@@ -10,10 +10,8 @@
 import * as response_lib from './response.js';
 import RoadsResponse from './response.js';
 import { NextCallback, RequestChain } from './requestChain.js';
-import { normalizeHeaders } from '../util/headers.js';
+import { caseInsensitiveHeaders, RoadsHeaders } from '../util/headers.js';
 import { toOriginForm } from '../util/url.js';
-
-export interface IncomingHeaders extends Record<string, string | Array<string> | undefined> {}
 
 /**
  * `BodyType` is the type of the request body this middleware receives. It starts out as a string (or undefined),
@@ -22,7 +20,7 @@ export interface IncomingHeaders extends Record<string, string | Array<string> |
  */
 export interface Middleware<MiddlewareContext extends Context, BodyType = unknown> {
 	(this: MiddlewareContext, method: string, path: string,
-		body: BodyType, headers: IncomingHeaders,
+		body: BodyType, headers: RoadsHeaders,
 		next: NextCallback): Promise<RoadsResponse | string>
 }
 
@@ -96,17 +94,12 @@ export default class Road {
 	 * @param {object} [headers] - HTTP request headers
 	 * @returns {Promise} this promise will resolve to a RoadsResponse object
 	 */
-	request (method: string, url: string, body?: string, headers?: IncomingHeaders): Promise<RoadsResponse> {
+	request (method: string, url: string, body?: string, headers?: RoadsHeaders): Promise<RoadsResponse> {
 		// Servers can receive absolute urls. We reduce them to the path here so a middleware that checks the url
 		// 		and the router that matches it can't disagree about which path was requested.
-		// Header names are case-insensitive, so we lower-case them on the way in and on the way out. This lets
-		// 		middleware and connectors look headers up by their lower-case name.
+		// Header names are case-insensitive.
 		// Each request gets its own context
 		return response_lib.wrap(this._request_chain.getChainStart()({}, method, toOriginForm(url), body,
-			headers ? normalizeHeaders(headers) : {}))
-			.then((response) => {
-				response.headers = normalizeHeaders(response.headers);
-				return response;
-			});
+			caseInsensitiveHeaders(headers ?? {})));
 	}
 }

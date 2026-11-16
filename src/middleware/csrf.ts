@@ -7,11 +7,11 @@
  */
 
 import * as cookie from 'cookie';
-import { Context, IncomingHeaders, Middleware } from '../core/road.js';
+import { Context, Middleware } from '../core/road.js';
 import RoadsResponse from '../core/response.js';
 import { CookieContext } from './cookieMiddleware.js';
 import { StoreValsContext } from './storeVals.js';
-import { getSingleHeader } from '../util/headers.js';
+import { getSingleHeader, RoadsHeaders } from '../util/headers.js';
 
 const DEFAULT_EXPIRY_SECONDS = 60 * 60 * 24; // 1 day
 // Browsers only accept a cookie with this prefix if it is Secure, has a path of / and has no Domain.
@@ -151,7 +151,7 @@ function testSigner (sign: CSRFOptions['sign'], verify: CSRFOptions['verify']): 
  * 	Requests without any of these headers (such as non-browser clients) are let through,
  * 	and still have to pass the token check.
  */
-function isSameOrigin (headers: IncomingHeaders, trustedOrigins: string[]): boolean {
+function isSameOrigin (headers: RoadsHeaders, trustedOrigins: string[]): boolean {
 	const origin = getSingleHeader(headers, 'origin');
 
 	if (origin && trustedOrigins.includes(origin)) {

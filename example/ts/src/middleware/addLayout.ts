@@ -40,7 +40,10 @@ function wrapLayout(body: string, title: string, siteName: string) {
  * 	non-HTML responses
  */
 const addLayoutMiddleware = LayoutMiddleware.build<StoreValsMiddleware.StoreValsContext & SiteContext>(
-	function (body, context) {
+	function (response, context) {
+		// The body can be a Buffer, so turn it into a string
+		const body = String(response.body);
+
 		if (context.getVal(IGNORE_LAYOUT_KEY) === true) {
 			return body;
 		}

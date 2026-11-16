@@ -298,6 +298,57 @@ describe('road request', () => {
 	});
 
 	/**
+	 * Ensure that middleware can read, check and list request headers without knowing their casing
+	 */
+	test('Request Header Names Are Case-Insensitive', async () => {
+		const road = new Road();
+		const original = { 'Content-Type': 'text/plain' };
+
+		road.use(async function (method, url, body, headers) {
+			headers['X-Added'] = 'yes';
+
+			return JSON.stringify({
+				lower: headers['content-type'],
+				mixed: headers['Content-Type'],
+				has: 'CONTENT-TYPE' in headers,
+				missing: 'x-missing' in headers,
+				added: headers['x-added'],
+				names: Object.keys(headers)
+			});
+		});
+
+		const response = await road.request('GET', '/', undefined, original);
+
+		expect(JSON.parse(String(response.body))).toEqual({
+			lower: 'text/plain',
+			mixed: 'text/plain',
+			has: true,
+			missing: false,
+			added: 'yes',
+			names: ['content-type', 'x-added']
+		});
+		// The caller's object is copied, so middleware can't change it
+		expect(original).toEqual({ 'Content-Type': 'text/plain' });
+	});
+
+	/**
+	 * Ensure that the bundled middleware find a header the caller wrote with capital letters
+	 */
+	test('Request Headers With Capital Letters Reach Middleware That Look Them Up In Lower Case', async () => {
+		const road = new Road();
+
+		road.use(async function (method, url, body, headers, next) {
+			return next();
+		});
+		road.use(async function (method, url, body, headers) {
+			return String(headers['content-type']);
+		});
+
+		expect((await road.request('POST', '/', '{}', { 'CONTENT-TYPE': 'application/json' })).body)
+			.toEqual('application/json');
+	});
+
+	/**
 	 * Ensure that middleware receives an empty headers object when the request has no headers
 	 */
 	test('Request Without Headers Gives Middleware An Empty Object', () => {
