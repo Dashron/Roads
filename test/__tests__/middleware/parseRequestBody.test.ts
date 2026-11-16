@@ -1,17 +1,18 @@
 import { build, middleware, ParseBodyContext } from '../../../src/middleware/parseBody.js';
 
-import { Context, IncomingHeaders, Middleware as MiddlewareType } from '../../../src/core/road.js';
+import { Context, Middleware as MiddlewareType } from '../../../src/core/road.js';
 import { NextOverrides } from '../../../src/core/requestChain.js';
 import { Road } from '../../../src/index.js';
 import RoadsResponse from '../../../src/core/response.js';
 
 import { describe, expect, test, assert, vi } from 'vitest';
+import type { RoadsHeaders } from '../../../src/util/headers.js';
 
 /**
  * Calls the middleware directly and returns what it sent to next, along with the context and response.
  * 	`overrides` is undefined if next was never called
  */
-function callMiddleware (body: string | undefined, headers: IncomingHeaders) {
+function callMiddleware (body: string | undefined, headers: RoadsHeaders) {
 	const context = {} as ParseBodyContext;
 	let overrides: NextOverrides | undefined;
 

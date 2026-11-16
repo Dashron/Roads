@@ -8,14 +8,14 @@
 
 import RoadsResponse from '../core/response.js';
 import type Road from '../core/road.js';
-import type { IncomingHeaders } from '../core/road.js';
+import type { RoadsHeaders } from '../util/headers.js';
 
 // These only describe what the connector uses from Express, so the package's types work without @types/express
 export interface ExpressRequest {
 	method: string,
 	url: string,
 	body?: unknown,
-	headers: IncomingHeaders,
+	headers: RoadsHeaders,
 	// Express requests are Node streams. The connector reads the body from the stream if nothing else has
 	readableDidRead?: boolean,
 	// These match Node's stream types, which use any, so a real Express request can be passed in

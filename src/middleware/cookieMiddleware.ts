@@ -6,9 +6,10 @@
  * Middleware for managing cookies
  */
 import * as cookie from 'cookie';
-import { Context, IncomingHeaders, Middleware } from '../core/road.js';
+import { Context, Middleware } from '../core/road.js';
 import { NextCallback } from '../core/requestChain.js';
 import RoadsResponse from '../core/response.js';
+import type { RoadsHeaders } from '../util/headers.js';
 
 /**
  * The Cookie Context represents the request context when either the
@@ -101,7 +102,7 @@ export const serverMiddleware = function (
 	route_method: string,
 	route_path: string,
 	route_body: unknown,
-	route_headers: IncomingHeaders,
+	route_headers: RoadsHeaders,
 	next: NextCallback
 ): Promise<RoadsResponse | string> {
 	let cookies: SetCookies = {};
@@ -137,16 +138,9 @@ export const serverMiddleware = function (
 				response = new RoadsResponse(response);
 			}
 
-			// Header names are case-insensitive, so collect every casing of set-cookie the route might have used
-			// 		into one array. This way we end up with a single header and none of the cookies are lost.
-			let setCookies: Array<string> = [];
-
-			for (const key of Object.keys(response.headers)) {
-				if (key.toLowerCase() === 'set-cookie') {
-					setCookies = setCookies.concat(response.headers[key] || []);
-					delete response.headers[key];
-				}
-			}
+			// Keep any cookies the route set itself. Response header names are case-insensitive, so this finds
+			// 		them whatever casing the route used
+			const setCookies = ([] as Array<string>).concat(response.headers['set-cookie'] ?? []);
 
 			// Apply all the cookies
 			for (const [cookieKey, cookieValue] of newCookiesEntries) {

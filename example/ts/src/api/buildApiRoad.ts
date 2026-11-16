@@ -8,7 +8,7 @@
  *  - Directly from the web road through the reroute middleware, without any network request (see buildServerRoad.ts)
  */
 
-import { Road, RoadsResponse, CorsMiddleware, ParseBodyMiddleware, RouterMiddleware, RoadModule } from 'roads';
+import { Road, RoadsResponse, CorsMiddleware, ParseBodyMiddleware, RouterMiddleware, RoadModule, RoadsHeaders } from 'roads';
 
 export interface Post {
 	id: number,
@@ -21,7 +21,7 @@ export interface Post {
  * 	sends the request straight into this road and resolves with its response
  */
 export interface ApiContext extends RoadModule.Context {
-	api: (method: string, path: string, body?: string, headers?: RoadModule.IncomingHeaders) => Promise<RoadsResponse>
+	api: (method: string, path: string, body?: string, headers?: RoadsHeaders) => Promise<RoadsResponse>
 }
 
 // In the real world this would be a database

@@ -8,6 +8,8 @@ import { Road } from 'roads';
 const road = new Road();
 
 road.use(async function (method, path, body, headers) {
+    // CAREFUL: This isn't safe! A browser treats this response as HTML, and the path comes from the request.
+    //   A real site should build its HTML with a template engine that escapes values, such as React.
     return `Hello from ${path}!`;
 });
 
@@ -176,6 +178,8 @@ router.addRoute('GET', '/hello', async function (method, url, body, headers, nex
 });
 
 router.addRoute('GET', '/users/$name', async function (method, url, body, headers, next) {
+    // CAREFUL: This isn't safe! The name comes from the request, and nothing escapes it.
+    //   A real site should build its HTML with a template engine that escapes values, such as React.
     return `Hello, ${url.args?.name}!`;
 });
 
@@ -226,6 +230,8 @@ router.addRoute('GET', '/hello', async function (method, url, body, headers, nex
 });
 
 router.addRoute('GET', '/users/$name', async function (method, url, body, headers, next) {
+    // CAREFUL: This isn't safe! The name comes from the request, and nothing escapes it.
+    //   A real site should build its HTML with a template engine that escapes values, such as React.
     return `Hello, ${url.args?.name}!`;
 });
 
@@ -294,8 +300,8 @@ attachCommonMiddleware(road);
 
 // Wrap each response in a full page, but only on the server, because the browser already has the page
 if (typeof window === 'undefined') {
-    road.use(LayoutMiddleware.build(function (body) {
-        return `<!doctype html><body><div id="container">${body}</div><script src="/client.js"></script></body>`;
+    road.use(LayoutMiddleware.build(function (response) {
+        return `<!doctype html><body><div id="container">${response.body}</div><script src="/client.js"></script></body>`;
     }));
 }
 
@@ -306,7 +312,8 @@ router.addRoute('GET', '/hello', async function (method, url, body, headers, nex
 });
 
 router.addRoute('GET', '/users/$name', async function (method, url, body, headers, next) {
-    // CAREFUL: This isn't safe! This works for an example but you need to escape the name.
+    // CAREFUL: This isn't safe! The name comes from the request, and nothing escapes it.
+    //   A real site should build its HTML with a template engine that escapes values, such as React.
     return `Hello, ${url.args?.name}!`;
 });
 
@@ -316,6 +323,8 @@ export default road;
 Here's what changed. First, the [layout middleware](#layout) wraps each response in the parts that every page shares: the container and the script tag. Your routes now only return what goes inside the container. Next, the `/hello` route returns a heading and the link.
 
 A path variable can contain `<`, `"` and other HTML characters, because the router decodes it. Returning it unescaped lets a link like `/users/%3Cscript%3E...` run a script on your page. Escape any value from the request before you put it in HTML.
+
+The examples in this README build HTML with template strings, because that keeps them short. A template string escapes nothing. Every example that puts a value from the request into HTML is marked with a `CAREFUL` comment, and none of them are safe to copy as they are. For a real site, build your HTML with a template engine that escapes values for you, such as React.
 
 Stop the server with Ctrl+C, run `node server.ts` again, and visit `http://localhost:3000/hello`. You should see the heading and the link. If you click the link now, the browser loads a whole new page, because the browser code doesn't exist yet.
 
@@ -600,7 +609,7 @@ This function will execute the *request chain* in the order they were assigned v
 
 The parameters are all the standard HTTP request parameters.
 
-Header names are case-insensitive, so `request` lower-cases them before your middleware runs. Always look request headers up by their lower-case name (e.g. `headers['content-type']`). If you leave `headers` out, middleware receive an empty object.
+Header names are case-insensitive, as they are in HTTP. Your middleware can read a request header with any casing, so `headers['Content-Type']` and `headers['content-type']` are the same header, whichever casing you passed to `request`. The names are stored in lower case, so listing them (e.g. with `Object.keys(headers)`) gives lower-case names. [Response headers](#headers) work the same way. If you leave `headers` out, middleware receive an empty object.
 
 Make sure to catch any errors in the promise!
 
@@ -626,7 +635,7 @@ The response object contains all of the information you want to send to the clie
 | ------- | -------------- | ----------------------------------------------------------------- |
 | body    | string \| Buffer | The body of the response.                                     |
 | status  | number         | The HTTP Status code. Defaults to 200.                            |
-| headers | object         | All the headers. The value may be a string or an array of strings |
+| headers | object         | All the headers. The value may be a string or an array of strings. Header names are case-insensitive |
 
 
 ```typescript
@@ -654,7 +663,25 @@ console.log(response.status);
 console.log(response.headers);
 ```
 
-The response returned by `road.request` always has lower-case header names (e.g. `response.headers['set-cookie']`), no matter how your middleware wrote them. If two names only differ by case, such as `Set-Cookie` and `set-cookie`, they are merged into one header that holds an array of every value.
+Header names are case-insensitive, as they are in HTTP. You can read, assign, check or delete a header with any casing, and you always get the same header.
+
+```typescript
+const response = new RoadsResponse('Hello!', 200, { 'Content-Type': 'text/html' });
+
+console.log(response.headers['content-type']); // text/html
+console.log(response.headers['Content-Type']); // text/html
+
+response.headers['X-Request-Id'] = 'abc';
+console.log(response.headers['x-request-id']); // abc
+```
+
+The response stores each name in lower case, so listing the headers gives lower-case names.
+
+```typescript
+console.log(Object.keys(response.headers)); // [ 'content-type', 'x-request-id' ]
+```
+
+Assigning a header replaces its value, whatever casing the old value was assigned with. If the headers you pass to `new RoadsResponse` have two names that only differ by case, such as `Set-Cookie` and `set-cookie`, the response merges them into one header that holds an array of every value.
 
 ## Bundled Middleware
 
@@ -933,7 +960,9 @@ Most pages on a site share the same outer HTML: the doctype, the `<head>`, the s
 
 #### Add a layout to every page
 
-`LayoutMiddleware.build` takes a function, called the **layout function**, and returns a middleware that you add to roads with `road.use`. The middleware calls the layout function with the HTML that the route returned.
+`LayoutMiddleware.build` takes a function, called the **layout function**, and returns a middleware that you add to roads with `road.use`. The middleware calls the layout function with two arguments: the response that the route returned, and the request context. The layout function returns a string, and the middleware makes that string the new body of the response.
+
+The first example uses only the response. [Include variables in your layout](#include-variables-in-your-layout) covers the context.
 
 Here's a road with one route and a layout.
 
@@ -942,10 +971,10 @@ import { Road, RouterMiddleware, LayoutMiddleware } from 'roads';
 
 const road = new Road();
 
-road.use(LayoutMiddleware.build(function (body) {
+road.use(LayoutMiddleware.build(function (response) {
     // This is the layout function.
     // We apply the layout wrapper here and return it up the request chain
-    return `<!doctype html><html><body><div id="container">${body}</div></body></html>`;
+    return `<!doctype html><html><body><div id="container">${response.body}</div></body></html>`;
 }));
 
 const router = new RouterMiddleware.Router(road);
@@ -961,6 +990,8 @@ A request for `/` now returns this body:
 <!doctype html><html><body><div id="container"><h1>Home</h1></div></body></html>
 ```
 
+The route in this example returns a string, not a `RoadsResponse`. The middleware turns a string into a `RoadsResponse` before it calls the layout function, so the layout function always receives a response.
+
 The layout changes only the body. The status and headers stay as the route set them.
 
 #### Add the layout before your router
@@ -969,7 +1000,7 @@ The layout middleware wraps only what runs after it in the request chain. If you
 
 #### Include variables in your layout
 
-The layout above gives every page the same markup, but most sites need part of it to change on each page, such as the `<title>`. For that, the layout function receives a second argument: the request [context](#context). The context is the same object your routes use as `this`, so a route can save a value on it, and the layout function can read that value after the route returns.
+The layout above gives every page the same markup, but most sites need part of that layout to change for each page, such as the `<title>`. For that, use the second argument of the layout function: the request [context](#context). The context is the same object your routes use as `this`, so a route can save a value on it, and the layout function can read that value after the route returns.
 
 This example adds [Store Values](#store-values), which gives the context `storeVal` and `getVal`.
 
@@ -979,10 +1010,11 @@ import { Road, RouterMiddleware, LayoutMiddleware, StoreValsMiddleware } from 'r
 const road = new Road();
 road.use(StoreValsMiddleware.middleware);
 
-road.use(LayoutMiddleware.build<StoreValsMiddleware.StoreValsContext>(function (body, context) {
+road.use(LayoutMiddleware.build<StoreValsMiddleware.StoreValsContext>(function (response, context) {
     const title = context.getVal('page-title') ?? 'My site';
-    // Escape the title if it can contain anything from the request
-    return `<!doctype html><html><head><title>${title}</title></head><body><div id="container">${body}</div></body></html>`;
+    // CAREFUL: This isn't safe if a title can contain anything from the request, because nothing escapes it.
+    //   A real site should build its HTML with a template engine that escapes values, such as React.
+    return `<!doctype html><html><head><title>${title}</title></head><body><div id="container">${response.body}</div></body></html>`;
 }));
 
 const router = new RouterMiddleware.Router<StoreValsMiddleware.StoreValsContext>(road);
@@ -995,6 +1027,58 @@ router.addRoute('GET', '/', async function () {
 
 Three things changed from the first example. First, Store Values is added before the layout. Next, the layout function takes `context` and reads the title. Finally, the route saves the title with `this.storeVal`. The layout function runs after the route returns, so it can read that title and put it in the `<title>` tag.
 
+#### Read the status and headers of the response
+
+The first argument is the whole response, so the layout function can read `response.status` and `response.headers` as well as `response.body`. Here's the layout from the first example again, with a `<title>` that changes when the response is a `404`.
+
+```typescript
+road.use(LayoutMiddleware.build(function (response) {
+    const title = response.status === 404 ? 'Page not found' : 'My site';
+    return `<!doctype html><html><head><title>${title}</title></head><body><div id="container">${response.body}</div></body></html>`;
+}));
+```
+
+A request for a path that has no route now gets a page with the title `Page not found`. Every other page has the title `My site`.
+
+#### Carry extra data on the response
+
+The response that the layout function receives is the same object the route returned, not a copy. So a route can return a subclass of `RoadsResponse` that carries extra data, and the layout function can check for that subclass with `instanceof`.
+
+A subclass helps when the layout needs more from the route than a string of HTML. For example, a site that renders with React can have each route return its page as a React element. The layout function then renders the page and the layout as one tree.
+
+Here's a `RoadsResponse` subclass that carries a React element, a layout function that reads the element, and a route that returns the subclass. `Page` and `Home` are your own React components.
+
+```typescript
+import { createElement, ReactElement } from 'react';
+import { renderToString } from 'react-dom/server';
+import { LayoutMiddleware, RoadsResponse } from 'roads';
+
+class ReactResponse extends RoadsResponse {
+    element: ReactElement;
+
+    constructor (element: ReactElement, status?: number) {
+        super('', status);
+        this.element = element;
+    }
+}
+
+road.use(LayoutMiddleware.build(function (response) {
+    // CAREFUL: dangerouslySetInnerHTML puts the body into the page as HTML, and React does not escape it.
+    //   This is only safe if every route that returns a string escapes the request values in that string.
+    const page = response instanceof ReactResponse
+        ? response.element
+        : createElement('div', { dangerouslySetInnerHTML: { __html: String(response.body) } });
+
+    return '<!doctype html>' + renderToString(createElement(Page, null, page));
+}));
+
+router.addRoute('GET', '/', async function () {
+    return new ReactResponse(createElement(Home));
+});
+```
+
+First, `ReactResponse` stores the element and passes an empty body to `RoadsResponse`. Next, the layout function checks whether the response is a `ReactResponse`. If it is, the layout function uses the element. If it isn't, the route returned HTML, such as a plain string, so the layout function puts that HTML in a `div`. React escapes the values inside an element, but it does not escape HTML passed to `dangerouslySetInnerHTML`, so the routes that return strings still have to escape request values themselves. Finally, the layout function renders `Page` around the result and returns the string.
+
 #### Show errors inside the layout
 
 Error responses get the layout like any other page. A route that returns a `RoadsResponse` with a `404` status gets the layout, and the response keeps its `404` status.
@@ -1003,8 +1087,8 @@ A thrown error is different. When a route throws, there's no response to wrap, s
 
 ```typescript
 road.use(LayoutMiddleware.build(
-    function (body) {
-        return `<!doctype html><html><body><div id="container">${body}</div></body></html>`;
+    function (response) {
+        return `<!doctype html><html><body><div id="container">${response.body}</div></body></html>`;
     },
     function (error) {
         console.error(error);
@@ -1038,15 +1122,15 @@ Some responses shouldn't be wrapped in an HTML layout. The layout middleware ret
 
 A response without a `content-type` header is treated as HTML, so a route that returns a plain string gets the layout.
 
-To skip the layout for any other response, return `body` unchanged from your layout function. For example, a route can save a `no-layout` value, and the layout function can check for it:
+To skip the layout for any other response, return its body unchanged from your layout function. For example, a route can save a `no-layout` value, and the layout function can check for it. The layout function must return a string, and `response.body` can be a `Buffer`, so the example passes the body through `String()`.
 
 ```typescript
-road.use(LayoutMiddleware.build<StoreValsMiddleware.StoreValsContext>(function (body, context) {
+road.use(LayoutMiddleware.build<StoreValsMiddleware.StoreValsContext>(function (response, context) {
     if (context.getVal('no-layout')) {
-        return body;
+        return String(response.body);
     }
 
-    return `<!doctype html><html><body><div id="container">${body}</div></body></html>`;
+    return `<!doctype html><html><body><div id="container">${response.body}</div></body></html>`;
 }));
 ```
 
@@ -1058,7 +1142,7 @@ Add the layout middleware only to the road that runs on your server. [Run the sa
 
 | name    | type                                                                                                    | required | description |
 | ------- | ------------------------------------------------------------------------------------------------------- | -------- | ----------- |
-| layout  | function(body: *string*, context: *object*): *string \| Promise<string>*                                 | yes      | The layout function. It receives the response body and the request context, and returns the new body. It can return a promise, so you can render the page with an async template engine. |
+| layout  | function(response: *RoadsResponse*, context: *object*): *string \| Promise<string>*                      | yes      | The layout function. `response` is the response that the route returned, and `context` is the request context. The layout function returns the new body. It can return a promise, so you can render the page with an async template engine. |
 | onError | function(error: *unknown*, context: *object*): *string \| RoadsResponse \| Promise<string \| RoadsResponse>* | no       | Receives an error thrown by middleware added after the layout, and the request context. It returns the response to send instead. A string becomes the body of a `500` response. Without `onError`, errors pass through the layout middleware. |
 
 ### Method override
@@ -1126,6 +1210,8 @@ road.use(ParseBodyMiddleware.middleware);
 road.use<ParseBodyMiddleware.ParseBodyContext, { name: string }>(async function (method, path, body, headers) {
     // body is {name: "dashron"}
     // this.rawBody is '{"name":"dashron"}'
+    // CAREFUL: This isn't safe! The name comes from the request, and nothing escapes it.
+    //   A real site should build its HTML with a template engine that escapes values, such as React.
     return 'Hello ' + body.name;
 });
 
@@ -1147,6 +1233,8 @@ road.use<ParseBodyMiddleware.ParseBodyContext, {
     description?: string
 }>(async function (method, path, body, headers) {
     // body.name will be properly identified by TypeScript. In this example, "dashron"
+    // CAREFUL: This isn't safe! The name comes from the request, and nothing escapes it.
+    //   A real site should build its HTML with a template engine that escapes values, such as React.
     return `Hello ${body.name}`;
 });
 ```

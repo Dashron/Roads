@@ -1,14 +1,14 @@
-import { build } from '../../../src/middleware/layout.js';
+import { build, LayoutFunction } from '../../../src/middleware/layout.js';
 import Road from '../../../src/core/road.js';
 import { Context } from '../../../src/core/road.js';
 import RoadsResponse from '../../../src/core/response.js';
 
 import { describe, expect, test } from 'vitest';
 
-const wrap = (body: string) => `<main>${body}</main>`;
+const wrap = (response: RoadsResponse) => `<main>${String(response.body)}</main>`;
 
 // Builds a road with the layout, and a final middleware that returns the given response
-const buildRoad = (response: RoadsResponse | string, layout = wrap) => {
+const buildRoad = (response: RoadsResponse | string, layout: LayoutFunction<Context> = wrap) => {
 	const road = new Road();
 	road.use(build(layout));
 	road.use(() => Promise.resolve(response));
@@ -65,12 +65,60 @@ describe('Layout middleware tests', () => {
 			this['siteName'] = 'Site';
 			return next();
 		});
-		road.use(build(async (body, context) => `<h1>${String(context['siteName'])}</h1>${body}`));
+		road.use(build(async (response, context) =>
+			`<h1>${String(context['siteName'])}</h1>${String(response.body)}`));
 		road.use(() => Promise.resolve('Hi'));
 
 		const response = await road.request('GET', '/');
 
 		expect(response.body).toBe('<h1>Site</h1>Hi');
+	});
+
+	test('passes the same response instance the route returned to the layout', async () => {
+		class PageResponse extends RoadsResponse {
+			title: string;
+
+			constructor (body: string, title: string) {
+				super(body);
+				this.title = title;
+			}
+		}
+
+		const routeResponse = new PageResponse('Hi', 'Home');
+		let received: RoadsResponse | undefined;
+
+		const response = await buildRoad(routeResponse, (layoutResponse) => {
+			received = layoutResponse;
+			const body = String(layoutResponse.body);
+			return layoutResponse instanceof PageResponse ? `<h1>${layoutResponse.title}</h1>${body}` : body;
+		}).request('GET', '/');
+
+		expect(received).toBe(routeResponse);
+		expect(received).toBeInstanceOf(PageResponse);
+		expect(response.body).toBe('<h1>Home</h1>Hi');
+	});
+
+	test('passes a response built from the string to the layout when the route returns a string', async () => {
+		let received: RoadsResponse | undefined;
+
+		const response = await buildRoad('Hello', (layoutResponse) => {
+			received = layoutResponse;
+			return wrap(layoutResponse);
+		}).request('GET', '/');
+
+		expect(received).toBeInstanceOf(RoadsResponse);
+		expect(received?.status).toBe(200);
+		expect(response.body).toBe('<main>Hello</main>');
+	});
+
+	test('passes the status and headers of the response to the layout', async () => {
+		const layout = (response: RoadsResponse) =>
+			`${response.status} ${String(response.headers['x-test'])} ${String(response.body)}`;
+
+		const response = await buildRoad(new RoadsResponse('Missing', 404, { 'X-Test': 'yes' }), layout)
+			.request('GET', '/');
+
+		expect(response.body).toBe('404 yes Missing');
 	});
 
 	test('wraps the 404 when no middleware is left', async () => {
@@ -100,6 +148,30 @@ describe('Layout middleware tests', () => {
 
 			expect(response.status).toBe(500);
 			expect(response.body).toBe('<main>Site: Broken</main>');
+		});
+
+		test('passes the 500 response built from an onError string to the layout', async () => {
+			let received: RoadsResponse | undefined;
+			let receivedBody: unknown;
+			let receivedStatus: number | undefined;
+
+			const road = new Road();
+			road.use(build((layoutResponse) => {
+				received = layoutResponse;
+				// Read these here, because the middleware replaces the body once the layout returns
+				receivedBody = layoutResponse.body;
+				receivedStatus = layoutResponse.status;
+				return wrap(layoutResponse);
+			}, () => 'Error page'));
+			road.use(fail);
+
+			const response = await road.request('GET', '/');
+
+			expect(received).toBeInstanceOf(RoadsResponse);
+			expect(receivedStatus).toBe(500);
+			expect(receivedBody).toBe('Error page');
+			expect(response.status).toBe(500);
+			expect(response.body).toBe('<main>Error page</main>');
 		});
 
 		test('keeps the status of a response from onError, and waits for an async onError', async () => {

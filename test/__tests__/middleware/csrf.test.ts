@@ -4,11 +4,12 @@ import {
 import { serverMiddleware as cookieMiddleware, CookieContext } from '../../../src/middleware/cookieMiddleware.js';
 import { middleware as parseBodyMiddleware } from '../../../src/middleware/parseBody.js';
 import { middleware as storeValsMiddleware, StoreValsContext } from '../../../src/middleware/storeVals.js';
-import Road, { Context, IncomingHeaders } from '../../../src/core/road.js';
+import Road, { Context } from '../../../src/core/road.js';
 import RoadsResponse from '../../../src/core/response.js';
 import { sign, verify, secondsFromNow } from '../../resources/fakeSigner.js';
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import type { RoadsHeaders } from '../../../src/util/headers.js';
 
 const COOKIE_NAME = CSRF_COOKIE_NAME;
 const FORM_HEADERS = { 'content-type': 'application/x-www-form-urlencoded' };
@@ -32,7 +33,7 @@ function buildRoad (handler: (this: TestContext, method: string) => string, opti
 	return road;
 }
 
-function post (road: Road, bodyToken?: string, cookieToken?: string, headers: IncomingHeaders = {}) {
+function post (road: Road, bodyToken?: string, cookieToken?: string, headers: RoadsHeaders = {}) {
 	return road.request(
 		'POST', '/',
 		bodyToken === undefined ? '' : `${CSRF_BODY_NAME}=${encodeURIComponent(bodyToken)}`,
@@ -392,7 +393,7 @@ describe('csrf tests', () => {
 		['the origin matches the host and port', { origin: 'http://localhost:8081', host: 'localhost:8081' }],
 		['the origin matches the host in a different case', { origin: 'https://example.com', host: 'Example.com' }],
 		['there are no origin headers', {}]
-	])('a POST with a valid token passes when %s', async (description, headers: IncomingHeaders) => {
+	])('a POST with a valid token passes when %s', async (description, headers: RoadsHeaders) => {
 		expect.assertions(1);
 
 		const token = sign({ exp: secondsFromNow(60) });
@@ -413,7 +414,7 @@ describe('csrf tests', () => {
 		['the origin is on another port', { origin: 'http://localhost:9000', host: 'localhost:8081' }],
 		['the origin is null', { origin: 'null', host: 'example.com' }],
 		['there is an origin but no host', { origin: 'https://example.com' }]
-	])('a POST with a valid token is rejected when %s', async (description, headers: IncomingHeaders) => {
+	])('a POST with a valid token is rejected when %s', async (description, headers: RoadsHeaders) => {
 		expect.assertions(1);
 
 		const token = sign({ exp: secondsFromNow(60) });

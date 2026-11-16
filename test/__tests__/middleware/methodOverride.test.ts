@@ -5,11 +5,12 @@ import {
 import { serverMiddleware as cookieMiddleware } from '../../../src/middleware/cookieMiddleware.js';
 import { middleware as parseBodyMiddleware } from '../../../src/middleware/parseBody.js';
 import { Router } from '../../../src/middleware/router.js';
-import Road, { IncomingHeaders } from '../../../src/core/road.js';
+import Road from '../../../src/core/road.js';
 import RoadsResponse from '../../../src/core/response.js';
 import { sign, verify, secondsFromNow } from '../../resources/fakeSigner.js';
 
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import type { RoadsHeaders } from '../../../src/util/headers.js';
 
 const FORM_HEADERS = { 'content-type': 'application/x-www-form-urlencoded' };
 
@@ -18,7 +19,7 @@ const FORM_HEADERS = { 'content-type': 'application/x-www-form-urlencoded' };
  * 	and resolves with the method that the middleware after it received
  */
 function requestMethod (
-	method: string, url: string, body?: string, headers?: IncomingHeaders, options: MethodOverrideOptions = {}
+	method: string, url: string, body?: string, headers?: RoadsHeaders, options: MethodOverrideOptions = {}
 ): Promise<RoadsResponse> {
 	const road = new Road();
 

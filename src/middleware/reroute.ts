@@ -7,8 +7,9 @@
  * This is useful when you're running two servers locally. One example is a webserver and a separate API server.
  */
 
-import { Context, IncomingHeaders, Middleware } from '../core/road.js';
+import { Context, Middleware } from '../core/road.js';
 import Road from '../core/road.js';
+import type { RoadsHeaders } from '../util/headers.js';
 
 /**
  * Applies a method to the request context that allows you to make requests into another roads object.
@@ -21,7 +22,7 @@ import Road from '../core/road.js';
  */
 export function build (key: string, road: Road): Middleware<Context> {
 	const reroute: Middleware<Context> = function (route_method, route_path, route_body, route_headers, next) {
-		this[key] = function (method: string, path: string, body?: string, headers?: IncomingHeaders) {
+		this[key] = function (method: string, path: string, body?: string, headers?: RoadsHeaders) {
 			return road.request(method, path, body, headers);
 		};
 

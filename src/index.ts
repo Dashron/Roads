@@ -5,8 +5,8 @@ export { default as Road } from './core/road.js';
 export * as RoadModule from './core/road.js';
 
 // Export types
-export type { Context, IncomingHeaders, Middleware } from './core/road.js';
-export type { OutgoingHeaders } from './core/response.js';
+export type { Context, Middleware } from './core/road.js';
+export type { RoadsHeaders } from './util/headers.js';
 export type { NextCallback, NextOverrides } from './core/requestChain.js';
 export type { ParsedURL } from './util/url.js';
 export { default as RoadsPJAX } from './client/pjax.js';

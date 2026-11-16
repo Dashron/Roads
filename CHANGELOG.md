@@ -1,5 +1,33 @@
 # Changelog
 
+## 9.0.0-beta.3
+
+### Breaking changes
+
+- **Layout:** the layout function passed to `LayoutMiddleware.build` receives the response instead of its body: `(response, context)`, where it used to be `(body, context)`. Replace `body` with `response.body`. The body can be a `Buffer`, so a layout that returns it unchanged should return `String(response.body)`. The response is the same instance the route returned, so the layout can read its status and headers, and data that a `RoadsResponse` subclass carries (e.g. `response instanceof MyResponse`).
+- **Headers:** header names are case-insensitive, on the `headers` that middleware and routes receive and on `RoadsResponse`. `headers['Content-Type']` and `headers['content-type']` are the same header, whether you read, assign, check or delete it, so your code no longer needs to know which casing was used. Nothing changes for request headers that you already read by their lower-case name. Three things change for response headers:
+  - The names are stored in lower case, so `Object.keys(response.headers)` and `Object.entries(response.headers)` give lower-case names as soon as the response is created. They used to keep your casing until `road.request()` finished.
+  - Assigning a header replaces any value it already had under another casing. `Set-Cookie` and `set-cookie` assigned separately used to be merged into one array when `road.request()` finished. Names that only differ by case in the object passed to `new RoadsResponse` are still merged.
+  - The response stores a copy of the headers object you pass in, so changing that object afterwards no longer changes the response.
+- **Types:** the `IncomingHeaders` and `OutgoingHeaders` types are replaced by one type, `RoadsHeaders`, because request and response headers are the same kind of object. Rename both in your imports. `RoadModule.IncomingHeaders` is gone too.
+
+## 9.0.0-beta.2
+
+### Behaviour changes
+
+- **CSRF:** the default response to a request that fails validation is a plain-text `403` with the body `Forbidden`. It used to be a longer message asking the user to contact support.
+- **Parse body:** the middleware logs a warning with `console.warn` when it receives a body that is not a string. This usually means it was added to the road more than once, such as directly and with `attachCommonMiddleware`. To turn the warning off, build the middleware with `ParseBodyMiddleware.build({ warnOnNonStringBody: false })`.
+- **Express connector:** after a request body passes `options.limit` while it is being read, the connector reads and throws away the rest of it. It used to pause the stream, which left the unread body blocking the next request on a keep-alive connection.
+
+### New
+
+- **CSRF:** two new options for `CSRFMiddleware.build`.
+  - `logger` is an object with a `log(key, data)` function, called every time a request fails validation, including failures from your own calls to `isValidCSRFToken()`. Without it, failures are still logged with `console.error`.
+  - `onFailure(reason, context)` builds the response for a request that failed validation. It returns a `RoadsResponse` or a string, and can return a promise.
+- **Parse body:** `ParseBodyMiddleware.build(options)` creates the middleware with your own options. `ParseBodyMiddleware.middleware` is the middleware with the default options.
+- **Express connector:** `options.onBodyTooLarge` sends your own response for a request body over the limit. The connector calls it with the Express request and sends the `RoadsResponse` or string it returns. A string is sent with a status of `413`. Without it, the connector still passes an error with a status of 413 to Express with `next(err)`.
+- The `IncomingHeaders` and `OutgoingHeaders` types are exported. 9.0.0-beta.3 replaces both with `RoadsHeaders`.
+
 ## 9.0.0-beta.1
 
 9.0.0 requires Node 22 or later. Most apps need only a few changes. Work through the "Breaking changes" list below, then check the "Behaviour changes" list for anything your app relies on.
@@ -20,9 +48,9 @@
 #### Requests and responses
 - **`Response` is renamed to `RoadsResponse`,** so it no longer shares a name with the fetch API's global `Response`. Update your imports and every `new Response(...)`. Search your code for this, because a `new Response(...)` left behind after you change the import doesn't throw. It builds the fetch API's `Response`, and Roads treats that object as the body of a 200.
 - **Absolute urls are reduced to their path before any middleware runs.** A request for `http://example.com/a?b` reaches middleware and routes as `/a?b`, so they always agree on the path. Dot segments are not collapsed.
-- **Header names are lower-cased** on the way into and out of `road.request()` (e.g. `set-cookie`, not `Set-Cookie`). Headers that only differ by case are merged into an array of every value. `set-cookie` stays an array, and Node sends each entry as its own header when your server passes the array to it. Nothing else changes on the wire. Reading `headers['Content-Type']` now returns `undefined`, and TypeScript doesn't report it, so search your code for capitalized header names.
+- **Header names are lower-cased** on the way into and out of `road.request()` (e.g. `set-cookie`, not `Set-Cookie`). Headers that only differ by case are merged into an array of every value. `set-cookie` stays an array, and Node sends each entry as its own header when your server passes the array to it. Nothing else changes on the wire. Header names are stored and listed in lower case, and since 9.0.0-beta.3 you can read a header with any casing.
 - **`road.request()` rejects with a `TypeError` if the request chain resolves to `undefined` or `null`.** This is usually a middleware that forgot to `return next()`. Previously the response was a 200 with an `undefined` body.
-- **Middleware receive an empty object** instead of `undefined` when `road.request()` is called without headers. The `headers` parameter of `Middleware` is now typed as `IncomingHeaders` instead of `IncomingHeaders | undefined`, so a middleware called directly (such as in a test) needs to be passed `{}`.
+- **Middleware receive an empty object** instead of `undefined` when `road.request()` is called without headers. The `headers` parameter of `Middleware` is now typed as `RoadsHeaders` instead of `RoadsHeaders | undefined`, so a middleware called directly (such as in a test) needs to be passed `{}`.
 - **Middleware and routes must return a Promise.** The `Middleware` and `Route` types no longer allow returning a `RoadsResponse` or string directly. Make the function `async`, or wrap the value in `Promise.resolve()`. Roads still resolves plain return values at runtime, so this only affects type checking.
 
 #### Middleware
@@ -64,11 +92,12 @@
 
 - `MethodOverrideMiddleware` and `CSRFMiddleware`.
 - `LayoutMiddleware` wraps each HTML response in a layout, such as a full HTML page. Redirects, `304` responses and responses with a non-HTML `content-type` are sent without the layout. An optional `onError` function turns errors thrown later in the request chain into an error page inside the layout.
+  - The layout function receives the response and the request context: `(response, context)`. The response is the same instance the route returned, so the layout can read its body, status and headers, and data that a `RoadsResponse` subclass carries (e.g. `response instanceof MyResponse`).
 - `expressConnector(road)` creates an Express middleware that sends each request through a road.
   - A request body over `options.limit` (100kb by default) is not kept, and the road does not run. The connector passes an error with a status of 413 to Express with `next(err)`.
   - To send your own response for an oversized body, pass `options.onBodyTooLarge`. The connector calls it with the Express request and sends the `RoadsResponse` or string it returns.
 - `next()` accepts `{ method, body }` to change the method or body that the rest of the chain receives.
-- The `NextOverrides`, `ParsedURL`, `IncomingHeaders` and `OutgoingHeaders` types are exported.
+- The `NextOverrides`, `ParsedURL` and `RoadsHeaders` types are exported.
 - `RoadsPJAX.unregister()`. `registerAdditionalElement` accepts any `HTMLElement`, handles forms as well as links, and can be called after `register`.
 - The package includes its TypeScript sources, so "go to definition" opens the source instead of a declaration file.
 
